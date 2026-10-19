@@ -322,8 +322,10 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	if not _health.damage(hit["damage"], not hit["pierce"]):
 		return
 	# A játékos fegyvere talált: életlopás stb. (lásd Player.on_hit_enemy).
-	if hitbox.owner and hitbox.owner.has_method("on_hit_enemy"):
-		hitbox.owner.call("on_hit_enemy", hit["damage"])
+	# (A nyílvesszőnek nincs owner-e: a kilövője a "source" metában van.)
+	var source: Variant = hitbox.get_meta("source", hitbox.owner)
+	if is_instance_valid(source) and source.has_method("on_hit_enemy"):
+		source.call("on_hit_enemy", hit["damage"])
 	Audio.play("crit" if hit["crit"] else "hit")
 	if hit["crit"]:
 		# Kritikus találat: nagyobb, piros-narancs szám felkiáltójellel.

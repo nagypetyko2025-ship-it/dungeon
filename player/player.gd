@@ -12,8 +12,6 @@ const SWING_ARC := deg_to_rad(140.0)
 const MAX_SWING_TIME := 0.15
 ## Cooldown két ütés között 100%-os attack_speed mellett (mp).
 const BASE_ATTACK_COOLDOWN := 0.6
-## A karakter sprite-ja (lovag) a lapon: az idle első képkockája.
-const SPRITE_RECT := Rect2(128, 100, 16, 28)
 ## A markolat ennyire van a forgásponttól; a találati terület ennyivel hosszabb
 ## a pengénél (hogy a rövid kard se legyen használhatatlan) és ilyen széles.
 const SWORD_HILT_OFFSET := 2.0
@@ -35,17 +33,31 @@ const SPEAR_KNOCKBACK := 470.0
 const THRUST_BACK := -10.0
 const THRUST_FORWARD := 22.0
 const WEAPON_PIVOT_POSITION := Vector2(0, -18)
-## Fegyverfajták suhintása: ív (fok), cooldown-szorzó, hátralökés; az ikonos (átlós képű)
-## fegyvereknél a fegyver hossza 100%-os hatótávnál és a találati terület szélessége.
+## Fegyverfajták. style:
+##   throw  egyenesen előre "dobja" a fegyvert a kurzor felé, majd visszahúzza
+##          (kard, tőr, lándzsa); a Hatótáv azt adja meg, milyen messzire: `throw` × hatótáv%
+##   swing  ívben suhint (balta, buzogány); a Hatótáv a testtől való távolságot növeli
+##   bow    nyilat lő a kurzor felé; a Hatótáv a nyíl repülési távolsága
+## A fegyver mérete sosem nő a hatótávval. length / width: az átlós ikonú fegyverek
+## hossza és a találati terület szélessége.
 const WEAPON_TYPES := {
-	"sword": {"arc": 140.0, "cooldown": 1.0, "knockback": 260.0},
-	"axe": {"arc": 200.0, "cooldown": 1.3, "knockback": 380.0, "length": 58.0, "width": 34.0},
-	"dagger": {"arc": 120.0, "cooldown": 0.6, "knockback": 150.0, "length": 54.0, "width": 28.0},
-	"mace": {"arc": 160.0, "cooldown": 1.45, "knockback": 520.0, "length": 56.0, "width": 36.0},
-	"spear": {"arc": 0.0, "cooldown": 1.2, "knockback": 470.0},
+	"sword": {"style": "throw", "cooldown": 1.0, "knockback": 260.0, "throw": 64.0},
+	"dagger": {"style": "throw", "cooldown": 0.6, "knockback": 150.0, "throw": 56.0, "length": 34.0, "width": 24.0},
+	"spear": {"style": "throw", "cooldown": 1.2, "knockback": 470.0, "throw": 80.0},
+	"axe": {"style": "swing", "arc": 200.0, "cooldown": 1.3, "knockback": 380.0, "length": 58.0, "width": 34.0},
+	"mace": {"style": "swing", "arc": 160.0, "cooldown": 1.45, "knockback": 520.0, "length": 56.0, "width": 36.0},
+	"bow": {"style": "bow", "cooldown": 1.1, "knockback": 120.0, "length": 40.0, "width": 10.0},
 }
 ## Az átlós ikonú fegyvereknél a markolat ennyied része a forgáspont mögött.
 const ICON_WEAPON_GRIP := 0.15
+## Suhintásnál +100% hatótáv ennyivel távolabb viszi a fegyvert a testtől (pixel).
+const SWING_REACH_OFFSET := 40.0
+## Dobásnál a fegyver ennyi idő alatt ér ki és vissza (100%-os hatótávnál, mp).
+const THROW_TIME := 0.24
+## Íj: a nyíl repülési távolsága 100%-os hatótávnál és a sebessége (pixel, pixel / mp).
+const BOW_RANGE := 420.0
+const ARROW_SPEED := 560.0
+const PLAYER_ARROW := preload("res://player/player_arrow.gd")
 ## Ennyi megtett pixelenként szól egy lépés.
 const STEP_LENGTH := 46.0
 
@@ -73,7 +85,7 @@ var _step_distance := 0.0
 
 
 func _ready() -> void:
-	_sprite.sprite_frames = SpriteSheet.character_frames(SPRITE_RECT, true, true)
+	_sprite.sprite_frames = Characters.frames(Progress.character)
 	_sprite.play("idle")
 	_weapon_pivot.visible = false
 	_sword_shape.disabled = true
@@ -116,9 +128,28 @@ func weapon_crit_multiplier() -> float:
 	return _weapon_value("crit_multiplier", Stats.CRIT_MULTIPLIER)
 
 
-## Egy (nem kritikus) találat sebzése a jelenlegi fegyverrel és statokkal.
+## Egy (nem kritikus) találat sebzése a jelenlegi fegyverrel és statokkal. Az íjat a
+## Távolsági sebzés erősíti (a többit a Közelharci), és az íjász karakter íjjal többet sebez.
 func hit_damage() -> int:
-	return _stats.hit_damage(weapon_base_damage(), weapon_scaling())
+	var bow := _weapon_type == "bow"
+	var damage := _stats.hit_damage(weapon_base_damage(), weapon_scaling(), bow)
+	if bow:
+		damage = roundi(damage * (1.0 + Characters.bonus("bow_damage")))
+	return damage
+
+
+## Másik karakterre váltás (a kocsmában): kinézet, tábori felszerelés, fejlesztések.
+func set_character(id: String) -> void:
+	Progress.select_character(id)
+	_sprite.sprite_frames = Characters.frames(id)
+	_sprite.play("idle")
+	if Progress.camp_inventory.is_empty():
+		_inventory.reset_to_start()
+	else:
+		_inventory.load_data(Progress.camp_inventory)
+	_apply_equipment()
+	_health.current = _health.max_health
+	_health.changed.emit(_health.current, _health.max_health)
 
 
 func _weapon_value(key: String, default: Variant) -> Variant:
@@ -144,6 +175,7 @@ func _apply_equipment() -> void:
 	if weapon == null:
 		return
 	_weapon_type = weapon.get("weapon_type", "sword")
+	_apply_stats()
 	_sword_hitbox.ignore_dodge = _weapon_type == "spear"
 	_sword_hitbox.knockback = WEAPON_TYPES[_weapon_type]["knockback"]
 	_set_sword_look(Items.icon(weapon))
@@ -154,9 +186,9 @@ func _set_sword_look(texture: Texture2D) -> void:
 	_update_sword_geometry()
 
 
-## A fegyver képe és a találati terület a fegyver hosszához és a Hatótáv stathoz
-## igazodik: nagyobb hatótávnál a penge / lándzsa hosszabbra nyúlik
-## (a markolat a forgáspontnál van, a hegy a célzás irányába mutat).
+## A fegyver képe és a találati terület a fegyver saját méretéhez igazodik (a hatótáv
+## nem nagyítja: dobásnál a dobás távolságát, suhintásnál a testtől való távolságot,
+## íjnál a nyíl repülését adja). A markolat a forgáspontnál, a hegy a célzás irányában.
 func _update_sword_geometry() -> void:
 	if _sword_sprite.texture == null:
 		return
@@ -164,16 +196,22 @@ func _update_sword_geometry() -> void:
 	var shape := RectangleShape2D.new()
 	var type_data: Dictionary = WEAPON_TYPES[_weapon_type]
 	if type_data.has("length"):
-		# Balta, tőr, buzogány: átlós ikon (feje bal felül), mint a lándzsánál; a kéz a nyél végén.
-		var length: float = type_data["length"] * reach
+		# Tőr, balta, buzogány, íj: átlós ikon (feje bal felül); a kéz a nyél végén.
+		var length: float = type_data["length"]
 		var icon_length := _sword_sprite.texture.get_width() * sqrt(2.0)
 		_sword_sprite.rotation = SPEAR_SPRITE_ROTATION
 		_sword_sprite.scale = Vector2.ONE * length / icon_length
 		_sword_sprite.position.x = length / 2.0 - length * ICON_WEAPON_GRIP
+		if type_data["style"] == "swing":
+			_sword_sprite.position.x += maxf((reach - 1.0) * SWING_REACH_OFFSET, -10.0)
+		elif type_data["style"] == "bow":
+			# Az íj ikonja átlós; 45°-kal elforgatva függőlegesen áll a célzás irányára merőlegesen.
+			_sword_sprite.rotation = PI / 4.0
+			_sword_sprite.position.x = 10.0
 		shape.size = Vector2(length + SWORD_HITBOX_EXTRA, type_data["width"])
 		_sword_shape.position.x = _sword_sprite.position.x + SWORD_HITBOX_EXTRA / 2.0
 	elif _weapon_type == "spear":
-		var length := SPEAR_LENGTH * reach
+		var length := SPEAR_LENGTH
 		# Az ikon átlósan áll: a hossza az átlója.
 		var icon_length := _sword_sprite.texture.get_width() * sqrt(2.0)
 		_sword_sprite.rotation = SPEAR_SPRITE_ROTATION
@@ -182,10 +220,10 @@ func _update_sword_geometry() -> void:
 		shape.size = Vector2(length + SWORD_HITBOX_EXTRA, SPEAR_HITBOX_WIDTH)
 		_sword_shape.position.x = _sword_sprite.position.x + SWORD_HITBOX_EXTRA / 2.0
 	else:
-		var blade := _sword_sprite.texture.get_height() * 2.0 * reach
+		var blade := _sword_sprite.texture.get_height() * 2.0
 		# A kard képe függőleges: 90°-kal elforgatva a helyi y tengelye a penge hossza.
 		_sword_sprite.rotation = PI / 2.0
-		_sword_sprite.scale = Vector2(2.0, 2.0 * reach)
+		_sword_sprite.scale = Vector2(2.0, 2.0)
 		_sword_sprite.position.x = blade / 2.0 + SWORD_HILT_OFFSET
 		shape.size = Vector2(blade + SWORD_HITBOX_EXTRA, SWORD_HITBOX_WIDTH)
 		_sword_shape.position.x = blade / 2.0 + SWORD_HILT_OFFSET + SWORD_HITBOX_EXTRA / 2.0
@@ -219,7 +257,11 @@ func spend_gold(amount: int) -> bool:
 
 func attack_cooldown() -> float:
 	var cooldown := BASE_ATTACK_COOLDOWN / (_stats.attack_speed / 100.0)
-	return cooldown * float(WEAPON_TYPES[_weapon_type]["cooldown"])
+	cooldown *= float(WEAPON_TYPES[_weapon_type]["cooldown"])
+	# Az íjász íjjal gyorsabban lő.
+	if _weapon_type == "bow":
+		cooldown *= 1.0 - Characters.bonus("bow_speed")
+	return cooldown
 
 
 ## Emeletváltás előtt elmenti a statokat, a HP-t és a szintet a GameState-be.
@@ -276,9 +318,13 @@ func _update_footsteps(delta: float, input_dir: Vector2) -> void:
 
 
 func _swing(aim_angle: float) -> void:
-	if _weapon_type == "spear":
-		_thrust(aim_angle)
-		return
+	match WEAPON_TYPES[_weapon_type]["style"]:
+		"throw":
+			_thrust(aim_angle)
+			return
+		"bow":
+			_shoot(aim_angle)
+			return
 	_cooldown_left = attack_cooldown()
 	Audio.play("swing")
 	_swing_side = -_swing_side
@@ -295,24 +341,54 @@ func _swing(aim_angle: float) -> void:
 	_weapon_pivot.visible = false
 
 
-## Lándzsás szúrás: egyenesen a célzás irányába, visszahúzás után előredöfés.
+## Dobás / döfés (kard, tőr, lándzsa): a fegyver egyenesen a kurzor felé repül ki,
+## `throw` × hatótáv% távolságra, aztán visszatér; közben mindent eltalál az útjában.
 func _thrust(aim_angle: float) -> void:
 	_cooldown_left = attack_cooldown()
-	Audio.play("thrust")
+	Audio.play("thrust" if _weapon_type == "spear" else "swing")
 	var direction := Vector2.from_angle(aim_angle)
+	var distance: float = WEAPON_TYPES[_weapon_type]["throw"] * _stats.attack_range / 100.0
 	_weapon_pivot.visible = true
 	_weapon_pivot.rotation = aim_angle
 	_weapon_pivot.position = WEAPON_PIVOT_POSITION + direction * THRUST_BACK
 	_sword_shape.set_deferred("disabled", false)
-	var thrust_time := minf(MAX_SWING_TIME * 1.4, _cooldown_left * 0.6)
+	# Messzebbre dobva kicsit tovább tart, de mindig belefér a cooldownba.
+	var thrust_time := minf(THROW_TIME * sqrt(distance / 64.0), _cooldown_left * 0.8)
 	var tween := create_tween()
-	tween.tween_property(_weapon_pivot, "position", WEAPON_PIVOT_POSITION + direction * THRUST_FORWARD,
-		thrust_time * 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(_weapon_pivot, "position", WEAPON_PIVOT_POSITION, thrust_time * 0.55)
+	tween.tween_property(_weapon_pivot, "position", WEAPON_PIVOT_POSITION + direction * distance,
+		thrust_time * 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	# Csak kifelé menet sebez (visszafelé nem, hogy egy dobás ne találjon kétszer).
+	tween.tween_callback(func() -> void: _sword_shape.set_deferred("disabled", true))
+	tween.tween_property(_weapon_pivot, "position", WEAPON_PIVOT_POSITION, thrust_time * 0.5) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	await tween.finished
-	_sword_shape.set_deferred("disabled", true)
 	_weapon_pivot.visible = false
 	_weapon_pivot.position = WEAPON_PIVOT_POSITION
+
+
+## Íj: nyílvessző a kurzor felé; a hatótáv a nyíl repülési távolsága.
+func _shoot(aim_angle: float) -> void:
+	_cooldown_left = attack_cooldown()
+	Audio.play("arrow")
+	var direction := Vector2.from_angle(aim_angle)
+	# Az íj egy pillanatra látszik a kézben, a célzás irányába fordítva.
+	_weapon_pivot.visible = true
+	_weapon_pivot.rotation = aim_angle
+	_weapon_pivot.position = WEAPON_PIVOT_POSITION
+	var arrow: Area2D = PLAYER_ARROW.new()
+	arrow.direction = direction
+	arrow.speed = ARROW_SPEED
+	arrow.max_distance = BOW_RANGE * _stats.attack_range / 100.0
+	arrow.damage = hit_damage()
+	arrow.crit_chance = _stats.crit_chance / 100.0
+	arrow.crit_multiplier = weapon_crit_multiplier()
+	arrow.knockback = WEAPON_TYPES["bow"]["knockback"]
+	arrow.set_meta("source", self)
+	get_parent().add_child(arrow)
+	arrow.global_position = _weapon_pivot.global_position + direction * 18.0
+	await get_tree().create_timer(0.15, false).timeout
+	if _weapon_pivot.rotation == aim_angle:
+		_weapon_pivot.visible = false
 
 
 func _on_hurt(hitbox: Hitbox) -> void:

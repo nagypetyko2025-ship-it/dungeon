@@ -6,6 +6,8 @@ class_name Upgrades
 const ALL: Array[Dictionary] = [
 	{"stat": "damage", "title": "Erő", "text": "+1 közelharci sebzés (a fegyvered skálázása szerint)", "amount": 1,
 		"region": Rect2(339, 98, 10, 29)},
+	{"stat": "ranged_damage", "title": "Íjászat", "text": "+1 távolsági sebzés (az íjakat erősíti)", "amount": 1,
+		"icon_path": "res://assets/ui/icon_ranged.png"},
 	{"stat": "damage_percent", "title": "Pusztítás", "text": "+5% sebzés (minden találat)", "amount": 5,
 		"region": Rect2(291, 137, 10, 22)},
 	{"stat": "max_health", "title": "Vitalitás", "text": "+3 max élet", "amount": 3,

@@ -28,10 +28,20 @@ var equipment := {}
 
 
 func _ready() -> void:
+	reset_to_start(false)
+
+
+## Kezdő felszerelés: üres táska, csak a karakter kezdőfegyvere (lovag: rozsdás kard,
+## íjász: régi íj).
+func reset_to_start(notify := true) -> void:
+	bag.clear()
 	bag.resize(BAG_SIZE)
 	for slot in EQUIPMENT_SLOTS:
 		equipment[slot] = null
-	equipment["weapon"] = Items.create(STARTING_WEAPON_ID)
+	Progress.load_game()
+	equipment["weapon"] = Items.create(Characters.data(Progress.character).get("start_weapon", STARTING_WEAPON_ID))
+	if notify:
+		changed.emit()
 
 
 ## Az első üres helyre teszi; hamisat ad, ha tele a táska.

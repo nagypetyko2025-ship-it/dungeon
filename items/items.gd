@@ -21,13 +21,15 @@ const SELL_RATIO := 0.4
 const SPEAR_NOTE_INK := Color(0.42, 0.28, 0.12)
 const SLOT_NOTE_INK := Color(0.3, 0.22, 0.14)
 const WEAPON_NOTE_INK := Color(0.45, 0.16, 0.1)
-const WEAPON_KIND_NAMES := {"sword": "Kard", "spear": "Lándzsa", "axe": "Balta", "dagger": "Tőr", "mace": "Buzogány"}
+const WEAPON_KIND_NAMES := {"sword": "Kard", "spear": "Lándzsa", "axe": "Balta", "dagger": "Tőr", "mace": "Buzogány", "bow": "Íj"}
 ## A fegyverfajták rövid leírása (a kard az alap, ahhoz nincs).
 const WEAPON_NOTES := {
 	"spear": "Lándzsa: messzebbre ér és szúr. Átütés: a szúrást nem lehet kikerülni, és erősen hátralök.",
 	"axe": "Balta: nagyon széles ívben suhint, kicsit lassabb, erősen hátralök.",
 	"dagger": "Tőr: rövid, de nagyon gyors; nagy kritikus szorzó.",
 	"mace": "Buzogány: lassú, de nagyot üt és messzire löki az ellenséget.",
+	"bow": "Íj: nyilat lő a kurzor felé; a Távolsági sebzés erősíti, a Hatótáv a nyíl repülési távolsága.",
+	"sword": "Kard: egyenesen előre döfi; a Hatótáv azt adja meg, milyen messzire.",
 }
 ## Melyik tárgy képe jelzi halványan az üres felszerelés-helyet.
 const SLOT_ICON_ITEMS := {
@@ -39,6 +41,7 @@ const SLOT_ICON_ITEMS := {
 ## Stat neve a leírásokban, és hogy százalékos-e / tizedes-e.
 const STAT_LABELS := {
 	"damage": "közelharci sebzés",
+	"ranged_damage": "távolsági sebzés",
 	"damage_percent": "sebzés",
 	"max_health": "max élet",
 	"health_regen": "élet / mp",
@@ -90,6 +93,20 @@ const DEFINITIONS := {
 	"spear_crimson": {"name": "Vörös végzet", "slot": "weapon", "rarity": "legendary", "weapon_type": "spear",
 		"base": [4, 6], "scaling": 1.0, "crit": 2.25,
 		"stats": {"attack_range": [18, 26], "attack_speed": [8, 15], "crit_chance": [8, 12], "damage_percent": [5, 8]}},
+	# Íjak: nyilat lőnek a kurzor felé, a Távolsági sebzés erősíti őket (az íjász bónuszt kap rájuk).
+	"bow_old": {"name": "Régi íj", "slot": "weapon", "rarity": "common", "weapon_type": "bow", "shop": false,
+		"base": [1, 1], "scaling": 1.0, "crit": 1.5, "stats": {},
+		"description": "Kopott, de még feszül a húrja. Az íjász első íja."},
+	"bow_hunter": {"name": "Vadászíj", "slot": "weapon", "rarity": "common", "weapon_type": "bow",
+		"base": [2, 2], "scaling": 0.8, "crit": 1.5, "stats": {"attack_range": [5, 10]}},
+	"bow_long": {"name": "Hosszúíj", "slot": "weapon", "rarity": "rare", "weapon_type": "bow",
+		"base": [2, 3], "scaling": 0.9, "crit": 1.6, "stats": {"attack_range": [15, 25], "crit_chance": [2, 4]}},
+	"bow_flame": {"name": "Lángíj", "slot": "weapon", "rarity": "epic", "weapon_type": "bow",
+		"base": [3, 4], "scaling": 1.0, "crit": 1.75,
+		"stats": {"ranged_damage": [1, 2], "attack_speed": [8, 12], "damage_percent": [3, 6]}},
+	"bow_star": {"name": "Csillagíj", "slot": "weapon", "rarity": "legendary", "weapon_type": "bow",
+		"base": [4, 5], "scaling": 1.2, "crit": 2.0,
+		"stats": {"ranged_damage": [2, 3], "attack_range": [15, 25], "crit_chance": [8, 12], "damage_percent": [6, 10]}},
 	# Sisakok
 	"helmet_leather": {"name": "Bőrsapka", "slot": "helmet", "rarity": "common",
 		"stats": {"max_health": [2, 4], "crit_chance": [1, 2]}},
@@ -337,8 +354,9 @@ static func describe_bbcode(item: Dictionary) -> String:
 		lines.append("[color=#%s]Típus: %s  →  %s helyre tehető[/color]"
 			% [SLOT_NOTE_INK.to_html(false), kind, slot_name(item)])
 	if item.has("base_damage"):
-		lines.append("[color=#%s]Alapsebzés: %d  ·  +%d%% közelharci sebzés\nKritikus szorzó: ×%s[/color]" % [
-			WEAPON_NOTE_INK.to_html(false), item["base_damage"], roundi(item["scaling"] * 100.0),
+		var scaling_stat := "távolsági" if item.get("weapon_type", "") == "bow" else "közelharci"
+		lines.append("[color=#%s]Alapsebzés: %d  ·  +%d%% %s sebzés\nKritikus szorzó: ×%s[/color]" % [
+			WEAPON_NOTE_INK.to_html(false), item["base_damage"], roundi(item["scaling"] * 100.0), scaling_stat,
 			str(item["crit_multiplier"])])
 	for stat: String in item.get("stats", {}):
 		var value: float = item["stats"][stat]

@@ -146,8 +146,8 @@ func _on_health_changed(current: int, maximum: int) -> void:
 
 func _on_stats_changed() -> void:
 	var player := _stats.get_parent()
-	_stats_label.text = "Sebzés / ütés: %d\nKözelharci: %+d\nSebzés: %+d%%\nÉlet: %d\nRegen: %.1f / mp\nVédelem: %d%%\nKikerülés: %d%%\nSebesség: %d%%\nÜtési seb.: %d%%\nKritikus: %d%%\nHatótáv: %d%%" % [
-		player.call("hit_damage"), _stats.damage, _stats.damage_percent, _stats.max_health,
+	_stats_label.text = "Sebzés / ütés: %d\nKözelharci: %+d\nTávolsági: %+d\nSebzés: %+d%%\nÉlet: %d\nRegen: %.1f / mp\nVédelem: %d%%\nKikerülés: %d%%\nSebesség: %d%%\nÜtési seb.: %d%%\nKritikus: %d%%\nHatótáv: %d%%" % [
+		player.call("hit_damage"), _stats.damage, _stats.ranged_damage, _stats.damage_percent, _stats.max_health,
 		_stats.health_regen, _stats.defense, _stats.dodge, _stats.move_speed, _stats.attack_speed,
 		_stats.crit_chance, _stats.attack_range,
 	]

@@ -75,6 +75,7 @@ func _refresh() -> void:
 	_section(_left, "Tulajdonságok", 4)
 	_stat_row("damage", "Közelharci sebzés", "%+d" % stats.damage,
 		"×%d%% a fegyver szerint" % roundi(_player.call("weapon_scaling") * 100.0))
+	_stat_row("ranged_damage", "Távolsági sebzés", "%+d" % stats.ranged_damage, "az íjakat erősíti")
 	_stat_row("damage_percent", "Sebzés", "%+d%%" % stats.damage_percent, "minden találat")
 	_stat_row("max_health", "Élet", "%d / %d" % [health.current, health.max_health], "")
 	_stat_row("health_regen", "Regeneráció", "%.1f / mp" % stats.health_regen, "")
@@ -96,7 +97,9 @@ func _refresh() -> void:
 	var scaling: float = _player.call("weapon_scaling")
 	var hit: int = _player.call("hit_damage")
 	_pair("Alapsebzés", str(base))
-	_pair("Képlet", "(%d + %d × %d%%) × %d%%" % [base, stats.damage, roundi(scaling * 100.0), 100 + stats.damage_percent])
+	var scaled_stat: int = stats.ranged_damage if weapon and weapon.get("weapon_type", "") == "bow" else stats.damage
+	_pair("Képlet", "(%d + %d × %d%%) × %d%%" % [base, scaled_stat, roundi(scaling * 100.0), 100 + stats.damage_percent])
+	_pair("Karakter", Characters.data(Progress.character)["name"])
 	_pair("Sebzés / ütés", str(hit))
 	_pair("Kritikus ütés", str(roundi(hit * float(_player.call("weapon_crit_multiplier")))))
 	# Különleges tárgy-képességek (csak ha van ilyen).

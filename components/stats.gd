@@ -13,7 +13,7 @@ extends Node
 signal changed
 
 const NAMES: Array[String] = [
-	"damage", "damage_percent", "max_health", "health_regen", "dodge", "move_speed", "attack_speed",
+	"damage", "ranged_damage", "damage_percent", "max_health", "health_regen", "dodge", "move_speed", "attack_speed",
 	"crit_chance", "attack_range", "defense",
 ]
 const MAX_RANGE := 200
@@ -34,6 +34,7 @@ const SPECIAL: Array[String] = ["lifesteal", "thorns", "gold_find", "xp_bonus"]
 ## fejlesztésen felül). A tört részek összeadódnak, pl. a közelharci sebzés 10 szintenként +1.
 const LEVEL_GROWTH := {
 	"damage": 0.1,
+	"ranged_damage": 0.1,
 	"damage_percent": 1.0,
 	"max_health": 1.0,
 	"health_regen": 0.02,
@@ -47,6 +48,7 @@ const LEVEL_GROWTH := {
 ## A végső értékek korlátai: [min, max].
 const LIMITS := {
 	"damage": [-99, 999],
+	"ranged_damage": [-99, 999],
 	"damage_percent": [-90, 999],
 	"max_health": [1, 9999],
 	"health_regen": [0.0, 99.0],
@@ -63,6 +65,11 @@ const LIMITS := {
 @export var base_damage := 0.0:
 	set(value):
 		base_damage = value
+		changed.emit()
+## Távolsági sebzés: ugyanígy, csak az íjak skálázódnak vele.
+@export var base_ranged_damage := 0.0:
+	set(value):
+		base_ranged_damage = value
 		changed.emit()
 ## Sebzés %: minden találat ennyi százalékkal nagyobb (negatív = kisebb).
 @export var base_damage_percent := 0.0:
@@ -114,6 +121,8 @@ const LIMITS := {
 # Végső értékek (alap + tárgyak, korlátozva). Csak olvasásra.
 var damage: int:
 	get: return floori(_final("damage"))
+var ranged_damage: int:
+	get: return floori(_final("ranged_damage"))
 var damage_percent: int:
 	get: return floori(_final("damage_percent"))
 var max_health: int:
@@ -158,8 +167,9 @@ func apply_level_growth() -> void:
 
 
 ## Egy találat sebzése a fegyver alapsebzéséből és skálázásából (lásd fent).
-func hit_damage(weapon_base: float, scaling: float) -> int:
-	var raw := weapon_base + damage * scaling
+## `ranged`: íjnál a Távolsági sebzés skálázódik a Közelharci helyett.
+func hit_damage(weapon_base: float, scaling: float, ranged := false) -> int:
+	var raw := weapon_base + (ranged_damage if ranged else damage) * scaling
 	return maxi(1, roundi(raw * (1.0 + damage_percent / 100.0)))
 
 

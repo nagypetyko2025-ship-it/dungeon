@@ -61,6 +61,8 @@ const FIRE_TILE := Vector2i(22, 17)
 const CAMP_RADIUS := Vector2(9.5, 6.0)
 ## Az út sorai (2 csempe széles), keletre a tábortól az erdő széléig.
 const ROAD_ROW := 17
+## A világ keleti széle (a város mögötti erdő vége).
+const WORLD_END_X := 94 + FOREST_DEPTH
 
 @onready var _ground: TileMapLayer = $Ground
 @onready var _dirt_layer: TileMapLayer = $Dirt
@@ -84,6 +86,9 @@ var _merchant_panel: CanvasLayer
 var _npc_position := Vector2.ZERO
 ## Pihenő közben (főellenség után kimentél) vagy.
 var _on_break := false
+var _town: Town
+var _toast_label: Label
+var _toast_tween: Tween
 ## A kazamata lépcsője (pihenő közben rács van rajta).
 var _stairs_node: Area2D
 var _gold_label: Label
@@ -116,6 +121,13 @@ func _ready() -> void:
 	_build_bounds()
 	_build_fireflies()
 	_build_ui()
+	# A város (a kocsmával) az erdőn átvezető út végén.
+	_town = Town.new()
+	_town.name = "Town"
+	add_child(_town)
+	_town.setup(self)
+	_town.build()
+	_town.message.connect(_toast)
 	_upgrades_panel = CAMP_UPGRADES.new()
 	_upgrades_panel.name = "CampUpgrades"
 	add_child(_upgrades_panel)
@@ -201,7 +213,7 @@ func _build_ground() -> void:
 	for i in GRASS_TILES.size():
 		grass.create_tile(Vector2i(i, 0))
 	_ground.tile_set = tile_set
-	for x in range(-FOREST_DEPTH, SIZE.x + FOREST_DEPTH):
+	for x in range(-FOREST_DEPTH, WORLD_END_X):
 		for y in range(-FOREST_DEPTH, SIZE.y + FOREST_DEPTH):
 			_ground.set_cell(Vector2i(x, y), GRASS_SOURCE, Vector2i(randi() % GRASS_TILES.size(), 0))
 
@@ -232,13 +244,16 @@ func _build_dirt() -> void:
 	for y in range(STAIRS_TILE.y + 2, FIRE_TILE.y):
 		for dx in range(-1, 2):
 			_dirt[Vector2i(STAIRS_TILE.x + dx, y)] = true
-	# Az út: a tisztáson kicsit kanyarog, az erdőben egyenesen megy tovább.
-	for x in range(FIRE_TILE.x + 5, SIZE.x + FOREST_DEPTH):
+	# Az út: a tisztáson kicsit kanyarog, az erdőben egyenesen megy tovább a városig, és át rajta.
+	for x in range(FIRE_TILE.x + 5, Town.RECT.end.x):
 		var row := ROAD_ROW
 		if x < SIZE.x - 2:
 			row += roundi(sin(x * 0.45) * 1.0)
 		_dirt[Vector2i(x, row)] = true
 		_dirt[Vector2i(x, row + 1)] = true
+	# Ösvény a kocsma ajtajától az útig.
+	for tile in Town.path_tiles():
+		_dirt[tile] = true
 	var tile_set := TileSet.new()
 	tile_set.tile_size = Vector2i(16, 16)
 	var source := TileSetAtlasSource.new()
@@ -448,6 +463,16 @@ func _build_trees() -> void:
 			var edge := mini(mini(x, SIZE.x - 1 - x), mini(y, SIZE.y - 1 - y))
 			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.35):
 				_tree(tile, randf() < 0.6, true)
+	# A város tisztásának szélén is fasor (az épület és az út kimarad).
+	var town := Town.RECT
+	for x in range(town.position.x, town.end.x):
+		for y in range(town.position.y, town.end.y):
+			var tile := Vector2i(x, y)
+			if _blocked.has(tile) or Town.blocked_rect().has_point(tile):
+				continue
+			var edge := mini(mini(x - town.position.x, town.end.x - 1 - x), mini(y - town.position.y, town.end.y - 1 - y))
+			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.3):
+				_tree(tile, randf() < 0.6, true)
 	var free_area := Rect2i(Vector2i(3, 3), SIZE - Vector2i(6, 6))
 	for i in 110:
 		var tile := Vector2i(randi_range(free_area.position.x, free_area.end.x), randi_range(free_area.position.y, free_area.end.y))
@@ -465,20 +490,27 @@ func _build_trees() -> void:
 ## Sűrű erdő a tisztáson túl, ameddig a kamera ellát (beljebb egyre sötétebb).
 ## Ezeknek a fáknak nincs ütközőjük (oda úgysem lehet bemenni), az útra nem kerül fa.
 func _build_forest() -> void:
-	for x in range(-FOREST_DEPTH, SIZE.x + FOREST_DEPTH):
+	for x in range(-FOREST_DEPTH, WORLD_END_X):
 		for y in range(-FOREST_DEPTH, SIZE.y + FOREST_DEPTH):
 			var tile := Vector2i(x, y)
-			if Rect2i(Vector2i.ZERO, SIZE).has_point(tile) or _dirt.has(tile):
+			if Rect2i(Vector2i.ZERO, SIZE).has_point(tile) or Town.RECT.has_point(tile) or _dirt.has(tile):
 				continue
 			if _dirt.has(tile + Vector2i.UP) or _dirt.has(tile + Vector2i.DOWN):
 				if randf() < 0.6:
 					continue
 			# Hány csempére van a tisztás szélétől.
-			var depth := maxi(maxi(-x, x - SIZE.x + 1), maxi(-y, y - SIZE.y + 1))
+			var depth := mini(_outside_distance(tile, Rect2i(Vector2i.ZERO, SIZE)), _outside_distance(tile, Town.RECT))
 			var shade := clampf(1.0 - depth * 0.06, 0.35, 1.0)
 			var tree := _tree(tile, randf() < 0.75, false)
 			tree.position += Vector2(randf_range(-8, 8), randf_range(-6, 6))
 			tree.modulate = Color(shade, shade, shade * 1.05)
+
+
+## Hány csempére van egy csempe a téglalapon kívül (0, ha benne van).
+func _outside_distance(tile: Vector2i, rect: Rect2i) -> int:
+	var dx := maxi(maxi(rect.position.x - tile.x, tile.x - rect.end.x + 1), 0)
+	var dy := maxi(maxi(rect.position.y - tile.y, tile.y - rect.end.y + 1), 0)
+	return maxi(dx, dy)
 
 
 func _tree(tile: Vector2i, tall: bool, solid: bool) -> Node2D:
@@ -516,10 +548,64 @@ func _build_bounds() -> void:
 	var gap_bottom := (ROAD_ROW + 2) * TILE
 	_solid(Rect2(Vector2(area.end.x, 0), Vector2(thickness, gap_top)))
 	_solid(Rect2(Vector2(area.end.x, gap_bottom), Vector2(thickness, area.size.y - gap_bottom)))
-	var road_end := (SIZE.x + FOREST_DEPTH) * TILE
-	_solid(Rect2(Vector2(area.end.x, gap_top - thickness), Vector2(road_end - area.end.x, thickness)))
-	_solid(Rect2(Vector2(area.end.x, gap_bottom), Vector2(road_end - area.end.x, thickness)))
-	_solid(Rect2(Vector2(road_end - TILE, gap_top), Vector2(TILE, gap_bottom - gap_top)))
+	# Az út folyosója az erdőn át a városig.
+	var town := Rect2(Vector2(Town.RECT.position) * TILE, Vector2(Town.RECT.size) * TILE)
+	_solid(Rect2(Vector2(area.end.x, gap_top - thickness), Vector2(town.position.x - area.end.x, thickness)))
+	_solid(Rect2(Vector2(area.end.x, gap_bottom), Vector2(town.position.x - area.end.x, thickness)))
+	# A város tisztása körül (nyugaton nyílás az útnál; keleten egyelőre zárva).
+	_solid(Rect2(town.position - Vector2(thickness, thickness), Vector2(town.size.x + thickness * 2, thickness)))
+	_solid(Rect2(Vector2(town.position.x - thickness, town.end.y), Vector2(town.size.x + thickness * 2, thickness)))
+	_solid(Rect2(Vector2(town.end.x, town.position.y), Vector2(thickness, town.size.y)))
+	_solid(Rect2(Vector2(town.position.x - thickness, town.position.y), Vector2(thickness, gap_top - town.position.y)))
+	_solid(Rect2(Vector2(town.position.x - thickness, gap_bottom), Vector2(thickness, town.end.y - gap_bottom)))
+
+
+## Átlépés egy másik helyre elsötétüléssel (pl. be a kocsmába): `limits` a kamera határai
+## (üres = a szabadtéri határok), `light` a szín-hangulat (fekete = az esti szürkület).
+func teleport_player(at: Vector2, limits: Rect2, light: Color) -> void:
+	var tween := create_tween()
+	tween.tween_property(_fade, "color:a", 1.0, 0.25)
+	await tween.finished
+	_player.global_position = at
+	var camera: Camera2D = _player.get_node("Camera2D")
+	if limits.has_area():
+		camera.limit_left = int(limits.position.x)
+		camera.limit_top = int(limits.position.y)
+		camera.limit_right = int(limits.end.x)
+		camera.limit_bottom = int(limits.end.y)
+	else:
+		_setup_camera()
+	camera.reset_smoothing()
+	$CanvasModulate.color = EVENING if light == Color.BLACK else light
+	create_tween().tween_property(_fade, "color:a", 0.0, 0.3)
+
+
+## Rövid felirat a képernyő közepén (pl. a kocsmáros szavai), ami magától elhalványul.
+func _toast(text: String) -> void:
+	if _toast_label == null:
+		var layer := CanvasLayer.new()
+		layer.layer = 6
+		add_child(layer)
+		_toast_label = Label.new()
+		_toast_label.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
+		_toast_label.add_theme_font_size_override("font_size", 24)
+		_toast_label.add_theme_color_override("font_color", MenuStyle.PARCHMENT)
+		_toast_label.add_theme_color_override("font_outline_color", MenuStyle.SHADOW)
+		_toast_label.add_theme_constant_override("outline_size", 8)
+		_toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_toast_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_toast_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+		_toast_label.offset_top = 150
+		_toast_label.offset_left = -600
+		_toast_label.offset_right = 600
+		layer.add_child(_toast_label)
+	_toast_label.text = text
+	_toast_label.modulate.a = 1.0
+	if _toast_tween:
+		_toast_tween.kill()
+	_toast_tween = create_tween()
+	_toast_tween.tween_interval(3.0)
+	_toast_tween.tween_property(_toast_label, "modulate:a", 0.0, 0.8)
 
 
 ## A kamera nem lát túl az erdő szélén (ott már nincs semmi).
@@ -527,7 +613,7 @@ func _setup_camera() -> void:
 	var camera: Camera2D = _player.get_node("Camera2D")
 	camera.limit_left = -FOREST_DEPTH * TILE
 	camera.limit_top = -FOREST_DEPTH * TILE
-	camera.limit_right = (SIZE.x + FOREST_DEPTH) * TILE
+	camera.limit_right = WORLD_END_X * TILE
 	camera.limit_bottom = (SIZE.y + FOREST_DEPTH) * TILE
 
 

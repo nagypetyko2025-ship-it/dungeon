@@ -14,6 +14,7 @@ const COSTS: Array[int] = [100, 200, 300, 400, 500]
 const UPGRADES := {
 	"strength": {"name": "Erőedzés", "stat": "damage_percent", "per_level": 3, "costs": COSTS},
 	"weapon_mastery": {"name": "Fegyverforgatás", "stat": "damage", "per_level": 1, "costs": COSTS},
+	"archery": {"name": "Íjásztréning", "stat": "ranged_damage", "per_level": 1, "costs": COSTS},
 	"vitality": {"name": "Edzett test", "stat": "max_health", "per_level": 3, "costs": COSTS},
 	"herbalism": {"name": "Gyógynövénytan", "stat": "health_regen", "per_level": 0.1, "costs": COSTS},
 	"shield_training": {"name": "Pajzsgyakorlat", "stat": "defense", "per_level": 2, "costs": COSTS},
@@ -26,13 +27,18 @@ const UPGRADES := {
 
 ## A táborban váró arany (halálkor, kilépéskor, és a főellenség utáni visszatéréskor kerül ide).
 static var camp_gold := 0
-## fejlesztés -> szint
+## Az aktív (játszott) karakter (lásd Characters).
+static var character := Characters.DEFAULT
+## Az aktív karakter fejlesztései: fejlesztés -> szint (minden karakternek külön).
 static var upgrades := {}
-## A tábori ládában váró tárgyak (a tárgylifttel / a főellenség után felküldve).
+## A tábori ládában váró tárgyak (közös; a tárgylifttel / a főellenség után felküldve).
 static var stash: Array = []
-## A táborban nálad lévő felszerelés (Inventory.save_data); üres = kezdő felszerelés.
-## Leszálláskor magaddal viszed (és innen törlődik).
+## Az aktív karakter tábori felszerelése (Inventory.save_data); üres = kezdő felszerelés.
+## Leszálláskor magaddal viszed (és innen törlődik). Minden karakternek külön.
 static var camp_inventory := {}
+## karakter -> fejlesztései / tábori felszerelése (az aktívé a fenti kettőben is).
+static var _all_upgrades := {}
+static var _all_inventories := {}
 static var _loaded := false
 
 
@@ -46,28 +52,46 @@ static func load_game(force := false) -> void:
 		return
 	_loaded = true
 	camp_gold = 0
-	upgrades = {}
+	character = Characters.DEFAULT
+	_all_upgrades = {}
+	_all_inventories = {}
+	stash = []
 	var config := ConfigFile.new()
-	if config.load(PATH) != OK:
-		return
-	camp_gold = int(config.get_value("camp", "gold", 0))
-	var saved: Variant = config.get_value("camp", "upgrades", {})
-	if saved is Dictionary:
-		upgrades = saved
-	var saved_stash: Variant = config.get_value("camp", "stash", [])
-	if saved_stash is Array:
-		stash = saved_stash
-	var saved_inventory: Variant = config.get_value("camp", "inventory", {})
-	if saved_inventory is Dictionary:
-		camp_inventory = saved_inventory
+	if config.load(PATH) == OK:
+		camp_gold = int(config.get_value("camp", "gold", 0))
+		character = str(config.get_value("camp", "character", Characters.DEFAULT))
+		if not Characters.ALL.has(character):
+			character = Characters.DEFAULT
+		var by_character: Variant = config.get_value("camp", "upgrades_by_character") \
+			if config.has_section_key("camp", "upgrades_by_character") else null
+		if by_character is Dictionary:
+			_all_upgrades = by_character
+		else:
+			# Régi mentés (még egy karakter volt): a fejlesztések a lovagéi.
+			var old: Variant = config.get_value("camp", "upgrades", {})
+			_all_upgrades = {Characters.DEFAULT: old if old is Dictionary else {}}
+		var inventories: Variant = config.get_value("camp", "inventory_by_character") \
+			if config.has_section_key("camp", "inventory_by_character") else null
+		if inventories is Dictionary:
+			_all_inventories = inventories
+		else:
+			var old_inventory: Variant = config.get_value("camp", "inventory", {})
+			_all_inventories = {Characters.DEFAULT: old_inventory if old_inventory is Dictionary else {}}
+		var saved_stash: Variant = config.get_value("camp", "stash", [])
+		if saved_stash is Array:
+			stash = saved_stash
+	_activate(character)
 
 
 static func save_game() -> void:
+	_all_upgrades[character] = upgrades
+	_all_inventories[character] = camp_inventory
 	var config := ConfigFile.new()
 	config.set_value("camp", "gold", camp_gold)
-	config.set_value("camp", "upgrades", upgrades)
+	config.set_value("camp", "character", character)
+	config.set_value("camp", "upgrades_by_character", _all_upgrades)
+	config.set_value("camp", "inventory_by_character", _all_inventories)
 	config.set_value("camp", "stash", stash)
-	config.set_value("camp", "inventory", camp_inventory)
 	config.save(PATH)
 
 
@@ -75,10 +99,29 @@ static func save_game() -> void:
 static func reset_game() -> void:
 	_loaded = true
 	camp_gold = 0
-	upgrades = {}
+	_all_upgrades = {}
+	_all_inventories = {}
 	stash = []
-	camp_inventory = {}
+	_activate(Characters.DEFAULT)
 	save_game()
+
+
+## Másik karakterre váltás (a kocsmában): a saját fejlesztései és felszerelése töltődnek be.
+static func select_character(id: String) -> void:
+	load_game()
+	save_game()
+	_activate(id)
+	save_game()
+
+
+static func _activate(id: String) -> void:
+	character = id
+	if not _all_upgrades.has(id):
+		_all_upgrades[id] = {}
+	if not _all_inventories.has(id):
+		_all_inventories[id] = {}
+	upgrades = _all_upgrades[id]
+	camp_inventory = _all_inventories[id]
 
 
 ## Egy tárgy a tábori ládába (mentve).
