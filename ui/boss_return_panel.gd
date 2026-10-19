@@ -1,15 +1,20 @@
 extends CanvasLayer
-## A főellenség legyőzése után felajánlott visszatérés a táborba: a pénzed RATIO része
-## és egy általad választott tárgy (a felszerelésedből vagy a táskádból) a táborba
-## kerül (a tábori ládába), a többi elveszik. "Maradok": tovább lehet menni a mélybe.
+## A főellenség legyőzése után: kimehetsz pihenni a táborba. Egy általad választott
+## tárgyat a tábori ládába küldhetsz (végleg megmarad), a többi felszerelésed, a
+## szinted és a statjaid megmaradnak: a táborban a kék portálon át a következő
+## emeletről folytatod. A pénzed kiviheted (a táborban a vándorárusnál elköltheted,
+## a maradékot visszaviszed), vagy bent hagyhatod (visszatéréskor visszakapod).
+## "Maradok": tovább lehet menni a lépcsőn.
 
-const RATIO := 0.7
 const CAMP := "res://world/camp.tscn"
+const FALLBACK_WEAPON := "sword_rusty"
 
 var _grid: ItemGrid
 var _items: Array = []
+## Minden tárgyhoz: ["equip", hely] vagy ["bag", index].
+var _sources: Array = []
 var _selected := -1
-var _gold_label: Label
+var _take_gold: CheckBox
 var _info_title: Label
 var _info_text: RichTextLabel
 var _choice_label: Label
@@ -25,19 +30,21 @@ func _ready() -> void:
 func open() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	var inventory: Inventory = player.get_node("Inventory")
-	# Minden tárgy: előbb a felszerelés, aztán a táska.
 	_items = []
+	_sources = []
 	for slot in Inventory.EQUIPMENT_SLOTS:
 		if inventory.equipment[slot] != null:
 			_items.append(inventory.equipment[slot])
-	for item in inventory.bag:
-		if item != null:
-			_items.append(item)
+			_sources.append(["equip", slot])
+	for i in inventory.bag.size():
+		if inventory.bag[i] != null:
+			_items.append(inventory.bag[i])
+			_sources.append(["bag", i])
 	_grid.set_items(_items, 12)
 	_selected = -1
-	var gold: int = player.get("gold")
-	_gold_label.text = "Megmentett arany: %d (a %d arany %d%%-a)" % [floori(gold * RATIO), gold, roundi(RATIO * 100)]
-	_choice_label.text = "Kiválasztott tárgy: nincs"
+	_take_gold.text = "Kiviszem a pénzem (%d arany) — a táborban a vándorárusnál elköltheted" % int(player.get("gold"))
+	_take_gold.button_pressed = true
+	_choice_label.text = "A ládába küldött tárgy: nincs kiválasztva"
 	_show_item(null)
 	visible = true
 
@@ -59,27 +66,26 @@ func _build() -> void:
 	window.add_theme_stylebox_override("panel", UiStyle.decorated_panel())
 	center.add_child(window)
 	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 12)
+	root.add_theme_constant_override("separation", 10)
 	window.add_child(root)
-	root.add_child(UiStyle.title_bar("Győzelem! Vissza a táborba?"))
-	root.add_child(UiStyle.label("Ha most visszatérsz, a pénzed %d%%-át és EGY általad választott tárgyat megtartasz\n"
-		% roundi(RATIO * 100) + "(a tábori ládába kerül) — a többi elveszik. Maradhatsz is, és mehetsz tovább a mélybe.",
-		15, UiStyle.INK_LIGHT))
-	_gold_label = UiStyle.label("", 18, Color(0.6, 0.38, 0.05))
-	root.add_child(_gold_label)
+	root.add_child(UiStyle.title_bar("Győzelem! Kimész pihenni?"))
+	root.add_child(UiStyle.label("Kimehetsz a táborba pihenni: egy általad választott tárgyat a tábori ládába küldhetsz (végleg megmarad),\n"
+		+ "a többi felszerelésed, a szinted és a statjaid megmaradnak. A táborban a kék portálon át a következő emeletről\n"
+		+ "folytatod. Pihenő közben a fejlesztések és a láda zárva, de a vándorárustól vásárolhatsz.", 15, UiStyle.INK_LIGHT))
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 20)
 	root.add_child(columns)
 	var left := VBoxContainer.new()
 	columns.add_child(left)
-	left.add_child(UiStyle.label("Válaszd ki, melyik tárgyat viszed haza", 17, UiStyle.INK))
+	left.add_child(UiStyle.label("Melyik tárgy kerüljön a tábori ládába? (nem kötelező)", 17, UiStyle.INK))
 	_grid = ItemGrid.new()
 	_grid.columns = 6
 	_grid.item_clicked.connect(func(index: int) -> void:
-		_selected = index
-		_grid.select(index)
-		_choice_label.text = "Kiválasztott tárgy: %s" % _items[index]["name"]
+		# Újra rákattintva visszavonja a választást.
+		_selected = -1 if _selected == index else index
+		_grid.select(_selected)
+		_choice_label.text = "A ládába küldött tárgy: %s" % (_items[_selected]["name"] if _selected >= 0 else "nincs kiválasztva")
 		_show_item(_items[index]))
 	_grid.item_hovered.connect(func(index: int) -> void: _show_item(_grid.item_at(index)))
 	left.add_child(_grid)
@@ -104,13 +110,23 @@ func _build() -> void:
 	_info_text.add_theme_font_size_override("normal_font_size", 15)
 	info_box.add_child(_info_text)
 
+	_take_gold = CheckBox.new()
+	_take_gold.add_theme_font_size_override("font_size", 17)
+	_take_gold.add_theme_color_override("font_color", UiStyle.INK)
+	_take_gold.add_theme_color_override("font_hover_color", UiStyle.INK)
+	_take_gold.add_theme_color_override("font_pressed_color", UiStyle.INK)
+	_take_gold.add_theme_color_override("font_hover_pressed_color", UiStyle.INK)
+	root.add_child(_take_gold)
+	root.add_child(UiStyle.label("Ha bent hagyod, a táborban nem költheted el, de visszatéréskor újra nálad lesz.", 14, UiStyle.INK_LIGHT))
+
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 20)
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	root.add_child(buttons)
-	var go_home := MenuStyle.button("Vissza a táborba")
-	go_home.pressed.connect(_return_to_camp)
-	buttons.add_child(go_home)
+	var go_out := MenuStyle.button("Kimegyek a táborba")
+	go_out.custom_minimum_size.x = 380
+	go_out.pressed.connect(_go_to_camp)
+	buttons.add_child(go_out)
 	var stay := MenuStyle.button("Maradok")
 	stay.pressed.connect(func() -> void: get_tree().current_scene.get_node("Menus").call("close_current"))
 	buttons.add_child(stay)
@@ -126,13 +142,27 @@ func _show_item(item: Variant) -> void:
 	_info_text.text = Items.describe_bbcode(item)
 
 
-func _return_to_camp() -> void:
+func _go_to_camp() -> void:
 	var player := get_tree().get_first_node_in_group("player")
-	Progress.rescue_gold(int(player.get("gold")), RATIO)
+	var inventory: Inventory = player.get_node("Inventory")
 	if _selected >= 0:
+		var source: Array = _sources[_selected]
 		Progress.add_to_stash(_items[_selected])
-	Records.submit_run(player)
+		if source[0] == "bag":
+			inventory.take_from_bag(source[1])
+		else:
+			inventory.equipment[source[1]] = null
+			# Fegyver nélkül nem lehet harcolni: a rozsdás kard kerül a helyére.
+			if source[1] == "weapon":
+				inventory.equipment["weapon"] = Items.create(FALLBACK_WEAPON)
+			inventory.changed.emit()
+	player.call("save_state")
+	if not _take_gold.button_pressed:
+		GameState.break_gold_left = GameState.saved_gold
+		GameState.saved_gold = 0
+	GameState.on_break = true
+	GameState.exits += 1
+	GameState.merchant_stock = []
 	Audio.play("level_up")
-	GameState.reset()
 	get_tree().paused = false
 	get_tree().change_scene_to_file(CAMP)

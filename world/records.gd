@@ -24,10 +24,10 @@ static func top() -> Array[Dictionary]:
 
 
 ## Elmenti a futást; visszaadja, hányadik helyre került (1–5), vagy 0-t, ha nem fért be.
-static func submit(depth: int, gold: int, kills: int, level: int, time: float) -> int:
+static func submit(depth: int, gold: int, kills: int, level: int, time: float, exits := 0) -> int:
 	var entry := {
 		"depth": depth, "gold": gold, "kills": kills, "level": level,
-		"time": int(time), "date": Time.get_date_string_from_system(),
+		"time": int(time), "date": Time.get_date_string_from_system(), "exits": exits,
 	}
 	var entries := top()
 	entries.append(entry)
@@ -46,7 +46,8 @@ static func submit_run(player: Node) -> int:
 		return 0
 	GameState.run_recorded = true
 	var experience: Experience = player.get_node("Experience")
-	return submit(GameState.depth, int(player.get("gold")), GameState.kills, experience.level, GameState.run_time)
+	var gold := int(player.get("gold")) + GameState.break_gold_left
+	return submit(GameState.depth, gold, GameState.kills, experience.level, GameState.run_time, GameState.exits)
 
 
 static func _better(a: Dictionary, b: Dictionary) -> bool:

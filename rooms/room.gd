@@ -64,6 +64,8 @@ var visited := false
 var has_boss := false
 ## A tárgylift jobb oldali csempéjének x-e (csak a bolt szobájában; a fáklyák kikerülik).
 var lift_x := -99999
+## A szoba lépcsője (ha van): a harc végéig rács van rajta.
+var _stairs: Node2D
 var alcove_dir := Vector2i.ZERO
 
 var _fought := false
@@ -90,7 +92,11 @@ func _ready() -> void:
 	position = tile_center(anchor)
 	_used_tiles[anchor] = true
 	if has_stairs:
-		_add_at_tile(stairs_scene, _traps, anchor).connect("used", stairs_used.emit)
+		_stairs = _add_at_tile(stairs_scene, _traps, anchor)
+		_stairs.connect("used", stairs_used.emit)
+		# Rács a lépcsőn, amíg a szoba szörnyei élnek.
+		if enemy_count > 0:
+			_stairs.call("set_locked", true)
 	if has_shop:
 		_place_shop()
 	if has_boss:
@@ -477,6 +483,8 @@ func _finish_fight() -> void:
 		return
 	_cleared = true
 	_set_doors_locked(false)
+	if is_instance_valid(_stairs) and _stairs.call("is_locked"):
+		_stairs.call("set_locked", false)
 	if has_chest:
 		_spawn_chest.call_deferred()
 	cleared.emit()

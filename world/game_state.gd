@@ -25,6 +25,17 @@ static var run_recorded := false
 static var lift_used_floor := 0
 ## Az arany egy része már a táborba került ebben a futásban (halálkor / kilépéskor egyszer).
 static var gold_rescued := false
+## Pihenő a táborban (főellenség után kimentél): a futás áll, a tárgyaid, szinted, statjaid
+## megvannak; a táborban a kék portálon át a következő emeletről folytatod.
+static var on_break := false
+## Ha nem vitted ki a pénzed a táborba, az "bent marad nálad": visszatéréskor visszakapod.
+static var break_gold_left := 0
+## Hányszor mentél ki pihenni ebben a futásban (az eredmények közé is bekerül).
+static var exits := 0
+## A tábori vándorárus kínálata a mostani pihenőre.
+static var merchant_stock: Array = []
+## Szintlépéskor hányszor dobtad újra a fejlesztéseket (minden újradobás drágább).
+static var rerolls := 0
 
 ## Az ablak már teljes képernyőre lett állítva indításkor (nem a futás része, reset nem törli).
 static var display_initialized := false
@@ -44,3 +55,8 @@ static func reset() -> void:
 	run_recorded = false
 	lift_used_floor = 0
 	gold_rescued = false
+	on_break = false
+	break_gold_left = 0
+	exits = 0
+	merchant_stock = []
+	rerolls = 0

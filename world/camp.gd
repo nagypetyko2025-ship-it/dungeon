@@ -8,6 +8,9 @@ extends Node2D
 const DUNGEON_SCENE := "res://world/dungeon.tscn"
 const CAMP_UPGRADES := preload("res://ui/camp_upgrades.gd")
 const STASH_PANEL := preload("res://ui/stash_panel.gd")
+const MERCHANT_PANEL := preload("res://ui/merchant_panel.gd")
+const RETURN_PORTAL := preload("res://rooms/obstacles/return_portal.gd")
+const STAIRS_SCENE := preload("res://rooms/obstacles/stairs.tscn")
 ## A tábori láda képe (0x72 lap: csukott láda).
 const STASH_CHEST := Rect2(304, 416, 16, 16)
 const RPG: Texture2D = preload("res://assets/shop/kenney_rpg.png")
@@ -77,6 +80,12 @@ var _upgrades_panel: CanvasLayer
 ## A tábori láda helye (E-re nyílik a láda ablaka).
 var _stash_position := Vector2.ZERO
 var _stash_panel: CanvasLayer
+var _merchant_panel: CanvasLayer
+var _npc_position := Vector2.ZERO
+## Pihenő közben (főellenség után kimentél) vagy.
+var _on_break := false
+## A kazamata lépcsője (pihenő közben rács van rajta).
+var _stairs_node: Area2D
 var _gold_label: Label
 
 
@@ -86,9 +95,12 @@ func _ready() -> void:
 		GameState.display_initialized = true
 		if Audio.saved_fullscreen():
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-	# A táborban nincs futás: a játékos friss, és innen nem kerül semmi az eredmények közé.
-	GameState.reset()
-	GameState.run_recorded = true
+	# Pihenő (főellenség után kimentél): a futás áll, a játékos a futás állapotával van itt.
+	# Különben nincs futás: a játékos friss, és innen nem kerül semmi az eredmények közé.
+	_on_break = GameState.on_break
+	if not _on_break:
+		GameState.reset()
+		GameState.run_recorded = true
 	Progress.load_game()
 	Audio.music("menu")
 	GameCursor.apply()
@@ -110,17 +122,60 @@ func _ready() -> void:
 	_stash_panel = STASH_PANEL.new()
 	_stash_panel.name = "StashPanel"
 	add_child(_stash_panel)
+	_merchant_panel = MERCHANT_PANEL.new()
+	_merchant_panel.name = "MerchantPanel"
+	add_child(_merchant_panel)
 	# A táborban nálad lévő felszerelés mentett (a ládából kivett tárgyak nem vesznek el).
+	# Pihenő közben a futás felszerelése van nálad (az a futás része, nem a táboré).
 	var inventory: Inventory = _player.get_node("Inventory")
-	if not Progress.camp_inventory.is_empty():
-		inventory.load_data(Progress.camp_inventory)
-	inventory.changed.connect(func() -> void:
-		Progress.camp_inventory = inventory.save_data()
-		Progress.save_game())
+	if not _on_break:
+		if not Progress.camp_inventory.is_empty():
+			inventory.load_data(Progress.camp_inventory)
+		inventory.changed.connect(func() -> void:
+			Progress.camp_inventory = inventory.save_data()
+			Progress.save_game())
 	_setup_camera()
 	_player.global_position = _tile_center(STAIRS_TILE + Vector2i(0, 3))
+	if _on_break:
+		_setup_break()
 	_player.get_node("Camera2D").reset_smoothing()
 	_show_title()
+
+
+## Pihenő: rács a lépcsőn, kék portál a lépcső mellett (vissza a kazamatába, a következő emeletre).
+func _setup_break() -> void:
+	_stairs_node.call("set_locked", true)
+	var portal: Node2D = RETURN_PORTAL.new()
+	portal.prompt_text = "[E] Vissza a kazamatába (%d. emelet)" % (GameState.depth + 1)
+	portal.on_use = _return_to_dungeon
+	portal.position = _tile_center(STAIRS_TILE + Vector2i(5, 1))
+	add_child(portal)
+	_player.global_position = portal.position + Vector2(0, 50)
+
+
+## Ha pihenő közben bezárod a játékot, az a futás feladása: a pénzed 40%-a a táborba kerül.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and GameState.on_break and is_instance_valid(_player):
+		Records.submit_run(_player)
+		Progress.rescue_gold(int(_player.get("gold")) + GameState.break_gold_left, 0.4)
+
+
+## Vissza a kazamatába a pihenőből: a futás a következő emeletről folytatódik, minden
+## megmarad (a bent hagyott pénzt is visszakapod).
+func _return_to_dungeon() -> void:
+	if _leaving:
+		return
+	_leaving = true
+	Audio.play("stairs")
+	_player.call("save_state")
+	GameState.saved_gold += GameState.break_gold_left
+	GameState.break_gold_left = 0
+	GameState.on_break = false
+	GameState.depth += 1
+	var tween := create_tween()
+	tween.tween_property(_fade, "color:a", 1.0, 0.5)
+	await tween.finished
+	get_tree().change_scene_to_file(DUNGEON_SCENE)
 
 
 func _build_ground() -> void:
@@ -158,7 +213,13 @@ func _build_entrance() -> void:
 		for dy in range(-1, 2):
 			_sprite(SpriteSheet.region(STONE_FLOOR), _tile_center(STAIRS_TILE + Vector2i(dx, dy)), -8)
 			_blocked[STAIRS_TILE + Vector2i(dx, dy)] = true
-	_sprite(SpriteSheet.region(STAIRS_REGION), _stairs_position, -7)
+	# A lépcső (a kazamata lépcsője: pihenő közben rács kerül rá). Itt nem rálépésre,
+	# hanem E-re visz le, ezért a saját érzékelője ki van kapcsolva.
+	_stairs_node = STAIRS_SCENE.instantiate()
+	_stairs_node.position = _stairs_position
+	_stairs_node.z_index = -7
+	_stairs_node.monitoring = false
+	add_child(_stairs_node)
 
 
 ## Kitaposott föld: ovális tábor a tűz körül, ösvény fel a lépcsőhöz, és az út keletre.
@@ -217,7 +278,8 @@ func _build_camp() -> void:
 	_tent(FIRE_TILE + Vector2i(-4, 3), 1)
 	_campfire(_tile_center(FIRE_TILE))
 	# Az NPC a bal oldali sátor előtt, a tűz felé fordulva.
-	_npc(_tile_center(FIRE_TILE + Vector2i(-6, -1)) + Vector2(0, 6))
+	_npc_position = _tile_center(FIRE_TILE + Vector2i(-6, -1)) + Vector2(0, 6)
+	_npc(_npc_position)
 	# Hordók és ládák a jobb oldali sátor mellett, korsók a bal oldali mellett.
 	var right_tent := FIRE_TILE + Vector2i(5, -4)
 	# A jobb oldali sátor a kiképzősátor (előtte nem áll senki).
@@ -523,7 +585,7 @@ func _build_ui() -> void:
 	gold_box.add_theme_constant_override("separation", 10)
 	gold_box.alignment = BoxContainer.ALIGNMENT_END
 	gold_box.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	gold_box.offset_left = -360
+	gold_box.offset_left = -640
 	gold_box.offset_right = -28
 	gold_box.offset_top = 24
 	layer.add_child(gold_box)
@@ -558,7 +620,7 @@ func _show_title() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 4
 	add_child(layer)
-	var title := MenuStyle.title_label("Tábor", 72, MenuStyle.GOLD)
+	var title := MenuStyle.title_label("Tábor — pihenő" if _on_break else "Tábor", 72, MenuStyle.GOLD)
 	title.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	title.offset_top = 40
 	title.offset_left = -300
@@ -573,13 +635,18 @@ func _process(delta: float) -> void:
 	var near_stairs := _is_near_stairs()
 	var near_tent := _is_near_tent()
 	var near_stash := _is_near_stash()
+	var near_npc := _is_near_npc()
+	var any_near := near_stairs or near_tent or near_stash or near_npc
 	if near_stairs:
-		_prompt.text = "[E] Leszállás a mélybe"
+		_prompt.text = "A kazamata lezárva — a kék portálon át folytathatod" if _on_break else "[E] Leszállás a mélybe"
 	elif near_tent:
-		_prompt.text = "[E] Kiképzősátor"
+		_prompt.text = "Kiképzősátor — pihenő közben zárva" if _on_break else "[E] Kiképzősátor"
 	elif near_stash:
-		_prompt.text = "[E] Tábori láda (%d tárgy)" % Progress.stash.size()
-	var target := 1.0 if (near_stairs or near_tent or near_stash) and not _leaving and not get_tree().paused else 0.0
+		_prompt.text = "Tábori láda — pihenő közben zárva" if _on_break \
+			else "[E] Tábori láda (%d tárgy)" % Progress.stash.size()
+	elif near_npc:
+		_prompt.text = "[E] Gorm, a vándorárus" if _on_break else "Gorm: \"Majd ha visszajössz a mélyből...\""
+	var target := 1.0 if any_near and not _leaving and not get_tree().paused else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 	_update_gold()
 
@@ -587,17 +654,30 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("interact") or _leaving or get_tree().paused:
 		return
+	var near_something := _is_near_stairs() or _is_near_tent() or _is_near_stash() or _is_near_npc()
+	if not near_something:
+		return
+	get_viewport().set_input_as_handled()
+	if _on_break:
+		# Pihenő közben csak az árus használható (a kazamatába a kék portál visz vissza).
+		if _is_near_npc():
+			Audio.play("ui_open")
+			$Menus.open_menu(_merchant_panel)
+		else:
+			Audio.play("ui_error")
+		return
 	if _is_near_stairs():
-		get_viewport().set_input_as_handled()
 		_enter_dungeon()
 	elif _is_near_tent():
-		get_viewport().set_input_as_handled()
 		Audio.play("door_unlock", -6.0)
 		$Menus.open_menu(_upgrades_panel)
 	elif _is_near_stash():
-		get_viewport().set_input_as_handled()
 		Audio.play("chest_open", -4.0)
 		$Menus.open_menu(_stash_panel)
+
+
+func _is_near_npc() -> bool:
+	return is_instance_valid(_player) and _player.global_position.distance_to(_npc_position) < INTERACT_RANGE
 
 
 func _is_near_stash() -> bool:
@@ -611,6 +691,9 @@ func _is_near_tent() -> bool:
 func _update_gold() -> void:
 	if _gold_label:
 		_gold_label.text = str(Progress.camp_gold)
+		# Pihenő közben a futás pénze is látszik (ezt költheted az árusnál).
+		if _on_break:
+			_gold_label.text += "   ·   Nálad: %d" % int(_player.get("gold"))
 
 
 func _is_near_stairs() -> bool:

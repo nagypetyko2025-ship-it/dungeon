@@ -53,7 +53,7 @@ func _build() -> void:
 	window.add_child(root)
 	root.add_child(UiStyle.title_bar("Kiképzősátor"))
 	var intro: Label = UiStyle.label("Itt edzhetsz a következő leszállásra. A fejlesztések minden futásra érvényesek. Az árukat a táborba\n"
-		+ "került aranyból fizeted (halálkor a pénzed 20%-a, kilépéskor 40%-a, főellenség után visszatérve 70%-a jut ide).",
+		+ "került aranyból fizeted (halálkor a pénzed 20%-a, a futás feladásakor 40%-a jut ide).",
 		15, UiStyle.INK_LIGHT)
 	root.add_child(intro)
 

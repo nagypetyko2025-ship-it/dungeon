@@ -1,11 +1,17 @@
 extends Node2D
-## Visszaút a táborba: a legyőzött főellenség termében nyílik meg. E-re felajánlja
-## a visszatérést (ui/boss_return_panel.gd): a pénzed 70%-a és egy választott tárgy
-## a táborba kerül, a többi elveszik. Ha nem kéred, mehetsz tovább a lépcsőn.
+## Kék portál. A legyőzött főellenség termében: E-re felajánlja a kimenetelt a táborba
+## pihenni (ui/boss_return_panel.gd); ha nem kéred, mehetsz tovább a lépcsőn.
+## A táborban (pihenő közben) ugyanez a portál visz vissza a kazamatába: ott az
+## `on_use` hívódik a panel helyett.
 
 const PANEL_SCRIPT := preload("res://ui/boss_return_panel.gd")
 const INTERACT_RANGE := 64.0
 const COLOR := Color(0.45, 0.75, 1.0)
+
+## A felirat, ami a közelében megjelenik.
+var prompt_text := "[E] Kimegyek pihenni a táborba"
+## Ha be van állítva, E-re ez fut (a táborban: vissza a kazamatába).
+var on_use: Callable
 
 var _prompt: Label
 var _ring: Polygon2D
@@ -52,9 +58,9 @@ func _ready() -> void:
 	light.texture_scale = 3.0
 	light.energy = 1.2
 	add_child(light)
-	_prompt = MenuStyle.title_label("[E] Vissza a táborba", 22, MenuStyle.GOLD)
-	_prompt.position = Vector2(-140, -80)
-	_prompt.size = Vector2(280, 30)
+	_prompt = MenuStyle.title_label(prompt_text, 22, MenuStyle.GOLD)
+	_prompt.position = Vector2(-200, -80)
+	_prompt.size = Vector2(400, 30)
 	_prompt.modulate.a = 0.0
 	_prompt.z_index = 20
 	add_child(_prompt)
@@ -77,6 +83,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("interact") or not _is_near() or get_tree().paused:
 		return
 	get_viewport().set_input_as_handled()
+	if on_use.is_valid():
+		Audio.play("magic", -6.0)
+		on_use.call()
+		return
 	var scene := get_tree().current_scene
 	var panel := scene.get_node_or_null("BossReturnPanel")
 	if panel == null:

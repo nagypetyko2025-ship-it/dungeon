@@ -6,7 +6,7 @@ extends CanvasLayer
 
 const BAG_COLUMNS := 6
 ## A leíráspanel fix mérete (ettől nem változik az ablak mérete).
-const INFO_SIZE := Vector2(340, 430)
+const INFO_SIZE := Vector2(380, 520)
 ## A kijelölt táskatárgy célhelye így világít.
 const TARGET_GLOW := Color(1.5, 1.25, 0.55)
 ## A felszerelés "karakterbábu" elrendezésben, ahogy a testen van: fent a sisak,
@@ -137,13 +137,14 @@ func _build() -> void:
 	_info_text = RichTextLabel.new()
 	_info_text.bbcode_enabled = true
 	_info_text.fit_content = false
-	_info_text.scroll_active = false
+	# Hosszú leírás + összehasonlítás esetén görgethető (egérgörgővel).
+	_info_text.scroll_active = true
 	_info_text.clip_contents = true
 	_info_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_info_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_info_text.add_theme_color_override("default_color", UiStyle.INK_LIGHT)
-	_info_text.add_theme_font_size_override("normal_font_size", 16)
-	_info_text.add_theme_constant_override("line_separation", 3)
+	_info_text.add_theme_font_size_override("normal_font_size", 15)
+	_info_text.add_theme_constant_override("line_separation", 1)
 	info_box.add_child(_info_text)
 	_hint = UiStyle.label("", 14, UiStyle.INK_LIGHT)
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -237,6 +238,10 @@ func _on_slot_hovered(item: Variant, slot: InventorySlot) -> void:
 			hint = "A fegyvert csak egy másik fegyverre cserélheted." if slot.key == "weapon" \
 				else "Húzd a táskába • jobb klikk: levétel"
 		_show_info(item, hint)
+		# Táskabeli tárgynál összehasonlítás a helyén lévő felvett tárggyal.
+		var equipped: Variant = _inventory.equipment.get(item["slot"]) if slot.kind == "bag" else null
+		if equipped != null:
+			_info_text.text += "\n\n" + Items.compare_bbcode(item, equipped)
 	elif slot.kind == "equip":
 		_show_info(null, "Üres hely: " + Inventory.SLOT_NAMES[slot.key])
 	else:

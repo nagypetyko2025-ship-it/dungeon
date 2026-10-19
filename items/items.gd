@@ -21,6 +21,7 @@ const SELL_RATIO := 0.4
 const SPEAR_NOTE_INK := Color(0.42, 0.28, 0.12)
 const SLOT_NOTE_INK := Color(0.3, 0.22, 0.14)
 const WEAPON_NOTE_INK := Color(0.45, 0.16, 0.1)
+const WEAPON_KIND_NAMES := {"sword": "Kard", "spear": "Lándzsa", "axe": "Balta", "dagger": "Tőr", "mace": "Buzogány"}
 ## A fegyverfajták rövid leírása (a kard az alap, ahhoz nincs).
 const WEAPON_NOTES := {
 	"spear": "Lándzsa: messzebbre ér és szúr. Átütés: a szúrást nem lehet kikerülni, és erősen hátralök.",
@@ -329,8 +330,12 @@ static func describe_bbcode(item: Dictionary) -> String:
 	if item.has("rarity"):
 		lines.append("[color=#%s]%s[/color]" % [rarity_ink(item).to_html(false), rarity_name(item)])
 	if item.has("slot"):
+		var kind := slot_name(item)
+		# Fegyvernél a fajtája is: pl. "Fegyver (Tőr)".
+		if item["slot"] == "weapon":
+			kind += " (%s)" % WEAPON_KIND_NAMES.get(item.get("weapon_type", "sword"), "Kard")
 		lines.append("[color=#%s]Típus: %s  →  %s helyre tehető[/color]"
-			% [SLOT_NOTE_INK.to_html(false), slot_name(item), slot_name(item)])
+			% [SLOT_NOTE_INK.to_html(false), kind, slot_name(item)])
 	if item.has("base_damage"):
 		lines.append("[color=#%s]Alapsebzés: %d  ·  +%d%% közelharci sebzés\nKritikus szorzó: ×%s[/color]" % [
 			WEAPON_NOTE_INK.to_html(false), item["base_damage"], roundi(item["scaling"] * 100.0),
@@ -348,6 +353,39 @@ static func describe_bbcode(item: Dictionary) -> String:
 	if item.has("description"):
 		lines.append(item["description"])
 	return "\n".join(lines)
+
+
+## Egyszerű összehasonlítás egy felvett tárggyal: mit ad többet (zöld) és miből kevesebbet
+## (piros) az új tárgy a régihez képest. Fegyvernél az alapsebzés, skálázás, kritikus szorzó is.
+static func compare_bbcode(new_item: Dictionary, equipped: Dictionary) -> String:
+	var lines: Array[String] = []
+	var better := "3c8a32"
+	var worse := "b0302a"
+	if new_item.has("base_damage") and equipped.has("base_damage"):
+		var weapon_values := [
+			["alapsebzés", float(new_item["base_damage"]) - float(equipped["base_damage"]), "%+d"],
+			["skálázás", (float(new_item["scaling"]) - float(equipped["scaling"])) * 100.0, "%+d%%"],
+			["kritikus szorzó", float(new_item["crit_multiplier"]) - float(equipped["crit_multiplier"]), "%+.2f×"],
+		]
+		for entry in weapon_values:
+			var diff: float = entry[1]
+			if not is_zero_approx(diff):
+				var text: String = entry[2] % (roundi(diff) if entry[2].contains("d") else diff)
+				lines.append("[color=#%s]%s %s[/color]" % [better if diff > 0 else worse, text, entry[0]])
+	var stats := {}
+	for stat: String in new_item.get("stats", {}):
+		stats[stat] = true
+	for stat: String in equipped.get("stats", {}):
+		stats[stat] = true
+	for stat: String in stats:
+		var diff := float(new_item.get("stats", {}).get(stat, 0.0)) - float(equipped.get("stats", {}).get(stat, 0.0))
+		if is_zero_approx(diff):
+			continue
+		lines.append("[color=#%s]%s[/color]" % [better if diff > 0 else worse, format_stat(stat, diff)])
+	if lines.is_empty():
+		lines.append("Nincs eltérés.")
+	return "[color=#%s]Összehasonlítás a felvett %s tárggyal:[/color]\n%s" % [
+		SLOT_NOTE_INK.to_html(false), equipped["name"], "\n".join(lines)]
 
 
 ## A tárgy helyének (típusának) neve, pl. "Gyűrű", "Amulett".

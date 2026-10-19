@@ -92,9 +92,12 @@ func _resume() -> void:
 ## a pénzed 40%-a a táborba kerül.
 func _record_run() -> void:
 	var player := get_tree().get_first_node_in_group("player")
+	# A táborban csak pihenő közben van futás (amit így feladsz).
+	if get_parent().name != "Dungeon" and not GameState.on_break:
+		return
 	Records.submit_run(player)
-	if get_parent().name == "Dungeon" and player:
-		Progress.rescue_gold(int(player.get("gold")), QUIT_GOLD_RATIO)
+	if player:
+		Progress.rescue_gold(int(player.get("gold")) + GameState.break_gold_left, QUIT_GOLD_RATIO)
 
 
 func _to_camp() -> void:

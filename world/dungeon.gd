@@ -157,7 +157,7 @@ func _on_boss_fight_started(boss: Node2D) -> void:
 func _on_boss_defeated(boss: Node2D) -> void:
 	Audio.music("dungeon")
 	_hud.call("hide_boss")
-	_hud.show_message("%s legyőzve! A lépcső szabad, és megnyílt a visszaút a táborba." % boss.get("boss_name"))
+	_hud.show_message("%s legyőzve! A lépcső szabad, és megnyílt a kék portál a táborba." % boss.get("boss_name"))
 	# Visszaút-portál a teremben (a fülkével ellentétes oldalon, hogy ne takarja a lépcsőt).
 	var room: Room = boss.get_parent().get_parent()
 	var portal: Node2D = RETURN_PORTAL.new()

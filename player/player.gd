@@ -40,7 +40,7 @@ const WEAPON_PIVOT_POSITION := Vector2(0, -18)
 const WEAPON_TYPES := {
 	"sword": {"arc": 140.0, "cooldown": 1.0, "knockback": 260.0},
 	"axe": {"arc": 200.0, "cooldown": 1.3, "knockback": 380.0, "length": 58.0, "width": 34.0},
-	"dagger": {"arc": 110.0, "cooldown": 0.6, "knockback": 150.0, "length": 38.0, "width": 22.0},
+	"dagger": {"arc": 120.0, "cooldown": 0.6, "knockback": 150.0, "length": 54.0, "width": 28.0},
 	"mace": {"arc": 160.0, "cooldown": 1.45, "knockback": 520.0, "length": 56.0, "width": 36.0},
 	"spear": {"arc": 0.0, "cooldown": 1.2, "knockback": 470.0},
 }

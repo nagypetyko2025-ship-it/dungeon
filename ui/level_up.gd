@@ -15,6 +15,10 @@ var _level_queue: Array[int] = []
 var _options: Array[Dictionary] = []
 var _accepting_input := false
 var _stats: Stats
+var _reroll_button: Button
+
+const REROLL_BASE := 5.0
+const REROLL_GROWTH := 1.6
 
 @onready var _title: Label = $Center/Box/Title
 @onready var _cards: HBoxContainer = $Center/Box/Cards
@@ -32,6 +36,39 @@ func _ready() -> void:
 	growth.custom_minimum_size.x = CARD_SIZE.x * CARD_COUNT
 	_title.get_parent().add_child(growth)
 	_title.get_parent().move_child(growth, _title.get_index() + 1)
+	# Újradobás aranyért (R): új fejlesztések, minden alkalommal drágábban.
+	_reroll_button = MenuStyle.button("")
+	_reroll_button.custom_minimum_size = Vector2(360, 56)
+	_reroll_button.add_theme_font_size_override("font_size", 20)
+	_reroll_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_reroll_button.focus_mode = Control.FOCUS_NONE
+	_reroll_button.pressed.connect(_reroll)
+	_cards.get_parent().add_child(_reroll_button)
+
+
+## Az újradobás ára: REROLL_BASE, majd minden újradobás után REROLL_GROWTH-szor több (futásonként).
+static func reroll_cost() -> int:
+	return roundi(REROLL_BASE * pow(REROLL_GROWTH, GameState.rerolls))
+
+
+func _update_reroll_button() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	var cost := reroll_cost()
+	_reroll_button.text = "[R] Újradobás: %d arany" % cost
+	_reroll_button.disabled = player == null or int(player.get("gold")) < cost
+
+
+func _reroll() -> void:
+	if not _accepting_input:
+		return
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null or not player.call("spend_gold", reroll_cost()):
+		Audio.play("ui_error")
+		return
+	GameState.rerolls += 1
+	Audio.play("coin")
+	_options = Upgrades.roll(_stats, CARD_COUNT)
+	_show_cards()
 
 
 func _growth_text() -> String:
@@ -55,16 +92,21 @@ func _on_leveled_up(level: int) -> void:
 func _open() -> void:
 	_options = Upgrades.roll(_stats, CARD_COUNT)
 	_title.text = "Szintlépés! — %d. szint" % _level_queue[0]
-	for child in _cards.get_children():
-		child.queue_free()
-	for i in _options.size():
-		_cards.add_child(_make_card(i, _options[i]))
+	_show_cards()
 	visible = true
 	get_tree().paused = true
 	Audio.play("level_up")
 	_accepting_input = false
 	await get_tree().create_timer(INPUT_DELAY, true).timeout
 	_accepting_input = true
+
+
+func _show_cards() -> void:
+	for child in _cards.get_children():
+		child.queue_free()
+	for i in _options.size():
+		_cards.add_child(_make_card(i, _options[i]))
+	_update_reroll_button()
 
 
 func _choose(index: int) -> void:
@@ -88,6 +130,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_1: _choose(0)
 		KEY_2: _choose(1)
 		KEY_3: _choose(2)
+		KEY_R: _reroll()
 	get_viewport().set_input_as_handled()
 
 
