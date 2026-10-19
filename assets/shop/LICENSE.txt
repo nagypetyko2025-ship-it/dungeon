@@ -1,0 +1,13 @@
+﻿Shop tiles (shop_closed.png = dngn_abandoned_shop.png, shop_open.png = dngn_enter_shop.png)
+  from "Dungeon Crawl 32x32 tiles" - https://opengameart.org/content/dungeon-crawl-32x32-tiles
+  License: CC0 1.0 Universal (public domain). No attribution required.
+
+kenney_indoor.png = "Roguelike Indoors" by Kenney (www.kenney.nl) - https://kenney.nl/assets/roguelike-indoors
+  License: CC0 1.0 Universal. 16x16 tiles with 1 px spacing.
+
+kenney_rpg.png = "Roguelike RPG Pack" by Kenney (www.kenney.nl) - https://kenney.nl/assets/roguelike-rpg-pack
+  License: CC0 1.0 Universal. 16x16 tiles with 1 px spacing.
+
+barrels_and_boxes.png, pottery.png = "Various containers" by zwonky - https://opengameart.org/content/various-containers
+  License: CC0 1.0 Universal.
+  (barrels_and_boxes.png, pottery.png: the solid background colour was made transparent.)

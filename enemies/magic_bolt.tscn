@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://enemies/arrow.gd" id="1_bolt"]
+[ext_resource type="Texture2D" path="res://assets/ui/xp_orb.png" id="2_orb"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bolt"]
+radius = 8.0
+
+[sub_resource type="Gradient" id="Gradient_glow"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(0.8, 0.4, 1, 1, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_glow"]
+gradient = SubResource("Gradient_glow")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
+[node name="MagicBolt" type="Area2D"]
+z_index = 3
+collision_layer = 16
+collision_mask = 1
+script = ExtResource("1_bolt")
+damage = 2
+knockback = 120.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(2.5, 0.5, 3, 1)
+scale = Vector2(2.4, 2.4)
+texture = ExtResource("2_orb")
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+energy = 0.9
+texture = SubResource("GradientTexture2D_glow")
+texture_scale = 0.6
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_bolt")

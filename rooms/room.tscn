@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://rooms/room.gd" id="1_room"]
+[ext_resource type="PackedScene" path="res://enemies/enemy.tscn" id="2_enemy"]
+[ext_resource type="PackedScene" path="res://rooms/obstacles/pillar.tscn" id="3_pillar"]
+[ext_resource type="PackedScene" path="res://rooms/obstacles/spike_trap.tscn" id="4_trap"]
+[ext_resource type="PackedScene" path="res://rooms/obstacles/stairs.tscn" id="5_stairs"]
+[ext_resource type="PackedScene" path="res://pickups/chest.tscn" id="6_chest"]
+[ext_resource type="PackedScene" path="res://rooms/obstacles/shop.tscn" id="7_shop"]
+[ext_resource type="PackedScene" path="res://enemies/boss.tscn" id="8_boss"]
+
+[node name="Room" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_room")
+enemy_scene = ExtResource("2_enemy")
+pillar_scene = ExtResource("3_pillar")
+trap_scene = ExtResource("4_trap")
+stairs_scene = ExtResource("5_stairs")
+chest_scene = ExtResource("6_chest")
+shop_scene = ExtResource("7_shop")
+boss_scene = ExtResource("8_boss")
+
+[node name="Traps" type="Node2D" parent="."]
+z_index = -5
+
+[node name="Doors" type="Node2D" parent="."]
+
+[node name="Pillars" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Enemies" type="Node2D" parent="."]
+y_sort_enabled = true

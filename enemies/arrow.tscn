@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://enemies/arrow.gd" id="1_arrow"]
+[ext_resource type="Texture2D" path="res://assets/0x72_dungeon/0x72_DungeonTilesetII_v1.7.png" id="2_sheet"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_arrow"]
+atlas = ExtResource("2_sheet")
+region = Rect2(324, 202, 7, 21)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arrow"]
+size = Vector2(20, 6)
+
+[node name="Arrow" type="Area2D"]
+z_index = 3
+collision_layer = 16
+collision_mask = 1
+script = ExtResource("1_arrow")
+damage = 1
+knockback = 150.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+rotation = 1.5707964
+scale = Vector2(2, 2)
+texture = SubResource("AtlasTexture_arrow")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_arrow")

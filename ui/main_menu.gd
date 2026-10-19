@@ -1,0 +1,251 @@
+extends Control
+## Főmenü: "Dungeon" cím, "The Secrets Of The Deep" alcím, gombok
+## (Folytatás ha van mentés, Új játék, Eredmények, Beállítások, Kilépés). A háttérben fáklyák, felszálló parázs,
+## és egy dungeon-padlón álló lovag néhány szörnnyel.
+
+## Az "Új játék" a táborba visz; onnan a lépcsőn lehet lemenni a kazamatába.
+const GAME_SCENE := "res://world/camp.tscn"
+const TORCH := preload("res://rooms/decor/torch.tscn")
+const FLOOR_TILE := Rect2(16, 64, 16, 16)
+const WALL_TILE := Rect2(32, 16, 16, 16)
+const WALL_TOP_TILE := Rect2(32, 0, 16, 16)
+## A padlócsíkon álló figurák: [sprite-lap téglalap, x eltolás a középtől, tükrözve?]
+const FIGURES := [
+	[Rect2(128, 100, 16, 28), 0, false],     # lovag (a játékos)
+	[Rect2(368, 88, 16, 16), -170, false],   # csontváz
+	[Rect2(368, 177, 16, 23), -260, false],  # ork harcos
+	[Rect2(128, 36, 16, 28), 190, true],     # íjász
+	[Rect2(16, 428, 32, 36), 300, true],     # nagy démon
+]
+const TILE_SCALE := 4.0
+
+var _buttons: VBoxContainer
+var _settings: SettingsPanel
+var _records: RecordsPanel
+var _new_game_button: Button
+var _records_button: Button
+var _settings_button: Button
+var _confirm_new_game := false
+var _title: Label
+## Az alcím és a díszcsík: panel (Eredmények/Beállítások) nyitásakor elrejtjük, hogy ne lógjon bele.
+var _subtitle_parts: Array[Control] = []
+
+const RECORDS := "records"
+const SETTINGS := "settings"
+
+
+func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Indításkor a mentett ablak-beállítás (alapból teljes képernyő); utána az F11-es választás megmarad.
+	if not GameState.display_initialized:
+		GameState.display_initialized = true
+		if Audio.saved_fullscreen():
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	Audio.music("menu")
+	GameCursor.apply()
+	_build_background()
+	_build_title()
+	_build_buttons()
+	_build_settings()
+	_build_footer()
+	_buttons.get_child(0).grab_focus()
+
+
+func _build_background() -> void:
+	var background := ColorRect.new()
+	background.color = Color(0.06, 0.04, 0.06)
+	background.set_anchors_preset(Control.PRESET_FULL_RECT)
+	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(background)
+
+	# A jelenet (fal, padló, figurák, fáklyák) egy Node2D-ben, a képernyő alján középen.
+	var scene := Node2D.new()
+	add_child(scene)
+	var screen := get_viewport_rect().size
+	scene.position = Vector2(screen.x / 2.0, screen.y - 40)
+	resized.connect(func() -> void: scene.position = Vector2(size.x / 2.0, size.y - 40))
+
+	var tile := 16.0 * TILE_SCALE
+	for i in range(-12, 13):
+		_tile_sprite(scene, FLOOR_TILE, Vector2(i * tile, 0))
+		_tile_sprite(scene, WALL_TILE, Vector2(i * tile, -tile * 1.5))
+		_tile_sprite(scene, WALL_TOP_TILE, Vector2(i * tile, -tile * 2.5))
+	for figure in FIGURES:
+		var rect: Rect2 = figure[0]
+		var sprite := AnimatedSprite2D.new()
+		sprite.sprite_frames = SpriteSheet.character_frames(rect, true)
+		sprite.scale = Vector2.ONE * 3.0
+		sprite.offset.y = -rect.size.y / 2.0
+		sprite.position = Vector2(figure[1], -tile * 0.2)
+		sprite.flip_h = figure[2]
+		sprite.play("idle")
+		sprite.frame = randi() % 4
+		scene.add_child(sprite)
+	for x in [-420, 420]:
+		var torch: Node2D = TORCH.instantiate()
+		torch.scale = Vector2(2.2, 2.2)
+		torch.position = Vector2(x, -tile * 1.6)
+		torch.z_index = 0
+		scene.add_child(torch)
+
+	# Felszálló parázs.
+	var embers := CPUParticles2D.new()
+	embers.amount = 60
+	embers.lifetime = 7.0
+	embers.preprocess = 7.0
+	embers.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	embers.emission_rect_extents = Vector2(700, 10)
+	embers.direction = Vector2(0, -1)
+	embers.spread = 20.0
+	embers.gravity = Vector2(0, -12)
+	embers.initial_velocity_min = 20.0
+	embers.initial_velocity_max = 55.0
+	embers.scale_amount_min = 2.0
+	embers.scale_amount_max = 4.0
+	embers.color = Color(1, 0.55, 0.2, 0.9)
+	var fade := Gradient.new()
+	fade.set_color(0, Color(1, 0.7, 0.3, 1))
+	fade.set_color(1, Color(1, 0.3, 0.1, 0))
+	embers.color_ramp = fade
+	embers.position = Vector2(0, -20)
+	scene.add_child(embers)
+
+
+## Horgony (0..1) + eltolás + minimális méret: így az ablak átméretezésekor is a helyén marad.
+func _place(control: Control, anchor: Vector2, offset: Vector2, min_size: Vector2) -> void:
+	control.anchor_left = anchor.x
+	control.anchor_right = anchor.x
+	control.anchor_top = anchor.y
+	control.anchor_bottom = anchor.y
+	control.offset_left = offset.x
+	control.offset_top = offset.y
+	control.offset_right = offset.x + min_size.x
+	control.offset_bottom = offset.y + min_size.y
+	control.custom_minimum_size = min_size
+
+
+func _tile_sprite(parent: Node, region: Rect2, at: Vector2) -> void:
+	var sprite := Sprite2D.new()
+	sprite.texture = SpriteSheet.region(region)
+	sprite.scale = Vector2.ONE * TILE_SCALE
+	sprite.position = at
+	sprite.modulate = Color(0.55, 0.5, 0.55)
+	parent.add_child(sprite)
+
+
+func _build_title() -> void:
+	var box := VBoxContainer.new()
+	_place(box, Vector2(0.5, 0.0), Vector2(-400, 40), Vector2(800, 0))
+	box.add_theme_constant_override("separation", -8)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(box)
+	_title = MenuStyle.title_label("Dungeon", 144, MenuStyle.GOLD)
+	box.add_child(_title)
+	var subtitle := MenuStyle.title_label("The Secrets Of The Deep", 48, MenuStyle.PARCHMENT)
+	box.add_child(subtitle)
+	_subtitle_parts.append(subtitle)
+	var divider := HBoxContainer.new()
+	divider.alignment = BoxContainer.ALIGNMENT_CENTER
+	divider.add_theme_constant_override("separation", 0)
+	for path in ["res://assets/menu/divider_left.png", "res://assets/menu/divider_right.png"]:
+		var part := TextureRect.new()
+		part.texture = load(path)
+		part.custom_minimum_size = Vector2(96, 22) * 2.5
+		part.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		part.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		divider.add_child(part)
+	box.add_child(divider)
+	_subtitle_parts.append(divider)
+	# A cím lassan "izzik".
+	var glow := create_tween().set_loops()
+	glow.tween_property(_title, "modulate", Color(1.25, 1.15, 1.0), 1.6).set_trans(Tween.TRANS_SINE)
+	glow.tween_property(_title, "modulate", Color.WHITE, 1.6).set_trans(Tween.TRANS_SINE)
+
+
+func _build_buttons() -> void:
+	_buttons = VBoxContainer.new()
+	_place(_buttons, Vector2(0.5, 0.5), Vector2(-MenuStyle.BUTTON_SIZE.x / 2.0, -110), Vector2(MenuStyle.BUTTON_SIZE.x, 0))
+	_buttons.add_theme_constant_override("separation", 14)
+	add_child(_buttons)
+	# Ha van mentés: Folytatás (a táborba, a mentett haladással).
+	if Progress.has_save():
+		var resume := MenuStyle.button("Folytatás")
+		resume.pressed.connect(_on_continue)
+		_buttons.add_child(resume)
+	_new_game_button = MenuStyle.button("Új játék")
+	_new_game_button.pressed.connect(_on_new_game)
+	_buttons.add_child(_new_game_button)
+	_records_button = MenuStyle.button("Eredmények")
+	_records_button.pressed.connect(_show_panel.bind(RECORDS))
+	_buttons.add_child(_records_button)
+	_settings_button = MenuStyle.button("Beállítások")
+	_settings_button.pressed.connect(_show_panel.bind(SETTINGS))
+	_buttons.add_child(_settings_button)
+	var quit := MenuStyle.button("Kilépés")
+	quit.pressed.connect(func() -> void: get_tree().quit())
+	_buttons.add_child(quit)
+
+
+func _build_settings() -> void:
+	_settings = SettingsPanel.new()
+	_place(_settings, Vector2(0.5, 0.5), Vector2(-240, -150), Vector2(480, 0))
+	_settings.visible = false
+	_settings.closed.connect(_show_panel.bind(""))
+	add_child(_settings)
+	_records = RecordsPanel.new()
+	_place(_records, Vector2(0.5, 0.5), Vector2(-370, -175), Vector2(740, 0))
+	_records.visible = false
+	_records.closed.connect(_show_panel.bind(""))
+	add_child(_records)
+
+
+func _build_footer() -> void:
+	var footer := Label.new()
+	footer.text = "F11 — teljes képernyő   ·   v0.1"
+	footer.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
+	footer.add_theme_font_size_override("font_size", 14)
+	footer.add_theme_color_override("font_color", Color(0.6, 0.52, 0.45, 0.8))
+	_place(footer, Vector2(1.0, 1.0), Vector2(-260, -30), Vector2(240, 20))
+	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	add_child(footer)
+
+
+## Egy panel (Eredmények / Beállítások) megnyitása a gombok helyén; "" = vissza a gombokhoz.
+func _show_panel(panel: String) -> void:
+	var previous := RECORDS if _records.visible else SETTINGS
+	_records.visible = panel == RECORDS
+	_settings.visible = panel == SETTINGS
+	_buttons.visible = panel.is_empty()
+	for part in _subtitle_parts:
+		part.modulate.a = 1.0 if panel.is_empty() else 0.0
+	if panel.is_empty():
+		(_records_button if previous == RECORDS else _settings_button).grab_focus()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
+		return
+	if key.physical_keycode == KEY_F11 or (key.physical_keycode == KEY_ENTER and key.alt_pressed):
+		Audio.toggle_fullscreen()
+		get_viewport().set_input_as_handled()
+	elif key.physical_keycode == KEY_ESCAPE and not _buttons.visible:
+		_show_panel("")
+		get_viewport().set_input_as_handled()
+
+func _on_continue() -> void:
+	Progress.load_game(true)
+	GameState.reset()
+	get_tree().change_scene_to_file(GAME_SCENE)
+
+
+## Új játék: ha van mentés, előbb rákérdez (második kattintásra törli a tábori haladást).
+func _on_new_game() -> void:
+	if Progress.has_save() and not _confirm_new_game:
+		_confirm_new_game = true
+		_new_game_button.text = "Biztos? Mentés törlése"
+		return
+	Progress.reset_game()
+	GameState.reset()
+	get_tree().change_scene_to_file(GAME_SCENE)

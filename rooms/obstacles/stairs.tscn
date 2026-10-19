@@ -1,0 +1,24 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://rooms/obstacles/stairs.gd" id="1_stairs"]
+[ext_resource type="Texture2D" path="res://assets/0x72_dungeon/0x72_DungeonTilesetII_v1.7.png" id="2_sheet"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_stairs"]
+atlas = ExtResource("2_sheet")
+region = Rect2(80, 192, 16, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_stairs"]
+size = Vector2(20, 20)
+
+[node name="Stairs" type="Area2D"]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("1_stairs")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_stairs")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = SubResource("AtlasTexture_stairs")

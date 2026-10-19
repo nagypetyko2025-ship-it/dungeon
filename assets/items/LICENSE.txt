@@ -1,0 +1,9 @@
+Item icons (helmet_*, chest_*, boots_*, spear_*, ring_silver, ring_sapphire, amulet_*, and assets/ui/icon_crit.png, assets/ui/icon_range.png):
+  "496 pixel art icons for medieval/fantasy RPG" by Henrique Lazarini (7Soul1)
+  https://opengameart.org/node/39455 - License: CC0 1.0 Universal.
+
+pants_cloth, pants_ranger, pants_shadow, pants_knight, ring_ruby, ring_emerald:
+  "Dungeon Crawl 32x32 tiles" - https://opengameart.org/content/dungeon-crawl-32x32-tiles
+  License: CC0 1.0 Universal. Cropped and scaled up (nearest neighbour) into 34x34 icons.
+
+Új tárgyikonok (balták, tőrök, buzogányok, kesztyűk, talizmánok és több páncél): "496 pixel art icons for medieval/fantasy RPG" by Henrique Lazarini (7Soul1), CC0 — https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg

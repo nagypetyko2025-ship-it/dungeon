@@ -1,0 +1,4 @@
+﻿puny_dungeon.png = "16x16 Puny Dungeon Tileset" by Shade - https://opengameart.org/content/16x16-puny-dungeon-tileset
+License: CC0 1.0 Universal (public domain).
+
+cobweb.png, bones.png, blood.png: drawn for this project (pixel art), free to use.

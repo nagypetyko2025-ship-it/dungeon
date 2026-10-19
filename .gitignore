@@ -1,0 +1,10 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Beckett MCP local state (port/token)
+.beckett/
+
+# Helyi szerkesztő / MCP beállítások
+.cursor/
+.mcp.json

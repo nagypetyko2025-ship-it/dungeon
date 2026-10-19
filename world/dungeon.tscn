@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://world/dungeon.gd" id="1_dungeon"]
+[ext_resource type="PackedScene" path="res://rooms/room.tscn" id="2_room"]
+[ext_resource type="PackedScene" uid="uid://bplayerdungeon01" path="res://player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="4_hud"]
+[ext_resource type="PackedScene" path="res://ui/level_up.tscn" id="5_level_up"]
+[ext_resource type="PackedScene" path="res://ui/death_screen.tscn" id="6_death_screen"]
+[ext_resource type="Script" path="res://ui/inventory_screen.gd" id="7_inventory_screen"]
+[ext_resource type="Script" path="res://ui/stats_screen.gd" id="8_stats_screen"]
+[ext_resource type="Script" path="res://ui/menus.gd" id="9_menus"]
+[ext_resource type="Script" path="res://ui/pause_menu.gd" id="10_pause_menu"]
+
+[sub_resource type="Environment" id="Environment_dungeon"]
+background_mode = 3
+glow_enabled = true
+glow_intensity = 0.25
+glow_strength = 0.7
+glow_bloom = 0.02
+
+[node name="Dungeon" type="Node2D"]
+texture_filter = 1
+script = ExtResource("1_dungeon")
+room_scene = ExtResource("2_room")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_dungeon")
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.78, 0.74, 0.8, 1)
+
+[node name="FloorLayer" type="TileMapLayer" parent="."]
+z_index = -10
+scale = Vector2(2, 2)
+
+[node name="WallLayer" type="TileMapLayer" parent="."]
+z_index = -10
+scale = Vector2(2, 2)
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Rooms" type="Node2D" parent="Entities"]
+y_sort_enabled = true
+
+[node name="Player" parent="Entities" instance=ExtResource("3_player")]
+
+[node name="HUD" parent="." instance=ExtResource("4_hud")]
+
+[node name="LevelUp" parent="." instance=ExtResource("5_level_up")]
+
+[node name="Inventory" type="CanvasLayer" parent="."]
+process_mode = 3
+layer = 15
+script = ExtResource("7_inventory_screen")
+
+[node name="StatsScreen" type="CanvasLayer" parent="."]
+process_mode = 3
+layer = 15
+script = ExtResource("8_stats_screen")
+
+[node name="PauseMenu" type="CanvasLayer" parent="."]
+process_mode = 3
+layer = 18
+script = ExtResource("10_pause_menu")
+
+[node name="Menus" type="Node" parent="."]
+process_mode = 3
+script = ExtResource("9_menus")
+
+[node name="DeathScreen" parent="." instance=ExtResource("6_death_screen")]

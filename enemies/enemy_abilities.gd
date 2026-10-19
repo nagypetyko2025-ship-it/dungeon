@@ -1,0 +1,254 @@
+class_name EnemyAbilities
+extends Node
+## Az ellenségek különleges képességei. A típus "abilities" listája dönti el,
+## melyik ellenség mit tud (lásd EnemyTypes). Minden ellenségnek van ilyen
+## csomópontja (üres listával is), hogy a harci kiáltás őt is felgyorsíthassa.
+##
+##   zigzag       cikázva közelít, nehezebb eltalálni
+##   teleport     felvillan, majd a játékos mellé / mögé ugrik
+##   summon       csontvázakat idéz (legfeljebb SUMMON_LIMIT-et)
+##   heal         a közeli sérült társait gyógyítja
+##   war_cry      harci kiáltás: a közeli társai rövid ideig gyorsabbak
+##   berserk      fél élet alatt dühöng: sokkal gyorsabb és vöröses
+##   death_burst  halálakor lövedékek repülnek szét belőle minden irányba
+##   regenerate   lassan visszatölti az életét
+
+const MAGIC_BOLT := preload("res://enemies/magic_bolt.tscn")
+## Ennyi ideig villog, mielőtt képességet használ (ilyenkor áll): ennyi időd van reagálni.
+const WINDUP := 0.45
+const WINDUP_COLORS := {
+	"teleport": Color(1.8, 0.8, 2.6), "summon": Color(0.8, 2.0, 1.0),
+	"heal": Color(0.9, 2.2, 0.9), "war_cry": Color(2.4, 1.4, 0.5),
+}
+## Két használat között eltelt idő (mp), [min, max].
+const COOLDOWNS := {
+	"teleport": Vector2(3.5, 5.5), "summon": Vector2(6.0, 8.0),
+	"heal": Vector2(3.5, 4.5), "war_cry": Vector2(6.0, 8.0),
+}
+## Ennél messzebbről nem használja a képességeit.
+const ACTIVE_RANGE := 420.0
+const ZIGZAG_ANGLE := 0.9
+const ZIGZAG_FREQUENCY := 6.0
+const TELEPORT_DISTANCE := Vector2(90, 140)
+const SUMMON_TYPE := "skelet"
+const SUMMON_COUNT := 2
+const SUMMON_LIMIT := 4
+const HEAL_RADIUS := 170.0
+const WAR_CRY_RADIUS := 220.0
+const HASTE_TIME := 3.0
+const HASTE_MULTIPLIER := 1.45
+const BERSERK_MULTIPLIER := 1.6
+const BERSERK_TINT := Color(1.4, 0.6, 0.55)
+const BURST_BOLTS := 8
+const BURST_SPEED := 190.0
+const REGEN_PER_SECOND := 0.6
+
+var enemy: CharacterBody2D
+var abilities: Array = []
+
+var _cooldowns := {}
+var _busy := false
+var _zigzag_time := 0.0
+var _haste_left := 0.0
+var _berserk := false
+var _summoned := 0
+
+
+func setup(owner_enemy: CharacterBody2D, list: Array) -> void:
+	enemy = owner_enemy
+	abilities = list
+	_zigzag_time = randf() * TAU
+	for ability: String in COOLDOWNS:
+		var range_pair: Vector2 = COOLDOWNS[ability]
+		_cooldowns[ability] = randf_range(range_pair.x * 0.4, range_pair.y * 0.6)
+	var health: Health = enemy.get_node("Health")
+	if has("regenerate"):
+		health.regen_per_second = REGEN_PER_SECOND
+	if has("berserk"):
+		health.changed.connect(_on_health_changed)
+
+
+func has(ability: String) -> bool:
+	return abilities.has(ability)
+
+
+## Képesség használata közben (felvillanás) az ellenség áll.
+func is_busy() -> bool:
+	return _busy
+
+
+## A sebesség szorzója (harci kiáltás, dühöngés).
+func speed_multiplier() -> float:
+	var multiplier := 1.0
+	if _haste_left > 0.0:
+		multiplier *= HASTE_MULTIPLIER
+	if _berserk:
+		multiplier *= BERSERK_MULTIPLIER
+	return multiplier
+
+
+## A mozgás iránya a képességek után (cikázás).
+func steer(dir: Vector2, delta: float) -> Vector2:
+	if not has("zigzag") or dir == Vector2.ZERO:
+		return dir
+	_zigzag_time += delta * ZIGZAG_FREQUENCY
+	return dir.rotated(sin(_zigzag_time) * ZIGZAG_ANGLE)
+
+
+## Harci kiáltás hatása (egy társ hívja).
+func haste(seconds: float) -> void:
+	_haste_left = maxf(_haste_left, seconds)
+
+
+func _physics_process(delta: float) -> void:
+	_haste_left -= delta
+	if _busy or not enemy.is_physics_processing():
+		return
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null or enemy.global_position.distance_to(player.global_position) > ACTIVE_RANGE:
+		return
+	for ability: String in abilities:
+		if not _cooldowns.has(ability):
+			continue
+		_cooldowns[ability] -= delta
+		if _cooldowns[ability] <= 0.0 and _worth_using(ability):
+			var range_pair: Vector2 = COOLDOWNS[ability]
+			_cooldowns[ability] = randf_range(range_pair.x, range_pair.y)
+			_use(ability, player)
+			return
+
+
+func _worth_using(ability: String) -> bool:
+	match ability:
+		"summon": return _summoned < SUMMON_LIMIT
+		"heal": return not _hurt_allies().is_empty()
+		"war_cry": return _allies_within(WAR_CRY_RADIUS).size() > 0
+	return true
+
+
+func _use(ability: String, player: Node2D) -> void:
+	_busy = true
+	var visual: Node2D = enemy.get_node("Visual")
+	var flash := create_tween()
+	flash.tween_property(visual, "modulate", WINDUP_COLORS[ability], WINDUP)
+	await flash.finished
+	visual.modulate = Color.WHITE
+	_busy = false
+	if not enemy.is_physics_processing() or not is_instance_valid(player):
+		return
+	match ability:
+		"teleport": _teleport(player)
+		"summon": _summon()
+		"heal": _heal()
+		"war_cry": _war_cry()
+
+
+func _teleport(player: Node2D) -> void:
+	var room := _room()
+	var side := Vector2.from_angle(randf() * TAU)
+	var target := player.global_position + side * randf_range(TELEPORT_DISTANCE.x, TELEPORT_DISTANCE.y)
+	if room != null:
+		target = room.safe_spawn_position(target)
+	Audio.play("magic", -6.0)
+	_puff(enemy.global_position)
+	enemy.global_position = target
+	_puff(target)
+
+
+func _summon() -> void:
+	var room := _room()
+	if room == null:
+		return
+	Audio.play("boss_roar", -12.0, 0.3)
+	_summoned += SUMMON_COUNT
+	room.summon_minions(SUMMON_TYPE, SUMMON_COUNT, enemy.global_position)
+	FloatingText.spawn(enemy.get_parent(), _head(), "Ébredjetek!", Color(0.6, 1, 0.6))
+
+
+func _heal() -> void:
+	var amount := 2 + int(enemy.get("_depth")) / 2
+	Audio.play("xp", 2.0)
+	for ally in _hurt_allies():
+		var health: Health = ally.get_node("Health")
+		health.heal(amount)
+		FloatingText.spawn(ally.get_parent(), ally.global_position + Vector2(0, -40), "+%d" % amount, Color(0.4, 1, 0.4))
+
+
+func _war_cry() -> void:
+	Audio.play("boss_roar", -10.0, 0.2)
+	FloatingText.spawn(enemy.get_parent(), _head(), "Rohamra!", Color(1, 0.7, 0.3))
+	haste(HASTE_TIME)
+	for ally in _allies_within(WAR_CRY_RADIUS):
+		var other := ally.get_node_or_null("Abilities") as EnemyAbilities
+		if other:
+			other.haste(HASTE_TIME)
+
+
+func _on_health_changed(current: int, maximum: int) -> void:
+	if _berserk or current <= 0 or current > maximum / 2:
+		return
+	_berserk = true
+	enemy.get_node("Visual/AnimatedSprite2D").self_modulate *= BERSERK_TINT
+	FloatingText.spawn(enemy.get_parent(), _head(), "Dühöng!", Color(1, 0.35, 0.25))
+
+
+## Halálkor hívja az ellenség.
+func on_died() -> void:
+	if not has("death_burst"):
+		return
+	Audio.play("magic", -4.0)
+	var offset := randf() * TAU
+	for i in BURST_BOLTS:
+		var bolt = MAGIC_BOLT.instantiate()
+		bolt.direction = Vector2.from_angle(offset + TAU * i / BURST_BOLTS)
+		bolt.speed = BURST_SPEED
+		bolt.damage = maxi(1, int(enemy.get("stats")["damage"]) - 1)
+		enemy.get_parent().add_child.call_deferred(bolt)
+		bolt.position = enemy.position + Vector2(0, -16)
+
+
+func _allies_within(radius: float) -> Array[Node2D]:
+	var result: Array[Node2D] = []
+	for other in enemy.get_parent().get_children():
+		if other != enemy and other is CharacterBody2D and other.is_in_group("enemies") \
+				and other.global_position.distance_to(enemy.global_position) <= radius \
+				and not other.get_node("Health").is_dead():
+			result.append(other)
+	return result
+
+
+func _hurt_allies() -> Array[Node2D]:
+	var result: Array[Node2D] = []
+	for ally in _allies_within(HEAL_RADIUS):
+		var health: Health = ally.get_node("Health")
+		if health.current < health.max_health:
+			result.append(ally)
+	return result
+
+
+func _room() -> Room:
+	return enemy.get_parent().get_parent() as Room
+
+
+func _head() -> Vector2:
+	return enemy.global_position + Vector2(0, -48)
+
+
+## Kis lila füstfelhő a teleportnál.
+func _puff(at: Vector2) -> void:
+	var puff := CPUParticles2D.new()
+	puff.one_shot = true
+	puff.emitting = true
+	puff.amount = 14
+	puff.lifetime = 0.45
+	puff.explosiveness = 1.0
+	puff.spread = 180.0
+	puff.initial_velocity_min = 40.0
+	puff.initial_velocity_max = 90.0
+	puff.gravity = Vector2(0, -40)
+	puff.scale_amount_min = 3.0
+	puff.scale_amount_max = 5.0
+	puff.color = Color(0.75, 0.45, 1.0, 0.8)
+	enemy.get_parent().add_child(puff)
+	puff.global_position = at + Vector2(0, -16)
+	get_tree().create_timer(1.0, false).timeout.connect(puff.queue_free)

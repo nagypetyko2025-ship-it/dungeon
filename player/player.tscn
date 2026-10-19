@@ -1,0 +1,118 @@
+[gd_scene format=3 uid="uid://bplayerdungeon01"]
+
+[ext_resource type="Script" path="res://player/player.gd" id="1_player"]
+[ext_resource type="Script" path="res://components/health.gd" id="2_health"]
+[ext_resource type="Script" path="res://components/hurtbox.gd" id="3_hurtbox"]
+[ext_resource type="Script" path="res://components/hitbox.gd" id="4_hitbox"]
+[ext_resource type="Script" path="res://components/stats.gd" id="5_stats"]
+[ext_resource type="Texture2D" path="res://assets/0x72_dungeon/0x72_DungeonTilesetII_v1.7.png" id="6_sheet"]
+[ext_resource type="Script" path="res://components/experience.gd" id="7_experience"]
+[ext_resource type="Script" path="res://player/cooldown_bar.gd" id="8_cooldown_bar"]
+[ext_resource type="Script" path="res://components/inventory.gd" id="9_inventory"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 9.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+size = Vector2(20, 36)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sword"]
+atlas = ExtResource("6_sheet")
+region = Rect2(339, 98, 10, 29)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sword"]
+size = Vector2(44, 28)
+
+[sub_resource type="Gradient" id="Gradient_light"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(1, 0.92, 0.75, 1, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_light"]
+gradient = SubResource("Gradient_light")
+width = 512
+height = 512
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0.05)
+
+[node name="Player" type="CharacterBody2D" groups=["player"]]
+collision_layer = 2
+collision_mask = 1
+motion_mode = 1
+script = ExtResource("1_player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_body")
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Visual"]
+scale = Vector2(2, 2)
+offset = Vector2(0, -12)
+
+[node name="WeaponPivot" type="Node2D" parent="."]
+position = Vector2(0, -18)
+
+[node name="Sword" type="Sprite2D" parent="WeaponPivot"]
+position = Vector2(30, 0)
+rotation = 1.5707964
+scale = Vector2(2, 2)
+texture = SubResource("AtlasTexture_sword")
+
+[node name="SwordHitbox" type="Area2D" parent="WeaponPivot"]
+collision_layer = 8
+collision_mask = 0
+monitoring = false
+script = ExtResource("4_hitbox")
+damage = 1
+knockback = 260.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WeaponPivot/SwordHitbox"]
+position = Vector2(34, 0)
+shape = SubResource("RectangleShape2D_sword")
+disabled = true
+
+[node name="CooldownBar" type="Node2D" parent="."]
+z_index = 5
+position = Vector2(0, 10)
+script = ExtResource("8_cooldown_bar")
+
+[node name="Stats" type="Node" parent="."]
+script = ExtResource("5_stats")
+base_damage = 0.0
+base_max_health = 10
+base_health_regen = 0.2
+base_dodge = 10
+
+[node name="Experience" type="Node" parent="."]
+script = ExtResource("7_experience")
+
+[node name="Inventory" type="Node" parent="."]
+script = ExtResource("9_inventory")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_health")
+max_health = 10
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 16
+monitorable = false
+script = ExtResource("3_hurtbox")
+invincibility_time = 0.8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -18)
+shape = SubResource("RectangleShape2D_hurtbox")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(0, -20)
+position_smoothing_enabled = true
+position_smoothing_speed = 10.0
+zoom = Vector2(1.5, 1.5)
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+position = Vector2(0, -20)
+energy = 0.8
+texture = SubResource("GradientTexture2D_light")
+texture_scale = 2.2

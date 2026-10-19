@@ -1,0 +1,57 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://world/camp.gd" id="1_camp"]
+[ext_resource type="PackedScene" uid="uid://bplayerdungeon01" path="res://player/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://ui/inventory_screen.gd" id="3_inventory_screen"]
+[ext_resource type="Script" path="res://ui/stats_screen.gd" id="4_stats_screen"]
+[ext_resource type="Script" path="res://ui/menus.gd" id="5_menus"]
+[ext_resource type="Script" path="res://ui/pause_menu.gd" id="6_pause_menu"]
+
+[sub_resource type="Environment" id="Environment_camp"]
+background_mode = 3
+glow_enabled = true
+glow_intensity = 0.25
+glow_strength = 0.7
+glow_bloom = 0.03
+
+[node name="Camp" type="Node2D"]
+texture_filter = 1
+script = ExtResource("1_camp")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_camp")
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.42, 0.46, 0.68, 1)
+
+[node name="Ground" type="TileMapLayer" parent="."]
+z_index = -10
+scale = Vector2(2, 2)
+
+[node name="Dirt" type="TileMapLayer" parent="."]
+z_index = -9
+scale = Vector2(2, 2)
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Player" parent="Entities" instance=ExtResource("2_player")]
+
+[node name="Inventory" type="CanvasLayer" parent="."]
+process_mode = 3
+layer = 15
+script = ExtResource("3_inventory_screen")
+
+[node name="StatsScreen" type="CanvasLayer" parent="."]
+process_mode = 3
+layer = 15
+script = ExtResource("4_stats_screen")
+
+[node name="PauseMenu" type="CanvasLayer" parent="."]
+process_mode = 3
+layer = 18
+script = ExtResource("6_pause_menu")
+
+[node name="Menus" type="Node" parent="."]
+process_mode = 3
+script = ExtResource("5_menus")

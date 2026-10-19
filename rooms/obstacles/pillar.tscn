@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/0x72_dungeon/0x72_DungeonTilesetII_v1.7.png" id="1_sheet"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_column"]
+atlas = ExtResource("1_sheet")
+region = Rect2(80, 80, 16, 48)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_pillar"]
+size = Vector2(28, 28)
+
+[node name="Pillar" type="StaticBody2D"]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_pillar")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = SubResource("AtlasTexture_column")
+offset = Vector2(0, -16)

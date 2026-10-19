@@ -1,0 +1,2 @@
+﻿"Parchment GUI" by zwonky - https://opengameart.org/content/parchment-gui
+License: CC0 1.0 Universal (public domain). Cropped, slot corners combined and scaled 2x (nearest neighbour).
