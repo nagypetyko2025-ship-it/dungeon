@@ -355,37 +355,48 @@ static func describe_bbcode(item: Dictionary) -> String:
 	return "\n".join(lines)
 
 
-## Egyszerű összehasonlítás egy felvett tárggyal: mit ad többet (zöld) és miből kevesebbet
-## (piros) az új tárgy a régihez képest. Fegyvernél az alapsebzés, skálázás, kritikus szorzó is.
+## Összehasonlítás: a FELVETT tárgy statjai, mindegyik után zárójelben, hogy mennyivel ad
+## többet (+, zöld) vagy kevesebbet (−, piros) a vizsgált (új) tárgyhoz képest. Pl. ha a
+## felvett gyűrű 2 védelmet ad, a vizsgált 3-at: "+2% védelem (-1)". Amit csak az új tárgy
+## ad, az 0-val szerepel. Fegyvernél az alapsebzés, a skálázás és a kritikus szorzó is.
 static func compare_bbcode(new_item: Dictionary, equipped: Dictionary) -> String:
 	var lines: Array[String] = []
-	var better := "3c8a32"
-	var worse := "b0302a"
 	if new_item.has("base_damage") and equipped.has("base_damage"):
-		var weapon_values := [
-			["alapsebzés", float(new_item["base_damage"]) - float(equipped["base_damage"]), "%+d"],
-			["skálázás", (float(new_item["scaling"]) - float(equipped["scaling"])) * 100.0, "%+d%%"],
-			["kritikus szorzó", float(new_item["crit_multiplier"]) - float(equipped["crit_multiplier"]), "%+.2f×"],
-		]
-		for entry in weapon_values:
-			var diff: float = entry[1]
-			if not is_zero_approx(diff):
-				var text: String = entry[2] % (roundi(diff) if entry[2].contains("d") else diff)
-				lines.append("[color=#%s]%s %s[/color]" % [better if diff > 0 else worse, text, entry[0]])
-	var stats := {}
-	for stat: String in new_item.get("stats", {}):
-		stats[stat] = true
+		var base := float(equipped["base_damage"])
+		lines.append("Alapsebzés: %d %s" % [roundi(base), _diff_text(base - float(new_item["base_damage"]), "%+d")])
+		var scaling := float(equipped["scaling"]) * 100.0
+		lines.append("Skálázás: %d%% %s" % [roundi(scaling),
+			_diff_text(scaling - float(new_item["scaling"]) * 100.0, "%+d%%")])
+		var crit := float(equipped["crit_multiplier"])
+		lines.append("Kritikus szorzó: ×%s %s" % [str(crit),
+			_diff_text(crit - float(new_item["crit_multiplier"]), "%+.2f")])
+	# Előbb a felvett tárgy statjai, aztán amit csak az új tárgy ad.
+	var stats: Array[String] = []
 	for stat: String in equipped.get("stats", {}):
-		stats[stat] = true
-	for stat: String in stats:
-		var diff := float(new_item.get("stats", {}).get(stat, 0.0)) - float(equipped.get("stats", {}).get(stat, 0.0))
-		if is_zero_approx(diff):
-			continue
-		lines.append("[color=#%s]%s[/color]" % [better if diff > 0 else worse, format_stat(stat, diff)])
+		stats.append(stat)
+	for stat: String in new_item.get("stats", {}):
+		if not stats.has(stat):
+			stats.append(stat)
+	for stat in stats:
+		var old_value := float(equipped.get("stats", {}).get(stat, 0.0))
+		var new_value := float(new_item.get("stats", {}).get(stat, 0.0))
+		var number_format := "%+.1f" if stat == "health_regen" else "%+d"
+		if stat in PERCENT_STATS:
+			number_format += "%%"
+		lines.append("%s %s" % [format_stat(stat, old_value), _diff_text(old_value - new_value, number_format)])
 	if lines.is_empty():
-		lines.append("Nincs eltérés.")
-	return "[color=#%s]Összehasonlítás a felvett %s tárggyal:[/color]\n%s" % [
+		lines.append("(nincs statja)")
+	return "[color=#%s]A felvett tárgy: %s[/color]\n%s" % [
 		SLOT_NOTE_INK.to_html(false), equipped["name"], "\n".join(lines)]
+
+
+## A különbség zárójelben: zöld, ha a felvett tárgy ad többet, piros, ha kevesebbet.
+static func _diff_text(diff: float, number_format: String) -> String:
+	if is_zero_approx(diff):
+		return "[color=#8a7a60](=)[/color]"
+	var color := "3c8a32" if diff > 0 else "b0302a"
+	var value: Variant = roundi(diff) if number_format.contains("d") else diff
+	return "[color=#%s](%s)[/color]" % [color, number_format % value]
 
 
 ## A tárgy helyének (típusának) neve, pl. "Gyűrű", "Amulett".

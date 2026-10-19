@@ -645,7 +645,7 @@ func _process(delta: float) -> void:
 		_prompt.text = "Tábori láda — pihenő közben zárva" if _on_break \
 			else "[E] Tábori láda (%d tárgy)" % Progress.stash.size()
 	elif near_npc:
-		_prompt.text = "[E] Gorm, a vándorárus" if _on_break else "Gorm: \"Majd ha visszajössz a mélyből...\""
+		_prompt.text = "[E] Zoltán, a vándorárus" if _on_break else "Zoltán: \"Majd ha visszajössz a mélyből...\""
 	var target := 1.0 if any_near and not _leaving and not get_tree().paused else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 	_update_gold()

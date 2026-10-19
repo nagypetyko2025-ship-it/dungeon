@@ -1,5 +1,5 @@
 extends CanvasLayer
-## Gorm, a vándorárus (a táborban, pihenő közben, E-vel): olyan tárgyakat árul,
+## Zoltán, a vándorárus (a táborban, pihenő közben, E-vel): olyan tárgyakat árul,
 ## mint a kazamata gyanús boltosa, csak MARKUP-pal drágábban. A futás pénzéből
 ## vásárolsz, a tárgy a táskádba kerül, és visszaviheted a kazamatába.
 
@@ -74,7 +74,7 @@ func _build() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 12)
 	window.add_child(root)
-	root.add_child(UiStyle.title_bar("Gorm, a vándorárus"))
+	root.add_child(UiStyle.title_bar("Zoltán, a vándorárus"))
 	root.add_child(UiStyle.label("„Ugyanazt árulom, mint az a gyanús alak odalent... csak én nem harapok.\n"
 		+ "Persze a szállítás nem ingyen van: minden 14%-kal drágább.”", 15, UiStyle.INK_LIGHT))
 	_gold_label = UiStyle.label("", 18, Color(0.6, 0.38, 0.05))

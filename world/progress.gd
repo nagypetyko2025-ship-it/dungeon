@@ -9,7 +9,8 @@ const PATH := "user://save.cfg"
 
 ## Tábori fejlesztések (minden alapstathoz egy). per_level: ennyit ad szintenként a
 ## `stat`-ra, minden futásra; costs: az egyes szintek ára tábori aranyban.
-const COSTS: Array[int] = [20, 35, 55, 80, 110]
+## 100 arany az első szint, és minden szint 100-zal drágább.
+const COSTS: Array[int] = [100, 200, 300, 400, 500]
 const UPGRADES := {
 	"strength": {"name": "Erőedzés", "stat": "damage_percent", "per_level": 3, "costs": COSTS},
 	"weapon_mastery": {"name": "Fegyverforgatás", "stat": "damage", "per_level": 1, "costs": COSTS},
