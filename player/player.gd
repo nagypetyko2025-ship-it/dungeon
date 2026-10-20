@@ -58,6 +58,9 @@ const THROW_TIME := 0.24
 const BOW_RANGE := 420.0
 const ARROW_SPEED := 560.0
 const PLAYER_ARROW := preload("res://player/player_arrow.gd")
+## Többlövésnél a nyilak egymástól ennyi fokkal térnek el, és ennyi pixellel indulnak egymás mellől.
+const MULTISHOT_SPREAD := 8.0
+const MULTISHOT_GAP := 16.0
 ## Ennyi megtett pixelenként szól egy lépés.
 const STEP_LENGTH := 46.0
 
@@ -93,6 +96,9 @@ func _ready() -> void:
 	_health.died.connect(_on_died)
 	_health.dodged.connect(_on_dodged)
 	_load_state()
+	# Új futás: a Többlövés alapértéke a karakteré (az íjász 2 nyilat lő).
+	if not GameState.saved_stats.has("multishot"):
+		_stats.base_multishot = float(Characters.data(Progress.character).get("multishot", 1))
 	_stats.changed.connect(_apply_stats)
 	_inventory.changed.connect(_apply_equipment)
 	# Minden szintlépéskor minden alapstat nő egy kicsit (a választott fejlesztésen felül).
@@ -141,6 +147,7 @@ func hit_damage() -> int:
 ## Másik karakterre váltás (a kocsmában): kinézet, tábori felszerelés, fejlesztések.
 func set_character(id: String) -> void:
 	Progress.select_character(id)
+	_stats.base_multishot = float(Characters.data(id).get("multishot", 1))
 	_sprite.sprite_frames = Characters.frames(id)
 	_sprite.play("idle")
 	if Progress.camp_inventory.is_empty():
@@ -375,17 +382,22 @@ func _shoot(aim_angle: float) -> void:
 	_weapon_pivot.visible = true
 	_weapon_pivot.rotation = aim_angle
 	_weapon_pivot.position = WEAPON_PIVOT_POSITION
-	var arrow: Area2D = PLAYER_ARROW.new()
-	arrow.direction = direction
-	arrow.speed = ARROW_SPEED
-	arrow.max_distance = BOW_RANGE * _stats.attack_range / 100.0
-	arrow.damage = hit_damage()
-	arrow.crit_chance = _stats.crit_chance / 100.0
-	arrow.crit_multiplier = weapon_crit_multiplier()
-	arrow.knockback = WEAPON_TYPES["bow"]["knockback"]
-	arrow.set_meta("source", self)
-	get_parent().add_child(arrow)
-	arrow.global_position = _weapon_pivot.global_position + direction * 18.0
+	# Többlövés: ennyi nyíl egyszerre, egymás mellett, kicsit szétterülve (nem egymásban).
+	var count := _stats.multishot
+	var side := direction.orthogonal()
+	for i in count:
+		var k := i - (count - 1) / 2.0
+		var arrow: Area2D = PLAYER_ARROW.new()
+		arrow.direction = direction.rotated(deg_to_rad(MULTISHOT_SPREAD) * k)
+		arrow.speed = ARROW_SPEED
+		arrow.max_distance = BOW_RANGE * _stats.attack_range / 100.0
+		arrow.damage = hit_damage()
+		arrow.crit_chance = _stats.crit_chance / 100.0
+		arrow.crit_multiplier = weapon_crit_multiplier()
+		arrow.knockback = WEAPON_TYPES["bow"]["knockback"]
+		arrow.set_meta("source", self)
+		get_parent().add_child(arrow)
+		arrow.global_position = _weapon_pivot.global_position + direction * 18.0 + side * MULTISHOT_GAP * k
 	await get_tree().create_timer(0.15, false).timeout
 	if _weapon_pivot.rotation == aim_angle:
 		_weapon_pivot.visible = false

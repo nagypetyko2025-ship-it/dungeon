@@ -17,6 +17,7 @@ var _accepting_input := false
 var _stats: Stats
 var _reroll_button: Button
 
+const LEGENDARY_COLOR := Color(1, 0.6, 0.15)
 const REROLL_BASE := 5.0
 const REROLL_GROWTH := 1.6
 
@@ -67,8 +68,17 @@ func _reroll() -> void:
 		return
 	GameState.rerolls += 1
 	Audio.play("coin")
-	_options = Upgrades.roll(_stats, CARD_COUNT)
+	_options = Upgrades.roll(_stats, CARD_COUNT, _has_bow())
 	_show_cards()
+
+
+## Íjjal vagy íjászként a Nyílzápor legendás kártya is felbukkanhat.
+func _has_bow() -> bool:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return false
+	var weapon = player.get_node("Inventory").equipment.get("weapon")
+	return Progress.character == "archer" or (weapon is Dictionary and weapon.get("weapon_type", "") == "bow")
 
 
 func _growth_text() -> String:
@@ -76,7 +86,7 @@ func _growth_text() -> String:
 	for stat: String in Stats.LEVEL_GROWTH:
 		var amount: float = Stats.LEVEL_GROWTH[stat]
 		var text := Items.format_stat(stat, amount)
-		if stat in ["damage", "dodge", "crit_chance", "health_regen", "defense"]:
+		if stat in ["damage", "ranged_damage", "dodge", "crit_chance", "health_regen", "defense"]:
 			# A tört értékek (pl. +0.25 sebzés) tizedesekkel.
 			text = "+%s%s %s" % [str(amount), "%" if stat in Items.PERCENT_STATS else "", Items.STAT_LABELS[stat]]
 		parts.append(text)
@@ -90,7 +100,7 @@ func _on_leveled_up(level: int) -> void:
 
 
 func _open() -> void:
-	_options = Upgrades.roll(_stats, CARD_COUNT)
+	_options = Upgrades.roll(_stats, CARD_COUNT, _has_bow())
 	_title.text = "Szintlépés! — %d. szint" % _level_queue[0]
 	_show_cards()
 	visible = true
@@ -161,7 +171,47 @@ func _make_card(index: int, upgrade: Dictionary) -> Button:
 	box.add_child(icon)
 	box.add_child(_label(upgrade["title"], 24, Color(1, 0.88, 0.55)))
 	box.add_child(_label(upgrade["text"], 16, Color(0.9, 0.86, 0.8)))
+	if upgrade.get("legendary", false):
+		_make_legendary(card, box, icon)
 	return card
+
+
+## Legendás kártya: izzó arany-narancs keret, "LEGENDÁS" felirat, lüktető fény, csillogás.
+func _make_legendary(card: Button, box: VBoxContainer, icon: TextureRect) -> void:
+	for state in ["normal", "hover", "pressed"]:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.22, 0.1, 0.03) if state == "normal" else Color(0.32, 0.15, 0.04)
+		style.border_color = LEGENDARY_COLOR if state == "normal" else Color(1, 0.85, 0.4)
+		style.set_border_width_all(5)
+		style.set_corner_radius_all(6)
+		style.shadow_color = Color(1, 0.55, 0.1, 0.55)
+		style.shadow_size = 14
+		style.set_content_margin_all(16)
+		card.add_theme_stylebox_override(state, style)
+	var banner := _label("★ LEGENDÁS ★", 16, LEGENDARY_COLOR)
+	box.add_child(banner)
+	box.move_child(banner, 1)
+	icon.custom_minimum_size = Vector2(88, 88)
+	# Lüktetés és szikrák.
+	var glow := card.create_tween().set_loops()
+	glow.tween_property(card, "self_modulate", Color(1.35, 1.15, 0.85), 0.6).set_trans(Tween.TRANS_SINE)
+	glow.tween_property(card, "self_modulate", Color.WHITE, 0.6).set_trans(Tween.TRANS_SINE)
+	var sparks := CPUParticles2D.new()
+	sparks.amount = 24
+	sparks.lifetime = 1.4
+	sparks.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	sparks.emission_rect_extents = CARD_SIZE / 2.0
+	sparks.position = CARD_SIZE / 2.0
+	sparks.direction = Vector2(0, -1)
+	sparks.spread = 30.0
+	sparks.gravity = Vector2(0, -25)
+	sparks.initial_velocity_min = 10.0
+	sparks.initial_velocity_max = 30.0
+	sparks.scale_amount_min = 2.0
+	sparks.scale_amount_max = 3.5
+	sparks.color = Color(1, 0.75, 0.3)
+	card.add_child(sparks)
+	Audio.play("boss_defeated", -14.0)
 
 
 func _label(text: String, size: int, color: Color) -> Label:

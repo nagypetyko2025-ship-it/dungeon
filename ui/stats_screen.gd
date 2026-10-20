@@ -79,6 +79,8 @@ func _refresh() -> void:
 	_stat_row("damage_percent", "Sebzés", "%+d%%" % stats.damage_percent, "minden találat")
 	_stat_row("max_health", "Élet", "%d / %d" % [health.current, health.max_health], "")
 	_stat_row("health_regen", "Regeneráció", "%.1f / mp" % stats.health_regen, "")
+	_stat_row("multishot", "Többlövés", "%d nyíl" % stats.multishot,
+		"íjjal egyszerre, max %d (csak legendás növeli)" % Stats.MAX_MULTISHOT)
 	_stat_row("defense", "Védelem", "%d%%" % stats.defense, "a sebzésből, max %d%%" % Stats.MAX_DEFENSE)
 	_stat_row("dodge", "Kikerülés", "%d%%" % stats.dodge, "max %d%%" % Stats.MAX_DODGE)
 	_stat_row("move_speed", "Sebesség", "%d%%" % stats.move_speed,
@@ -135,7 +137,7 @@ func _stat_row(stat: String, title: String, value: String, detail: String) -> vo
 	icon.custom_minimum_size = ICON_SIZE
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	for upgrade in Upgrades.ALL:
+	for upgrade in Upgrades.ALL + Upgrades.LEGENDARY:
 		if upgrade["stat"] == stat:
 			icon.texture = Upgrades.icon(upgrade)
 	_left.add_child(icon)

@@ -142,7 +142,8 @@ func _ready() -> void:
 ## Az ütközők méretét a sprite méretéhez igazítja (nagy ellenségnél nagyobb).
 ## Az erősebbre dobott példány kicsit nagyobb (a főellenség felülírja).
 func _compute_size_scale() -> float:
-	return 1.0 + lerpf(-SIZE_VARIATION, SIZE_VARIATION, stats["power"])
+	# A típus saját mérete ("size", pl. a nagy, 5. emelet utáni szörnyeknél), ezen belül a dobás szerint.
+	return float(_type.get("size", 1.0)) * (1.0 + lerpf(-SIZE_VARIATION, SIZE_VARIATION, stats["power"]))
 
 
 func _fit_shapes(size: Vector2) -> void:
@@ -284,7 +285,9 @@ func _dash_direction(delta: float, chase: Vector2) -> Vector2:
 func _own_frames(texture: Texture2D, frame_size: Vector2) -> SpriteFrames:
 	var frames := SpriteFrames.new()
 	frames.remove_animation("default")
-	var animations := {"dormant": [0], "wake": [1], "idle": [2, 3, 4, 5], "run": [2, 3, 4, 5]}
+	# Mimik: 0 alvó, 1 ébredő, 2-5 futás; minden más saját lap: 0-3 álló, 4-7 futás.
+	var animations := {"dormant": [0], "wake": [1], "idle": [2, 3, 4, 5], "run": [2, 3, 4, 5]} \
+		if _type.get("mimic", false) else {"idle": [0, 1, 2, 3], "run": [4, 5, 6, 7]}
 	for anim: String in animations:
 		frames.add_animation(anim)
 		frames.set_animation_speed(anim, 10.0)

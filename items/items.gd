@@ -42,6 +42,7 @@ const SLOT_ICON_ITEMS := {
 const STAT_LABELS := {
 	"damage": "közelharci sebzés",
 	"ranged_damage": "távolsági sebzés",
+	"multishot": "nyíl lövésenként (többlövés)",
 	"damage_percent": "sebzés",
 	"max_health": "max élet",
 	"health_regen": "élet / mp",
@@ -106,7 +107,7 @@ const DEFINITIONS := {
 		"stats": {"ranged_damage": [1, 2], "attack_speed": [8, 12], "damage_percent": [3, 6]}},
 	"bow_star": {"name": "Csillagíj", "slot": "weapon", "rarity": "legendary", "weapon_type": "bow",
 		"base": [4, 5], "scaling": 1.2, "crit": 2.0,
-		"stats": {"ranged_damage": [2, 3], "attack_range": [15, 25], "crit_chance": [8, 12], "damage_percent": [6, 10]}},
+		"stats": {"multishot": [1, 1], "ranged_damage": [2, 3], "attack_range": [15, 25], "crit_chance": [8, 12], "damage_percent": [6, 10]}},
 	# Sisakok
 	"helmet_leather": {"name": "Bőrsapka", "slot": "helmet", "rarity": "common",
 		"stats": {"max_health": [2, 4], "crit_chance": [1, 2]}},
@@ -212,6 +213,9 @@ const DEFINITIONS := {
 		"stats": {"xp_bonus": [25, 35], "crit_chance": [3, 5]}},
 	"trinket_fang": {"name": "Vámpírfog", "slot": "trinket", "rarity": "epic",
 		"stats": {"lifesteal": [8, 12], "damage_percent": [4, 6]}},
+	# Főnixtoll: legendás; a többlövést csak legendás tárgy növelheti.
+	"trinket_phoenix": {"name": "Főnixtoll", "slot": "trinket", "rarity": "legendary",
+		"stats": {"multishot": [1, 1], "ranged_damage": [1, 2], "attack_speed": [5, 10]}},
 	"trinket_clock": {"name": "Megállított óra", "slot": "trinket", "rarity": "legendary",
 		"stats": {"attack_speed": [15, 22], "move_speed": [8, 12], "xp_bonus": [10, 15]}},
 

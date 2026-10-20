@@ -9,6 +9,16 @@ const CELL := Vector2i(19, 15)
 const ROOM_WIDTH := Vector2i(11, 14)
 const ROOM_HEIGHT := Vector2i(8, 10)
 const ROOM_JITTER := 1
+## Az 5. emelettől nagyobbak a szobák (és több szörny jön): ehhez nagyobb rácscella kell,
+## hogy a szomszédos szobák fala ne érjen össze.
+const BIG_ROOMS_FROM := 5
+const BIG_CELL := Vector2i(26, 19)
+const BIG_ROOM_WIDTH := Vector2i(15, 19)
+const BIG_ROOM_HEIGHT := Vector2i(11, 14)
+## Nagy szobákban ennyi plusz szörny, és legfeljebb ennyi lehet egy szobában.
+const BIG_ROOM_EXTRA_ENEMIES := 3
+const BIG_MAX_ENEMIES := 14
+const BIG_BOSS_ROOM_SIZE := Vector2i(21, 15)
 ## A folyosók szélessége csempében (páratlan legyen).
 const CORRIDOR_WIDTH := 3
 const DIRECTIONS: Array[Vector2i] = [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]
@@ -53,6 +63,8 @@ var _floor := {}
 var _wood_floor := {}
 var _shop_return := Vector2.ZERO
 var _teleporting := false
+var _cell := CELL
+var _big_rooms := false
 
 @onready var _floor_layer: TileMapLayer = $FloorLayer
 @onready var _wall_layer: TileMapLayer = $WallLayer
@@ -77,6 +89,8 @@ func _ready() -> void:
 	_wall_layer.tile_set = tile_set
 
 	var depth := GameState.depth
+	_big_rooms = depth >= BIG_ROOMS_FROM
+	_cell = BIG_CELL if _big_rooms else CELL
 	var cells := _generate_layout(mini(base_room_count + depth - 1, max_room_count))
 	var distances := _distances_from_start(cells)
 	var stairs_cell := _farthest(distances)
@@ -88,12 +102,13 @@ func _ready() -> void:
 	var room_rects := {}
 	for cell in cells:
 		if boss_floor and cell == stairs_cell:
-			room_rects[cell] = Rect2i(cell * CELL - BOSS_ROOM_SIZE / 2, BOSS_ROOM_SIZE)
+			var boss_size := BIG_BOSS_ROOM_SIZE if _big_rooms else BOSS_ROOM_SIZE
+			room_rects[cell] = Rect2i(cell * _cell - boss_size / 2, boss_size)
 		else:
 			room_rects[cell] = _random_room_rect(cell)
 		_carve(room_rects[cell])
 	if boss_floor and alcove_dir != Vector2i.ZERO:
-		_carve(_alcove_rect(room_rects[stairs_cell], stairs_cell * CELL, alcove_dir))
+		_carve(_alcove_rect(room_rects[stairs_cell], stairs_cell * _cell, alcove_dir))
 	for cell in cells:
 		for dir in [Vector2i.RIGHT, Vector2i.DOWN]:
 			if cells.has(cell + dir):
@@ -109,7 +124,7 @@ func _ready() -> void:
 
 	for cell in cells:
 		var room: Room = room_scene.instantiate()
-		room.anchor = cell * CELL
+		room.anchor = cell * _cell
 		room.rect = room_rects[cell]
 		room.depth = depth
 		for dir in DIRECTIONS:
@@ -123,7 +138,10 @@ func _ready() -> void:
 			room.alcove_dir = alcove_dir
 			room.enemy_count = 1
 		elif distance > 0:
-			room.enemy_count = mini(2 + distance / 2 + depth - 1, max_enemies_per_room)
+			if _big_rooms:
+				room.enemy_count = mini(2 + BIG_ROOM_EXTRA_ENEMIES + distance / 2 + depth - 1, BIG_MAX_ENEMIES)
+			else:
+				room.enemy_count = mini(2 + distance / 2 + depth - 1, max_enemies_per_room)
 			room.trap_count = randi_range(1, mini(2 + depth / 2, 4))
 			room.has_chest = randf() < CHEST_CHANCE
 		room.has_stairs = cell == stairs_cell and not boss_floor
@@ -144,7 +162,7 @@ func _ready() -> void:
 	_player.connect("death_finished", Callable(_death_screen, "show_for").bind(_player))
 	var rooms: Array[Room] = []
 	rooms.assign(_rooms.get_children())
-	_hud.call("setup_map", rooms, _player, CELL)
+	_hud.call("setup_map", rooms, _player, _cell)
 	_hud.show_message(("%d. emelet — főellenség vár!" if boss_floor else "%d. emelet") % depth)
 
 
@@ -275,9 +293,11 @@ func _farthest(distances: Dictionary) -> Vector2i:
 ## A szoba mindig tartalmazza a cella középső sorát és oszlopát,
 ## mert a folyosók ezek mentén futnak.
 func _random_room_rect(cell: Vector2i) -> Rect2i:
-	var size := Vector2i(randi_range(ROOM_WIDTH.x, ROOM_WIDTH.y), randi_range(ROOM_HEIGHT.x, ROOM_HEIGHT.y))
+	var widths := BIG_ROOM_WIDTH if _big_rooms else ROOM_WIDTH
+	var heights := BIG_ROOM_HEIGHT if _big_rooms else ROOM_HEIGHT
+	var size := Vector2i(randi_range(widths.x, widths.y), randi_range(heights.x, heights.y))
 	var jitter := Vector2i(randi_range(-ROOM_JITTER, ROOM_JITTER), randi_range(-ROOM_JITTER, ROOM_JITTER))
-	return Rect2i(cell * CELL - size / 2 + jitter, size)
+	return Rect2i(cell * _cell - size / 2 + jitter, size)
 
 
 func _carve(rect: Rect2i) -> void:
@@ -287,7 +307,7 @@ func _carve(rect: Rect2i) -> void:
 
 
 func _carve_corridor(from: Rect2i, to: Rect2i, cell: Vector2i, dir: Vector2i) -> void:
-	var anchor := cell * CELL
+	var anchor := cell * _cell
 	var half := CORRIDOR_WIDTH / 2
 	if dir == Vector2i.RIGHT:
 		_carve(Rect2i(from.end.x, anchor.y - half, to.position.x - from.end.x, CORRIDOR_WIDTH))

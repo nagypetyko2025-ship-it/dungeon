@@ -8,6 +8,7 @@ class_name Characters
 ## seat          melyik kocsmai széken ül, amikor nem ő az aktív karakter
 ## bow_damage    íjjal ennyivel nagyobbat sebez (szorzó-bónusz, pl. 0.25 = +25%)
 ## bow_speed     íjjal ennyivel gyorsabban lő (pl. 0.15 = 15%-kal rövidebb cooldown)
+## multishot     a Többlövés alapértéke (egyszerre ennyi nyíl; alapból 1)
 
 const DEFAULT := "knight"
 const ALL := {
@@ -18,8 +19,8 @@ const ALL := {
 	},
 	"archer": {
 		"name": "Íjász", "sheet": "res://assets/characters/archer.png", "frame_size": Vector2(16, 28),
-		"start_weapon": "bow_old", "seat": 3, "bow_damage": 0.25, "bow_speed": 0.15,
-		"description": "Erdei vadász. Régi íjjal indul; íjjal +25% sebzés és 15%-kal gyorsabb lövés.",
+		"start_weapon": "bow_old", "seat": 3, "bow_damage": 0.25, "bow_speed": 0.15, "multishot": 2,
+		"description": "Erdei vadász. Régi íjjal indul; egyszerre 2 nyilat lő, íjjal +25% sebzés és 15%-kal gyorsabb lövés.",
 	},
 }
 

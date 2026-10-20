@@ -147,6 +147,30 @@ const TYPES: Array[Dictionary] = [
 	{"name": "big_demon", "abilities": ["death_burst"], "rect": Rect2(16, 428, 32, 36), "run": true,
 		"health": [20, 26], "damage": [4, 5], "speed": [65, 75], "dodge": [15, 25],
 		"knockback": [420, 480], "resist": [0.85, 0.95], "xp": [12, 14], "min_depth": 6, "weight": 1},
+	# --- Csak az 5. emelettől: erősebb, nagyobb szörnyek (MiniWorld Sprites, CC0) ---
+	# sheet: 8 kockás sáv (0-3 álló, 4-7 futás); size: ennyiszer nagyobb a sima méretnél.
+	{"name": "minotaur", "abilities": ["berserk"], "dash": true,
+		"sheet": "res://assets/enemies/minotaur.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.8,
+		"health": [24, 30], "damage": [5, 6], "speed": [80, 95], "dodge": [5, 10],
+		"knockback": [460, 520], "resist": [0.75, 0.85], "xp": [14, 16], "min_depth": 5, "weight": 2},
+	{"name": "yeti", "abilities": ["regenerate", "war_cry"],
+		"sheet": "res://assets/enemies/yeti.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.9,
+		"health": [30, 38], "damage": [5, 6], "speed": [60, 70], "dodge": [0, 5],
+		"knockback": [480, 540], "resist": [0.85, 0.95], "xp": [15, 17], "min_depth": 5, "weight": 2},
+	{"name": "wendigo", "abilities": ["teleport", "zigzag"],
+		"sheet": "res://assets/enemies/wendigo.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.7,
+		"health": [18, 22], "damage": [5, 6], "speed": [120, 140], "dodge": [15, 25],
+		"knockback": [380, 420], "resist": [0.5, 0.6], "xp": [13, 15], "min_depth": 5, "weight": 2},
+	{"name": "armored_demon", "abilities": ["berserk", "death_burst"], "ranged": true,
+		"projectile": "magic", "weapon_region": Rect2(324, 129, 8, 30), "shots": 3, "spread": 15.0,
+		"sheet": "res://assets/enemies/armored_demon.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.7,
+		"health": [22, 28], "damage": [4, 5], "speed": [65, 80], "dodge": [10, 15],
+		"knockback": [300, 340], "resist": [0.6, 0.7], "xp": [15, 17], "min_depth": 5, "weight": 2,
+		"fire_interval": [2.2, 3.0], "arrow_speed": [220, 260], "keep_distance": [200, 260]},
+	{"name": "skeleton_legionary", "abilities": ["summon"],
+		"sheet": "res://assets/enemies/skeleton_legionary.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.6,
+		"health": [20, 26], "damage": [4, 5], "speed": [75, 90], "dodge": [20, 30],
+		"knockback": [360, 400], "resist": [0.5, 0.6], "xp": [14, 16], "min_depth": 5, "weight": 2},
 ]
 
 ## Erősödés emeletenként (az 1. emelethez képest):

@@ -1,1 +1,2 @@
 ﻿mimic.png: a 0x72 DungeonTileset II mimik-ládájából (CC0, https://0x72.itch.io/dungeontileset-ii) készült, rajzolt lábakkal. CC0.
+minotaur.png, yeti.png, wendigo.png, armored_demon.png, skeleton_legionary.png: a "MiniWorld Sprites" csomagból (CC0, https://opengameart.org/content/miniworld-sprites), az oldalnézeti kockákból összeállítva.

@@ -36,19 +36,39 @@ const LIMITS := {
 	"crit_chance": Stats.MAX_CRIT,
 	"attack_range": Stats.MAX_RANGE,
 	"defense": Stats.MAX_DEFENSE,
+	"multishot": Stats.MAX_MULTISHOT,
 }
+
+## Legendás fejlesztések: ritkábbak a többinél (LEGENDARY_CHANCE eséllyel kerül egy a
+## választhatók közé), és különleges, arany kártyán jelennek meg.
+const LEGENDARY: Array[Dictionary] = [
+	{"stat": "multishot", "title": "Nyílzápor", "text": "+1 nyíl lövésenként", "amount": 1,
+		"icon_path": "res://assets/ui/icon_multishot.png", "legendary": true, "needs_bow": true},
+]
+const LEGENDARY_CHANCE := 0.1
 
 
 ## `count` darab különböző fejlesztés véletlenszerűen; ami már maxon van, kimarad.
-static func roll(stats: Stats, count: int) -> Array[Dictionary]:
+## `has_bow`: íjjal (vagy íjászként) a Nyílzápor legendás kártya is felbukkanhat, ritkán.
+static func roll(stats: Stats, count: int, has_bow := false) -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	for upgrade in ALL:
-		var stat: String = upgrade["stat"]
-		if LIMITS.has(stat) and stats.get(stat) >= LIMITS[stat]:
-			continue
-		options.append(upgrade)
+		if _available(stats, upgrade):
+			options.append(upgrade)
 	options.shuffle()
-	return options.slice(0, count)
+	options = options.slice(0, count)
+	var legendary: Array[Dictionary] = []
+	for upgrade in LEGENDARY:
+		if _available(stats, upgrade) and (has_bow or not upgrade.get("needs_bow", false)):
+			legendary.append(upgrade)
+	if not legendary.is_empty() and randf() < LEGENDARY_CHANCE and not options.is_empty():
+		options[randi() % options.size()] = legendary.pick_random()
+	return options
+
+
+static func _available(stats: Stats, upgrade: Dictionary) -> bool:
+	var stat: String = upgrade["stat"]
+	return not (LIMITS.has(stat) and stats.get(stat) >= LIMITS[stat])
 
 
 static func apply(stats: Stats, upgrade: Dictionary) -> void:
