@@ -12,6 +12,7 @@ class_name Characters
 ## bow_speed     íjjal ennyivel gyorsabban lő (pl. 0.15 = 15%-kal rövidebb cooldown)
 ## multishot     a Többlövés alapértéke (egyszerre ennyi nyíl; alapból 1)
 ## move_speed    a mozgási sebesség alapértéke (%, alapból 100)
+## accuracy      a találati esély alapértéke (%): ennyi eséllyel találja el a szörnyet
 ## dash          van-e Suhanása (Ctrl: a kurzor felé, a szörnyeken át)
 ## role / traits / story   a bemutatkozó panel szövegei (a kocsmában, a karakter mellett)
 
@@ -19,7 +20,7 @@ const DEFAULT := "knight"
 const ALL := {
 	"knight": {
 		"name": "Lovag", "rect": Rect2(128, 100, 16, 28),
-		"start_weapon": "sword_rusty", "seat": 0, "weapons": "melee",
+		"start_weapon": "sword_rusty", "seat": 0, "weapons": "melee", "accuracy": 75,
 		"description": "Kiegyensúlyozott közelharcos. Rozsdás karddal indul.",
 		"role": "Közelharcos",
 		"story": "Egykor a királyi őrség tagja volt; most a mélység titkai után kutat. "
@@ -28,12 +29,14 @@ const ALL := {
 			"Rozsdás karddal indul",
 			"Bármilyen közelharci fegyvert forgathat (kard, tőr, lándzsa, balta, buzogány)",
 			"Íjat nem használhat",
+			"75% találati esély",
 		],
 	},
 	"archer": {
 		"name": "Íjász", "sheet": "res://assets/characters/archer.png", "frame_size": Vector2(16, 28),
 		"start_weapon": "bow_old", "seat": 3, "weapons": "ranged",
 		"bow_damage": 0.25, "bow_speed": 0.15, "multishot": 2, "move_speed": 115, "dash": true,
+		"accuracy": 80,
 		"description": "Erdei vadász: 2 nyíl egyszerre, gyorsabb mozgás, Ctrl-re suhanás.",
 		"role": "Távolsági harcos",
 		"story": "Az erdő szélén nőtt fel, ahol a farkasok is tisztelettel kerülték. "
@@ -43,6 +46,7 @@ const ALL := {
 			"Egyszerre 2 nyilat lő (Többlövés, legfeljebb 5)",
 			"Íjjal +25% sebzés és 15%-kal gyorsabb lövés",
 			"15%-kal gyorsabban mozog",
+			"80% találati esély",
 			"Suhanás [Ctrl]: a kurzor felé ugrik, a szörnyeken át (5 mp)",
 		],
 	},

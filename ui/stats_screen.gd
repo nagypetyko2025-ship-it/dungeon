@@ -82,6 +82,7 @@ func _refresh() -> void:
 	_stat_row("multishot", "Többlövés", "%d nyíl" % stats.multishot,
 		"íjjal egyszerre, max %d (csak legendás növeli)" % Stats.MAX_MULTISHOT)
 	_stat_row("defense", "Védelem", "%d%%" % stats.defense, "a sebzésből, max %d%%" % Stats.MAX_DEFENSE)
+	_stat_row("accuracy", "Találati esély", "%d%%" % stats.accuracy, "ennyire találod el a szörnyet, max %d%%" % Stats.MAX_ACCURACY)
 	_stat_row("dodge", "Kikerülés", "%d%%" % stats.dodge, "max %d%%" % Stats.MAX_DODGE)
 	_stat_row("move_speed", "Sebesség", "%d%%" % stats.move_speed,
 		"%d px / mp" % roundi(PLAYER_SCRIPT.BASE_SPEED * stats.move_speed / 100.0))

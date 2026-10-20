@@ -18,12 +18,14 @@ const ALL: Array[Dictionary] = [
 		"icon_path": "res://assets/ui/icon_dodge.png"},
 	{"stat": "move_speed", "title": "Gyorsaság", "text": "+10% mozgási sebesség", "amount": 10,
 		"icon_path": "res://assets/ui/icon_boot.png"},
-	{"stat": "attack_speed", "title": "Fürgeség", "text": "+15% ütési sebesség", "amount": 15,
+	{"stat": "attack_speed", "title": "Fürgeség", "text": "+5% ütési sebesség", "amount": 5,
 		"region": Rect2(293, 66, 6, 29)},
 	{"stat": "crit_chance", "title": "Precizitás", "text": "+4% kritikus esély", "amount": 4,
 		"icon_path": "res://assets/ui/icon_crit.png"},
 	{"stat": "defense", "title": "Páncélzat", "text": "+2% védelem (a sebzés ennyi %-át kivéded)", "amount": 2,
 		"icon_path": "res://assets/ui/icon_defense.png"},
+	{"stat": "accuracy", "title": "Pontosság", "text": "+3% találati esély (ritkábban mész mellé)", "amount": 3,
+		"icon_path": "res://assets/ui/icon_accuracy.png"},
 	{"stat": "attack_range", "title": "Hosszú karok", "text": "+12% hatótáv (messzebbre ér a kardod)", "amount": 12,
 		"icon_path": "res://assets/ui/icon_range.png"},
 ]
@@ -37,6 +39,7 @@ const LIMITS := {
 	"attack_range": Stats.MAX_RANGE,
 	"defense": Stats.MAX_DEFENSE,
 	"multishot": Stats.MAX_MULTISHOT,
+	"accuracy": Stats.MAX_ACCURACY,
 }
 
 ## Legendás fejlesztések: ritkábbak a többinél (LEGENDARY_CHANCE eséllyel kerül egy a

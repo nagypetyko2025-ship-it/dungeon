@@ -86,7 +86,7 @@ func _growth_text() -> String:
 	for stat: String in Stats.LEVEL_GROWTH:
 		var amount: float = Stats.LEVEL_GROWTH[stat]
 		var text := Items.format_stat(stat, amount)
-		if stat in ["damage", "ranged_damage", "dodge", "crit_chance", "health_regen", "defense"]:
+		if stat in ["damage", "ranged_damage", "dodge", "crit_chance", "health_regen", "defense", "accuracy"]:
 			# A tört értékek (pl. +0.25 sebzés) tizedesekkel.
 			text = "+%s%s %s" % [str(amount), "%" if stat in Items.PERCENT_STATS else "", Items.STAT_LABELS[stat]]
 		parts.append(text)

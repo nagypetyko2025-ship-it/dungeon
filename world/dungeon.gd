@@ -54,6 +54,11 @@ const QUEST_BOOK := preload("res://ui/quest_book.gd")
 ## A gyakorló pálya szobái (balról jobbra): kezdő, harc + láda, bolt, lépcső.
 const TUTORIAL_CELLS: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
 const BOSS_ROOM_SIZE := Vector2i(15, 11)
+## Az utolsó, 20. emelet: csak a kezdőszoba és a Vérfarkas nagy terme (tőle keletre).
+const FINAL_DEPTH := 20
+const FINAL_START_ROOM := Rect2i(-6, -5, 13, 11)
+const FINAL_ARENA_SIZE := Vector2i(31, 21)
+const VICTORY_PANEL := preload("res://ui/victory_panel.gd")
 const NO_SHOP := Vector2i(999999, 999999)
 
 @export var room_scene: PackedScene
@@ -96,18 +101,27 @@ func _ready() -> void:
 	_cell = BIG_CELL if _big_rooms else CELL
 	# Gyakorló pálya (tutorial): rögzített, egyenes sor: kezdőszoba, harc + láda, bolt, lépcső.
 	var tutorial := GameState.tutorial
-	var cells: Array[Vector2i] = TUTORIAL_CELLS.duplicate() if tutorial \
-		else _generate_layout(mini(base_room_count + depth - 1, max_room_count))
+	var final_floor := depth == FINAL_DEPTH and not tutorial
+	var cells: Array[Vector2i] = []
+	if tutorial:
+		cells = TUTORIAL_CELLS.duplicate()
+	elif final_floor:
+		cells = [Vector2i.ZERO, Vector2i.RIGHT]
+	else:
+		cells = _generate_layout(mini(base_room_count + depth - 1, max_room_count))
 	var distances := _distances_from_start(cells)
 	var stairs_cell := _farthest(distances)
-	var shop_cell := TUTORIAL_CELLS[2] if tutorial else _pick_shop_cell(cells, stairs_cell)
+	var shop_cell := TUTORIAL_CELLS[2] if tutorial else NO_SHOP if final_floor else _pick_shop_cell(cells, stairs_cell)
 	# Minden BOSS_EVERY. emeleten a lépcsős szoba helyett főellenség-terem van.
-	var boss_floor := depth % BOSS_EVERY == 0 and not tutorial
+	var boss_floor := depth % BOSS_EVERY == 0 and not tutorial and not final_floor
 	var alcove_dir := _free_direction(cells, stairs_cell) if boss_floor else Vector2i.ZERO
 
 	var room_rects := {}
 	for cell in cells:
-		if boss_floor and cell == stairs_cell:
+		if final_floor:
+			room_rects[cell] = FINAL_START_ROOM if cell == Vector2i.ZERO \
+				else Rect2i(cell * _cell - FINAL_ARENA_SIZE / 2, FINAL_ARENA_SIZE)
+		elif boss_floor and cell == stairs_cell:
 			var boss_size := BIG_BOSS_ROOM_SIZE if _big_rooms else BOSS_ROOM_SIZE
 			room_rects[cell] = Rect2i(cell * _cell - boss_size / 2, boss_size)
 		else:
@@ -137,7 +151,13 @@ func _ready() -> void:
 			if cells.has(cell + dir):
 				room.connections.append(dir)
 		var distance: int = distances[cell]
-		if cell == shop_cell:
+		if final_floor:
+			# A Vérfarkas terme: nyitott aréna, se csapda, se láda.
+			if cell == Vector2i.RIGHT:
+				room.has_boss = true
+				room.final_boss = true
+				room.enemy_count = 1
+		elif cell == shop_cell:
 			room.has_shop = true
 		elif boss_floor and cell == stairs_cell:
 			room.has_boss = true
@@ -150,7 +170,7 @@ func _ready() -> void:
 				room.enemy_count = mini(2 + distance / 2 + depth - 1, max_enemies_per_room)
 			room.trap_count = randi_range(1, mini(2 + depth / 2, 4))
 			room.has_chest = randf() < CHEST_CHANCE
-		room.has_stairs = cell == stairs_cell and not boss_floor
+		room.has_stairs = cell == stairs_cell and not boss_floor and not final_floor
 		if tutorial:
 			room.trap_count = 1 if cell == stairs_cell else 0
 			room.has_chest = cell == TUTORIAL_CELLS[1]
@@ -185,7 +205,10 @@ func _ready() -> void:
 		add_child(guide)
 		guide.call("setup", self, rooms)
 	else:
-		_hud.show_message(("%d. emelet — főellenség vár!" if boss_floor else "%d. emelet") % depth)
+		if final_floor:
+			_hud.show_message("%d. emelet — keletre vár a Mélység Ura!" % depth)
+		else:
+			_hud.show_message(("%d. emelet — főellenség vár!" if boss_floor else "%d. emelet") % depth)
 
 
 ## Küldetések könyve (J), a Menus kezeli.
@@ -204,12 +227,35 @@ func _on_boss_fight_started(boss: Node2D) -> void:
 func _on_boss_defeated(boss: Node2D) -> void:
 	Audio.music("dungeon")
 	_hud.call("hide_boss")
+	var room: Room = boss.get_parent().get_parent()
+	if room.final_boss:
+		_on_final_boss_defeated(room)
+		return
 	_hud.show_message("%s legyőzve! A lépcső szabad, és megnyílt a kék portál a táborba." % boss.get("boss_name"))
 	# Visszaút-portál a teremben (a fülkével ellentétes oldalon, hogy ne takarja a lépcsőt).
-	var room: Room = boss.get_parent().get_parent()
 	var portal: Node2D = RETURN_PORTAL.new()
 	portal.position = Room.tile_center(room.anchor - room.alcove_dir * 3) - room.position
 	room.add_child.call_deferred(portal)
+
+
+## A Vérfarkas legyőzve: vége a kazamatának. A terem közepén portál nyílik, ami a
+## győzelmi ablakot nyitja (2 tárgy, a pénz 100%-a, aztán a táborba).
+func _on_final_boss_defeated(room: Room) -> void:
+	_hud.show_message("A Mélység Ura legyőzve! Lépj a portálba — végigértél a kazamatán!")
+	var portal: Node2D = RETURN_PORTAL.new()
+	portal.position = Room.tile_center(room.anchor) - room.position
+	portal.set("prompt_text", "[E] Győzelem — vissza a táborba")
+	portal.set("on_use", _open_victory_panel)
+	room.add_child.call_deferred(portal)
+
+
+func _open_victory_panel() -> void:
+	var panel := get_node_or_null("VictoryPanel")
+	if panel == null:
+		panel = VICTORY_PANEL.new()
+		panel.name = "VictoryPanel"
+		add_child(panel)
+	get_node("Menus").call("open_menu", panel)
 
 
 ## Ha a kazamatában bezárod az ablakot, az is kilépésnek számít: a pénzed 40%-a a táborba kerül.

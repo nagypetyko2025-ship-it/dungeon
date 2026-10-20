@@ -763,6 +763,19 @@ func _show_title() -> void:
 	var tween := create_tween()
 	tween.tween_interval(2.0)
 	tween.tween_property(title, "modulate:a", 0.0, 1.0)
+	# A Vérfarkas után egyszer: győzelmi felirat.
+	if GameState.dungeon_won:
+		GameState.dungeon_won = false
+		var won := MenuStyle.title_label("Végigértél a kazamatán! A Mélység Ura elesett.", 40, Color(1, 0.85, 0.4))
+		won.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+		won.offset_top = 130
+		won.offset_left = -500
+		won.offset_right = 500
+		won.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		layer.add_child(won)
+		var fade := create_tween()
+		fade.tween_interval(5.0)
+		fade.tween_property(won, "modulate:a", 0.0, 1.5)
 
 
 func _process(delta: float) -> void:

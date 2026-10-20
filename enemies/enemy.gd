@@ -9,11 +9,9 @@ const HIT_STUN := 0.25
 const XP_ORB := preload("res://pickups/xp_orb.tscn")
 ## Ennél több gömb nem pattan ki; a maradék XP az utolsóba kerül.
 const MAX_ORBS := 6
-## Tárgy-dobás esélye: alap + XP-nként ennyi (az erősebb ellenség gyakrabban dob), max ennyi.
 const ITEM_DROP := preload("res://pickups/item_drop.tscn")
-const ITEM_DROP_BASE := 0.015
-const ITEM_DROP_PER_XP := 0.004
-const ITEM_DROP_MAX := 0.08
+## Tárgy-dobás esélye: minden szörnynél ugyanannyi.
+const ITEM_DROP_CHANCE := 0.01
 ## A legerősebbre dobott példány ennyivel nagyobb, a leggyengébb ennyivel kisebb.
 const SIZE_VARIATION := 0.1
 const CRIT_COLOR := Color(1, 0.35, 0.15)
@@ -321,12 +319,16 @@ func _head_position() -> Vector2:
 
 func _on_hurt(hitbox: Hitbox) -> void:
 	_wake()
+	# (A nyílvesszőnek nincs owner-e: a kilövője a "source" metában van.)
+	var source: Variant = hitbox.get_meta("source", hitbox.owner)
+	# A játékos találati esélye: ha mellé megy, nem sebez (utána jön a szörny kikerülése).
+	if is_instance_valid(source) and source.has_method("hit_chance") and randf() >= float(source.call("hit_chance")):
+		_on_missed()
+		return
 	var hit := hitbox.roll_hit()
 	if not _health.damage(hit["damage"], not hit["pierce"]):
 		return
 	# A játékos fegyvere talált: életlopás stb. (lásd Player.on_hit_enemy).
-	# (A nyílvesszőnek nincs owner-e: a kilövője a "source" metában van.)
-	var source: Variant = hitbox.get_meta("source", hitbox.owner)
 	if is_instance_valid(source) and source.has_method("on_hit_enemy"):
 		source.call("on_hit_enemy", hit["damage"])
 	Audio.play("crit" if hit["crit"] else "hit")
@@ -343,6 +345,11 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	create_tween().tween_property(_visual, "modulate", Color.WHITE, 0.15)
 
 
+func _on_missed() -> void:
+	Audio.play("swing", -8.0, 0.2)
+	FloatingText.spawn(get_parent(), _head_position(), "Mellé!", Color(0.75, 0.75, 0.75))
+
+
 func _on_dodged() -> void:
 	Audio.play("dodge", -4.0)
 	FloatingText.spawn(get_parent(), _head_position(), "Kikerülte!", Color(0.7, 0.75, 0.85))
@@ -357,7 +364,7 @@ func _on_died() -> void:
 	_abilities.on_died()
 	if _type.has("gold"):
 		_drop_gold.call_deferred()
-	if randf() < minf(ITEM_DROP_BASE + stats["xp"] * ITEM_DROP_PER_XP, ITEM_DROP_MAX):
+	if randf() < ITEM_DROP_CHANCE:
 		_drop_item.call_deferred()
 	var tween := create_tween()
 	tween.tween_property(_visual, "scale", Vector2.ZERO, 0.2)

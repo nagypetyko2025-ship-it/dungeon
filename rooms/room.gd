@@ -34,6 +34,9 @@ const BOSS_GOLD := 40
 const BOSS_GOLD_PER_DEPTH := 10
 const BOSS_ITEM_MIN_RARITY := "epic"
 const COIN := preload("res://pickups/coin.tscn")
+const WEREWOLF := preload("res://enemies/werewolf_boss.gd")
+## A nagy főellenség (Vérfarkas, 20. emelet) jutalma: sok arany és két tárgy.
+const FINAL_BOSS_GOLD := 400
 const ITEM_DROP := preload("res://pickups/item_drop.tscn")
 
 @export var enemy_scene: PackedScene
@@ -62,6 +65,9 @@ var has_shop := false
 var visited := false
 ## Főellenség-terem: a lépcső a fülkében van (lcove_dir irányban), rács mögött.
 var has_boss := false
+## A nagy főellenség terme (20. emelet, Vérfarkas): nincs fülke és lépcső, győzelem után
+## a portálon át a táborba mehetsz, és vége a kazamatának.
+var final_boss := false
 ## A tárgylift jobb oldali csempéjének x-e (csak a bolt szobájában; a fáklyák kikerülik).
 var lift_x := -99999
 ## A szoba lépcsője (ha van): a harc végéig rács van rajta.
@@ -99,7 +105,7 @@ func _ready() -> void:
 			_stairs.call("set_locked", true)
 	if has_shop:
 		_place_shop()
-	if has_boss:
+	if has_boss and not final_boss:
 		_create_alcove()
 	_create_doors()
 	_create_trigger()
@@ -306,10 +312,17 @@ func _on_trigger_body_entered(body: Node2D) -> void:
 ## A főellenség a terem fülke felőli felén jelenik meg (a lépcső "mögötte" van).
 func _spawn_boss() -> void:
 	var boss = boss_scene.instantiate()
-	boss.setup_boss(depth)
-	var toward_alcove := Vector2(alcove_dir) * Vector2(rect.size) * 0.25
-	boss.position = toward_alcove * TILE
-	boss.get_node("Health").died.connect(_on_enemy_died.bind(boss))
+	if final_boss:
+		# A Vérfarkas a terem túlsó (keleti) felén vár; csak az igazi halála számít.
+		boss.set_script(WEREWOLF)
+		boss.setup_werewolf(depth)
+		boss.position = Vector2(rect.size.x * 0.25, 0) * TILE
+		boss.connect("final_died", _on_enemy_died.bind(boss))
+	else:
+		boss.setup_boss(depth)
+		var toward_alcove := Vector2(alcove_dir) * Vector2(rect.size) * 0.25
+		boss.position = toward_alcove * TILE
+		boss.get_node("Health").died.connect(_on_enemy_died.bind(boss))
 	_alive_enemies.append(boss)
 	_enemies.add_child.call_deferred(boss)
 	Audio.play("boss_roar")
@@ -363,7 +376,9 @@ func _point_free(world_position: Vector2) -> bool:
 
 func _on_boss_defeated(boss: Node2D) -> void:
 	Quests.notify("boss")
-	if is_instance_valid(_gate):
+	if final_boss:
+		pass  # nincs lépcső: a Dungeon nyit portált a táborba
+	elif is_instance_valid(_gate):
 		_gate.set_blocked(false)
 	elif alcove_dir == Vector2i.ZERO:
 		# Nem fért el fülke (minden oldalon szomszéd van): a lépcső most jelenik meg középen.
@@ -381,8 +396,8 @@ func _connect_center_stairs() -> void:
 
 ## Sok arany és egy biztosan legalább epikus tárgy.
 func _drop_boss_loot(at: Vector2) -> void:
-	var total := BOSS_GOLD + depth * BOSS_GOLD_PER_DEPTH
-	var coins := 10
+	var total := FINAL_BOSS_GOLD if final_boss else BOSS_GOLD + depth * BOSS_GOLD_PER_DEPTH
+	var coins := 20 if final_boss else 10
 	for i in coins:
 		var coin = COIN.instantiate()
 		coin.value = total / coins + (total % coins if i == 0 else 0)
@@ -392,6 +407,12 @@ func _drop_boss_loot(at: Vector2) -> void:
 	drop.item = Items.random_item("legendary", BOSS_ITEM_MIN_RARITY)
 	drop.position = at + Vector2(0, -20)
 	_enemies.add_child(drop)
+	if final_boss:
+		# A Vérfarkas egy biztos legendás tárgyat is hagy.
+		var legendary = ITEM_DROP.instantiate()
+		legendary.item = Items.random_item("legendary", "legendary")
+		legendary.position = at + Vector2(40, -20)
+		_enemies.add_child(legendary)
 
 
 ## `taken`: az ebben a körben már kiosztott csempék, hogy két ellenség

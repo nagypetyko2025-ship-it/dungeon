@@ -107,6 +107,9 @@ func _ready() -> void:
 	# Új futás: a karakter saját alapértékei (az íjász 2 nyilat lő és gyorsabb).
 	if GameState.saved_stats.is_empty():
 		_apply_character_base(Progress.character)
+	elif not GameState.saved_stats.has("accuracy"):
+		# Régebbi futás (még nem volt találati esély): a karakter alapértéke.
+		_stats.base_accuracy = float(Characters.data(Progress.character).get("accuracy", 75))
 	_stats.changed.connect(_apply_stats)
 	_inventory.changed.connect(_apply_equipment)
 	# Minden szintlépéskor minden alapstat nő egy kicsit (a választott fejlesztésen felül).
@@ -156,9 +159,10 @@ func hit_damage() -> int:
 	return damage
 
 
-## A karakter saját alapstatjai (Többlövés, mozgási sebesség).
+## A karakter saját alapstatjai (Többlövés, mozgási sebesség, találati esély).
 func _apply_character_base(id: String) -> void:
 	var definition := Characters.data(id)
+	_stats.base_accuracy = float(definition.get("accuracy", 75))
 	_stats.base_multishot = float(definition.get("multishot", 1))
 	_stats.base_move_speed = float(definition.get("move_speed", 100))
 
@@ -266,6 +270,11 @@ func pick_up_gold(amount: int) -> void:
 	var total := roundi(amount * (1.0 + _stats.special("gold_find") / 100.0))
 	add_gold(total)
 	Quests.notify("gold", total)
+
+
+## Az ellenség hívja, mielőtt a fegyvered sebezné: 0..1 esély, hogy eltalálod (Találati esély).
+func hit_chance() -> float:
+	return _stats.accuracy / 100.0
 
 
 ## Az ellenség hívja, ha a fegyvered eltalálta: életlopás.
@@ -494,6 +503,10 @@ func _on_hurt(hitbox: Hitbox) -> void:
 		_sprite.play("hit")
 		FloatingText.spawn(get_parent(), global_position + Vector2(0, -56), "-%d" % amount, Color(1, 0.35, 0.3))
 		_thorns(hitbox)
+		# Életlopó támadó (a Vérfarkas): a sebzésből gyógyul.
+		var attacker: Variant = hitbox.get_meta("source", hitbox.owner)
+		if is_instance_valid(attacker) and attacker.has_method("on_hit_player"):
+			attacker.call("on_hit_player", amount)
 
 
 ## Tüskék: aki közelharcban megüt, maga is sebződik.

@@ -16,6 +16,8 @@ var draggable := false
 var _items: Array = []
 var _slots: Array[Panel] = []
 var selected := -1
+## Több kijelölt hely egyszerre (select_many), pl. a végső győzelem után 2 tárgy.
+var selected_many: Array[int] = []
 
 
 func _init() -> void:
@@ -30,6 +32,7 @@ func set_items(items: Array, min_slots := 0) -> void:
 		child.queue_free()
 	_slots.clear()
 	selected = -1
+	selected_many.clear()
 	for i in maxi(items.size(), min_slots):
 		var item: Variant = items[i] if i < items.size() else null
 		var slot := GridSlot.new()
@@ -56,7 +59,7 @@ func set_items(items: Array, min_slots := 0) -> void:
 			slot.add_theme_stylebox_override("panel", UiStyle.slot(true))
 			item_hovered.emit(i))
 		slot.mouse_exited.connect(func() -> void:
-			slot.add_theme_stylebox_override("panel", UiStyle.slot(i == selected)))
+			slot.add_theme_stylebox_override("panel", UiStyle.slot(_is_selected(i))))
 		add_child(slot)
 		_slots.append(slot)
 
@@ -90,9 +93,23 @@ func item_at(index: int) -> Variant:
 
 func select(index: int) -> void:
 	selected = index
+	selected_many.clear()
 	for i in _slots.size():
 		_slots[i].modulate = SELECTED_GLOW if i == index else Color.WHITE
 		_slots[i].add_theme_stylebox_override("panel", UiStyle.slot(i == index))
+
+
+## Több hely kijelölése egyszerre (a korábbi kijelölés helyett).
+func select_many(indices: Array[int]) -> void:
+	selected = -1
+	selected_many = indices.duplicate()
+	for i in _slots.size():
+		_slots[i].modulate = SELECTED_GLOW if _is_selected(i) else Color.WHITE
+		_slots[i].add_theme_stylebox_override("panel", UiStyle.slot(_is_selected(i)))
+
+
+func _is_selected(index: int) -> bool:
+	return index == selected or selected_many.has(index)
 
 
 func _on_slot_input(event: InputEvent, index: int) -> void:

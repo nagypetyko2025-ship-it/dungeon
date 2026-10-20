@@ -26,6 +26,9 @@ const CHAPTERS := [
 		+ "szörnyet le nem győzöl. A kitisztított szobákban gyakran láda jelenik meg.\n\n"
 		+ "A lépcsős szobában a lépcsőn rács van, amíg élnek a szörnyek; utána a lépcső a következő, nehezebb emeletre visz. "
 		+ "Mélyebben erősebbek a szörnyek, az 5. emelettől nagyobbak a szobák, és új, erős szörnyek jönnek.\n\n"
+			+ "A 20. emelet az utolsó: egy hatalmas teremben a Vérfarkas, a Mélység Ura vár. Életet lop, karmos köröket "
+			+ "idéz a földre (3 mp múlva lecsapnak), és ha legyőzöd, egyszer feltámad. Utána a pénzed 100%-ával és "
+			+ "2 választott tárggyal térhetsz vissza a táborba.\n\n"
 		+ "Figyelj a tüskecsapdákra, és arra, hogy a szörnyek képességei is vannak: rohamoznak, teleportálnak, "
 		+ "gyógyítják egymást, idéznek, dühöngenek vagy halálukkor szétrobbannak. Támadás előtt felvillannak."],
 	["Harc és fegyverek",
@@ -34,7 +37,7 @@ const CHAPTERS := [
 		+ "Egy találat sebzése: (a fegyver alapsebzése + Közelharci vagy Távolsági sebzés × a fegyver skálázása) "
 		+ "× (100% + Sebzés%). Kritikus találatnál a fegyver kritikus szorzója is számít."],
 	["Statok",
-		"[b]Élet[/b], [b]Regeneráció[/b], [b]Védelem[/b] (a sebzés %-át kivédi, max 70%), [b]Kikerülés[/b] (esély, hogy nem sebződsz), "
+		"[b]Élet[/b], [b]Regeneráció[/b], [b]Védelem[/b] (a sebzés %-át kivédi, max 70%), [b]Találati esély[/b] (ennyire találod el a szörnyet; íjász 80%, lovag 75%), [b]Kikerülés[/b] (esély, hogy nem sebződsz),"
 		+ "[b]Sebesség[/b], [b]Ütési sebesség[/b], [b]Kritikus esély[/b], [b]Hatótáv[/b], [b]Közelharci[/b] és [b]Távolsági sebzés[/b], "
 		+ "[b]Sebzés%[/b], [b]Többlövés[/b] (íjjal, max 5, csak legendás növeli).\n\n"
 		+ "Szintlépéskor minden stat nő egy kicsit, és 3 kártya közül választasz. Ritkán legendás kártya is felbukkan."],

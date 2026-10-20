@@ -52,12 +52,13 @@ const STAT_LABELS := {
 	"crit_chance": "kritikus esély",
 	"attack_range": "hatótáv",
 	"defense": "védelem",
+	"accuracy": "találati esély",
 	"lifesteal": "életlopás esély (+1 élet találatkor)",
 	"thorns": "tüskesebzés a támadóidnak",
 	"gold_find": "több arany",
 	"xp_bonus": "több tapasztalat",
 }
-const PERCENT_STATS: Array[String] = ["damage_percent", "defense", "lifesteal", "gold_find", "xp_bonus", "dodge", "move_speed", "attack_speed", "crit_chance", "attack_range"]
+const PERCENT_STATS: Array[String] = ["damage_percent", "defense", "lifesteal", "gold_find", "xp_bonus", "dodge", "move_speed", "attack_speed", "crit_chance", "attack_range", "accuracy"]
 
 ## id -> definíció. "stats": stat -> [min, max] (negatív = hátrány).
 ## "region": a kép a 0x72 sprite-lapról (a kardoknál ez a kézben látszó kép is);
@@ -99,24 +100,24 @@ const DEFINITIONS := {
 		"base": [1, 1], "scaling": 1.0, "crit": 1.5, "stats": {},
 		"description": "Kopott, de még feszül a húrja. Az íjász első íja."},
 	"bow_hunter": {"name": "Vadászíj", "slot": "weapon", "rarity": "common", "weapon_type": "bow",
-		"base": [2, 2], "scaling": 0.8, "crit": 1.5, "stats": {"attack_range": [5, 10]}},
+		"base": [2, 2], "scaling": 0.8, "crit": 1.5, "stats": {"attack_range": [5, 10], "accuracy": [2, 4]}},
 	"bow_long": {"name": "Hosszúíj", "slot": "weapon", "rarity": "rare", "weapon_type": "bow",
-		"base": [2, 3], "scaling": 0.9, "crit": 1.6, "stats": {"attack_range": [15, 25], "crit_chance": [2, 4]}},
+		"base": [2, 3], "scaling": 0.9, "crit": 1.6, "stats": {"attack_range": [15, 25], "crit_chance": [2, 4], "accuracy": [4, 6]}},
 	"bow_flame": {"name": "Lángíj", "slot": "weapon", "rarity": "epic", "weapon_type": "bow",
 		"base": [3, 4], "scaling": 1.0, "crit": 1.75,
 		"stats": {"ranged_damage": [1, 2], "attack_speed": [8, 12], "damage_percent": [3, 6]}},
 	"bow_star": {"name": "Csillagíj", "slot": "weapon", "rarity": "legendary", "weapon_type": "bow",
 		"base": [4, 5], "scaling": 1.2, "crit": 2.0,
-		"stats": {"multishot": [1, 1], "ranged_damage": [2, 3], "attack_range": [15, 25], "crit_chance": [8, 12], "damage_percent": [6, 10]}},
+		"stats": {"multishot": [1, 1], "ranged_damage": [2, 3], "attack_range": [15, 25], "crit_chance": [8, 12], "damage_percent": [6, 10], "accuracy": [6, 10]}},
 	# Sisakok
 	"helmet_leather": {"name": "Bőrsapka", "slot": "helmet", "rarity": "common",
-		"stats": {"max_health": [2, 4], "crit_chance": [1, 2]}},
+		"stats": {"max_health": [2, 4], "crit_chance": [1, 2], "accuracy": [2, 3]}},
 	"helmet_knight": {"name": "Lovagsisak", "slot": "helmet", "rarity": "rare",
 		"stats": {"max_health": [5, 8], "move_speed": [-4, -2]}},
 	"helmet_great": {"name": "Aranyszegélyes nagysisak", "slot": "helmet", "rarity": "epic",
 		"stats": {"max_health": [6, 9], "damage": [1, 2]}},
 	"helmet_shadow": {"name": "Árnyékmágus kalapja", "slot": "helmet", "rarity": "legendary",
-		"stats": {"crit_chance": [8, 12], "damage": [2, 3], "max_health": [-3, -2]}},
+		"stats": {"crit_chance": [8, 12], "damage": [2, 3], "max_health": [-3, -2], "accuracy": [4, 6]}},
 	# Mellvértek
 	"chest_padded": {"name": "Párnázott zeke", "slot": "chest", "rarity": "common",
 		"stats": {"max_health": [3, 5], "health_regen": [0.1, 0.2]}},
@@ -194,11 +195,11 @@ const DEFINITIONS := {
 
 	# --- Kesztyűk (új hely) ---
 	"gloves_wool": {"name": "Gyapjúkesztyű", "slot": "gloves", "rarity": "common",
-		"stats": {"attack_speed": [4, 7], "defense": [1, 2]}},
+		"stats": {"attack_speed": [4, 7], "defense": [1, 2], "accuracy": [2, 3]}},
 	"gloves_spiked": {"name": "Tüskés ököl", "slot": "gloves", "rarity": "rare",
 		"stats": {"damage": [1, 1], "thorns": [1, 2], "attack_speed": [5, 8]}},
 	"gloves_steel": {"name": "Acél páncélkesztyű", "slot": "gloves", "rarity": "epic",
-		"stats": {"defense": [5, 7], "attack_speed": [8, 12], "damage": [1, 2]}},
+		"stats": {"defense": [5, 7], "attack_speed": [8, 12], "damage": [1, 2], "accuracy": [3, 5]}},
 	"gloves_titan": {"name": "Titánmarkolat", "slot": "gloves", "rarity": "legendary",
 		"stats": {"damage": [2, 3], "defense": [6, 9], "attack_speed": [12, 18], "thorns": [2, 3]}},
 

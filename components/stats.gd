@@ -14,7 +14,7 @@ signal changed
 
 const NAMES: Array[String] = [
 	"damage", "ranged_damage", "damage_percent", "max_health", "health_regen", "dodge", "move_speed", "attack_speed",
-	"crit_chance", "attack_range", "defense", "multishot",
+	"crit_chance", "attack_range", "defense", "multishot", "accuracy",
 ]
 const MAX_RANGE := 200
 ## Alapértelmezett kritikus szorzó (ha a fegyver nem ad meg sajátot).
@@ -29,6 +29,9 @@ const MAX_DEFENSE := 70
 ## Többlövés: ennyi nyíl repül egyszerre (íjjal). Csak legendás tárgy és a legendás
 ## szintlépési kártya növeli; legfeljebb ennyi lehet.
 const MAX_MULTISHOT := 5
+## Találati esély: ennyi % eséllyel találod el a szörnyet (a szörny kikerülése ezután még
+## jön). Az alapérték karakterenként más (Characters), legfeljebb ennyi lehet.
+const MAX_ACCURACY := 95
 ## Különleges tárgy-tulajdonságok (nem szintlépéses statok, csak tárgyakból / táborból):
 ## lifesteal: ennyi % eséllyel gyógyulsz 1-et találatkor; thorns: ennyit sebez vissza annak,
 ## aki megüt; gold_find: ennyi %-kal több arany; xp_bonus: ennyi %-kal több tapasztalat.
@@ -47,6 +50,7 @@ const LEVEL_GROWTH := {
 	"crit_chance": 0.25,
 	"attack_range": 0.5,
 	"defense": 0.25,
+	"accuracy": 0.2,
 }
 ## A végső értékek korlátai: [min, max].
 const LIMITS := {
@@ -62,6 +66,7 @@ const LIMITS := {
 	"attack_range": [50, MAX_RANGE],
 	"defense": [0, MAX_DEFENSE],
 	"multishot": [1, MAX_MULTISHOT],
+	"accuracy": [5, MAX_ACCURACY],
 }
 
 ## Közelharci sebzés: a fegyver skálázása szerint adódik a fegyver alapsebzéséhez.
@@ -126,6 +131,11 @@ const LIMITS := {
 	set(value):
 		base_multishot = value
 		changed.emit()
+## Találati esély százalékban (a lovagé 75, az íjászé 80; lásd Characters).
+@export var base_accuracy := 75.0:
+	set(value):
+		base_accuracy = value
+		changed.emit()
 
 # Végső értékek (alap + tárgyak, korlátozva). Csak olvasásra.
 var damage: int:
@@ -152,6 +162,8 @@ var defense: int:
 	get: return floori(_final("defense"))
 var multishot: int:
 	get: return floori(_final("multishot"))
+var accuracy: int:
+	get: return roundi(_final("accuracy"))
 
 ## stat -> a felvett tárgyakból jövő összeg.
 var _bonus := {}
