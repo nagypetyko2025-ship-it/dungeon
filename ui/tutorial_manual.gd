@@ -18,7 +18,7 @@ const CHAPTERS := [
 	["Irányítás",
 		"[b]W A S D[/b] — mozgás\n[b]Bal klikk[/b] — támadás az egér irányába (nyomva tartva folyamatosan)\n"
 		+ "[b]E[/b] — használat (ajtó, lépcső, tárgylift, árus, karakterek)\n[b]I[/b] — felszerelés\n"
-		+ "[b]Tab[/b] — karakterlap\n[b]M[/b] — nagy térkép\n[b]Esc[/b] — szünet menü / ablak bezárása\n"
+		+ "[b]Tab[/b] — karakterlap\n[b]M[/b] — nagy térkép\n[b]J[/b] — küldetések könyve (lapozás: A / D)\n[b]Esc[/b] — szünet menü / ablak bezárása\n"
 		+ "[b]Ctrl[/b] — suhanás (csak íjász)\n[b]F11[/b] vagy [b]Alt+Enter[/b] — teljes képernyő\n"
 		+ "Szintlépéskor: [b]1 2 3[/b] — kártya választása, [b]R[/b] — újradobás aranyért"],
 	["A kazamata",

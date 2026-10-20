@@ -69,9 +69,8 @@ func _build() -> void:
 	root.add_theme_constant_override("separation", 10)
 	window.add_child(root)
 	root.add_child(UiStyle.title_bar("Győzelem! Kimész pihenni?"))
-	root.add_child(UiStyle.label("Kimehetsz a táborba pihenni: egy általad választott tárgyat a tábori ládába küldhetsz (végleg megmarad),\n"
-		+ "a többi felszerelésed, a szinted és a statjaid megmaradnak. A táborban a kék portálon át a következő emeletről\n"
-		+ "folytatod. Pihenő közben a fejlesztések és a láda zárva, de a vándorárustól vásárolhatsz.", 15, UiStyle.INK_LIGHT))
+	root.add_child(UiStyle.label("Pihenj a táborban: egy választott tárgy a tábori ládába kerül, a többi felszerelésed, a szinted és a statjaid megmaradnak.\n"
+		+ "A kék portálon át a következő emeletről folytatod. Pihenő közben Zoltán, a vándorárus árul.", 15, UiStyle.INK_LIGHT))
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 20)
@@ -80,7 +79,7 @@ func _build() -> void:
 	columns.add_child(left)
 	left.add_child(UiStyle.label("Melyik tárgy kerüljön a tábori ládába? (nem kötelező)", 17, UiStyle.INK))
 	_grid = ItemGrid.new()
-	_grid.columns = 6
+	_grid.columns = 8
 	_grid.item_clicked.connect(func(index: int) -> void:
 		# Újra rákattintva visszavonja a választást.
 		_selected = -1 if _selected == index else index
@@ -88,13 +87,18 @@ func _build() -> void:
 		_choice_label.text = "A ládába küldött tárgy: %s" % (_items[_selected]["name"] if _selected >= 0 else "nincs kiválasztva")
 		_show_item(_items[index]))
 	_grid.item_hovered.connect(func(index: int) -> void: _show_item(_grid.item_at(index)))
-	left.add_child(_grid)
+	# Sok tárgynál görgethető, hogy az ablak ne lógjon ki a képernyőről.
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(8 * (ItemGrid.SLOT_SIZE.x + 4) + 12, 3 * (ItemGrid.SLOT_SIZE.y + 4))
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.add_child(_grid)
+	left.add_child(scroll)
 	_choice_label = UiStyle.label("", 16, UiStyle.INK)
 	left.add_child(_choice_label)
 
 	var info := PanelContainer.new()
 	info.add_theme_stylebox_override("panel", UiStyle.plain_panel())
-	info.custom_minimum_size = Vector2(300, 260)
+	info.custom_minimum_size = Vector2(340, 300)
 	columns.add_child(info)
 	var info_box := VBoxContainer.new()
 	info.add_child(info_box)
@@ -104,7 +108,7 @@ func _build() -> void:
 	info_box.add_child(_info_title)
 	_info_text = RichTextLabel.new()
 	_info_text.bbcode_enabled = true
-	_info_text.scroll_active = false
+	_info_text.scroll_active = true
 	_info_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_info_text.add_theme_color_override("default_color", UiStyle.INK_LIGHT)
 	_info_text.add_theme_font_size_override("normal_font_size", 15)

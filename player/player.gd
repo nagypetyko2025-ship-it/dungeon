@@ -464,7 +464,9 @@ func _shoot(aim_angle: float) -> void:
 	_weapon_pivot.position = WEAPON_PIVOT_POSITION
 	# Többlövés: ennyi nyíl egyszerre, egymás mellett, kicsit szétterülve (nem egymásban).
 	var count := _stats.multishot
-	var side := direction.orthogonal()
+	# Az oldalirány ugyanarra mutat, amerre a szög is nő: így a nyilak egymás mellől indulnak,
+	# és szétfelé repülnek (sosem keresztezik egymást).
+	var side := direction.rotated(PI / 2.0)
 	for i in count:
 		var k := i - (count - 1) / 2.0
 		var arrow: Area2D = PLAYER_ARROW.new()

@@ -10,6 +10,7 @@ const KEYS := {
 	KEY_I: "../Inventory",
 	KEY_TAB: "../StatsScreen",
 	KEY_M: "../HUD/Minimap",
+	KEY_J: "../QuestBook",
 }
 
 const PAUSE_MENU := "../PauseMenu"

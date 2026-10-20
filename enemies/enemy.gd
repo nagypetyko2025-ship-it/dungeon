@@ -11,9 +11,9 @@ const XP_ORB := preload("res://pickups/xp_orb.tscn")
 const MAX_ORBS := 6
 ## Tárgy-dobás esélye: alap + XP-nként ennyi (az erősebb ellenség gyakrabban dob), max ennyi.
 const ITEM_DROP := preload("res://pickups/item_drop.tscn")
-const ITEM_DROP_BASE := 0.03
-const ITEM_DROP_PER_XP := 0.01
-const ITEM_DROP_MAX := 0.2
+const ITEM_DROP_BASE := 0.015
+const ITEM_DROP_PER_XP := 0.004
+const ITEM_DROP_MAX := 0.08
 ## A legerősebbre dobott példány ennyivel nagyobb, a leggyengébb ennyivel kisebb.
 const SIZE_VARIATION := 0.1
 const CRIT_COLOR := Color(1, 0.35, 0.15)

@@ -1,12 +1,16 @@
 class_name SettingsPanel
 extends PanelContainer
-## Beállítások panel (főmenüben és a szünet menüben is): teljes képernyő,
-## zene- és effekt-hangerő. Minden változás azonnal életbe lép és mentődik.
+## Beállítások panel (főmenüben és a szünet menüben is), két füllel:
+## Általános (teljes képernyő, zene- és effekt-hangerő; minden változás azonnal életbe
+## lép és mentődik) és Irányítás (a billentyűk listája).
 
 signal closed
 
 var _fullscreen_button: Button
 var _back: Button
+var _general: VBoxContainer
+var _controls: PanelContainer
+var _tab_buttons: Array[Button] = []
 
 
 func _ready() -> void:
@@ -15,24 +19,66 @@ func _ready() -> void:
 	box.add_theme_constant_override("separation", 14)
 	add_child(box)
 	box.add_child(MenuStyle.title_label("Beállítások", 56, MenuStyle.GOLD))
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 10)
+	box.add_child(tabs)
+	for title: String in ["Általános", "Irányítás"]:
+		var tab := MenuStyle.button(title)
+		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tab.pressed.connect(_show_tab.bind(_tab_buttons.size()))
+		tabs.add_child(tab)
+		_tab_buttons.append(tab)
+
+	_general = VBoxContainer.new()
+	_general.add_theme_constant_override("separation", 14)
+	box.add_child(_general)
 	_fullscreen_button = MenuStyle.button("")
 	_fullscreen_button.pressed.connect(func() -> void:
 		Audio.toggle_fullscreen()
 		_update_fullscreen_text())
-	box.add_child(_fullscreen_button)
+	_general.add_child(_fullscreen_button)
 	var audio := Audio.settings()
-	box.add_child(_slider_row("Zene", audio.music_volume, audio.set_music_volume))
-	box.add_child(_slider_row("Effektek", audio.sfx_volume, func(value: float) -> void:
+	_general.add_child(_slider_row("Zene", audio.music_volume, audio.set_music_volume))
+	_general.add_child(_slider_row("Effektek", audio.sfx_volume, func(value: float) -> void:
 		audio.set_sfx_volume(value)
 		Audio.play("ui_click")))
+
+	# Irányítás fül: ugyanaz a lista, mint a kézikönyv első fejezetében.
+	_controls = PanelContainer.new()
+	_controls.add_theme_stylebox_override("panel", UiStyle.plain_panel())
+	box.add_child(_controls)
+	var text := RichTextLabel.new()
+	text.bbcode_enabled = true
+	text.fit_content = true
+	text.custom_minimum_size = Vector2(520, 0)
+	text.add_theme_font_override("normal_font", MenuStyle.BUTTON_FONT)
+	text.add_theme_font_override("bold_font", MenuStyle.BUTTON_FONT)
+	text.add_theme_font_size_override("normal_font_size", 18)
+	text.add_theme_font_size_override("bold_font_size", 18)
+	text.add_theme_color_override("default_color", UiStyle.INK)
+	text.text = TutorialManual.CHAPTERS[0][1]
+	_controls.add_child(text)
+
 	_back = MenuStyle.button("Vissza")
 	_back.pressed.connect(closed.emit)
 	box.add_child(_back)
 	_update_fullscreen_text()
+	_show_tab(0)
 	visibility_changed.connect(func() -> void:
 		if visible:
 			_update_fullscreen_text()
+			_show_tab(0)
 			_fullscreen_button.grab_focus())
+
+
+func _show_tab(index: int) -> void:
+	_general.visible = index == 0
+	_controls.visible = index == 1
+	for i in _tab_buttons.size():
+		# A kiválasztott fül arany, a másik halványabb.
+		_tab_buttons[i].modulate = Color.WHITE if i == index else Color(0.65, 0.6, 0.55)
+	# Fülváltáskor a panel összezsugorodik az új tartalomra.
+	reset_size()
 
 
 func _slider_row(title: String, value: float, on_change: Callable) -> HBoxContainer:

@@ -50,6 +50,7 @@ const SHOP_CHANCE := 0.6
 ## Minden ennyiedik emeleten főellenség van; a terme ekkora (csempe).
 const BOSS_EVERY := 3
 const RETURN_PORTAL := preload("res://rooms/obstacles/return_portal.gd")
+const QUEST_BOOK := preload("res://ui/quest_book.gd")
 ## A gyakorló pálya szobái (balról jobbra): kezdő, harc + láda, bolt, lépcső.
 const TUTORIAL_CELLS: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
 const BOSS_ROOM_SIZE := Vector2i(15, 11)
@@ -176,6 +177,7 @@ func _ready() -> void:
 	# Küldetés: elért emelet (a gyakorló pályán nem számít).
 	Quests.notify("floor", depth)
 	add_child(QuestTracker.new())
+	_add_quest_book()
 	if tutorial:
 		_hud.show_message("Gyakorló pálya")
 		var guide := TutorialGuide.new()
@@ -184,6 +186,13 @@ func _ready() -> void:
 		guide.call("setup", self, rooms)
 	else:
 		_hud.show_message(("%d. emelet — főellenség vár!" if boss_floor else "%d. emelet") % depth)
+
+
+## Küldetések könyve (J), a Menus kezeli.
+func _add_quest_book() -> void:
+	var book: CanvasLayer = QUEST_BOOK.new()
+	book.name = "QuestBook"
+	add_child(book)
 
 
 func _on_boss_fight_started(boss: Node2D) -> void:

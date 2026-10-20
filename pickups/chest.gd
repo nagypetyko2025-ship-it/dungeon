@@ -10,7 +10,7 @@ const MAX_COINS := 8
 ## Arany: GOLD_BASE véletlen része + emeletenként GOLD_PER_DEPTH.
 const GOLD_BASE := Vector2i(5, 12)
 const GOLD_PER_DEPTH := 3
-const ITEM_CHANCE := 0.3
+const ITEM_CHANCE := 0.15
 const ITEM_MAX_RARITY := "rare"
 const FULL_FIRST_FRAME := Rect2(304, 416, 16, 16)
 const EMPTY_FIRST_FRAME := Rect2(304, 400, 16, 16)

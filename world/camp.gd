@@ -121,6 +121,7 @@ func _ready() -> void:
 	_build_trees()
 	_build_forest()
 	_build_bounds()
+	_build_town_sign()
 	_build_fireflies()
 	_build_ui()
 	# A város (a kocsmával) az erdőn átvezető út végén.
@@ -131,6 +132,9 @@ func _ready() -> void:
 	_town.build()
 	_town.message.connect(_toast)
 	add_child(QuestTracker.new())
+	var book: CanvasLayer = preload("res://ui/quest_book.gd").new()
+	book.name = "QuestBook"
+	add_child(book)
 	_upgrades_panel = CAMP_UPGRADES.new()
 	_upgrades_panel.name = "CampUpgrades"
 	add_child(_upgrades_panel)
@@ -522,6 +526,46 @@ func _build_forest() -> void:
 			tree.modulate = Color(shade, shade, shade * 1.05)
 
 
+## Útjelző tábla az út mellett, a tisztás keleti szélén: "Város →" (a város felé mutat).
+func _build_town_sign() -> void:
+	var tile := Vector2i(SIZE.x - 4, ROAD_ROW - 1)
+	var holder := Node2D.new()
+	holder.position = _tile_center(tile) + Vector2(0, 12)
+	_entities.add_child(holder)
+	_body(holder, Vector2(0, -4), Vector2(12, 8))
+	# Fa útjelző tábla: oszlop, rajta nyíl alakú deszka a felirattal.
+	var post := ColorRect.new()
+	post.color = Color(0.36, 0.22, 0.12)
+	post.size = Vector2(8, 52)
+	post.position = Vector2(-4, -50)
+	holder.add_child(post)
+	var board := Polygon2D.new()
+	board.polygon = PackedVector2Array([Vector2(-46, -62), Vector2(40, -62), Vector2(56, -47),
+		Vector2(40, -32), Vector2(-46, -32)])
+	board.color = Color(0.62, 0.42, 0.22)
+	holder.add_child(board)
+	var rim := Line2D.new()
+	rim.points = board.polygon
+	rim.closed = true
+	rim.width = 3.0
+	rim.default_color = Color(0.3, 0.17, 0.08)
+	holder.add_child(rim)
+	var text := UiStyle.label("Város", 18, Color(0.2, 0.1, 0.04))
+	text.size = Vector2(90, 26)
+	text.position = Vector2(-46, -60)
+	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	holder.add_child(text)
+	# Lebegő, csillogó nyíl a tábla fölött, a város felé.
+	var label := MenuStyle.title_label("Város →", 26, MenuStyle.GOLD)
+	label.size = Vector2(160, 32)
+	label.position = Vector2(-80, -104)
+	label.z_index = 5
+	holder.add_child(label)
+	var bob := label.create_tween().set_loops()
+	bob.tween_property(label, "position:x", -72.0, 0.7).set_trans(Tween.TRANS_SINE)
+	bob.tween_property(label, "position:x", -80.0, 0.7).set_trans(Tween.TRANS_SINE)
+
+
 ## Hány csempére van egy csempe a téglalapon kívül (0, ha benne van).
 func _outside_distance(tile: Vector2i, rect: Rect2i) -> int:
 	var dx := maxi(maxi(rect.position.x - tile.x, tile.x - rect.end.x + 1), 0)
@@ -670,18 +714,6 @@ func _build_ui() -> void:
 	_prompt.offset_right = 300
 	_prompt.modulate.a = 0.0
 	layer.add_child(_prompt)
-	var hint := Label.new()
-	hint.text = "WASD — mozgás   ·   I — felszerelés   ·   Tab — karakter   ·   Esc — szünet"
-	hint.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
-	hint.add_theme_font_size_override("font_size", 16)
-	hint.add_theme_color_override("font_color", Color(0.8, 0.78, 0.7, 0.75))
-	hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	hint.offset_top = -40
-	hint.offset_bottom = -16
-	hint.offset_left = -400
-	hint.offset_right = 400
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	layer.add_child(hint)
 	# Jobb felül: a táborban váró arany (ebből lehet fejleszteni).
 	var gold_box := HBoxContainer.new()
 	gold_box.add_theme_constant_override("separation", 10)

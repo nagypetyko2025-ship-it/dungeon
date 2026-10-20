@@ -51,6 +51,10 @@ const ITEM_SPACING := 2
 const FOCUS_RANGE := 44.0
 const FOCUS_SCALE := 1.3
 const GLOW_ENERGY := 0.7
+## "Új áruk" kar (0x72 lap) és az ára: alap + ennyivel drágább minden alkalommal.
+const RESTOCK_LEVER := Rect2(80, 208, 16, 16)
+const RESTOCK_BASE := 25
+const RESTOCK_STEP := 20
 
 var _greeting_left := 0.0
 var _greeting_index := 0
@@ -63,6 +67,12 @@ var _tooltip: ShopTooltip
 ## A boltos pultja előtt áll-e a játékos (ott lehet eladni).
 var _at_counter := false
 var _sell_prompt: Label
+## Az árus pultok helyei: [pult csempe, ahol állni kell, irány] (az új áruk ide kerülnek).
+var _stalls: Array = []
+## Hányszor kértél új árut ebben a boltban (minden alkalommal drágább).
+var _restocks := 0
+var _lever_position := Vector2.ZERO
+var _lever_prompt: Label
 
 
 static func entrance_position() -> Vector2:
@@ -81,6 +91,7 @@ func _ready() -> void:
 	_build_market_counters()
 	_build_barrels()
 	_build_exit()
+	_build_restock_lever()
 	_add_light(Vector2i(0, 302), 0.55, 2.0)
 	_add_light(Vector2i(5, 305), 0.3, 1.5)
 	_add_light(Vector2i(-5, 305), 0.3, 1.5)
@@ -89,6 +100,9 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_greeting_left -= delta
 	_update_focus()
+	if _lever_prompt:
+		_lever_prompt.visible = _near_lever()
+		_lever_prompt.text = "[E] Új áruk: %d arany" % restock_cost()
 
 
 ## Polcok a hátsó fal előtt: két csempe magasak, tele áruval.
@@ -165,6 +179,7 @@ func _build_counter_column(x: int, top: int, bottom: int, facing: int, used_ids:
 				break
 			item = Items.random_item()
 		used_ids[item["id"]] = true
+		_stalls.append([Vector2i(x, y), Vector2i(x + facing, y), facing])
 		_add_stock(item, Vector2i(x, y), Vector2i(x + facing, y), facing)
 
 
@@ -252,7 +267,10 @@ func _update_tooltip() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("interact"):
 		return
-	if _focused != -1:
+	if _near_lever():
+		_restock()
+		get_viewport().set_input_as_handled()
+	elif _focused != -1:
 		_buy(_focused)
 		get_viewport().set_input_as_handled()
 	elif _at_counter:
@@ -280,6 +298,66 @@ func _buy(index: int) -> void:
 	_tooltip.hide_tooltip()
 	FloatingText.spawn(self, Room.tile_center(entry["tile"]) + Vector2(-20, -10), "Megvetted!", Items.rarity_color(item))
 	FloatingText.spawn(self, _shopkeeper.global_position + Vector2(0, -36), SOLD_LINES.pick_random(), Color(0.85, 0.75, 1))
+
+
+## "Új áruk" kar a pult jobb végén: E-re a boltos minden árut lecserél újakra, aranyért.
+func _build_restock_lever() -> void:
+	var tile := Vector2i(4, RECT.position.y + 3)
+	_sprite(SpriteSheet.TEXTURE, RESTOCK_LEVER, tile, -0.2)
+	_solid(Rect2i(tile.x, tile.y, 1, 1))
+	_lever_position = Room.tile_center(tile + Vector2i(0, 1))
+	var sign_label := UiStyle.label("Új áruk", 13, UiStyle.TEXT_GOLD, true)
+	sign_label.size = Vector2(80, 18)
+	sign_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sign_label.position = Room.tile_center(tile) + Vector2(-40, -40)
+	sign_label.z_index = 10
+	add_child(sign_label)
+	_lever_prompt = UiStyle.label("", 15, Color(1, 0.9, 0.6), true)
+	_lever_prompt.size = Vector2(220, 20)
+	_lever_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_lever_prompt.position = Room.tile_center(tile) + Vector2(-110, -64)
+	_lever_prompt.z_index = 10
+	_lever_prompt.visible = false
+	add_child(_lever_prompt)
+
+
+func _near_lever() -> bool:
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	return player != null and player.global_position.distance_to(_lever_position) < 40.0
+
+
+## Az új áruk ára: RESTOCK_BASE, és minden további alkalommal RESTOCK_STEP-pel több.
+func restock_cost() -> int:
+	return RESTOCK_BASE + RESTOCK_STEP * _restocks
+
+
+## Minden áru lecserélődik (a már megvettek helyére is kerül új).
+func _restock() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if not player.call("spend_gold", restock_cost()):
+		Audio.play("ui_error")
+		FloatingText.spawn(self, _lever_position + Vector2(-30, -60), "Nincs elég aranyad", Color(1, 0.5, 0.4))
+		return
+	_restocks += 1
+	Audio.play("door_unlock")
+	Audio.play("coin")
+	for entry in _stock:
+		if entry != null:
+			for node: Node in entry["nodes"]:
+				node.queue_free()
+	_stock.clear()
+	_focused = -1
+	_tooltip.hide_tooltip()
+	var used_ids := {}
+	for stall: Array in _stalls:
+		var item := Items.random_item()
+		for attempt in 10:
+			if not used_ids.has(item["id"]):
+				break
+			item = Items.random_item()
+		used_ids[item["id"]] = true
+		_add_stock(item, stall[0], stall[1], stall[2])
+	FloatingText.spawn(self, _shopkeeper.global_position + Vector2(0, -36), "Friss áru... hehe.", Color(0.85, 0.75, 1))
 
 
 func _glow_texture() -> GradientTexture2D:
@@ -312,7 +390,7 @@ func _build_barrels() -> void:
 	_barrel_stack(Vector2i(-4, top + 1), 2)
 	_barrel_stack(Vector2i(-4, top + 2), 1)
 	_crate(Vector2i(4, top + 1), BIG_CRATE)
-	_barrel_stack(Vector2i(4, top + 2), 2)
+	# (A (4, top + 2) csempén az "Új áruk" kar áll, az zárja el a pult jobb végét.)
 	_barrel_stack(Vector2i(right, bottom), 1)
 
 
