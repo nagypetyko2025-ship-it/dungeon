@@ -353,10 +353,10 @@ func _process(delta: float) -> void:
 	var target := 1.0 if not focus.is_empty() and not get_tree().paused else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 	if _quest_mark:
-		var can_take := Progress.quest.is_empty() and Progress.quests_done.size() < Quests.ALL.size()
-		_quest_mark.visible = can_take or Quests.is_complete()
-		_quest_mark.text = "?" if Quests.is_complete() else "!"
-		_quest_mark.add_theme_color_override("font_color", Color(0.55, 1.0, 0.55) if Quests.is_complete() else MenuStyle.GOLD)
+		# Zöld "?" a kocsmáros fölött, ha van átvehető jutalom.
+		_quest_mark.visible = not Quests.ready_ids().is_empty()
+		_quest_mark.text = "?"
+		_quest_mark.add_theme_color_override("font_color", Color(0.55, 1.0, 0.55))
 	# Egy ülő karakter mellett oldalt megjelenik a bemutatkozása.
 	var character_id: String = focus[0] if not focus.is_empty() and Characters.ALL.has(focus[0]) else ""
 	if character_id != _intro_for:

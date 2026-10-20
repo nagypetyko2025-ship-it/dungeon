@@ -33,8 +33,8 @@ static var character := Characters.DEFAULT
 static var upgrades := {}
 ## A tábori ládában váró tárgyak (közös; a tárgylifttel / a főellenség után felküldve).
 static var stash: Array = []
-## A felvett küldetés ({id, progress} vagy üres) és a már teljesített küldetések (Quests).
-static var quest := {}
+## Küldetések (Quests): mind egyszerre fut; id -> haladás, és a már átvett jutalmú küldetések.
+static var quest_progress := {}
 static var quests_done: Array = []
 ## Az aktív karakter tábori felszerelése (Inventory.save_data); üres = kezdő felszerelés.
 ## Leszálláskor magaddal viszed (és innen törlődik). Minden karakternek külön.
@@ -58,7 +58,7 @@ static func load_game(force := false) -> void:
 	upgrades = {}
 	_all_inventories = {}
 	stash = []
-	quest = {}
+	quest_progress = {}
 	quests_done = []
 	var config := ConfigFile.new()
 	if config.load(PATH) == OK:
@@ -77,9 +77,14 @@ static func load_game(force := false) -> void:
 		var saved_stash: Variant = config.get_value("camp", "stash", [])
 		if saved_stash is Array:
 			stash = saved_stash
-		var saved_quest: Variant = config.get_value("camp", "quest", {})
-		if saved_quest is Dictionary:
-			quest = saved_quest
+		var saved_progress: Variant = config.get_value("camp", "quest_progress", {})
+		if saved_progress is Dictionary:
+			quest_progress = saved_progress
+		# Régi mentés: egyetlen felvett küldetés ({id, progress}) -> az ő haladása megmarad.
+		var old_quest: Variant = config.get_value("camp", "quest", {})
+		if old_quest is Dictionary and (old_quest as Dictionary).has("id"):
+			var old: Dictionary = old_quest
+			quest_progress[str(old["id"])] = maxi(int(quest_progress.get(old["id"], 0)), int(old.get("progress", 0)))
 		var saved_done: Variant = config.get_value("camp", "quests_done", [])
 		if saved_done is Array:
 			quests_done = saved_done
@@ -94,7 +99,7 @@ static func save_game() -> void:
 	config.set_value("camp", "upgrades", upgrades)
 	config.set_value("camp", "inventory_by_character", _all_inventories)
 	config.set_value("camp", "stash", stash)
-	config.set_value("camp", "quest", quest)
+	config.set_value("camp", "quest_progress", quest_progress)
 	config.set_value("camp", "quests_done", quests_done)
 	config.save(PATH)
 
@@ -106,7 +111,7 @@ static func reset_game() -> void:
 	upgrades = {}
 	_all_inventories = {}
 	stash = []
-	quest = {}
+	quest_progress = {}
 	quests_done = []
 	_activate(Characters.DEFAULT)
 	save_game()

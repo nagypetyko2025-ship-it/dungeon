@@ -1,7 +1,7 @@
 extends CanvasLayer
 ## Küldetések könyve (J): bőrkötéses, nyitott könyv, két pergamenlappal. Minden lapon egy
-## küldetés (feladat, haladás, jutalom, állapot: felvéve / teljesítve / felvehető a
-## kocsmárosnál). Lapozás: a nyilakkal, vagy A / D, ← / →. A felvett küldetésnél nyílik ki.
+## küldetés (feladat, haladás, jutalom, állapot: folyamatban / kész / teljesítve).
+## Lapozás: a nyilakkal, vagy A / D, ← / →. Az első kész vagy futó küldetésnél nyílik ki.
 ## Megnyitását/bezárását a Menus kezeli (open()/close()).
 
 const LEATHER := Color(0.36, 0.18, 0.1)
@@ -27,9 +27,18 @@ func _ready() -> void:
 
 
 func open() -> void:
-	# A felvett küldetés lapjánál nyílik ki.
-	var active := _ids.find(Progress.quest.get("id", ""))
-	_spread = (active - active % 2) if active >= 0 else 0
+	# Az első kész (átvehető) küldetésnél nyílik ki, különben az első még futónál.
+	var first := -1
+	for i in _ids.size():
+		if Quests.is_complete(_ids[i]):
+			first = i
+			break
+	if first < 0:
+		for i in _ids.size():
+			if not Progress.quests_done.has(_ids[i]):
+				first = i
+				break
+	_spread = (first - first % 2) if first >= 0 else 0
 	_show_spread()
 	visible = true
 
@@ -154,7 +163,6 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 		return
 	var id: String = _ids[index]
 	var quest: Dictionary = Quests.ALL[id]
-	var is_active: bool = Progress.quest.get("id", "") == id
 	var done := Progress.quests_done.has(id)
 
 	var header := HBoxContainer.new()
@@ -176,7 +184,7 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 	page.add_child(task)
 
 	var goal: int = quest["goal"]
-	var progress: int = goal if done else (int(Progress.quest.get("progress", 0)) if is_active else 0)
+	var progress := Quests.progress(id)
 	page.add_child(UiStyle.label("Haladás: %d / %d" % [progress, goal], 17, UiStyle.INK_LIGHT))
 	var bar := ProgressBar.new()
 	bar.max_value = goal
@@ -197,17 +205,14 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page.add_child(spacer)
-	var state_text := "Felvehető a kocsmárosnál (a városban)"
-	var state_color := UiStyle.INK_LIGHT
+	var state_text := "★ FOLYAMATBAN — a kazamatában számol"
+	var state_color := Color(0.6, 0.3, 0.05)
 	if done:
-		state_text = "✔ TELJESÍTVE"
+		state_text = "✔ TELJESÍTVE — jutalom átvéve"
 		state_color = Color(0.24, 0.5, 0.2)
-	elif is_active and progress >= goal:
-		state_text = "KÉSZ — add le a kocsmárosnál!"
+	elif progress >= goal:
+		state_text = "KÉSZ — a jutalom a kocsmárosnál vár!"
 		state_color = Color(0.24, 0.5, 0.2)
-	elif is_active:
-		state_text = "★ FELVÉVE — a kazamatában számol"
-		state_color = Color(0.6, 0.3, 0.05)
 	var state := UiStyle.label(state_text, 19, state_color)
 	state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	state.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

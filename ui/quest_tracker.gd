@@ -1,7 +1,8 @@
 class_name QuestTracker
 extends CanvasLayer
-## A felvett küldetés kijelzője a jobb oldalon (a kazamatában a térkép alatt, a táborban
-## a tábori kincs alatt): tekercs-ikon, név és haladás; ha kész, zölden villog.
+## Küldetés-kijelző a jobb oldalon (a kazamatában a térkép alatt, a táborban a tábori
+## kincs alatt): a teljesítéshez legközelebb álló küldetés haladása, vagy ha van kész,
+## az átvehető jutalmak; amikor egy küldetés kész lesz, zölden villog.
 
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 
@@ -64,7 +65,7 @@ func _update() -> void:
 	_last = text
 	_box.visible = not text.is_empty()
 	_label.text = text
-	var complete := Quests.is_complete()
+	var complete := not Quests.ready_ids().is_empty()
 	_label.add_theme_color_override("font_color", Color(0.55, 1.0, 0.55) if complete else MenuStyle.PARCHMENT)
 	# Épp most lett kész (nem a jelenet betöltésekor): hang és villogás.
 	if complete and not first:

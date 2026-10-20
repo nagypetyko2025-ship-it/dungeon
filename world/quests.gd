@@ -1,7 +1,7 @@
 class_name Quests
-## Küldetések a kocsmárostól (a városban, a Mélységi kocsmában). Egyszerre egy lehet
-## felvéve; a haladás csak a kazamatában számít (a gyakorló pályán nem), futásokon át
-## összeadódik, és mentődik (Progress). Ha kész, a kocsmárosnál leadod a jutalomért:
+## Küldetések a kocsmárostól (a városban, a Mélységi kocsmában). Mind egyszerre fut, nem
+## kell felvenni; a haladás csak a kazamatában számít (a gyakorló pályán nem), futásokon át
+## összeadódik, és mentődik (Progress). Ha kész, a kocsmárosnál átveszed a jutalmat:
 ## arany (a táborba) vagy tárgy (a tábori ládába). Minden küldetés egyszer teljesíthető.
 ##
 ## kind:   kill (target: szörnytípusok, üres = bármilyen), floor (elért emelet),
@@ -34,48 +34,74 @@ const ALL := {
 }
 
 
-## Esemény a kazamatából: a felvett küldetés haladása (ha illik rá).
+## Esemény a kazamatából: minden még futó, illő küldetés haladása.
 ## `value`: kill-nél a szörnytípus neve, gold-nál az összeg, floor/level-nél az érték.
 static func notify(kind: String, value: Variant = 1) -> void:
-	if GameState.tutorial or Progress.quest.is_empty():
+	if GameState.tutorial:
 		return
-	var definition: Dictionary = ALL.get(Progress.quest["id"], {})
-	if definition.is_empty() or definition["kind"] != kind or is_complete():
-		return
-	var progress := int(Progress.quest.get("progress", 0))
-	match kind:
-		"kill":
-			var targets: Array = definition.get("target", [])
-			if not targets.is_empty() and not targets.has(str(value)):
-				return
-			progress += 1
-		"gold":
-			progress += int(value)
-		"floor", "level":
-			progress = maxi(progress, int(value))
-		_:
-			progress += 1
-	Progress.quest["progress"] = mini(progress, int(definition["goal"]))
-	Progress.save_game()
+	var changed := false
+	for id: String in ALL:
+		var definition: Dictionary = ALL[id]
+		if definition["kind"] != kind or Progress.quests_done.has(id) or is_complete(id):
+			continue
+		var amount := progress(id)
+		match kind:
+			"kill":
+				var targets: Array = definition.get("target", [])
+				if not targets.is_empty() and not targets.has(str(value)):
+					continue
+				amount += 1
+			"gold":
+				amount += int(value)
+			"floor", "level":
+				amount = maxi(amount, int(value))
+			_:
+				amount += 1
+		Progress.quest_progress[id] = mini(amount, int(definition["goal"]))
+		changed = true
+	if changed:
+		Progress.save_game()
 
 
-static func active() -> Dictionary:
-	return ALL.get(Progress.quest.get("id", ""), {})
+static func progress(id: String) -> int:
+	if Progress.quests_done.has(id):
+		return int(ALL[id]["goal"])
+	return int(Progress.quest_progress.get(id, 0))
 
 
-static func is_complete() -> bool:
-	var definition := active()
-	return not definition.is_empty() and int(Progress.quest.get("progress", 0)) >= int(definition["goal"])
+## Kész, de a jutalom még nincs átvéve?
+static func is_complete(id: String) -> bool:
+	return not Progress.quests_done.has(id) and progress(id) >= int(ALL[id]["goal"])
 
 
-## Rövid szöveg a kijelzőnek, pl. "Goblinvadász: 3 / 8" ("" ha nincs küldetés).
+## A kész, átvehető jutalmú küldetések.
+static func ready_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for id: String in ALL:
+		if is_complete(id):
+			ids.append(id)
+	return ids
+
+
+## Rövid szöveg a kijelzőnek: ha van átvehető jutalom, az; különben a teljesítéshez
+## legközelebb álló futó küldetés, pl. "Goblinvadász: 3 / 8" ("" ha minden kész).
 static func tracker_text() -> String:
-	var definition := active()
-	if definition.is_empty():
+	var ready := ready_ids().size()
+	if ready > 0:
+		return ("Küldetés kész! Jutalom a kocsmárosnál." if ready == 1
+			else "%d küldetés kész! Jutalmak a kocsmárosnál." % ready)
+	var best := ""
+	var best_ratio := -1.0
+	for id: String in ALL:
+		if Progress.quests_done.has(id):
+			continue
+		var ratio := progress(id) / float(ALL[id]["goal"])
+		if ratio > best_ratio:
+			best_ratio = ratio
+			best = id
+	if best.is_empty():
 		return ""
-	if is_complete():
-		return "%s — kész! Add le a kocsmárosnál." % definition["name"]
-	return "%s: %d / %d" % [definition["name"], int(Progress.quest.get("progress", 0)), definition["goal"]]
+	return "%s: %d / %d   [J]" % [ALL[best]["name"], progress(best), ALL[best]["goal"]]
 
 
 static func reward_text(id: String) -> String:
@@ -85,24 +111,10 @@ static func reward_text(id: String) -> String:
 	return "%s tárgy (a tábori ládába)" % Items.RARITIES[reward["item"]]["name"].to_lower()
 
 
-static func accept(id: String) -> bool:
-	if not Progress.quest.is_empty() or Progress.quests_done.has(id):
-		return false
-	Progress.quest = {"id": id, "progress": 0}
-	Progress.save_game()
-	return true
-
-
-static func abandon() -> void:
-	Progress.quest = {}
-	Progress.save_game()
-
-
-## Leadás: jutalom, a küldetés teljesítettnek számít. Visszaadja a jutalom leírását ("" ha nem kész).
-static func turn_in() -> String:
-	if not is_complete():
+## Jutalom átvétele: a küldetés teljesítettnek számít. Visszaadja a jutalom leírását ("" ha nem kész).
+static func turn_in(id: String) -> String:
+	if not is_complete(id):
 		return ""
-	var id: String = Progress.quest["id"]
 	var reward: Dictionary = ALL[id]["reward"]
 	var text := ""
 	if reward.has("gold"):
@@ -113,6 +125,6 @@ static func turn_in() -> String:
 		Progress.stash.append(item)
 		text = "%s (a tábori ládába került)" % item["name"]
 	Progress.quests_done.append(id)
-	Progress.quest = {}
+	Progress.quest_progress.erase(id)
 	Progress.save_game()
 	return text

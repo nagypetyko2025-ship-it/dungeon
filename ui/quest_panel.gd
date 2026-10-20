@@ -1,13 +1,13 @@
 extends CanvasLayer
-## A kocsmáros küldetés-ablaka (a Mélységi kocsmában, E-vel): a 10 küldetés listája
-## (felvehető / felvett / teljesített), a felvett haladása, felvétel, feladás és leadás.
-## Egyszerre egy küldetés lehet felvéve. Megnyitását/bezárását a Menus kezeli.
+## A kocsmáros küldetés-ablaka (a Mélységi kocsmában, E-vel): a küldetések listája
+## haladással. Minden küldetés eleve fut, itt csak a kész küldetések jutalmát lehet
+## átvenni (egyenként vagy mindet egyszerre). Megnyitását/bezárását a Menus kezeli.
+
+const DONE_COLOR := Color(0.24, 0.5, 0.2)
 
 var _list: VBoxContainer
-var _active_box: PanelContainer
-var _active_label: RichTextLabel
-var _turn_in: Button
-var _abandon: Button
+var _summary: RichTextLabel
+var _take_all: Button
 var _message: Label
 
 
@@ -51,43 +51,52 @@ func _build() -> void:
 	root.add_theme_constant_override("separation", 10)
 	window.add_child(root)
 	root.add_child(UiStyle.title_bar("Küldetések — a kocsmáros táblája"))
-	root.add_child(UiStyle.label("„Akad itt munka bőven. Egyszerre csak egyet vállalj, és a mélyben számít, nem itt fent.”",
+	root.add_child(UiStyle.label("„Minden munkát rád bízok, nem kell kérni. Ha kész vagy, gyere a jutalomért!”",
 		15, UiStyle.INK_LIGHT))
 
-	_active_box = PanelContainer.new()
-	_active_box.add_theme_stylebox_override("panel", UiStyle.plain_panel())
-	root.add_child(_active_box)
-	var active_row := HBoxContainer.new()
-	active_row.add_theme_constant_override("separation", 12)
-	_active_box.add_child(active_row)
-	_active_label = RichTextLabel.new()
-	_active_label.bbcode_enabled = true
-	_active_label.fit_content = true
-	_active_label.scroll_active = false
-	_active_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_active_label.add_theme_color_override("default_color", UiStyle.INK)
-	_active_label.add_theme_font_size_override("normal_font_size", 17)
-	_active_label.add_theme_font_size_override("bold_font_size", 17)
-	active_row.add_child(_active_label)
-	_turn_in = _small_button("Leadás", _on_turn_in)
-	active_row.add_child(_turn_in)
-	_abandon = _small_button("Feladás", _on_abandon)
-	active_row.add_child(_abandon)
+	var summary_box := PanelContainer.new()
+	summary_box.add_theme_stylebox_override("panel", UiStyle.plain_panel())
+	root.add_child(summary_box)
+	var summary_row := HBoxContainer.new()
+	summary_row.add_theme_constant_override("separation", 12)
+	summary_box.add_child(summary_row)
+	_summary = RichTextLabel.new()
+	_summary.bbcode_enabled = true
+	_summary.fit_content = true
+	_summary.scroll_active = false
+	_summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_summary.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_summary.add_theme_color_override("default_color", UiStyle.INK)
+	_summary.add_theme_font_size_override("normal_font_size", 17)
+	_summary.add_theme_font_size_override("bold_font_size", 17)
+	summary_row.add_child(_summary)
+	_take_all = _small_button("Mindet átveszem", _on_take_all)
+	_take_all.custom_minimum_size.x = 230
+	summary_row.add_child(_take_all)
 
 	# A lista görgethető (később több küldetés is jöhet).
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 470)
+	# (A 720 magas képernyőn az ablaknak bele kell férnie: a lista inkább görgethető.)
+	scroll.custom_minimum_size = Vector2(0, 360)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	root.add_child(scroll)
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 4)
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_list)
+	# Alul egy sorban: az utolsó átvétel üzenete (ha hosszú, levágva) és a bezárás.
+	var bottom := HBoxContainer.new()
+	bottom.add_theme_constant_override("separation", 12)
+	root.add_child(bottom)
 	_message = UiStyle.label("", 16, Color(0.24, 0.5, 0.2))
-	root.add_child(_message)
+	_message.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_message.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_message.clip_text = true
+	bottom.add_child(_message)
 	var hint := UiStyle.label("[E] / [Esc] bezárás", 14, UiStyle.INK_LIGHT)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	root.add_child(hint)
+	hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bottom.add_child(hint)
 
 
 func _small_button(text: String, action: Callable) -> Button:
@@ -100,17 +109,11 @@ func _small_button(text: String, action: Callable) -> Button:
 
 
 func _refresh() -> void:
-	var active := Quests.active()
-	if active.is_empty():
-		_active_label.text = "[b]Nincs felvett küldetésed.[/b] Válassz egyet lent!"
-	else:
-		var progress := int(Progress.quest.get("progress", 0))
-		var state := "[color=#3c6a32]KÉSZ — add le a jutalomért![/color]" if Quests.is_complete() \
-			else "Haladás: %d / %d" % [progress, active["goal"]]
-		_active_label.text = "[b]Felvett: %s[/b] — %s\n%s   ·   Jutalom: %s" % [
-			active["name"], active["text"], state, Quests.reward_text(Progress.quest["id"])]
-	_turn_in.visible = Quests.is_complete()
-	_abandon.visible = not active.is_empty() and not Quests.is_complete()
+	var ready := Quests.ready_ids().size()
+	_summary.text = "[b]Teljesítve: %d / %d[/b]   ·   %s" % [Progress.quests_done.size(), Quests.ALL.size(),
+		("[color=#3c6a32]%d jutalom vár rád![/color]" % ready) if ready > 0
+		else "Minden küldetés fut — a kazamatában számol."]
+	_take_all.disabled = ready == 0
 	for child in _list.get_children():
 		child.queue_free()
 	for id: String in Quests.ALL:
@@ -120,10 +123,10 @@ func _refresh() -> void:
 func _make_row(id: String) -> PanelContainer:
 	var definition: Dictionary = Quests.ALL[id]
 	var done := Progress.quests_done.has(id)
-	var is_active: bool = Progress.quest.get("id", "") == id
+	var complete := Quests.is_complete(id)
 	var panel := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.42, 0.28, 0.16, 0.12) if not is_active else Color(0.85, 0.55, 0.15, 0.25)
+	style.bg_color = Color(0.4, 0.7, 0.3, 0.25) if complete else Color(0.42, 0.28, 0.16, 0.12)
 	style.set_content_margin_all(6)
 	style.set_corner_radius_all(4)
 	panel.add_theme_stylebox_override("panel", style)
@@ -140,19 +143,15 @@ func _make_row(id: String) -> PanelContainer:
 	reward.custom_minimum_size.x = 250
 	row.add_child(reward)
 	if done:
-		row.add_child(_status_label("✔ Teljesítve", DONE_COLOR))
-	elif is_active:
-		row.add_child(_status_label("Felvéve", Color(0.6, 0.38, 0.05)))
-	else:
-		var take := _small_button("Felvétel", _on_accept.bind(id))
+		row.add_child(_status_label("✔ Átvéve", DONE_COLOR))
+	elif complete:
+		var take := _small_button("Átvétel", _on_turn_in.bind(id))
 		take.custom_minimum_size = Vector2(130, 34)
 		take.add_theme_font_size_override("font_size", 16)
-		take.disabled = not Progress.quest.is_empty()
 		row.add_child(take)
+	else:
+		row.add_child(_status_label("%d / %d" % [Quests.progress(id), definition["goal"]], Color(0.6, 0.38, 0.05)))
 	return panel
-
-
-const DONE_COLOR := Color(0.24, 0.5, 0.2)
 
 
 func _status_label(text: String, color: Color) -> Label:
@@ -162,24 +161,21 @@ func _status_label(text: String, color: Color) -> Label:
 	return label
 
 
-func _on_accept(id: String) -> void:
-	if Quests.accept(id):
-		Audio.play("ui_open")
-		_message.text = "Felvetted: %s. A kazamatában számol." % Quests.ALL[id]["name"]
-	_refresh()
-
-
-func _on_abandon() -> void:
-	Quests.abandon()
-	Audio.play("ui_close")
-	_message.text = "Feladtad a küldetést (később újra felveheted)."
-	_refresh()
-
-
-func _on_turn_in() -> void:
-	var reward := Quests.turn_in()
+func _on_turn_in(id: String) -> void:
+	var reward := Quests.turn_in(id)
 	if reward.is_empty():
 		return
 	Audio.play("level_up")
-	_message.text = "Küldetés leadva! Jutalom: " + reward
+	_message.text = "%s — jutalom: %s" % [Quests.ALL[id]["name"], reward]
+	_refresh()
+
+
+func _on_take_all() -> void:
+	var rewards: Array[String] = []
+	for id in Quests.ready_ids():
+		rewards.append(Quests.turn_in(id))
+	if rewards.is_empty():
+		return
+	Audio.play("level_up")
+	_message.text = "Jutalmak: " + ", ".join(rewards)
 	_refresh()
