@@ -68,6 +68,12 @@ var _prompt: Label
 var _inside := false
 var _barkeep_line := 0
 var _busy := false
+var _intro: PanelContainer
+var _intro_title: PanelContainer
+var _intro_portrait: TextureRect
+var _intro_role: Label
+var _intro_text: RichTextLabel
+var _intro_for := ""
 
 
 func setup(camp: Node2D) -> void:
@@ -95,6 +101,7 @@ func build() -> void:
 	_build_exterior()
 	_build_interior()
 	_build_ui()
+	_build_intro()
 	_seat_characters()
 
 
@@ -271,7 +278,7 @@ func _switch_to(id: String) -> void:
 	_player.global_position = stand_at
 	_player.call("set_character", id)
 	Audio.play("equip")
-	message.emit("Mostantól vele játszol: %s — %s" % [Characters.data(id)["name"], Characters.data(id)["description"]])
+	message.emit("Mostantól vele játszol: %s" % Characters.data(id)["name"])
 	# A régi karakter a saját székéhez sétál, és leül.
 	var walker := _sit(old_id)
 	var seat_position := walker.position
@@ -319,7 +326,7 @@ func _focus() -> Array:
 		return ["barkeep", "[E] Beszélgetés a kocsmárossal"]
 	for id: String in _seated:
 		if at.distance_to(_seated[id].position) < INTERACT_RANGE:
-			return [id, "[E] %s — átveszed az irányítást" % Characters.data(id)["name"]]
+			return [id, "[E] %s" % Characters.data(id)["name"]]
 	return []
 
 
@@ -329,6 +336,69 @@ func _process(delta: float) -> void:
 		_prompt.text = focus[1]
 	var target := 1.0 if not focus.is_empty() and not get_tree().paused else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
+	# Egy ülő karakter mellett oldalt megjelenik a bemutatkozása.
+	var character_id: String = focus[0] if not focus.is_empty() and Characters.ALL.has(focus[0]) else ""
+	if character_id != _intro_for:
+		_intro_for = character_id
+		if not character_id.is_empty():
+			_fill_intro(character_id)
+	var intro_target := 1.0 if not character_id.is_empty() and not get_tree().paused else 0.0
+	_intro.modulate.a = move_toward(_intro.modulate.a, intro_target, delta * 6.0)
+	_intro.visible = _intro.modulate.a > 0.01
+
+
+## A karakter bemutatkozó panelje (jobb oldalt): kép, név, szerep, történet, tulajdonságok.
+func _build_intro() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 6
+	add_child(layer)
+	_intro = PanelContainer.new()
+	_intro.add_theme_stylebox_override("panel", UiStyle.decorated_panel())
+	_intro.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
+	_intro.offset_left = -470
+	_intro.offset_right = -30
+	_intro.offset_top = -260
+	_intro.offset_bottom = 260
+	_intro.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_intro.modulate.a = 0.0
+	_intro.visible = false
+	layer.add_child(_intro)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	_intro.add_child(box)
+	_intro_title = UiStyle.title_bar("")
+	box.add_child(_intro_title)
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 14)
+	box.add_child(header)
+	_intro_portrait = TextureRect.new()
+	_intro_portrait.custom_minimum_size = Vector2(72, 112)
+	_intro_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_intro_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	header.add_child(_intro_portrait)
+	_intro_role = UiStyle.label("", 18, UiStyle.INK)
+	_intro_role.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header.add_child(_intro_role)
+	_intro_text = RichTextLabel.new()
+	_intro_text.bbcode_enabled = true
+	_intro_text.fit_content = true
+	_intro_text.scroll_active = false
+	_intro_text.custom_minimum_size.x = 390
+	_intro_text.add_theme_color_override("default_color", UiStyle.INK_LIGHT)
+	_intro_text.add_theme_font_size_override("normal_font_size", 15)
+	box.add_child(_intro_text)
+	box.add_child(UiStyle.label("[E] Átveszed az irányítást", 15, UiStyle.INK))
+
+
+func _fill_intro(id: String) -> void:
+	var definition := Characters.data(id)
+	(_intro_title.get_child(0) as Label).text = definition["name"]
+	_intro_portrait.texture = Characters.frames(id).get_frame_texture("idle", 0)
+	_intro_role.text = definition.get("role", "")
+	var lines: Array[String] = ["[i]%s[/i]" % definition.get("story", ""), ""]
+	for trait_text: String in definition.get("traits", []):
+		lines.append("[color=#3c6a32]•[/color] " + trait_text)
+	_intro_text.text = "\n".join(lines)
 
 
 func _unhandled_input(event: InputEvent) -> void:

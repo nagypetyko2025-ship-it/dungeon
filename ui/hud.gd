@@ -15,6 +15,7 @@ const FADE_TIME := 0.25
 var _stats: Stats
 var _message_tween: Tween
 var _fade: ColorRect
+var _dash_label: Label
 var _boss_box: VBoxContainer
 var _boss_name: Label
 var _boss_bar: ProgressBar
@@ -43,6 +44,36 @@ func _ready() -> void:
 	_on_xp_changed(experience.xp, experience.needed(), experience.level)
 	player.connect("gold_changed", _on_gold_changed)
 	_on_gold_changed(player.get("gold"))
+
+
+## Suhanás-kijelző (csak az íjásznál): "Suhanás [Ctrl]: kész" / hátralévő idő.
+func _process(_delta: float) -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	var has_dash: bool = player != null and Characters.data(Progress.character).get("dash", false)
+	if _dash_label == null:
+		if not has_dash:
+			return
+		_dash_label = Label.new()
+		_dash_label.add_theme_font_size_override("font_size", 18)
+		_dash_label.add_theme_color_override("font_outline_color", Color.BLACK)
+		_dash_label.add_theme_constant_override("outline_size", 5)
+		_dash_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+		_dash_label.offset_top = -100
+		_dash_label.offset_bottom = -76
+		_dash_label.offset_left = -200
+		_dash_label.offset_right = 200
+		_dash_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		add_child(_dash_label)
+	_dash_label.visible = has_dash
+	if not has_dash:
+		return
+	var left: float = player.call("dash_cooldown_ratio") * player.DASH_COOLDOWN
+	if left <= 0.0:
+		_dash_label.text = "Suhanás [Ctrl]: kész"
+		_dash_label.add_theme_color_override("font_color", Color(0.6, 0.95, 1.0))
+	else:
+		_dash_label.text = "Suhanás [Ctrl]: %.1f mp" % left
+		_dash_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
 
 
 func _on_gold_changed(gold: int) -> void:

@@ -69,7 +69,7 @@ func is_bag_full() -> bool:
 ## A táska adott helyén lévő tárgyat felveszi a helyére; ami ott volt, a táskába kerül.
 func equip_from_bag(index: int) -> void:
 	var item = bag[index]
-	if item == null or not equipment.has(item["slot"]):
+	if item == null or not equipment.has(item["slot"]) or not Characters.can_use(item):
 		return
 	bag[index] = equipment[item["slot"]]
 	equipment[item["slot"]] = item
@@ -116,7 +116,8 @@ func _fits(item: Variant, kind: String, key: Variant) -> bool:
 		return true
 	if item == null:
 		return key != "weapon"
-	return item["slot"] == key
+	# A lovag nem vehet fel íjat, az íjász csak íjat (lásd Characters.can_use).
+	return item["slot"] == key and Characters.can_use(item)
 
 
 func _item_at(kind: String, key: Variant) -> Variant:

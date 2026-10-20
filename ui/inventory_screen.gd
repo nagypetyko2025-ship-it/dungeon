@@ -234,6 +234,8 @@ func _on_slot_hovered(item: Variant, slot: InventorySlot) -> void:
 			_show_info(item, "Előbb vedd le (húzd a táskába), hogy eladhasd.")
 	elif item != null:
 		var hint := "Húzd a kiemelt %s helyre • jobb klikk: gyors felvétel" % Items.slot_name(item)
+		if not Characters.can_use(item):
+			hint = "Ezt a fegyvert a mostani karaktered nem veheti fel."
 		if slot.kind == "equip":
 			hint = "A fegyvert csak egy másik fegyverre cserélheted." if slot.key == "weapon" \
 				else "Húzd a táskába • jobb klikk: levétel"

@@ -29,15 +29,14 @@ const UPGRADES := {
 static var camp_gold := 0
 ## Az aktív (játszott) karakter (lásd Characters).
 static var character := Characters.DEFAULT
-## Az aktív karakter fejlesztései: fejlesztés -> szint (minden karakternek külön).
+## A tábori fejlesztések: fejlesztés -> szint (KÖZÖSEK: minden karakterre érvényesek).
 static var upgrades := {}
 ## A tábori ládában váró tárgyak (közös; a tárgylifttel / a főellenség után felküldve).
 static var stash: Array = []
 ## Az aktív karakter tábori felszerelése (Inventory.save_data); üres = kezdő felszerelés.
 ## Leszálláskor magaddal viszed (és innen törlődik). Minden karakternek külön.
 static var camp_inventory := {}
-## karakter -> fejlesztései / tábori felszerelése (az aktívé a fenti kettőben is).
-static var _all_upgrades := {}
+## karakter -> tábori felszerelése (az aktívé a fenti camp_inventory-ban is).
 static var _all_inventories := {}
 static var _loaded := false
 
@@ -53,7 +52,7 @@ static func load_game(force := false) -> void:
 	_loaded = true
 	camp_gold = 0
 	character = Characters.DEFAULT
-	_all_upgrades = {}
+	upgrades = {}
 	_all_inventories = {}
 	stash = []
 	var config := ConfigFile.new()
@@ -62,14 +61,7 @@ static func load_game(force := false) -> void:
 		character = str(config.get_value("camp", "character", Characters.DEFAULT))
 		if not Characters.ALL.has(character):
 			character = Characters.DEFAULT
-		var by_character: Variant = config.get_value("camp", "upgrades_by_character") \
-			if config.has_section_key("camp", "upgrades_by_character") else null
-		if by_character is Dictionary:
-			_all_upgrades = by_character
-		else:
-			# Régi mentés (még egy karakter volt): a fejlesztések a lovagéi.
-			var old: Variant = config.get_value("camp", "upgrades", {})
-			_all_upgrades = {Characters.DEFAULT: old if old is Dictionary else {}}
+		upgrades = _load_upgrades(config)
 		var inventories: Variant = config.get_value("camp", "inventory_by_character") \
 			if config.has_section_key("camp", "inventory_by_character") else null
 		if inventories is Dictionary:
@@ -84,12 +76,11 @@ static func load_game(force := false) -> void:
 
 
 static func save_game() -> void:
-	_all_upgrades[character] = upgrades
 	_all_inventories[character] = camp_inventory
 	var config := ConfigFile.new()
 	config.set_value("camp", "gold", camp_gold)
 	config.set_value("camp", "character", character)
-	config.set_value("camp", "upgrades_by_character", _all_upgrades)
+	config.set_value("camp", "upgrades", upgrades)
 	config.set_value("camp", "inventory_by_character", _all_inventories)
 	config.set_value("camp", "stash", stash)
 	config.save(PATH)
@@ -99,14 +90,14 @@ static func save_game() -> void:
 static func reset_game() -> void:
 	_loaded = true
 	camp_gold = 0
-	_all_upgrades = {}
+	upgrades = {}
 	_all_inventories = {}
 	stash = []
 	_activate(Characters.DEFAULT)
 	save_game()
 
 
-## Másik karakterre váltás (a kocsmában): a saját fejlesztései és felszerelése töltődnek be.
+## Másik karakterre váltás (a kocsmában): a saját tábori felszerelése töltődik be.
 static func select_character(id: String) -> void:
 	load_game()
 	save_game()
@@ -114,13 +105,28 @@ static func select_character(id: String) -> void:
 	save_game()
 
 
+## A fejlesztések a mentésből. A közös fejlesztések előtti mentésekben karakterenként voltak:
+## ilyenkor fejlesztésenként a legmagasabb elért szint marad meg (semmi nem vész el).
+static func _load_upgrades(config: ConfigFile) -> Dictionary:
+	var result := {}
+	var sources: Array = []
+	if config.has_section_key("camp", "upgrades_by_character"):
+		var by_character: Variant = config.get_value("camp", "upgrades_by_character")
+		if by_character is Dictionary:
+			sources.append_array(by_character.values())
+	if config.has_section_key("camp", "upgrades"):
+		sources.append(config.get_value("camp", "upgrades"))
+	for source: Variant in sources:
+		if source is Dictionary:
+			for id: String in source:
+				result[id] = maxi(int(result.get(id, 0)), int(source[id]))
+	return result
+
+
 static func _activate(id: String) -> void:
 	character = id
-	if not _all_upgrades.has(id):
-		_all_upgrades[id] = {}
 	if not _all_inventories.has(id):
 		_all_inventories[id] = {}
-	upgrades = _all_upgrades[id]
 	camp_inventory = _all_inventories[id]
 
 

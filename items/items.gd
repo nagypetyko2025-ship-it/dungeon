@@ -372,6 +372,12 @@ static func describe_bbcode(item: Dictionary) -> String:
 	var weapon_note: String = WEAPON_NOTES.get(item.get("weapon_type", ""), "")
 	if not weapon_note.is_empty():
 		lines.append("[color=#%s]%s[/color]" % [SPEAR_NOTE_INK.to_html(false), weapon_note])
+	# Ki használhatja (pirossal, ha a mostani karakter nem).
+	var restriction := Characters.weapon_restriction_text(item)
+	if not restriction.is_empty():
+		var usable := Characters.can_use(item)
+		lines.append("[color=#%s]%s%s[/color]" % ["3c6a32" if usable else "b0302a", restriction,
+			"" if usable else " (a mostani karaktered nem veheti fel)"])
 	if item.has("description"):
 		lines.append(item["description"])
 	return "\n".join(lines)

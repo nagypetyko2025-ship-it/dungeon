@@ -59,6 +59,10 @@ const BOW_RANGE := 420.0
 const ARROW_SPEED := 560.0
 const PLAYER_ARROW := preload("res://player/player_arrow.gd")
 ## Többlövésnél a nyilak egymástól ennyi fokkal térnek el, és ennyi pixellel indulnak egymás mellől.
+## Suhanás (íjász, Ctrl): időtartam, sebesség (kb. 180 px), fix cooldown.
+const DASH_TIME := 0.18
+const DASH_SPEED := 1000.0
+const DASH_COOLDOWN := 5.0
 const MULTISHOT_SPREAD := 8.0
 const MULTISHOT_GAP := 16.0
 ## Ennyi megtett pixelenként szól egy lépés.
@@ -85,6 +89,10 @@ var _swing_side := 1.0
 ## A felszerelt fegyver fajtája: "sword" vagy "spear".
 var _weapon_type := "sword"
 var _step_distance := 0.0
+var _dash_left := 0.0
+var _dash_cooldown_left := 0.0
+var _dash_dir := Vector2.RIGHT
+@onready var _normal_mask := collision_mask
 
 
 func _ready() -> void:
@@ -96,9 +104,9 @@ func _ready() -> void:
 	_health.died.connect(_on_died)
 	_health.dodged.connect(_on_dodged)
 	_load_state()
-	# Új futás: a Többlövés alapértéke a karakteré (az íjász 2 nyilat lő).
-	if not GameState.saved_stats.has("multishot"):
-		_stats.base_multishot = float(Characters.data(Progress.character).get("multishot", 1))
+	# Új futás: a karakter saját alapértékei (az íjász 2 nyilat lő és gyorsabb).
+	if GameState.saved_stats.is_empty():
+		_apply_character_base(Progress.character)
 	_stats.changed.connect(_apply_stats)
 	_inventory.changed.connect(_apply_equipment)
 	# Minden szintlépéskor minden alapstat nő egy kicsit (a választott fejlesztésen felül).
@@ -144,10 +152,17 @@ func hit_damage() -> int:
 	return damage
 
 
+## A karakter saját alapstatjai (Többlövés, mozgási sebesség).
+func _apply_character_base(id: String) -> void:
+	var definition := Characters.data(id)
+	_stats.base_multishot = float(definition.get("multishot", 1))
+	_stats.base_move_speed = float(definition.get("move_speed", 100))
+
+
 ## Másik karakterre váltás (a kocsmában): kinézet, tábori felszerelés, fejlesztések.
 func set_character(id: String) -> void:
 	Progress.select_character(id)
-	_stats.base_multishot = float(Characters.data(id).get("multishot", 1))
+	_apply_character_base(id)
 	_sprite.sprite_frames = Characters.frames(id)
 	_sprite.play("idle")
 	if Progress.camp_inventory.is_empty():
@@ -295,6 +310,18 @@ func _physics_process(delta: float) -> void:
 	var aim := _weapon_pivot.get_global_mouse_position() - _weapon_pivot.global_position
 
 	var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	_dash_cooldown_left = maxf(_dash_cooldown_left - delta, 0.0)
+	if _dash_left > 0.0:
+		# Suhanás közben fix sebességgel a kurzor felé repül, a szörnyeken át.
+		_dash_left -= delta
+		velocity = _dash_dir * DASH_SPEED
+		move_and_slide()
+		if _dash_left <= 0.0:
+			_end_dash()
+		_cooldown_bar.set_ratio(1.0 - _cooldown_left / attack_cooldown())
+		return
+	if Input.is_physical_key_pressed(KEY_CTRL) and _can_dash():
+		_start_dash(aim)
 	velocity = input_dir * BASE_SPEED * (_stats.move_speed / 100.0) + _knockback
 	_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
 	move_and_slide()
@@ -311,6 +338,53 @@ func _physics_process(delta: float) -> void:
 
 	# Villogás, amíg sérthetetlen.
 	_visual.visible = not _hurtbox.is_invincible() or fmod(Time.get_ticks_msec() / 80.0, 2.0) < 1.0
+
+
+## Suhanás (csak az íjász, Ctrl): rövid, gyors ugrás a kurzor felé; közben a szörnyeken
+## (és a lövedékeken) át lehet menni, és nem lehet megsebezni. Fix DASH_COOLDOWN mp.
+func _can_dash() -> bool:
+	return Characters.data(Progress.character).get("dash", false) and _dash_cooldown_left <= 0.0 \
+		and not get_tree().paused
+
+
+func _start_dash(aim: Vector2) -> void:
+	_dash_dir = aim.normalized() if aim.length() > 1.0 else Vector2.RIGHT
+	_dash_left = DASH_TIME
+	_dash_cooldown_left = DASH_COOLDOWN
+	_knockback = Vector2.ZERO
+	# Csak a falak állítják meg (a szörnyek rétegét nem érzékeli), és nem sebezhető.
+	collision_mask = 1
+	_hurtbox.set_deferred("monitoring", false)
+	Audio.play("dodge")
+	_dash_trail()
+
+
+func _end_dash() -> void:
+	collision_mask = _normal_mask
+	_hurtbox.set_deferred("monitoring", true)
+
+
+## Halvány "utóképek" a suhanás nyomvonalán.
+func _dash_trail() -> void:
+	for i in 4:
+		await get_tree().create_timer(DASH_TIME / 4.0, false).timeout
+		var ghost := Sprite2D.new()
+		ghost.texture = _sprite.sprite_frames.get_frame_texture(_sprite.animation, _sprite.frame)
+		ghost.flip_h = _sprite.flip_h
+		ghost.scale = _sprite.scale
+		ghost.offset = _sprite.offset
+		ghost.modulate = Color(0.6, 0.9, 1.0, 0.6)
+		ghost.global_position = _sprite.global_position
+		ghost.z_index = -1
+		get_parent().add_child(ghost)
+		var fade := ghost.create_tween()
+		fade.tween_property(ghost, "modulate:a", 0.0, 0.3)
+		fade.tween_callback(ghost.queue_free)
+
+
+## A suhanás hátralévő cooldownja 0..1 (a HUD-nak; 0 = kész).
+func dash_cooldown_ratio() -> float:
+	return _dash_cooldown_left / DASH_COOLDOWN
 
 
 ## Lépéshangok mozgás közben (a megtett úttal arányosan).
