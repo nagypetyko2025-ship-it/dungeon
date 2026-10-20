@@ -110,7 +110,11 @@ func _ready() -> void:
 	_stats.changed.connect(_apply_stats)
 	_inventory.changed.connect(_apply_equipment)
 	# Minden szintlépéskor minden alapstat nő egy kicsit (a választott fejlesztésen felül).
-	_experience.leveled_up.connect(func(_level: int) -> void: _stats.apply_level_growth())
+	_experience.leveled_up.connect(func(level: int) -> void:
+		_stats.apply_level_growth()
+		# (A táborban nincs futás: ott nem számít a küldetésbe.)
+		if get_tree().current_scene.name == "Dungeon":
+			Quests.notify("level", level))
 	_apply_equipment()
 	_apply_stats()
 	if GameState.saved_health > 0:
@@ -259,7 +263,9 @@ func add_gold(amount: int) -> void:
 
 ## Felszedett arany (érme): az aranykereső tárgyak szerint több.
 func pick_up_gold(amount: int) -> void:
-	add_gold(roundi(amount * (1.0 + _stats.special("gold_find") / 100.0)))
+	var total := roundi(amount * (1.0 + _stats.special("gold_find") / 100.0))
+	add_gold(total)
+	Quests.notify("gold", total)
 
 
 ## Az ellenség hívja, ha a fegyvered eltalálta: életlopás.

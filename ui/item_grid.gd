@@ -10,6 +10,9 @@ signal item_hovered(index: int)
 const SLOT_SIZE := Vector2(60, 60)
 const SELECTED_GLOW := Color(1.5, 1.25, 0.55)
 
+## Ha igaz, a tárgyak húzhatók (pl. a kukába): a húzott adat {"grid_index": i, "grid": rács}.
+var draggable := false
+
 var _items: Array = []
 var _slots: Array[Panel] = []
 var selected := -1
@@ -29,7 +32,9 @@ func set_items(items: Array, min_slots := 0) -> void:
 	selected = -1
 	for i in maxi(items.size(), min_slots):
 		var item: Variant = items[i] if i < items.size() else null
-		var slot := Panel.new()
+		var slot := GridSlot.new()
+		slot.grid = self
+		slot.index = i
 		slot.custom_minimum_size = SLOT_SIZE
 		slot.add_theme_stylebox_override("panel", UiStyle.slot())
 		if item != null:
@@ -56,6 +61,29 @@ func set_items(items: Array, min_slots := 0) -> void:
 		_slots.append(slot)
 
 
+## Egy hely a rácsban (húzható, ha a rács az).
+class GridSlot:
+	extends Panel
+	var grid: ItemGrid
+	var index := 0
+
+	func _get_drag_data(_at_position: Vector2) -> Variant:
+		var item: Variant = grid.item_at(index)
+		if not grid.draggable or item == null:
+			return null
+		var preview := TextureRect.new()
+		preview.texture = Items.icon(item)
+		preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		preview.size = Vector2(56, 56)
+		preview.position = -Vector2(28, 28)
+		preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var holder := Control.new()
+		holder.add_child(preview)
+		set_drag_preview(holder)
+		return {"grid_index": index, "grid": grid}
+
+
 func item_at(index: int) -> Variant:
 	return _items[index] if index >= 0 and index < _items.size() else null
 
@@ -68,7 +96,8 @@ func select(index: int) -> void:
 
 
 func _on_slot_input(event: InputEvent, index: int) -> void:
+	# Elengedéskor számít kattintásnak (így a húzás, pl. a kukába, nem vált ki kattintást).
 	var click := event as InputEventMouseButton
-	if click and click.pressed and click.button_index == MOUSE_BUTTON_LEFT and item_at(index) != null:
+	if click and not click.pressed and click.button_index == MOUSE_BUTTON_LEFT and item_at(index) != null:
 		Audio.play("ui_click")
 		item_clicked.emit(index)

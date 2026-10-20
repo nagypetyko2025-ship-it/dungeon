@@ -173,6 +173,9 @@ func _ready() -> void:
 	var rooms: Array[Room] = []
 	rooms.assign(_rooms.get_children())
 	_hud.call("setup_map", rooms, _player, _cell)
+	# Küldetés: elért emelet (a gyakorló pályán nem számít).
+	Quests.notify("floor", depth)
+	add_child(QuestTracker.new())
 	if tutorial:
 		_hud.show_message("Gyakorló pálya")
 		var guide := TutorialGuide.new()

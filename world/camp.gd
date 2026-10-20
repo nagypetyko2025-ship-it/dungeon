@@ -87,6 +87,8 @@ var _npc_position := Vector2.ZERO
 ## Pihenő közben (főellenség után kimentél) vagy.
 var _on_break := false
 var _town: Town
+## Pihenő közben itt van a torlasz a városba vezető úton (felirat jelenik meg a közelében).
+var _road_block_position := Vector2.INF
 var _toast_label: Label
 var _toast_tween: Tween
 ## A kazamata lépcsője (pihenő közben rács van rajta).
@@ -128,6 +130,7 @@ func _ready() -> void:
 	_town.setup(self)
 	_town.build()
 	_town.message.connect(_toast)
+	add_child(QuestTracker.new())
 	_upgrades_panel = CAMP_UPGRADES.new()
 	_upgrades_panel.name = "CampUpgrades"
 	add_child(_upgrades_panel)
@@ -163,7 +166,20 @@ func _setup_break() -> void:
 	portal.position = _tile_center(STAIRS_TILE + Vector2i(5, 1))
 	add_child(portal)
 	_player.global_position = portal.position + Vector2(0, 50)
+	_block_town_road()
 
+
+## Pihenő közben a városba vezető út el van torlaszolva (fatörzsek és ládák a tisztás szélén).
+func _block_town_road() -> void:
+	var x := SIZE.x - 1
+	for row in [ROAD_ROW - 1, ROAD_ROW, ROAD_ROW + 1, ROAD_ROW + 2]:
+		var at := _tile_center(Vector2i(x, row))
+		if row in [ROAD_ROW, ROAD_ROW + 1]:
+			_rpg_prop(LOG_PILE, at + Vector2(0, -10))
+		else:
+			_prop(CONTAINERS, BIG_CRATE, at + Vector2(0, -14))
+	_solid(Rect2(Vector2(x * TILE, (ROAD_ROW - 1) * TILE), Vector2(TILE, 4 * TILE)))
+	_road_block_position = _tile_center(Vector2i(x - 1, ROAD_ROW)) + Vector2(0, TILE / 2.0)
 
 ## Ha pihenő közben bezárod a játékot, az a futás feladása: a pénzed 40%-a a táborba kerül.
 func _notification(what: int) -> void:
@@ -722,8 +738,11 @@ func _process(delta: float) -> void:
 	var near_tent := _is_near_tent()
 	var near_stash := _is_near_stash()
 	var near_npc := _is_near_npc()
-	var any_near := near_stairs or near_tent or near_stash or near_npc
-	if near_stairs:
+	var near_block := _player.global_position.distance_to(_road_block_position) < 90.0
+	var any_near := near_stairs or near_tent or near_stash or near_npc or near_block
+	if near_block:
+		_prompt.text = "Pihenő közben nem mehetsz a városba"
+	elif near_stairs:
 		_prompt.text = "A kazamata lezárva — a kék portálon át folytathatod" if _on_break else "[E] Leszállás a mélybe"
 	elif near_tent:
 		_prompt.text = "Kiképzősátor — pihenő közben zárva" if _on_break else "[E] Kiképzősátor"

@@ -33,6 +33,9 @@ static var character := Characters.DEFAULT
 static var upgrades := {}
 ## A tábori ládában váró tárgyak (közös; a tárgylifttel / a főellenség után felküldve).
 static var stash: Array = []
+## A felvett küldetés ({id, progress} vagy üres) és a már teljesített küldetések (Quests).
+static var quest := {}
+static var quests_done: Array = []
 ## Az aktív karakter tábori felszerelése (Inventory.save_data); üres = kezdő felszerelés.
 ## Leszálláskor magaddal viszed (és innen törlődik). Minden karakternek külön.
 static var camp_inventory := {}
@@ -55,6 +58,8 @@ static func load_game(force := false) -> void:
 	upgrades = {}
 	_all_inventories = {}
 	stash = []
+	quest = {}
+	quests_done = []
 	var config := ConfigFile.new()
 	if config.load(PATH) == OK:
 		camp_gold = int(config.get_value("camp", "gold", 0))
@@ -72,6 +77,12 @@ static func load_game(force := false) -> void:
 		var saved_stash: Variant = config.get_value("camp", "stash", [])
 		if saved_stash is Array:
 			stash = saved_stash
+		var saved_quest: Variant = config.get_value("camp", "quest", {})
+		if saved_quest is Dictionary:
+			quest = saved_quest
+		var saved_done: Variant = config.get_value("camp", "quests_done", [])
+		if saved_done is Array:
+			quests_done = saved_done
 	_activate(character)
 
 
@@ -83,6 +94,8 @@ static func save_game() -> void:
 	config.set_value("camp", "upgrades", upgrades)
 	config.set_value("camp", "inventory_by_character", _all_inventories)
 	config.set_value("camp", "stash", stash)
+	config.set_value("camp", "quest", quest)
+	config.set_value("camp", "quests_done", quests_done)
 	config.save(PATH)
 
 
@@ -93,6 +106,8 @@ static func reset_game() -> void:
 	upgrades = {}
 	_all_inventories = {}
 	stash = []
+	quest = {}
+	quests_done = []
 	_activate(Characters.DEFAULT)
 	save_game()
 

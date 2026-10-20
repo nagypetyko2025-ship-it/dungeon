@@ -67,7 +67,18 @@ func _build() -> void:
 	_stash_grid.columns = 5
 	_stash_grid.item_clicked.connect(_take_from_stash)
 	_stash_grid.item_hovered.connect(func(i: int) -> void: _show_item(_stash_grid.item_at(i)))
+	_stash_grid.draggable = true
 	stash_box.add_child(_stash_grid)
+	# Kuka: a ládából vagy a táskából ide húzott tárgy (megerősítés után) törlődik.
+	var trash_row := HBoxContainer.new()
+	trash_row.add_theme_constant_override("separation", 10)
+	stash_box.add_child(trash_row)
+	var trash := TrashSlot.new()
+	trash.on_drop = _ask_trash
+	trash_row.add_child(trash)
+	var trash_hint := UiStyle.label("Kuka: húzz ide egy tárgyat a törléshez", 14, UiStyle.INK_LIGHT)
+	trash_hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	trash_row.add_child(trash_hint)
 
 	var bag_box := VBoxContainer.new()
 	columns.add_child(bag_box)
@@ -76,6 +87,7 @@ func _build() -> void:
 	_bag_grid.columns = 6
 	_bag_grid.item_clicked.connect(_put_to_stash)
 	_bag_grid.item_hovered.connect(func(i: int) -> void: _show_item(_bag_grid.item_at(i)))
+	_bag_grid.draggable = true
 	bag_box.add_child(_bag_grid)
 
 	var info := PanelContainer.new()
@@ -101,6 +113,24 @@ func _build() -> void:
 	var hint := UiStyle.label("[E] / [Esc] bezárás", 14, UiStyle.INK_LIGHT)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	root.add_child(hint)
+
+
+## Kuka: rákérdez, és ha igen, végleg törli a tárgyat (a ládából vagy a táskából).
+func _ask_trash(data: Dictionary) -> void:
+	var grid: ItemGrid = data.get("grid")
+	var index: int = data.get("grid_index", -1)
+	var item: Variant = grid.item_at(index) if grid else null
+	if item == null:
+		return
+	ConfirmBox.ask(self, "Biztosan kidobod: %s? Nem lehet visszahozni." % item["name"], func() -> void:
+		if grid == _stash_grid:
+			Progress.stash.remove_at(index)
+			Progress.save_game()
+		else:
+			_inventory().take_from_bag(index)
+		Audio.play("door_lock", -6.0)
+		_message.text = "Kidobva: " + item["name"]
+		_refresh())
 
 
 func _refresh() -> void:

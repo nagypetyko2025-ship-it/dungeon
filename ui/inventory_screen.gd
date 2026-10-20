@@ -116,10 +116,18 @@ func _build() -> void:
 	_bag_grid.add_theme_constant_override("v_separation", 4)
 	bag_box.add_child(_bag_grid)
 	# Az eladás mező mindig helyet foglal (csak eladáskor látszik), így nem ugrik az ablak mérete.
+	# Alatta egy sorban: az eladás mező (csak a boltosnál látszik) és a kuka.
+	var bottom_row := HBoxContainer.new()
+	bottom_row.add_theme_constant_override("separation", 8)
+	bag_box.add_child(bottom_row)
 	_sell_slot = SellSlot.new()
 	_sell_slot.on_sell = _sell_from_bag
-	bag_box.add_child(_sell_slot)
+	_sell_slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bottom_row.add_child(_sell_slot)
 	_set_sell_slot_shown(false)
+	var trash := TrashSlot.new()
+	trash.on_drop = func(data: Dictionary) -> void: _ask_trash(int(data["inventory_key"]))
+	bottom_row.add_child(trash)
 
 	# Jobbra: leírás (pergamen), fix méretű, hogy a hosszabb leírástól se változzon az ablak.
 	var info := PanelContainer.new()
@@ -205,6 +213,17 @@ func _make_slot(kind: String, key: Variant, item: Variant) -> InventorySlot:
 
 
 ## A boltos megveszi a táska adott helyén lévő tárgyat.
+## Kuka: rákérdez, és ha igen, végleg törli a táska adott helyén lévő tárgyat.
+func _ask_trash(index: int) -> void:
+	var item: Variant = _inventory.bag[index]
+	if item == null:
+		return
+	ConfirmBox.ask(self, "Biztosan kidobod: %s? Nem lehet visszahozni." % item["name"], func() -> void:
+		_inventory.take_from_bag(index)
+		Audio.play("door_lock", -6.0)
+		_show_info(null, "Kidobva: " + item["name"]))
+
+
 func _sell_from_bag(index: int) -> void:
 	var item = _inventory.bag[index]
 	if item == null:

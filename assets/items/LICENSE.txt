@@ -8,3 +8,4 @@ pants_cloth, pants_ranger, pants_shadow, pants_knight, ring_ruby, ring_emerald:
 
 Új tárgyikonok (balták, tőrök, buzogányok, kesztyűk, talizmánok és több páncél): "496 pixel art icons for medieval/fantasy RPG" by Henrique Lazarini (7Soul1), CC0 — https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg
 icon_multishot.png (assets/ui) és az íjak: "496 pixel art icons for medieval/fantasy RPG" (CC0).
+assets/ui/trash.png, trash_open.png: Kenney Game Icons (CC0, https://kenney.nl/assets/game-icons). assets/ui/quest_scroll.png: 496 pixel art icons (CC0).

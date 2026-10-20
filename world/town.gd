@@ -68,6 +68,10 @@ var _prompt: Label
 var _inside := false
 var _barkeep_line := 0
 var _busy := false
+var _quest_panel: CanvasLayer
+var _quest_mark: Label
+
+const QUEST_PANEL := preload("res://ui/quest_panel.gd")
 var _intro: PanelContainer
 var _intro_title: PanelContainer
 var _intro_portrait: TextureRect
@@ -80,6 +84,9 @@ func setup(camp: Node2D) -> void:
 	_camp = camp
 	_entities = camp.get_node("Entities")
 	_player = camp.get_node("Entities/Player")
+	_quest_panel = QUEST_PANEL.new()
+	_quest_panel.name = "QuestPanel"
+	camp.add_child.call_deferred(_quest_panel)
 
 
 ## A kocsma ajtaja előtti földút (a tábor rajzolja ki a többi földdel együtt).
@@ -196,6 +203,15 @@ func _build_bar() -> void:
 	barkeep.play("idle")
 	_entities.add_child(barkeep)
 	set_meta("barkeep_position", barkeep.position + Vector2(0, 2 * TILE))
+	# Jel a kocsmáros fölött: "!" ha vehetsz fel küldetést, "?" ha leadhatod a kész küldetést.
+	_quest_mark = MenuStyle.title_label("!", 40, MenuStyle.GOLD)
+	_quest_mark.size = Vector2(40, 46)
+	_quest_mark.position = barkeep.position + Vector2(-20, -84)
+	_quest_mark.z_index = 20
+	add_child(_quest_mark)
+	var bob := _quest_mark.create_tween().set_loops()
+	bob.tween_property(_quest_mark, "position:y", _quest_mark.position.y - 6, 0.6).set_trans(Tween.TRANS_SINE)
+	bob.tween_property(_quest_mark, "position:y", _quest_mark.position.y, 0.6).set_trans(Tween.TRANS_SINE)
 
 
 ## 10 asztal, mindegyiknél 2 szék (balra és jobbra), az asztalokon italok és gyertyák.
@@ -323,7 +339,7 @@ func _focus() -> Array:
 	if at.distance_to(_center(INTERIOR_DOOR) + Vector2(TILE / 2.0, TILE / 2.0)) < INTERACT_RANGE:
 		return ["exit", "[E] Kilépés a városba"]
 	if at.distance_to(get_meta("barkeep_position")) < INTERACT_RANGE + 10:
-		return ["barkeep", "[E] Beszélgetés a kocsmárossal"]
+		return ["barkeep", "[E] Küldetések (kocsmáros)"]
 	for id: String in _seated:
 		if at.distance_to(_seated[id].position) < INTERACT_RANGE:
 			return [id, "[E] %s" % Characters.data(id)["name"]]
@@ -336,6 +352,11 @@ func _process(delta: float) -> void:
 		_prompt.text = focus[1]
 	var target := 1.0 if not focus.is_empty() and not get_tree().paused else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
+	if _quest_mark:
+		var can_take := Progress.quest.is_empty() and Progress.quests_done.size() < Quests.ALL.size()
+		_quest_mark.visible = can_take or Quests.is_complete()
+		_quest_mark.text = "?" if Quests.is_complete() else "!"
+		_quest_mark.add_theme_color_override("font_color", Color(0.55, 1.0, 0.55) if Quests.is_complete() else MenuStyle.GOLD)
 	# Egy ülő karakter mellett oldalt megjelenik a bemutatkozása.
 	var character_id: String = focus[0] if not focus.is_empty() and Characters.ALL.has(focus[0]) else ""
 	if character_id != _intro_for:
@@ -412,9 +433,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		"door": _enter()
 		"exit": _exit()
 		"barkeep":
-			Audio.play("ui_click")
+			# A kocsmáros küldetéseket ad (és itt lehet leadni őket).
+			Audio.play("ui_open")
 			message.emit("Kocsmáros: \"%s\"" % BARKEEP_LINES[_barkeep_line % BARKEEP_LINES.size()])
 			_barkeep_line += 1
+			_camp.get_node("Menus").call("open_menu", _quest_panel)
 		_: _switch_to(focus[0])
 
 

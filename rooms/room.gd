@@ -362,6 +362,7 @@ func _point_free(world_position: Vector2) -> bool:
 
 
 func _on_boss_defeated(boss: Node2D) -> void:
+	Quests.notify("boss")
 	if is_instance_valid(_gate):
 		_gate.set_blocked(false)
 	elif alcove_dir == Vector2i.ZERO:
@@ -438,6 +439,8 @@ func _random_spawn_point(avoid: Vector2, taken := {}) -> Vector2:
 
 func _on_enemy_died(enemy: Node2D) -> void:
 	GameState.kills += 1
+	var type: Variant = enemy.get("_type")
+	Quests.notify("kill", type["name"] if type is Dictionary else "")
 	if enemy.is_in_group("boss"):
 		_on_boss_defeated(enemy)
 	# Előbb az osztódás, hogy a harc ne érjen véget, mielőtt a kicsik megjelennek.
@@ -482,6 +485,7 @@ func _finish_fight() -> void:
 	if _cleared:
 		return
 	_cleared = true
+	Quests.notify("room")
 	_set_doors_locked(false)
 	if is_instance_valid(_stairs) and _stairs.call("is_locked"):
 		_stairs.call("set_locked", false)
