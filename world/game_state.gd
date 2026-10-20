@@ -37,6 +37,10 @@ static var merchant_stock: Array = []
 ## Szintlépéskor hányszor dobtad újra a fejlesztéseket (minden újradobás drágább).
 static var rerolls := 0
 
+## Gyakorló pálya (tutorial) megy: rögzített pálya, lépésről lépésre vezetés; semmi nem
+## mentődik belőle (eredmény, tábori arany, tárgylift). A reset() nem törli, csak a kilépés.
+static var tutorial := false
+
 ## Az ablak már teljes képernyőre lett állítva indításkor (nem a futás része, reset nem törli).
 static var display_initialized := false
 

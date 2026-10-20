@@ -26,6 +26,12 @@ var _new_game_button: Button
 var _records_button: Button
 var _settings_button: Button
 var _confirm_new_game := false
+var _tutorial: TutorialPanel
+var _tutorial_button: Button
+var _tutorial_extras: Array = []
+
+const TUTORIAL := "tutorial"
+const DUNGEON_SCENE := "res://world/dungeon.tscn"
 var _title: Label
 ## Az alcím és a díszcsík: panel (Eredmények/Beállítások) nyitásakor elrejtjük, hogy ne lógjon bele.
 var _subtitle_parts: Array[Control] = []
@@ -198,6 +204,32 @@ func _build_settings() -> void:
 	_records.visible = false
 	_records.closed.connect(_show_panel.bind(""))
 	add_child(_records)
+	_tutorial = TutorialPanel.new()
+	_place(_tutorial, Vector2(0.5, 0.5), Vector2(-470, -330), Vector2(940, 0))
+	_tutorial.visible = false
+	_tutorial.closed.connect(_show_panel.bind(""))
+	_tutorial.start_requested.connect(_start_tutorial)
+	add_child(_tutorial)
+	# A Tutorial gomb a főgomboktól kicsit oldalra (bal alul), saját "könyv" kerettel.
+	_tutorial_button = MenuStyle.button("Tutorial")
+	_tutorial_button.custom_minimum_size = Vector2(240, 60)
+	_place(_tutorial_button, Vector2(0.0, 1.0), Vector2(40, -110), Vector2(240, 60))
+	_tutorial_button.pressed.connect(_show_panel.bind(TUTORIAL))
+	add_child(_tutorial_button)
+	var tag := Label.new()
+	tag.text = "Új vagy? Kezdd itt!"
+	tag.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
+	tag.add_theme_font_size_override("font_size", 16)
+	tag.add_theme_color_override("font_color", MenuStyle.PARCHMENT)
+	tag.add_theme_color_override("font_outline_color", MenuStyle.SHADOW)
+	tag.add_theme_constant_override("outline_size", 5)
+	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_place(tag, Vector2(0.0, 1.0), Vector2(40, -138), Vector2(240, 24))
+	add_child(tag)
+	_tutorial_extras = [_tutorial_button, tag]
+	var bob := tag.create_tween().set_loops()
+	bob.tween_property(tag, "modulate:a", 0.45, 0.9).set_trans(Tween.TRANS_SINE)
+	bob.tween_property(tag, "modulate:a", 1.0, 0.9).set_trans(Tween.TRANS_SINE)
 
 
 func _build_footer() -> void:
@@ -213,14 +245,27 @@ func _build_footer() -> void:
 
 ## Egy panel (Eredmények / Beállítások) megnyitása a gombok helyén; "" = vissza a gombokhoz.
 func _show_panel(panel: String) -> void:
-	var previous := RECORDS if _records.visible else SETTINGS
+	var previous := RECORDS if _records.visible else (TUTORIAL if _tutorial.visible else SETTINGS)
 	_records.visible = panel == RECORDS
 	_settings.visible = panel == SETTINGS
+	_tutorial.visible = panel == TUTORIAL
 	_buttons.visible = panel.is_empty()
-	for part in _subtitle_parts:
+	for part in _subtitle_parts + _tutorial_extras:
 		part.modulate.a = 1.0 if panel.is_empty() else 0.0
+	_tutorial_button.visible = panel.is_empty()
+	# A nagy Tutorial ablak a címig ér: ilyenkor a cím is eltűnik.
+	_title.get_parent().modulate.a = 0.0 if panel == TUTORIAL else 1.0
 	if panel.is_empty():
-		(_records_button if previous == RECORDS else _settings_button).grab_focus()
+		var focus_target: Button = _records_button if previous == RECORDS else (_tutorial_button if previous == TUTORIAL else _settings_button)
+		focus_target.grab_focus()
+
+
+## Gyakorló pálya: külön pálya a jelenlegi karakterrel, semmi nem mentődik belőle.
+func _start_tutorial() -> void:
+	Progress.load_game()
+	GameState.reset()
+	GameState.tutorial = true
+	get_tree().change_scene_to_file(DUNGEON_SCENE)
 
 
 func _unhandled_input(event: InputEvent) -> void:

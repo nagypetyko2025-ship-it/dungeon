@@ -34,7 +34,9 @@ func _ready() -> void:
 	stack.add_child(_buttons)
 	_add_button("Folytatás", _resume)
 	# A kazamatából vissza lehet menni a táborba (a futás véget ér, bekerül az eredmények közé).
-	if get_parent().name == "Dungeon":
+	if GameState.tutorial:
+		_add_button("Kilépés a gyakorlásból", func() -> void: TutorialGuide.leave_tutorial(get_tree()))
+	elif get_parent().name == "Dungeon":
 		_add_button("Vissza a táborba", _to_camp)
 		var note := UiStyle.label("Kilépéskor a pénzed 40%-a a táborba kerül, a tárgyaid elvesznek.", 16, MenuStyle.PARCHMENT)
 		note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -92,6 +94,9 @@ func _resume() -> void:
 ## a pénzed 40%-a a táborba kerül.
 func _record_run() -> void:
 	var player := get_tree().get_first_node_in_group("player")
+	if GameState.tutorial:
+		GameState.tutorial = false
+		return
 	# A táborban csak pihenő közben van futás (amit így feladsz).
 	if get_parent().name != "Dungeon" and not GameState.on_break:
 		return

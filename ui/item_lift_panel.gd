@@ -145,6 +145,10 @@ func _send() -> void:
 	if inventory == null or _used() or _selected < 0 or inventory.bag[_selected] == null:
 		Audio.play("ui_error")
 		return
+	if GameState.tutorial:
+		Audio.play("ui_error")
+		_status.text = "Gyakorláskor a lift nem küld fel semmit — az igazi játékban így működik."
+		return
 	var item: Dictionary = inventory.take_from_bag(_selected)
 	Progress.add_to_stash(item)
 	GameState.lift_used_floor = GameState.depth

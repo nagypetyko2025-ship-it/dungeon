@@ -7,6 +7,7 @@ const PANEL: Texture2D = preload("res://assets/ui/panel.png")
 const PANEL_HOVER: Texture2D = preload("res://assets/ui/panel_hover.png")
 const MAIN_MENU := "res://ui/main_menu.tscn"
 const CAMP := "res://world/camp.tscn"
+const GAME_SCENE := "res://world/dungeon.tscn"
 const DEATH_GOLD_RATIO := 0.2
 
 var _shown := false
@@ -49,8 +50,12 @@ func show_for(player: Node) -> void:
 		GameState.depth, experience.level, GameState.kills, player.get("gold"), seconds / 60, seconds % 60,
 	]
 	# Halálkor a pénzed 20%-a a táborba kerül.
-	var rescued := Progress.rescue_gold(int(player.get("gold")), DEATH_GOLD_RATIO)
-	_stats_label.text += "\n\nA pénzed %d%%-a (%d arany) a táborba került." % [roundi(DEATH_GOLD_RATIO * 100), rescued]
+	if GameState.tutorial:
+		_stats_label.text += "\n\nGyakorlás: az R / Újrakezdés a gyakorló pályát kezdi újra."
+		_restart.text = "Újra a gyakorlás (R)"
+	else:
+		var rescued := Progress.rescue_gold(int(player.get("gold")), DEATH_GOLD_RATIO)
+		_stats_label.text += "\n\nA pénzed %d%%-a (%d arany) a táborba került." % [roundi(DEATH_GOLD_RATIO * 100), rescued]
 	if rank > 0:
 		_stats_label.text += "\n\n★ Új eredmény: %d. hely! ★" % rank
 	visible = true
@@ -75,6 +80,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _to_main_menu() -> void:
+	GameState.tutorial = false
 	GameState.reset()
 	get_tree().paused = false
 	get_tree().change_scene_to_file(MAIN_MENU)
@@ -84,7 +90,8 @@ func _to_main_menu() -> void:
 func _restart_run() -> void:
 	GameState.reset()
 	get_tree().paused = false
-	get_tree().change_scene_to_file(CAMP)
+	# Gyakorláskor a gyakorló pálya indul újra.
+	get_tree().change_scene_to_file(GAME_SCENE if GameState.tutorial else CAMP)
 
 
 func _panel_style(texture: Texture2D) -> StyleBoxTexture:

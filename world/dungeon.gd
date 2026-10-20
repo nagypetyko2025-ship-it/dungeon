@@ -50,6 +50,8 @@ const SHOP_CHANCE := 0.6
 ## Minden ennyiedik emeleten főellenség van; a terme ekkora (csempe).
 const BOSS_EVERY := 3
 const RETURN_PORTAL := preload("res://rooms/obstacles/return_portal.gd")
+## A gyakorló pálya szobái (balról jobbra): kezdő, harc + láda, bolt, lépcső.
+const TUTORIAL_CELLS: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
 const BOSS_ROOM_SIZE := Vector2i(15, 11)
 const NO_SHOP := Vector2i(999999, 999999)
 
@@ -91,12 +93,15 @@ func _ready() -> void:
 	var depth := GameState.depth
 	_big_rooms = depth >= BIG_ROOMS_FROM
 	_cell = BIG_CELL if _big_rooms else CELL
-	var cells := _generate_layout(mini(base_room_count + depth - 1, max_room_count))
+	# Gyakorló pálya (tutorial): rögzített, egyenes sor: kezdőszoba, harc + láda, bolt, lépcső.
+	var tutorial := GameState.tutorial
+	var cells: Array[Vector2i] = TUTORIAL_CELLS.duplicate() if tutorial \
+		else _generate_layout(mini(base_room_count + depth - 1, max_room_count))
 	var distances := _distances_from_start(cells)
 	var stairs_cell := _farthest(distances)
-	var shop_cell := _pick_shop_cell(cells, stairs_cell)
+	var shop_cell := TUTORIAL_CELLS[2] if tutorial else _pick_shop_cell(cells, stairs_cell)
 	# Minden BOSS_EVERY. emeleten a lépcsős szoba helyett főellenség-terem van.
-	var boss_floor := depth % BOSS_EVERY == 0
+	var boss_floor := depth % BOSS_EVERY == 0 and not tutorial
 	var alcove_dir := _free_direction(cells, stairs_cell) if boss_floor else Vector2i.ZERO
 
 	var room_rects := {}
@@ -145,6 +150,11 @@ func _ready() -> void:
 			room.trap_count = randi_range(1, mini(2 + depth / 2, 4))
 			room.has_chest = randf() < CHEST_CHANCE
 		room.has_stairs = cell == stairs_cell and not boss_floor
+		if tutorial:
+			room.trap_count = 1 if cell == stairs_cell else 0
+			room.has_chest = cell == TUTORIAL_CELLS[1]
+			if room.enemy_count > 0:
+				room.enemy_count = 3 if cell == TUTORIAL_CELLS[1] else 4
 		_rooms.add_child(room)
 		room.cleared.connect(_hud.show_message.bind("Szoba kitisztítva!"))
 		room.stairs_used.connect(_go_deeper)
@@ -163,7 +173,14 @@ func _ready() -> void:
 	var rooms: Array[Room] = []
 	rooms.assign(_rooms.get_children())
 	_hud.call("setup_map", rooms, _player, _cell)
-	_hud.show_message(("%d. emelet — főellenség vár!" if boss_floor else "%d. emelet") % depth)
+	if tutorial:
+		_hud.show_message("Gyakorló pálya")
+		var guide := TutorialGuide.new()
+		guide.name = "TutorialGuide"
+		add_child(guide)
+		guide.call("setup", self, rooms)
+	else:
+		_hud.show_message(("%d. emelet — főellenség vár!" if boss_floor else "%d. emelet") % depth)
 
 
 func _on_boss_fight_started(boss: Node2D) -> void:
@@ -185,7 +202,7 @@ func _on_boss_defeated(boss: Node2D) -> void:
 
 ## Ha a kazamatában bezárod az ablakot, az is kilépésnek számít: a pénzed 40%-a a táborba kerül.
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and not GameState.tutorial:
 		var player := get_tree().get_first_node_in_group("player")
 		if player and not player.get_node("Health").is_dead():
 			Records.submit_run(player)
@@ -253,6 +270,10 @@ func _teleport(target: Vector2, message: String) -> void:
 
 
 func _go_deeper() -> void:
+	# A gyakorló pálya végén a lépcső befejezi a gyakorlást.
+	if GameState.tutorial:
+		get_node("TutorialGuide").call("finish")
+		return
 	_player.save_state()
 	GameState.depth += 1
 	get_tree().reload_current_scene.call_deferred()
