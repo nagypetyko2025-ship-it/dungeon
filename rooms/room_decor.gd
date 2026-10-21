@@ -26,18 +26,34 @@ const FOUNTAIN_CHANCE := 0.25
 const TOP_COBWEB_CHANCE := 0.6
 const BOTTOM_COBWEB_CHANCE := 0.3
 const STACK_STEP := 13.0
+## Néhány apró dísz, szobánként legfeljebb egy-egy, ennyi eséllyel: gyertyák a fal tövében
+## (Kenney RPG, pislákoló fénnyel), lecsorgó nyálka (alatta tócsa) és eldobott bájitalos
+## üveg (0x72). (Falizászló a falcsempék között már magától is van, lásd Dungeon.)
+const RPG: Texture2D = preload("res://assets/shop/kenney_rpg.png")
+const CANDLE := Vector2i(19, 7)
+const CANDLE_CHANCE := 0.3
+const WALL_GOO := Rect2(64, 80, 16, 16)
+const WALL_GOO_BASE := Rect2(64, 96, 16, 16)
+const GOO_CHANCE := 0.2
+const FLASKS: Array[Rect2] = [Rect2(288, 352, 16, 16), Rect2(304, 352, 16, 16), Rect2(320, 352, 16, 16)]
+const FLASK_CHANCE := 0.3
 const FLOOR_Z := -7
 
 var room: Room
+## A hátsó fal már foglalt oszlopai (fáklya, kút), hogy a falidíszek ne kerüljenek rájuk.
+var _wall_used: Array[int] = []
 
 
 func _ready() -> void:
 	y_sort_enabled = true
 	var fountain_x := _place_fountain()
+	_wall_used.append(fountain_x)
 	_place_torches(fountain_x)
+	_place_wall_decor()
 	_place_cobwebs()
 	_place_clutter()
 	_scatter_floor()
+	_place_dropped_flask()
 
 
 ## Falikút a hátsó fal bal oldalán (FOUNTAIN_CHANCE eséllyel). Az x-et adja vissza (vagy -99999).
@@ -71,6 +87,92 @@ func _place_torches(fountain_x: int) -> void:
 		var torch: Node2D = TORCH.instantiate()
 		torch.position = room.local_pos(Vector2i(x, y))
 		add_child(torch)
+		_wall_used.append(x)
+
+
+## Gyertyák a fal tövében és/vagy lecsorgó nyálka a hátsó falon, a fáklyák, a kút és a nyílások között.
+func _place_wall_decor() -> void:
+	var y := room.rect.position.y - 1
+	for decor in ["candles", "goo"]:
+		if randf() >= (CANDLE_CHANCE if decor == "candles" else GOO_CHANCE):
+			continue
+		var x := _free_wall_x()
+		if x == -99999:
+			return
+		_wall_used.append(x)
+		var base := Vector2i(x, room.rect.position.y)
+		if decor == "candles":
+			if not room.is_tile_used(base):
+				_place_candles(base)
+		else:
+			_sprite(WALL_GOO, Vector2i(x, y), -4)
+			if not room.is_tile_used(base):
+				_sprite(WALL_GOO_BASE, base, FLOOR_Z)
+
+
+## Két-három gyertya a padlón a fal tövében, halvány, pislákoló fénnyel (nem akadály).
+func _place_candles(tile: Vector2i) -> void:
+	var texture := AtlasTexture.new()
+	texture.atlas = RPG
+	texture.region = Rect2(Vector2(CANDLE) * 17.0, Vector2(16, 16))
+	for i in randi_range(2, 3):
+		var candle := _texture_sprite(texture, tile, FLOOR_Z + 1)
+		candle.scale = Vector2(1.2, 1.2) * randf_range(0.8, 1.05)
+		candle.position += Vector2(-12 + i * 11, -10 + (i % 2) * 6)
+	var light := PointLight2D.new()
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(1, 0.75, 0.4))
+	gradient.set_color(1, Color(0, 0, 0, 0))
+	var glow := GradientTexture2D.new()
+	glow.gradient = gradient
+	glow.fill = GradientTexture2D.FILL_RADIAL
+	glow.fill_from = Vector2(0.5, 0.5)
+	glow.fill_to = Vector2(0.5, 0.0)
+	light.texture = glow
+	light.texture_scale = 2.0
+	light.energy = 0.6
+	light.position = room.local_pos(tile) + Vector2(0, -14)
+	add_child(light)
+	var flicker := light.create_tween().set_loops()
+	flicker.tween_property(light, "energy", 0.45, 0.2)
+	flicker.tween_property(light, "energy", 0.7, 0.25)
+
+
+## Egy szabad oszlop a hátsó falon (nem fáklya / kút mellett, nem nyílás, bolt vagy tárgylift fölött).
+func _free_wall_x() -> int:
+	var candidates: Array[int] = []
+	for x in range(room.rect.position.x + 1, room.rect.end.x - 1):
+		if room.has_opening(Vector2i.UP) and absi(x - room.anchor.x) <= 2:
+			continue
+		if room.has_shop and x >= room.anchor.x + Room.SHOP_OFFSET - 1 and x <= room.anchor.x + Room.SHOP_OFFSET + 2:
+			continue
+		if x >= room.lift_x - 2 and x <= room.lift_x + 1:
+			continue
+		var near_used := false
+		for used in _wall_used:
+			if absi(x - used) <= 1:
+				near_used = true
+		if not near_used:
+			candidates.append(x)
+	if candidates.is_empty():
+		return -99999
+	return candidates[randi() % candidates.size()]
+
+
+## Egy eldobott (felborult) bájitalos üveg valahol a padlón, harci szobákban.
+func _place_dropped_flask() -> void:
+	if room.enemy_count <= 0 or randf() >= FLASK_CHANCE:
+		return
+	var inner := room.rect.grow(-1)
+	for attempt in 10:
+		var tile := Vector2i(randi_range(inner.position.x, inner.end.x - 1), randi_range(inner.position.y, inner.end.y - 1))
+		if room.is_tile_used(tile) or tile == room.anchor:
+			continue
+		var flask := _sprite(FLASKS.pick_random(), tile, FLOOR_Z)
+		flask.rotation = deg_to_rad([90.0, -90.0].pick_random())
+		flask.scale *= 0.8
+		flask.position += Vector2(randf_range(-6, 6), randf_range(-4, 6))
+		return
 
 
 func _place_cobwebs() -> void:
