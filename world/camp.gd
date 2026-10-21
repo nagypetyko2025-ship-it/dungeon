@@ -65,6 +65,16 @@ const CAMP_RADIUS := Vector2(9.5, 6.0)
 const ROAD_ROW := 17
 ## A világ keleti széle (a város mögötti erdő vége).
 const WORLD_END_X := 94 + FOREST_DEPTH
+## A nyugati tisztás (a várossal ellentétes irányban): ide vezet egy kis földút a táborból,
+## a végén majd lesz valami. A tisztáson a sebesült veterán sátra.
+const WEST_RECT := Rect2i(-30, 9, 20, 16)
+## A világ nyugati széle (a nyugati tisztás mögötti erdő vége).
+const WORLD_START_X := WEST_RECT.position.x - FOREST_DEPTH
+## A veterán sátrának bal felső csempéje (az ösvénytől északra); előtte ül a veterán.
+const VETERAN_TENT := Vector2i(-21, ROAD_ROW - 5)
+const VETERAN_SHEET: Texture2D = preload("res://assets/characters/veteran.png")
+## A veterán kardja (0x72 lap), a földbe szúrva mellette.
+const VETERAN_SWORD := Rect2(339, 98, 10, 29)
 
 @onready var _ground: TileMapLayer = $Ground
 @onready var _dirt_layer: TileMapLayer = $Dirt
@@ -86,6 +96,8 @@ var _stash_position := Vector2.ZERO
 var _stash_panel: CanvasLayer
 var _merchant_panel: CanvasLayer
 var _npc_position := Vector2.ZERO
+## A veterán helye (később ide jön a beszélgetés a régi időkről).
+var _veteran_position := Vector2.ZERO
 ## Pihenő közben (főellenség után kimentél) vagy.
 var _on_break := false
 var _town: Town
@@ -121,6 +133,7 @@ func _ready() -> void:
 	_build_dirt()
 	_build_camp()
 	_build_smithy()
+	_build_veteran()
 	_build_trees()
 	_build_forest()
 	_build_bounds()
@@ -236,7 +249,7 @@ func _build_ground() -> void:
 	for i in GRASS_TILES.size():
 		grass.create_tile(Vector2i(i, 0))
 	_ground.tile_set = tile_set
-	for x in range(-FOREST_DEPTH, WORLD_END_X):
+	for x in range(WORLD_START_X, WORLD_END_X):
 		for y in range(-FOREST_DEPTH, SIZE.y + FOREST_DEPTH):
 			_ground.set_cell(Vector2i(x, y), GRASS_SOURCE, Vector2i(randi() % GRASS_TILES.size(), 0))
 
@@ -274,6 +287,20 @@ func _build_dirt() -> void:
 			row += roundi(sin(x * 0.45) * 1.0)
 		_dirt[Vector2i(x, row)] = true
 		_dirt[Vector2i(x, row + 1)] = true
+	# Kis földút nyugatra (a várossal ellentétes irányba): a tisztásokon kanyarog, az
+	# erdőben egyenes, és a nyugati tisztás végén ér véget.
+	for x in range(WEST_RECT.position.x + 3, FIRE_TILE.x - 8):
+		var row := ROAD_ROW
+		if x > 2 or x < WEST_RECT.end.x - 2:
+			row += roundi(sin(x * 0.4 + 1.0) * 1.0)
+		_dirt[Vector2i(x, row)] = true
+		_dirt[Vector2i(x, row + 1)] = true
+	# Az ösvény végén egy kis kitaposott tér (ide jön majd valami).
+	var end := Vector2i(WEST_RECT.position.x + 4, ROAD_ROW)
+	for x in range(-3, 4):
+		for y in range(-3, 4):
+			if pow(x / 3.0, 2) + pow(y / 2.6, 2) <= 1.0:
+				_dirt[end + Vector2i(x, y)] = true
 	# Ösvény a kocsma ajtajától az útig.
 	for tile in Town.path_tiles():
 		_dirt[tile] = true
@@ -359,6 +386,78 @@ func _build_smithy() -> void:
 	_entities.add_child(smithy)
 
 
+## A nyugati tisztáson: sátor, előtte egy farönkön a sebesült veterán ül (kötés a sisakján),
+## mellette a földbe szúrt kardja és egy mankó, előtte kis tűz. Később a régi időkről
+## (a kazamata történetéről) lehet majd vele beszélni; egyelőre nem mond semmit.
+func _build_veteran() -> void:
+	_tent(VETERAN_TENT, 1)
+	var seat := _tile_center(VETERAN_TENT + Vector2i(1, 2)) + Vector2(-4, 8)
+	_veteran_position = seat
+	# A veterán: lassan "lélegzik" (álló kockák lassan), lejjebb ülve, a lábát a rönk takarja.
+	var frames := SpriteFrames.new()
+	frames.set_animation_speed("default", 2.5)
+	for i in 4:
+		var frame := AtlasTexture.new()
+		frame.atlas = VETERAN_SHEET
+		frame.region = Rect2(i * 16, 0, 16, 28)
+		frames.add_frame("default", frame)
+	var veteran := AnimatedSprite2D.new()
+	veteran.sprite_frames = frames
+	veteran.scale = Vector2(2, 2)
+	veteran.offset = Vector2(0, -14)
+	veteran.position = seat + Vector2(0, 6)
+	veteran.play()
+	_entities.add_child(veteran)
+	# A rönk, amin ül (előtte, hogy takarja a lábát).
+	var log_holder := Node2D.new()
+	log_holder.position = seat + Vector2(0, 12)
+	_entities.add_child(log_holder)
+	log_holder.add_child(SeatLog.new())
+	_body(log_holder, Vector2(0, -4), Vector2(34, 10))
+	# A kardja a földbe szúrva, és egy mankó a sátornak támasztva.
+	var sword_holder := Node2D.new()
+	sword_holder.position = seat + Vector2(30, 6)
+	_entities.add_child(sword_holder)
+	var sword := _sprite(SpriteSheet.region(VETERAN_SWORD), Vector2(0, -22), 0, sword_holder)
+	sword.rotation = deg_to_rad(172)
+	sword.scale = Vector2(1.5, 1.5)
+	sword.position = Vector2(0, -16)
+	sword.modulate = Color(0.7, 0.68, 0.66)
+	var crutch := Line2D.new()
+	crutch.points = PackedVector2Array([Vector2(-34, 2), Vector2(-26, -40)])
+	crutch.width = 3.0
+	crutch.default_color = Color(0.42, 0.28, 0.16)
+	log_holder.add_child(crutch)
+	var crutch_top := Line2D.new()
+	crutch_top.points = PackedVector2Array([Vector2(-33, -40), Vector2(-19, -40)])
+	crutch_top.width = 3.0
+	crutch_top.default_color = Color(0.36, 0.23, 0.13)
+	log_holder.add_child(crutch_top)
+	# Kis tűz előtte, hogy esténként is látsszon.
+	_campfire(_tile_center(VETERAN_TENT + Vector2i(3, 2)) + Vector2(6, 4))
+	for dx in range(-1, 3):
+		_blocked[VETERAN_TENT + Vector2i(dx, 2)] = true
+		_blocked[VETERAN_TENT + Vector2i(dx, 3)] = true
+
+
+## Fekvő farönk (ülőhely): kéreg, csíkok, világos évgyűrűs vége.
+class SeatLog:
+	extends Node2D
+
+	func _draw() -> void:
+		var bark := Color(0.38, 0.24, 0.13)
+		var dark := Color(0.24, 0.14, 0.07)
+		draw_rect(Rect2(-16, -12, 30, 11), bark)
+		draw_line(Vector2(-16, -12), Vector2(14, -12), dark, 1.0)
+		draw_line(Vector2(-16, -1), Vector2(14, -1), dark, 2.0)
+		for x in [-10, -2, 6]:
+			draw_line(Vector2(x, -10), Vector2(x + 4, -10), dark, 1.0)
+		# A rönk vége (évgyűrűkkel).
+		draw_circle(Vector2(14, -6.5), 6.0, Color(0.62, 0.45, 0.28))
+		draw_arc(Vector2(14, -6.5), 6.0, 0, TAU, 16, dark, 1.0)
+		draw_arc(Vector2(14, -6.5), 3.0, 0, TAU, 12, Color(0.45, 0.3, 0.17), 1.0)
+
+
 ## Fegyverállvány a kiképzősátor előtt: néhány kard egy ládának támasztva.
 func _training_sign(at: Vector2) -> void:
 	var holder := Node2D.new()
@@ -442,7 +541,7 @@ func _campfire(at: Vector2) -> void:
 	sparks.position = Vector2(0, -18)
 	holder.add_child(sparks)
 	_body(holder, Vector2(0, -6), Vector2(24, 14))
-	_blocked[FIRE_TILE] = true
+	_blocked[Vector2i((at / TILE).floor())] = true
 
 
 func _npc(at: Vector2) -> void:
@@ -504,6 +603,18 @@ func _build_trees() -> void:
 			var edge := mini(mini(x - town.position.x, town.end.x - 1 - x), mini(y - town.position.y, town.end.y - 1 - y))
 			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.3):
 				_tree(tile, randf() < 0.6, true)
+	# A nyugati tisztás szélén is fasor (az ösvény kimarad).
+	var west := WEST_RECT
+	for x in range(west.position.x, west.end.x):
+		for y in range(west.position.y, west.end.y):
+			var tile := Vector2i(x, y)
+			if _blocked.has(tile) or _near_blocked(tile, 1):
+				continue
+			var edge := mini(mini(x - west.position.x, west.end.x - 1 - x), mini(y - west.position.y, west.end.y - 1 - y))
+			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.3):
+				_tree(tile, randf() < 0.6, true)
+			elif edge >= 3 and randf() < 0.05:
+				_rpg_sprite(FLOWERS.pick_random(), _tile_center(tile) + Vector2(randf_range(-8, 8), randf_range(-8, 8)), -9)
 	var free_area := Rect2i(Vector2i(3, 3), SIZE - Vector2i(6, 6))
 	for i in 110:
 		var tile := Vector2i(randi_range(free_area.position.x, free_area.end.x), randi_range(free_area.position.y, free_area.end.y))
@@ -521,16 +632,18 @@ func _build_trees() -> void:
 ## Sűrű erdő a tisztáson túl, ameddig a kamera ellát (beljebb egyre sötétebb).
 ## Ezeknek a fáknak nincs ütközőjük (oda úgysem lehet bemenni), az útra nem kerül fa.
 func _build_forest() -> void:
-	for x in range(-FOREST_DEPTH, WORLD_END_X):
+	for x in range(WORLD_START_X, WORLD_END_X):
 		for y in range(-FOREST_DEPTH, SIZE.y + FOREST_DEPTH):
 			var tile := Vector2i(x, y)
-			if Rect2i(Vector2i.ZERO, SIZE).has_point(tile) or Town.RECT.has_point(tile) or _dirt.has(tile):
+			if Rect2i(Vector2i.ZERO, SIZE).has_point(tile) or Town.RECT.has_point(tile) or WEST_RECT.has_point(tile) \
+					or _dirt.has(tile):
 				continue
 			if _dirt.has(tile + Vector2i.UP) or _dirt.has(tile + Vector2i.DOWN):
 				if randf() < 0.6:
 					continue
 			# Hány csempére van a tisztás szélétől.
-			var depth := mini(_outside_distance(tile, Rect2i(Vector2i.ZERO, SIZE)), _outside_distance(tile, Town.RECT))
+			var depth := mini(mini(_outside_distance(tile, Rect2i(Vector2i.ZERO, SIZE)), _outside_distance(tile, Town.RECT)),
+				_outside_distance(tile, WEST_RECT))
 			var shade := clampf(1.0 - depth * 0.06, 0.35, 1.0)
 			var tree := _tree(tile, randf() < 0.75, false)
 			tree.position += Vector2(randf_range(-8, 8), randf_range(-6, 6))
@@ -613,10 +726,11 @@ func _build_bounds() -> void:
 	var thickness := 64.0
 	_solid(Rect2(area.position - Vector2(thickness, thickness), Vector2(area.size.x + thickness * 2, thickness)))
 	_solid(Rect2(Vector2(area.position.x - thickness, area.end.y), Vector2(area.size.x + thickness * 2, thickness)))
-	_solid(Rect2(area.position - Vector2(thickness, 0), Vector2(thickness, area.size.y)))
-	# Jobb oldal: nyílás az út sorainál.
+	# Jobb és bal oldal: nyílás az út / a nyugati ösvény sorainál.
 	var gap_top := ROAD_ROW * TILE
 	var gap_bottom := (ROAD_ROW + 2) * TILE
+	_solid(Rect2(area.position - Vector2(thickness, 0), Vector2(thickness, gap_top)))
+	_solid(Rect2(Vector2(area.position.x - thickness, gap_bottom), Vector2(thickness, area.size.y - gap_bottom)))
 	_solid(Rect2(Vector2(area.end.x, 0), Vector2(thickness, gap_top)))
 	_solid(Rect2(Vector2(area.end.x, gap_bottom), Vector2(thickness, area.size.y - gap_bottom)))
 	# Az út folyosója az erdőn át a városig.
@@ -629,6 +743,15 @@ func _build_bounds() -> void:
 	_solid(Rect2(Vector2(town.end.x, town.position.y), Vector2(thickness, town.size.y)))
 	_solid(Rect2(Vector2(town.position.x - thickness, town.position.y), Vector2(thickness, gap_top - town.position.y)))
 	_solid(Rect2(Vector2(town.position.x - thickness, gap_bottom), Vector2(thickness, town.end.y - gap_bottom)))
+	# A nyugati ösvény folyosója, és a nyugati tisztás (keleten nyílás az ösvénynél).
+	var west := Rect2(Vector2(WEST_RECT.position) * TILE, Vector2(WEST_RECT.size) * TILE)
+	_solid(Rect2(Vector2(west.end.x, gap_top - thickness), Vector2(-west.end.x, thickness)))
+	_solid(Rect2(Vector2(west.end.x, gap_bottom), Vector2(-west.end.x, thickness)))
+	_solid(Rect2(west.position - Vector2(thickness, thickness), Vector2(west.size.x + thickness * 2, thickness)))
+	_solid(Rect2(Vector2(west.position.x - thickness, west.end.y), Vector2(west.size.x + thickness * 2, thickness)))
+	_solid(Rect2(Vector2(west.position.x - thickness, west.position.y), Vector2(thickness, west.size.y)))
+	_solid(Rect2(Vector2(west.end.x, west.position.y), Vector2(thickness, gap_top - west.position.y)))
+	_solid(Rect2(Vector2(west.end.x, gap_bottom), Vector2(thickness, west.end.y - gap_bottom)))
 
 
 ## Átlépés egy másik helyre elsötétüléssel (pl. be a kocsmába): `limits` a kamera határai
@@ -682,7 +805,7 @@ func _toast(text: String) -> void:
 ## A kamera nem lát túl az erdő szélén (ott már nincs semmi).
 func _setup_camera() -> void:
 	var camera: Camera2D = _player.get_node("Camera2D")
-	camera.limit_left = -FOREST_DEPTH * TILE
+	camera.limit_left = WORLD_START_X * TILE
 	camera.limit_top = -FOREST_DEPTH * TILE
 	camera.limit_right = WORLD_END_X * TILE
 	camera.limit_bottom = (SIZE.y + FOREST_DEPTH) * TILE
