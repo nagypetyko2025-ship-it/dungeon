@@ -77,6 +77,9 @@ const WORLD_START_X := WEST_RECT.position.x - FOREST_DEPTH
 ## A veterán sátrának bal felső csempéje (a tábor nyugati részén, a sáros ösvénytől
 ## délre); előtte ül a veterán.
 const VETERAN_TENT := Vector2i(9, 20)
+## A Szörnyek könyve állványa (a lépcsőhöz vezető ösvénytől balra, a tábor északi szélén).
+const BESTIARY_TILE := Vector2i(17, 13)
+const BESTIARY_BOOK := preload("res://ui/bestiary_book.gd")
 ## A sáros ösvény színe (a földcsempék sötét, nedves árnyalata).
 const MUD_TINT := Color(0.42, 0.31, 0.25)
 ## A veterán botja ("16x16 RPG items", Jetrel, CC0), a rönknek támasztva.
@@ -107,6 +110,9 @@ var _stash_position := Vector2.ZERO
 var _stash_panel: CanvasLayer
 var _merchant_panel: CanvasLayer
 var _npc_position := Vector2.ZERO
+## A Szörnyek könyve (E-re nyílik az állványnál).
+var _bestiary_position := Vector2.ZERO
+var _bestiary_book: CanvasLayer
 ## A veterán helye (később ide jön a beszélgetés a régi időkről).
 var _veteran_position := Vector2.ZERO
 var _veteran_dialogue: DialoguePanel
@@ -150,6 +156,7 @@ func _ready() -> void:
 	_build_camp()
 	_build_smithy()
 	_build_veteran()
+	_build_bestiary()
 	_build_trees()
 	_build_forest()
 	_build_bounds()
@@ -185,6 +192,9 @@ func _ready() -> void:
 	_stash_panel = STASH_PANEL.new()
 	_stash_panel.name = "StashPanel"
 	add_child(_stash_panel)
+	_bestiary_book = BESTIARY_BOOK.new()
+	_bestiary_book.name = "BestiaryBook"
+	add_child(_bestiary_book)
 	_merchant_panel = MERCHANT_PANEL.new()
 	_merchant_panel.name = "MerchantPanel"
 	add_child(_merchant_panel)
@@ -508,6 +518,42 @@ func _build_veteran() -> void:
 	for dx in range(-1, 3):
 		_blocked[VETERAN_TENT + Vector2i(dx, 2)] = true
 		_blocked[VETERAN_TENT + Vector2i(dx, 3)] = true
+
+
+## A Szörnyek könyve: nyitott könyv egy faállványon (E-re nyílik, lásd Bestiary).
+func _build_bestiary() -> void:
+	var holder := Node2D.new()
+	holder.position = _tile_center(BESTIARY_TILE) + Vector2(0, 14)
+	_entities.add_child(holder)
+	holder.add_child(Lectern.new())
+	_body(holder, Vector2(0, -4), Vector2(28, 10))
+	_bestiary_position = holder.position
+	for dx in range(-1, 2):
+		for dy in range(-1, 2):
+			_blocked[BESTIARY_TILE + Vector2i(dx, dy)] = true
+
+
+## Olvasóállvány: faoszlop, ferde tartó, rajta nyitott, vörös kötésű könyv.
+class Lectern:
+	extends Node2D
+
+	func _draw() -> void:
+		var wood := Color(0.42, 0.27, 0.15)
+		var dark := Color(0.22, 0.13, 0.07)
+		draw_rect(Rect2(-12, -4, 24, 6), dark)
+		draw_rect(Rect2(-4, -30, 8, 28), wood)
+		draw_rect(Rect2(-4, -30, 2, 28), dark)
+		draw_colored_polygon(PackedVector2Array([Vector2(-20, -40), Vector2(20, -40), Vector2(16, -28), Vector2(-16, -28)]), dark)
+		# A könyv: vörös kötés, két sárgás lap, középen a gerinc.
+		draw_colored_polygon(PackedVector2Array([Vector2(-19, -50), Vector2(19, -50), Vector2(17, -38), Vector2(-17, -38)]),
+			Color(0.5, 0.1, 0.1))
+		draw_colored_polygon(PackedVector2Array([Vector2(-17, -52), Vector2(-1, -50), Vector2(-1, -40), Vector2(-15, -40)]),
+			Color(0.93, 0.86, 0.66))
+		draw_colored_polygon(PackedVector2Array([Vector2(1, -50), Vector2(17, -52), Vector2(15, -40), Vector2(1, -40)]),
+			Color(0.88, 0.8, 0.6))
+		for y in [-48, -45, -42]:
+			draw_line(Vector2(-14, y), Vector2(-4, y + 0.5), Color(0.45, 0.35, 0.25), 1.0)
+			draw_line(Vector2(4, y + 0.5), Vector2(14, y), Color(0.45, 0.35, 0.25), 1.0)
 
 
 ## A 30. emelet híre után Gáspár feláll, magához veszi a kardját és a botját, és útvonal-
@@ -1029,9 +1075,12 @@ func _process(delta: float) -> void:
 	var near_npc := _is_near_npc()
 	var near_veteran := _is_near_veteran()
 	var near_block := _player.global_position.distance_to(_road_block_position) < 90.0
-	var any_near := near_stairs or near_tent or near_stash or near_npc or near_veteran or near_block
+	var near_bestiary := _is_near_bestiary()
+	var any_near := near_stairs or near_tent or near_stash or near_npc or near_veteran or near_block or near_bestiary
 	if near_veteran:
 		_prompt.text = "[E] Beszélgetés: %s" % Dialogues.VETERAN_NAME
+	elif near_bestiary:
+		_prompt.text = "[E] Szörnyek könyve"
 	elif near_block:
 		_prompt.text = "Pihenő közben nem mehetsz a városba"
 	elif near_stairs:
@@ -1057,6 +1106,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		Audio.play("ui_open")
 		$Menus.open_menu(_veteran_dialogue)
 		return
+	# A Szörnyek könyve is mindig olvasható.
+	if _is_near_bestiary():
+		get_viewport().set_input_as_handled()
+		$Menus.open_menu(_bestiary_book)
+		return
 	var near_something := _is_near_stairs() or _is_near_tent() or _is_near_stash() or _is_near_npc()
 	if not near_something:
 		return
@@ -1081,6 +1135,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _is_near_veteran() -> bool:
 	return is_instance_valid(_player) and _player.global_position.distance_to(_veteran_position) < VETERAN_RANGE
+
+
+func _is_near_bestiary() -> bool:
+	return is_instance_valid(_player) and _player.global_position.distance_to(_bestiary_position) < INTERACT_RANGE
 
 
 func _is_near_npc() -> bool:

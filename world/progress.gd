@@ -41,6 +41,8 @@ static var trust := {}
 static var asked := {}
 ## NPC-küldetések állapota (Dialogues): küldetés -> "active" / "done" (nincs = még nem kérte).
 static var npc_quests := {}
+## Szörnyek könyve (Bestiary): szörny -> hányat öltél meg belőle (minden futásból összesen).
+static var kills := {}
 ## Az aktív karakter tábori felszerelése (Inventory.save_data); üres = kezdő felszerelés.
 ## Leszálláskor magaddal viszed (és innen törlődik). Minden karakternek külön.
 static var camp_inventory := {}
@@ -68,6 +70,7 @@ static func load_game(force := false) -> void:
 	trust = {}
 	asked = {}
 	npc_quests = {}
+	kills = {}
 	var config := ConfigFile.new()
 	if config.load(PATH) == OK:
 		camp_gold = int(config.get_value("camp", "gold", 0))
@@ -105,6 +108,9 @@ static func load_game(force := false) -> void:
 		var saved_npc_quests: Variant = config.get_value("camp", "npc_quests", {})
 		if saved_npc_quests is Dictionary:
 			npc_quests = saved_npc_quests
+		var saved_kills: Variant = config.get_value("camp", "kills", {})
+		if saved_kills is Dictionary:
+			kills = saved_kills
 	_activate(character)
 
 
@@ -121,6 +127,7 @@ static func save_game() -> void:
 	config.set_value("camp", "trust", trust)
 	config.set_value("camp", "asked", asked)
 	config.set_value("camp", "npc_quests", npc_quests)
+	config.set_value("camp", "kills", kills)
 	config.save(PATH)
 
 
@@ -168,7 +175,17 @@ static func reset_game() -> void:
 	trust = {}
 	asked = {}
 	npc_quests = {}
+	kills = {}
 	_activate(Characters.DEFAULT)
+	save_game()
+
+
+## Egy megölt szörny a Szörnyek könyvébe (a gyakorló pályán nem számít).
+static func add_kill(monster: String) -> void:
+	if monster.is_empty() or GameState.tutorial:
+		return
+	load_game()
+	kills[monster] = int(kills.get(monster, 0)) + 1
 	save_game()
 
 

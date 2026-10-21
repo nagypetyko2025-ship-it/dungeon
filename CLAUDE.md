@@ -37,6 +37,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Ellenségek: `enemies/enemy_types.gd` (statok, 10. emeleti ugrás), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`.
 - Tárgyak: `items/items.gd` (DEFINITIONS); statok: `components/stats.gd`; szintlépés-kártyák: `components/upgrades.gd`.
 - UI: minden ablak CanvasLayer `open()/close()`-zal, a `ui/menus.gd` kezeli (KEYS: I, Tab, M, J). Stílus: `UiStyle`, `MenuStyle`.
+- Szörnyek könyve: állvány a táborban (`BESTIARY_TILE`), adatok: `world/bestiary.gd`, ablak: `ui/bestiary_book.gd`;
+  a megölt szörnyek száma `Progress.kills` (a `room.gd` írja, főellenség a saját nevével).
+- Általános küldetések nehézséggel (`Quests.TIERS`: easy / medium).
 - NPC-beszélgetés: `ui/dialogue_panel.gd` (bizalom -100..+100, max 5 opció, 1-5 gomb), szövegek: `world/dialogues.gd`;
   bizalom és feltett kérdések: `Progress.trust` / `Progress.asked` (mentve).
 - Karakterek: `world/characters.gd` (lovag, íjász, Gáspár/"veteran" — utóbbi az "unlock" jelzővel, a 30. emelet

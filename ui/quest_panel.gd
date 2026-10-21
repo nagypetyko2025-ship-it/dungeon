@@ -133,9 +133,14 @@ func _make_row(id: String) -> PanelContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	panel.add_child(row)
-	var name_label := UiStyle.label(definition["name"], 17, UiStyle.INK if not done else Color(0.4, 0.35, 0.3, 0.7))
-	name_label.custom_minimum_size.x = 200
-	row.add_child(name_label)
+	# A név alatt a nehézség (könnyű / közepes), a saját színével.
+	var tier: Dictionary = Quests.TIERS[definition.get("tier", "easy")]
+	var name_box := VBoxContainer.new()
+	name_box.add_theme_constant_override("separation", -4)
+	name_box.custom_minimum_size.x = 200
+	row.add_child(name_box)
+	name_box.add_child(UiStyle.label(definition["name"], 17, UiStyle.INK if not done else Color(0.4, 0.35, 0.3, 0.7)))
+	name_box.add_child(UiStyle.label(tier["name"], 13, tier["color"] if not done else Color(0.4, 0.35, 0.3, 0.6)))
 	var text := UiStyle.label(definition["text"], 15, UiStyle.INK_LIGHT if not done else Color(0.4, 0.35, 0.3, 0.6))
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(text)

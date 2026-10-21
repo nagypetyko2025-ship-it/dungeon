@@ -268,6 +268,8 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 	bar.add_theme_stylebox_override("fill", fill)
 	page.add_child(bar)
 	page.add_child(UiStyle.label("Jutalom: " + Quests.reward_text(id), 17, Color(0.6, 0.38, 0.05)))
+	var tier: Dictionary = Quests.TIERS[quest.get("tier", "easy")]
+	page.add_child(UiStyle.label("Nehézség: " + tier["name"], 17, tier["color"]))
 
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
