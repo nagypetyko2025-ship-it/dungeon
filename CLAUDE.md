@@ -1,0 +1,36 @@
+# Dungeon (Godot 4.7.2) — munkajegyzet Claude-nak
+
+Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóval **magyarul** beszélünk.
+
+## Eszközök (Windows)
+- Godot: `C:\Users\Peti\Desktop\Godot_v4.7.2-stable_win64.exe` (nincs a PATH-on)
+- Git: `C:\Program Files\Git\cmd\git.exe` (PowerShellben nincs a PATH-on; Bash-ben is ezt hívd)
+- Python + PIL elérhető (képek kivágása, átszínezése). ogg-kódoló nincs: hangot .wav-ban tegyél be (az Audio kezeli).
+- Bash heredocban a `\` + sortörés és a hosszú, idézőjeles szövegek elromlanak: GDScript-et **Edit/Write** eszközzel szerkessz, ne Pythonnal a shellből.
+
+## Szokások (a felhasználó kérései)
+- Kész munka után **azonnal commit + push** a GitHubra (`main`). Commit üzenet fájlból: `git commit -F <fájl>`.
+- Grafika kell → **CC0** letöltés (opengameart / Kenney), és a mappa `LICENSE.txt`-jébe beírni a forrást.
+  Már letöltött, újrahasználható CC0 csomagok: 0x72 DungeonTileset II (`assets/0x72_dungeon`, lista: `tile_list.txt`),
+  Kenney RPG (`assets/shop/kenney_rpg.png`, 16 px + 1 px hézag → régió = `Vector2(coords) * 17`),
+  "496 pixel art icons" (tárgyikonok, 34×34), MiniWorld Sprites (szörnyek, 16×16).
+- A kód és a megjegyzések magyarul, statikus típusokkal (a figyelmeztetések hibának számítanak: nincs Variant-következtetés).
+
+## Tesztelés
+1. Import/fordítás ellenőrzés: `Godot --headless --path . --import` (stderr üres = jó).
+2. Funkcióteszt: ideiglenes `_shot.gd` a projekt gyökerében (`extends SceneTree`, `_initialize`-ban jelenetváltás,
+   `await process_frame`, képernyőkép: `root.get_texture().get_image().save_png(...)` a scratchpadbe), futtatás:
+   `Godot --path . --script res://_shot.gd` (nem headless, hogy legyen kép). Utána `_shot.gd*` törlése.
+3. **Mindig** mentsd el és állítsd vissza a mentést: `Progress.PATH` (user://save.cfg) tartalmát a teszt elején
+   olvasd be, a végén írd vissza, és ellenőrizd ("mentés változatlan: true").
+4. A végén a "2 RID allocations ... leaked" és a RenderingServer hibák ártalmatlanok.
+- Képernyő: 1280×720 alap (canvas_items, expand); az ablakoknak ebbe bele kell férniük.
+
+## Felépítés (fő fájlok)
+- `world/dungeon.gd` emelet-generálás (boss minden 3. emeleten, 20. emelet: Vérfarkas + győzelem), `world/camp.gd` tábor
+  (város keletre: `world/town.gd`, kovács: `world/smithy.gd`, veterán + sáros ösvény nyugatra), `world/shop_interior.gd` bolt.
+- Állapot: `world/game_state.gd` (futás; `reset()`), `world/progress.gd` (mentett tábor: arany, láda, fejlesztések, küldetések).
+- Ellenségek: `enemies/enemy_types.gd` (statok, 10. emeleti ugrás), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`.
+- Tárgyak: `items/items.gd` (DEFINITIONS); statok: `components/stats.gd`; szintlépés-kártyák: `components/upgrades.gd`.
+- UI: minden ablak CanvasLayer `open()/close()`-zal, a `ui/menus.gd` kezeli (KEYS: I, Tab, M, J). Stílus: `UiStyle`, `MenuStyle`.
+- Gyakorló pálya: `ui/tutorial_guide.gd` (lépések), kézikönyv: `ui/tutorial_manual.gd` (az irányítás szövege a Beállítások fülön is).
