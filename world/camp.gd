@@ -179,7 +179,8 @@ func _ready() -> void:
 	_veteran_dialogue.npc_id = Dialogues.VETERAN_ID
 	_veteran_dialogue.npc_name = Dialogues.VETERAN_NAME
 	_veteran_dialogue.greeting = Dialogues.VETERAN_GREETING
-	_veteran_dialogue.options = Dialogues.VETERAN_OPTIONS
+	_veteran_dialogue.options_provider = func() -> Array[Dictionary]:
+		return Dialogues.veteran_options(_player.get_node("Inventory"))
 	var face := AtlasTexture.new()
 	face.atlas = VETERAN_SHEET
 	face.region = Rect2(0, 0, 16, 28)

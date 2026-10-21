@@ -39,6 +39,8 @@ static var quests_done: Array = []
 ## NPC-k bizalma (npc -> -100..+100) és a tőlük már megkérdezett témák (npc -> [téma]).
 static var trust := {}
 static var asked := {}
+## NPC-küldetések állapota (Dialogues): küldetés -> "active" / "done" (nincs = még nem kérte).
+static var npc_quests := {}
 ## Az aktív karakter tábori felszerelése (Inventory.save_data); üres = kezdő felszerelés.
 ## Leszálláskor magaddal viszed (és innen törlődik). Minden karakternek külön.
 static var camp_inventory := {}
@@ -65,6 +67,7 @@ static func load_game(force := false) -> void:
 	quests_done = []
 	trust = {}
 	asked = {}
+	npc_quests = {}
 	var config := ConfigFile.new()
 	if config.load(PATH) == OK:
 		camp_gold = int(config.get_value("camp", "gold", 0))
@@ -99,6 +102,9 @@ static func load_game(force := false) -> void:
 		var saved_asked: Variant = config.get_value("camp", "asked", {})
 		if saved_asked is Dictionary:
 			asked = saved_asked
+		var saved_npc_quests: Variant = config.get_value("camp", "npc_quests", {})
+		if saved_npc_quests is Dictionary:
+			npc_quests = saved_npc_quests
 	_activate(character)
 
 
@@ -114,7 +120,17 @@ static func save_game() -> void:
 	config.set_value("camp", "quests_done", quests_done)
 	config.set_value("camp", "trust", trust)
 	config.set_value("camp", "asked", asked)
+	config.set_value("camp", "npc_quests", npc_quests)
 	config.save(PATH)
+
+
+static func npc_quest_state(quest_id: String) -> String:
+	return str(npc_quests.get(quest_id, ""))
+
+
+static func set_npc_quest(quest_id: String, state: String) -> void:
+	npc_quests[quest_id] = state
+	save_game()
 
 
 ## NPC bizalma (-100..+100, alapból 0).
@@ -151,6 +167,7 @@ static func reset_game() -> void:
 	quests_done = []
 	trust = {}
 	asked = {}
+	npc_quests = {}
 	_activate(Characters.DEFAULT)
 	save_game()
 

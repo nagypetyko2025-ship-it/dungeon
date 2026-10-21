@@ -6,10 +6,14 @@ extends CanvasLayer
 
 const LEATHER := Color(0.36, 0.18, 0.1)
 const LEATHER_DARK := Color(0.2, 0.09, 0.05)
-const PAGE_SIZE := Vector2(400, 470)
+const PAGE_SIZE := Vector2(400, 420)
+## Fülek: 0 = általános küldetések (Quests), 1 = a veterán küldetései (Dialogues).
+const TAB_NAMES: Array[String] = ["Általános", "Veterán"]
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 
 var _ids: Array = []
+var _tab := 0
+var _tab_buttons: Array[Button] = []
 ## A bal oldali lap indexe (mindig páros).
 var _spread := 0
 var _pages: Array[VBoxContainer] = []
@@ -22,11 +26,38 @@ func _ready() -> void:
 	layer = 15
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
-	_ids = Quests.ALL.keys()
 	_build()
+	_load_ids()
+
+
+## A fül lapjai: az általános küldetések mind; a veteránéból csak amit már kért.
+func _load_ids() -> void:
+	if _tab == 0:
+		_ids = Quests.ALL.keys()
+		return
+	_ids = []
+	for id: String in Dialogues.VETERAN_QUESTS:
+		if Progress.npc_quest_state(id) != "":
+			_ids.append(id)
+
+
+func _set_tab(tab: int) -> void:
+	_tab = tab
+	for i in _tab_buttons.size():
+		_tab_buttons[i].modulate = Color.WHITE if i == tab else Color(0.6, 0.55, 0.5)
+	_load_ids()
+	_spread = 0
+	Audio.play("ui_click")
+	_show_spread()
 
 
 func open() -> void:
+	_load_ids()
+	if _tab != 0:
+		_spread = 0
+		_show_spread()
+		visible = true
+		return
 	# Az első kész (átvehető) küldetésnél nyílik ki, különben az első még futónál.
 	var first := -1
 	for i in _ids.size():
@@ -79,7 +110,21 @@ func _build() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 10)
 	center.add_child(root)
-	root.add_child(MenuStyle.title_label("Küldetések könyve", 56, MenuStyle.GOLD))
+	root.add_child(MenuStyle.title_label("Küldetések könyve", 44, MenuStyle.GOLD))
+	# Fülek: általános / veterán.
+	var tabs := HBoxContainer.new()
+	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
+	tabs.add_theme_constant_override("separation", 12)
+	root.add_child(tabs)
+	for i in TAB_NAMES.size():
+		var tab := MenuStyle.button(TAB_NAMES[i])
+		tab.custom_minimum_size = Vector2(220, 44)
+		tab.add_theme_font_size_override("font_size", 20)
+		tab.focus_mode = Control.FOCUS_NONE
+		tab.modulate = Color.WHITE if i == 0 else Color(0.6, 0.55, 0.5)
+		tab.pressed.connect(_set_tab.bind(i))
+		tabs.add_child(tab)
+		_tab_buttons.append(tab)
 
 	# A könyv: bőrborító, benne két lap, középen a gerinc.
 	var cover := PanelContainer.new()
@@ -155,13 +200,22 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 	for child in page.get_children():
 		child.queue_free()
 	if index >= _ids.size():
-		var end := UiStyle.label("— A könyv további lapjai még üresek. —", 17, UiStyle.INK_LIGHT)
+		var empty_text := "— A könyv további lapjai még üresek. —"
+		if _tab == 1 and _ids.is_empty() and index == 0:
+			empty_text = "Gáspár, a veterán még nem kért tőled semmit.\n\n" \
+				+ "Beszélgess vele a táborban (a tábor nyugati részén ül, a sátra előtt)."
+		var end := UiStyle.label(empty_text, 17, UiStyle.INK_LIGHT)
+		end.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		end.custom_minimum_size.x = PAGE_SIZE.x - 40
 		end.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		end.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		end.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		page.add_child(end)
 		return
 	var id: String = _ids[index]
+	if _tab == 1:
+		_fill_npc_page(page, id)
+		return
 	var quest: Dictionary = Quests.ALL[id]
 	var done := Progress.quests_done.has(id)
 
@@ -214,6 +268,46 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 		state_text = "KÉSZ — a jutalom a kocsmárosnál vár!"
 		state_color = Color(0.24, 0.5, 0.2)
 	var state := UiStyle.label(state_text, 19, state_color)
+	state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	state.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	state.custom_minimum_size.x = PAGE_SIZE.x - 40
+	page.add_child(state)
+
+
+## A veterán egy küldetésének lapja: feladat, megbízó, jutalom, állapot.
+func _fill_npc_page(page: VBoxContainer, id: String) -> void:
+	var quest: Dictionary = Dialogues.VETERAN_QUESTS[id]
+	var done := Progress.npc_quest_state(id) == "done"
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 10)
+	page.add_child(header)
+	var icon := TextureRect.new()
+	icon.texture = SCROLL
+	icon.custom_minimum_size = Vector2(44, 44)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	header.add_child(icon)
+	var title := UiStyle.label(quest["name"], 24, UiStyle.INK)
+	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header.add_child(title)
+	page.add_child(_rule())
+	var task := RichTextLabel.new()
+	task.bbcode_enabled = true
+	task.fit_content = true
+	task.scroll_active = false
+	task.custom_minimum_size.x = PAGE_SIZE.x - 40
+	task.add_theme_color_override("default_color", UiStyle.INK)
+	task.add_theme_font_size_override("normal_font_size", 18)
+	task.add_theme_font_size_override("bold_font_size", 18)
+	task.text = quest["text"]
+	page.add_child(task)
+	page.add_child(UiStyle.label("Megbízó: " + Dialogues.VETERAN_NAME, 17, UiStyle.INK_LIGHT))
+	page.add_child(UiStyle.label("Jutalom: " + quest["reward"], 17, Color(0.6, 0.38, 0.05)))
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	page.add_child(spacer)
+	var state := UiStyle.label("✔ TELJESÍTVE — átadva" if done else "★ FOLYAMATBAN — vidd el Gáspárnak a táborba",
+		19, Color(0.24, 0.5, 0.2) if done else Color(0.6, 0.3, 0.05))
 	state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	state.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	state.custom_minimum_size.x = PAGE_SIZE.x - 40

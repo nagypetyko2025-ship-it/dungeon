@@ -4,6 +4,8 @@ extends CanvasLayer
 ## középen az NPC képe, neve és a mondandója, alul legfeljebb MAX_OPTIONS választható
 ## opció (egérrel vagy az 1-5 gombokkal). Egy opció: {id, text, answer, trust}; a "trust"
 ## csak az első kérdezéskor számít. A már feltett kérdések pipát kapnak (újra kérdezhetők).
+## Ha van `options_provider`, minden választás után újra lekéri az opciókat (pl. küldetés
+## után új opció jelenik meg); egy opció "on_choose" Callable-je adja a választ (pl. átadás).
 ## Megnyitását/bezárását a Menus kezeli (E / Esc: bezárás).
 
 const MAX_OPTIONS := 5
@@ -16,6 +18,8 @@ var npc_name := ""
 var portrait: Texture2D
 var greeting := ""
 var options: Array[Dictionary] = []
+## Ha be van állítva: () -> Array[Dictionary], az aktuális opciók (az `options` helyett).
+var options_provider: Callable
 
 var _trust_value: Label
 var _trust_fill: ColorRect
@@ -25,6 +29,7 @@ var _portrait_rect: TextureRect
 var _text: RichTextLabel
 var _options_box: VBoxContainer
 var _typing: Tween
+var _current: Array = []
 
 
 func _ready() -> void:
@@ -58,7 +63,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if key == null or not key.pressed or key.echo:
 		return
 	var index := key.physical_keycode - KEY_1
-	if index >= 0 and index < mini(options.size(), MAX_OPTIONS):
+	if index >= 0 and index < mini(_current.size(), MAX_OPTIONS):
 		get_viewport().set_input_as_handled()
 		_choose(index)
 
@@ -170,9 +175,13 @@ func _build() -> void:
 func _refresh_options() -> void:
 	for child in _options_box.get_children():
 		child.queue_free()
+	if options_provider.is_valid():
+		_current = options_provider.call()
+	else:
+		_current = options
 	var asked: Array = Progress.asked_topics(npc_id)
-	for i in mini(options.size(), MAX_OPTIONS):
-		var option: Dictionary = options[i]
+	for i in mini(_current.size(), MAX_OPTIONS):
+		var option: Dictionary = _current[i]
 		var was_asked := asked.has(option["id"])
 		var button := Button.new()
 		button.text = "%d.  %s%s" % [i + 1, option["text"], "   ✔" if was_asked else ""]
@@ -202,16 +211,24 @@ func _option_style(color: Color) -> StyleBoxFlat:
 
 
 func _choose(index: int) -> void:
-	var option: Dictionary = options[index]
+	var option: Dictionary = _current[index]
 	Audio.play("ui_click")
+	var trust_before := Progress.trust_of(npc_id)
 	# A bizalom csak az első kérdezéskor változik.
 	if not Progress.asked_topics(npc_id).has(option["id"]):
 		Progress.mark_asked(npc_id, option["id"])
 		var delta: int = option.get("trust", 0)
 		if delta != 0:
 			Progress.change_trust(npc_id, delta)
-			_update_trust(true)
-	_say("[i]„%s”[/i]\n\n%s" % [option["text"], option["answer"]])
+	# Egyedi opció (pl. tárgy átadása): a Callable dönt, és ő adja a választ.
+	var answer := ""
+	if option.has("on_choose"):
+		answer = (option["on_choose"] as Callable).call()
+	else:
+		answer = option["answer"]
+	if Progress.trust_of(npc_id) != trust_before:
+		_update_trust(true)
+	_say("[i]„%s”[/i]\n\n%s" % [option["text"], answer])
 	_refresh_options()
 
 
