@@ -250,10 +250,12 @@ func _update_sword_geometry() -> void:
 		shape.size = Vector2(length + SWORD_HITBOX_EXTRA, SPEAR_HITBOX_WIDTH)
 		_sword_shape.position.x = _sword_sprite.position.x + SWORD_HITBOX_EXTRA / 2.0
 	else:
-		var blade := _sword_sprite.texture.get_height() * 2.0
+		# Nagy felbontású kardkép (pl. Gáspár királyi kardja) a "hand_scale" szerint kisebb.
+		var hand := float(_weapon_value("hand_scale", 1.0))
+		var blade := _sword_sprite.texture.get_height() * 2.0 * hand
 		# A kard képe függőleges: 90°-kal elforgatva a helyi y tengelye a penge hossza.
 		_sword_sprite.rotation = PI / 2.0
-		_sword_sprite.scale = Vector2(2.0, 2.0)
+		_sword_sprite.scale = Vector2(2.0, 2.0) * hand
 		_sword_sprite.position.x = blade / 2.0 + SWORD_HILT_OFFSET
 		shape.size = Vector2(blade + SWORD_HITBOX_EXTRA, SWORD_HITBOX_WIDTH)
 		_sword_shape.position.x = blade / 2.0 + SWORD_HILT_OFFSET + SWORD_HITBOX_EXTRA / 2.0

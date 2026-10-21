@@ -61,6 +61,10 @@ const FINAL_ARENA_SIZE := Vector2i(31, 21)
 ## Gáspár elesett embereinek csontvázai a 20. emeleten (az aréna és a kezdőszoba).
 const FINAL_ARENA_GUARDS := 9
 const FINAL_START_GUARDS := 3
+## A Vérfarkas utáni lépcső helye a terem közepétől (csempe, keletre a portáltól).
+const DEEPER_STAIRS_OFFSET := 6
+## Gáspár második küldetésének célja.
+const QUEST_DEPTH := 30
 const VICTORY_PANEL := preload("res://ui/victory_panel.gd")
 const NO_SHOP := Vector2i(999999, 999999)
 
@@ -213,6 +217,10 @@ func _ready() -> void:
 	else:
 		if final_floor:
 			_hud.show_message("%d. emelet — keletre vár a Mélység Ura!" % depth)
+		elif depth >= QUEST_DEPTH and Progress.npc_quest_state("depth_30") == "active":
+			# Gáspár küldetése teljesül: elérted a 30. emeletet (hogy mi van itt, majd kiderül).
+			Progress.set_npc_quest("depth_30", "done")
+			_hud.show_message("%d. emelet — ennyire mélyen még senki sem járt. Mondd el Gáspárnak!" % depth)
 		elif depth == EnemyTypes.SURGE_DEPTH:
 			_hud.show_message("%d. emelet — a szörnyek hirtelen megerősödtek!" % depth)
 		else:
@@ -259,6 +267,10 @@ func _on_final_boss_defeated(room: Room) -> void:
 	portal.set("prompt_text", "[E] Győzelem — vissza a táborba")
 	portal.set("on_use", _open_victory_panel)
 	room.add_child.call_deferred(portal)
+	# Gáspár küldetése (A harmincadik emelet): a farkas mögött lépcső nyílik lefelé, a futás folytatható.
+	if Progress.npc_quest_state("depth_30") != "":
+		room.open_stairs.call_deferred(room.anchor + Vector2i(DEEPER_STAIRS_OFFSET, 0))
+		_hud.show_message("A Mélység Ura legyőzve! Portál a táborba — vagy a lépcsőn tovább a mélybe.")
 
 
 func _open_victory_panel() -> void:

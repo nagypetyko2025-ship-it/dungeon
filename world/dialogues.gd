@@ -37,9 +37,16 @@ const VETERAN_QUESTS := {
 		"text": "Gáspár emberei a huszadik emeleten estek el, a Mélység Ura, a vérfarkas termében. "
 			+ "Juss le a [b]20. emeletre[/b], és [b]győzd le a Mélység Urát[/b]. "
 			+ "Ne fordíts neki hátat, amikor elesik.",
-		"reward": "Majd meglátjuk... (Gáspár még nem mondta)", "doing": "győzd le a 20. emeleten",
+		"reward": "Gáspár királyi kardja (vidd hírét Gáspárnak)", "doing": "győzd le a 20. emeleten",
 		"done": "a Mélység Ura elesett"},
+	"depth_30": {"name": "A harmincadik emelet",
+		"text": "A Mélység Ura alatt is van még lejjebb. Gáspár szerint senki nem tudja, mi vár a "
+			+ "[b]30. emeleten[/b]. Győzd le újra a Mélység Urát, menj le a mögötte nyíló lépcsőn, "
+			+ "és juss el a 30. emeletig.",
+		"reward": "Majd meglátjuk...", "doing": "juss le a 30. emeletre", "done": "elérted a 30. emeletet"},
 }
+const ROYAL_SWORD := "sword_royal"
+const LORD_TRUST := 20
 const SWORD_TRUST := 15
 
 
@@ -52,7 +59,38 @@ static func veteran_options(inventory: Inventory) -> Array[Dictionary]:
 	if Progress.npc_quest_state("epic_sword") == "active":
 		list.append({"id": "give_sword", "text": "Itt a kard, amit kért. (epikus kard átadása)",
 			"on_choose": func() -> String: return _give_sword(inventory)})
+	if Progress.npc_quest_state("slay_lord") == "done" and not Progress.asked_topics(VETERAN_ID).has("report_lord"):
+		list.append({"id": "report_lord", "text": "Legyőztem a Mélység Urát.",
+			"on_choose": func() -> String: return _report_lord(inventory)})
 	return list
+
+
+## A vérfarkas legyőzésének híre: köszönet, Gáspár királyi kardja, és az új küldetés (30. emelet).
+static func _report_lord(inventory: Inventory) -> String:
+	var sword := Items.create(ROYAL_SWORD)
+	var where := "a táskádba"
+	if inventory.is_bag_full():
+		Progress.add_to_stash(sword)
+		where = "a tábori ládába (tele volt a táskád)"
+	else:
+		inventory.add_item(sword)
+	Progress.change_trust(VETERAN_ID, LORD_TRUST)
+	if Progress.npc_quest_state("depth_30") == "":
+		Progress.set_npc_quest("depth_30", "active")
+	Audio.play("level_up")
+	return "[i]Sokáig nem szól. Aztán lassan feláll, és a válladra teszi a kezét.[/i]\n\n" \
+		+ "Megtetted. Tizenkét éve minden éjjel azt a termet látom, valahányszor lehunyom a szemem. " \
+		+ "Benedeket, a fiúkat... és őt, ahogy felkel. Most végre csend lesz.\n\n" \
+		+ "Köszönöm. Nem a király nevében, hanem a magam és a fiaim nevében.\n\n" \
+		+ "[i]Kicsatolja az oldaláról a régi hüvelyt, és kihúzza belőle az aranyozott pengét.[/i]\n\n" \
+		+ "Ezt a király adta nekem, amikor elindultunk. [b]Gáspár királyi kardja[/b]... így hívták a fiúk, " \
+		+ "gúnyból. Én már nem tudnám úgy forgatni, ahogy kell. Te igen. Vidd.\n\n" \
+		+ "[color=#7a4a10](A kard %s került.)[/color]\n\n" % where \
+		+ "[i]Aztán a tűz felé fordul, és halkabban folytatja.[/i]\n\n" \
+		+ "Van még valami. A farkas mögött a padló... lejjebb vezet. Mi sosem jutottunk túl rajta. " \
+		+ "A régi írások egy harmincadik emeletről beszélnek, ahol a Mélység [i]kezdődik[/i], nem véget ér. " \
+		+ "Ha egyszer ismét legyőzöd, menj le a lépcsőn, és [b]juss el a harmincadik emeletig[/b]. " \
+		+ "Tudd meg, mi van ott. Aztán gyere, és mondd el nekem."
 
 
 ## A sérülés története; az első alkalommal a végén kardot kér (elindul a küldetés).

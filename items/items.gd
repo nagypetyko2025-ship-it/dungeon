@@ -251,6 +251,14 @@ const DEFINITIONS := {
 	"sword_saw": {"name": "Fűrészpenge", "slot": "weapon", "rarity": "rare",
 		"region": Rect2(307, 70, 10, 25), "base": [2, 3], "scaling": 0.95, "crit": 1.6,
 		"stats": {"lifesteal": [3, 5], "attack_range": [4, 8]}},
+	# Egyedi jutalom Gáspártól (nem esik, nem kapható): a királyi őrség kapitányának kardja.
+	# A kép nagy felbontású ("swords cc0", SnoopethDuckDuck, CC0), a kézben 0.6x.
+	"sword_royal": {"name": "Gáspár királyi kardja", "slot": "weapon", "rarity": "legendary", "shop": false,
+		"base": [9, 10], "scaling": 1.6, "crit": 2.5, "hand_scale": 0.6,
+		"stats": {"damage_percent": [25, 25], "attack_speed": [30, 30], "crit_chance": [15, 15], "lifesteal": [10, 10],
+			"max_health": [15, 15], "defense": [8, 8], "accuracy": [10, 10]},
+		"description": "Gáspár, a királyi őrség egykori kapitányának kardja. Aranyozott penge, rubinos markolat: "
+			+ "a király adta neki a Mélységbe indulás előtt. Most a tiéd."},
 	"sword_katana": {"name": "Holdfény katana", "slot": "weapon", "rarity": "epic",
 		"region": Rect2(293, 66, 6, 29), "base": [3, 4], "scaling": 1.05, "crit": 2.0,
 		"stats": {"attack_speed": [18, 26], "crit_chance": [6, 9], "accuracy": [4, 6]}},
@@ -365,6 +373,8 @@ static func create(id: String) -> Dictionary:
 		item["description"] = definition["description"]
 	if definition.has("weapon_type"):
 		item["weapon_type"] = definition["weapon_type"]
+	if definition.has("hand_scale"):
+		item["hand_scale"] = definition["hand_scale"]
 	if definition.has("base"):
 		item["base_damage"] = base_damage
 		item["scaling"] = definition["scaling"]

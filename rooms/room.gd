@@ -396,6 +396,13 @@ func _on_boss_defeated(boss: Node2D) -> void:
 	boss_defeated.emit(boss)
 
 
+## Lépcső lefelé a megadott csempén (pl. a Vérfarkas után, ha Gáspár küldetése mélyebbre visz).
+func open_stairs(tile: Vector2i) -> void:
+	var stairs := _add_at_tile(stairs_scene, _traps, tile)
+	stairs.connect("used", stairs_used.emit)
+	Audio.play("door_unlock")
+
+
 func _connect_center_stairs() -> void:
 	var stairs := _traps.get_child(_traps.get_child_count() - 1)
 	stairs.connect("used", stairs_used.emit)
