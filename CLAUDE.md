@@ -23,6 +23,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
    `Godot --path . --script res://_shot.gd` (nem headless, hogy legyen kép). Utána `_shot.gd*` törlése.
 3. **Mindig** mentsd el és állítsd vissza a mentést: `Progress.PATH` (user://save.cfg) tartalmát a teszt elején
    olvasd be, a végén írd vissza, és ellenőrizd ("mentés változatlan: true").
+   **Ezen felül shellből is**: futtatás előtt `cp "$APPDATA/Godot/app_userdata/dungeon/save.cfg" <scratchpad>/save_backup.cfg`,
+   utána *feltétel nélkül* vissza (ha a szkript elszáll, a GDScript-es visszaállítás nem fut le — egyszer már így
+   íródott felül a felhasználó mentése). A tesztben ne írj a felhasználó táskájának foglalt helyére.
 4. A végén a "2 RID allocations ... leaked" és a RenderingServer hibák ártalmatlanok.
 - Képernyő: 1280×720 alap (canvas_items, expand); az ablakoknak ebbe bele kell férniük.
 

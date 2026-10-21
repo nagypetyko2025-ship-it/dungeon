@@ -37,6 +37,9 @@ const WALL_GOO_BASE := Rect2(64, 96, 16, 16)
 const GOO_CHANCE := 0.2
 const FLASKS: Array[Rect2] = [Rect2(288, 352, 16, 16), Rect2(304, 352, 16, 16), Rect2(320, 352, 16, 16)]
 const FLASK_CHANCE := 0.3
+## Elesett királyi őr: a 0x72 csontváz (fekve) és a lovagkard (rozsdásra színezve).
+const FALLEN_SKELETON := Rect2(368, 88, 16, 16)
+const GUARD_SWORD := Rect2(339, 98, 10, 29)
 const FLOOR_Z := -7
 
 var room: Room
@@ -54,6 +57,8 @@ func _ready() -> void:
 	_place_clutter()
 	_scatter_floor()
 	_place_dropped_flask()
+	if room.fallen_guards > 0:
+		_place_fallen_guards(room.fallen_guards)
 
 
 ## Falikút a hátsó fal bal oldalán (FOUNTAIN_CHANCE eséllyel). Az x-et adja vissza (vagy -99999).
@@ -173,6 +178,35 @@ func _place_dropped_flask() -> void:
 		flask.scale *= 0.8
 		flask.position += Vector2(randf_range(-6, 6), randf_range(-4, 6))
 		return
+
+
+## Elesett királyi őrök (Gáspár emberei): fekvő, megfakult csontváz, mellette a rozsdás
+## kardja, körülötte csontok vagy rég megszáradt vér. Csak látvány, nem akadály.
+func _place_fallen_guards(count: int) -> void:
+	var inner := room.rect.grow(-2)
+	var taken := {}
+	for i in count:
+		for attempt in 20:
+			var tile := Vector2i(randi_range(inner.position.x, inner.end.x - 1), randi_range(inner.position.y, inner.end.y - 1))
+			if room.is_tile_used(tile) or tile == room.anchor or taken.has(tile) \
+					or taken.has(tile + Vector2i.LEFT) or taken.has(tile + Vector2i.RIGHT):
+				continue
+			taken[tile] = true
+			var side := -1.0 if randf() < 0.5 else 1.0
+			var body := _sprite(FALLEN_SKELETON, tile, FLOOR_Z + 1)
+			body.rotation = PI / 2.0 * side
+			body.modulate = Color(0.72, 0.68, 0.62)
+			body.position += Vector2(randf_range(-6, 6), randf_range(-2, 6))
+			var sword := _sprite(GUARD_SWORD, tile, FLOOR_Z)
+			sword.rotation = deg_to_rad(randf_range(50, 130)) * side
+			sword.modulate = Color(0.62, 0.48, 0.38)
+			sword.scale = Vector2(1.5, 1.5)
+			sword.position += Vector2(18 * side, randf_range(4, 12))
+			var extra := _texture_sprite(BONES if randf() < 0.5 else BLOOD, tile, FLOOR_Z - 1)
+			extra.modulate = Color(0.6, 0.55, 0.5, 0.85)
+			extra.flip_h = randf() < 0.5
+			extra.position += Vector2(randf_range(-14, 14), randf_range(8, 16))
+			break
 
 
 func _place_cobwebs() -> void:

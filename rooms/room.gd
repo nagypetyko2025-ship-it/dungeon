@@ -65,6 +65,8 @@ var has_shop := false
 var visited := false
 ## Főellenség-terem: a lépcső a fülkében van (lcove_dir irányban), rács mögött.
 var has_boss := false
+## Ennyi elesett királyi őr csontváza fekszik a szobában (a 20. emeleten: Gáspár emberei).
+var fallen_guards := 0
 ## A nagy főellenség terme (20. emelet, Vérfarkas): nincs fülke és lépcső, győzelem után
 ## a portálon át a táborba mehetsz, és vége a kazamatának.
 var final_boss := false

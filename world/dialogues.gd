@@ -26,12 +26,19 @@ const SWORD_REQUEST := "\n\n[i]Megkopogtatja az üres hüvelyt az oldalán.[/i]\
 	+ "rönkön. Ha a mélyben találsz egy [b]epikus kardot[/b], hozd el nekem. Mindegy, milyet: " \
 	+ "csak penge legyen, ami nem törik el az első csontnál."
 
-## NPC-küldetések (a J könyv "Veterán" fülén): id -> {name, text, reward}.
+## NPC-küldetések (a J könyv "Veterán" fülén): id -> {name, text, reward, doing, done}
+## (doing / done: az állapot szövege a könyvben).
 const VETERAN_QUESTS := {
 	"epic_sword": {"name": "Penge az öregnek",
 		"text": "Gáspár, a veterán kardja a Mélységben maradt. Vigyél neki egy [b]epikus kardot[/b] "
 			+ "(bármilyen kard jó, csak epikus legyen). A tábor nyugati részén ül, a sátra előtt.",
-		"reward": "+15 bizalom Gáspárnál"},
+		"reward": "+15 bizalom Gáspárnál", "doing": "vidd el Gáspárnak a táborba", "done": "átadva"},
+	"slay_lord": {"name": "A Mélység Ura",
+		"text": "Gáspár emberei a huszadik emeleten estek el, a Mélység Ura, a vérfarkas termében. "
+			+ "Juss le a [b]20. emeletre[/b], és [b]győzd le a Mélység Urát[/b]. "
+			+ "Ne fordíts neki hátat, amikor elesik.",
+		"reward": "Majd meglátjuk... (Gáspár még nem mondta)", "doing": "győzd le a 20. emeleten",
+		"done": "a Mélység Ura elesett"},
 }
 const SWORD_TRUST := 15
 
@@ -56,6 +63,12 @@ static func _ask_wound() -> String:
 			return WOUND_ANSWER + SWORD_REQUEST
 		"active":
 			return WOUND_ANSWER + "\n\n[i]Az üres hüvelyre bök.[/i] És a kard... még mindig várom."
+	match Progress.npc_quest_state("slay_lord"):
+		"active":
+			return WOUND_ANSWER + "\n\n[i]Megsimítja az új kard markolatát.[/i] A fiaim még mindig odalent vannak. " \
+				+ "A huszadik emeleten. Ne feledd."
+		"done":
+			return WOUND_ANSWER + "\n\n[i]Hosszan hallgat.[/i] De most már tudom, hogy nem hiába estek el."
 	return WOUND_ANSWER + "\n\n[i]Megsimítja az új kard markolatát.[/i] De most már nem vagyok fegyvertelen."
 
 
@@ -76,10 +89,23 @@ static func _give_sword(inventory: Inventory) -> String:
 			+ "Ez nem az, amit kértem. [b]Epikus kardot[/b] hozz. A lándzsát, baltát meg a kis késeket tartsd meg magadnak."
 	Progress.set_npc_quest("epic_sword", "done")
 	Progress.change_trust(VETERAN_ID, SWORD_TRUST)
+	# A kard után elmeséli, hogyan győzte le őket a vérfarkas, és új küldetést ad.
+	if Progress.npc_quest_state("slay_lord") == "":
+		Progress.set_npc_quest("slay_lord", "active")
 	Audio.play("level_up")
-	return "[i]Kezébe veszi a(z) %s pengéjét, és sokáig nézi a tűz fényében.[/i]\n\n" % sword["name"] \
-		+ "Ez... ez igen. Ezzel már nem csak egy öregember vagyok egy rönkön.\n\n" \
-		+ "Köszönöm, fiam. Ezt nem felejtem el."
+	return "[i]Kezébe veszi a(z) %s pengéjét, megforgatja, végighúzza a hüvelykujját az élén.[/i]\n\n" % sword["name"] \
+		+ "Ez jó fajta kard. Kiegyensúlyozott, és az acélja nem mai darab: ezt még törpe kovács edzette. " \
+		+ "Ilyen volt az enyém is.\n\n" \
+		+ "[i]Leteszi a térdére, és a tűzbe néz.[/i]\n\n" \
+		+ "Tudod, mi volt a legrosszabb? Nem a fogai. Az, hogy várt ránk. Mire beértünk a terembe, már ott ült " \
+		+ "középen, mintha vendégeket várna. Elsőnek Benedeket kapta el, a zászlóvivőnket. Aztán sorban a többieket. " \
+		+ "Minden harapással erősebb lett, és amikor végre levágtam... felkelt, dühösebben, mint előtte.\n\n" \
+		+ "Engem a fal mellé dobott, mint egy rongybabát. Ott feküdtem, és néztem, ahogy a fiaim egymás után elesnek. " \
+		+ "Mire magamhoz tértem, csak hárman álltunk. Ő pedig hagyta, hogy elmenjünk. Hogy meséljünk róla.\n\n" \
+		+ "[i]Feláll a rönkről, és egyenesen a szemedbe néz.[/i]\n\n" \
+		+ "A fiaim még mindig ott fekszenek a huszadik emeleten. Juss le odáig, és [b]öld meg a Mélység Urát[/b]. " \
+		+ "Nem a kincsért. Értük.\n\n" \
+		+ "És ha megtetted... gyere vissza hozzám. Akkor majd beszélünk."
 
 
 static func is_epic_sword(item: Variant) -> bool:

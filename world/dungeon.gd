@@ -58,6 +58,9 @@ const BOSS_ROOM_SIZE := Vector2i(15, 11)
 const FINAL_DEPTH := 20
 const FINAL_START_ROOM := Rect2i(-6, -5, 13, 11)
 const FINAL_ARENA_SIZE := Vector2i(31, 21)
+## Gáspár elesett embereinek csontvázai a 20. emeleten (az aréna és a kezdőszoba).
+const FINAL_ARENA_GUARDS := 9
+const FINAL_START_GUARDS := 3
 const VICTORY_PANEL := preload("res://ui/victory_panel.gd")
 const NO_SHOP := Vector2i(999999, 999999)
 
@@ -152,7 +155,9 @@ func _ready() -> void:
 				room.connections.append(dir)
 		var distance: int = distances[cell]
 		if final_floor:
-			# A Vérfarkas terme: nyitott aréna, se csapda, se láda.
+			# A Vérfarkas terme: nyitott aréna, se csapda, se láda. Mindkét szobában Gáspár
+			# elesett embereinek csontvázai fekszenek (a teremben a legtöbb).
+			room.fallen_guards = FINAL_ARENA_GUARDS if cell == Vector2i.RIGHT else FINAL_START_GUARDS
 			if cell == Vector2i.RIGHT:
 				room.has_boss = true
 				room.final_boss = true
@@ -245,6 +250,10 @@ func _on_boss_defeated(boss: Node2D) -> void:
 ## győzelmi ablakot nyitja (2 tárgy, a pénz 100%-a, aztán a táborba).
 func _on_final_boss_defeated(room: Room) -> void:
 	_hud.show_message("A Mélység Ura legyőzve! Lépj a portálba — végigértél a kazamatán!")
+	# Gáspár küldetése: bosszú a fiaiért (a jutalmat majd ő mondja meg).
+	if Progress.npc_quest_state("slay_lord") == "active":
+		Progress.set_npc_quest("slay_lord", "done")
+		FloatingText.spawn(room, room.global_position + Vector2(0, -90), "Gáspár emberei megbosszulva", Color(1, 0.85, 0.4), 22)
 	var portal: Node2D = RETURN_PORTAL.new()
 	portal.position = Room.tile_center(room.anchor) - room.position
 	portal.set("prompt_text", "[E] Győzelem — vissza a táborba")
