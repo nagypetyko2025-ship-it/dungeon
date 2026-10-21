@@ -80,6 +80,8 @@ const VETERAN_TENT := Vector2i(9, 20)
 ## A Szörnyek könyve állványa (a lépcsőhöz vezető ösvénytől balra, a tábor északi szélén).
 const BESTIARY_TILE := Vector2i(17, 13)
 const BESTIARY_BOOK := preload("res://ui/bestiary_book.gd")
+## Olvasóállvány nyitott könyvvel (ehhez a projekthez rajzolva).
+const LECTERN: Texture2D = preload("res://assets/props/lectern.png")
 ## A sáros ösvény színe (a földcsempék sötét, nedves árnyalata).
 const MUD_TINT := Color(0.42, 0.31, 0.25)
 ## A veterán botja ("16x16 RPG items", Jetrel, CC0), a rönknek támasztva.
@@ -525,35 +527,16 @@ func _build_bestiary() -> void:
 	var holder := Node2D.new()
 	holder.position = _tile_center(BESTIARY_TILE) + Vector2(0, 14)
 	_entities.add_child(holder)
-	holder.add_child(Lectern.new())
-	_body(holder, Vector2(0, -4), Vector2(28, 10))
+	var lectern := Sprite2D.new()
+	lectern.texture = LECTERN
+	lectern.scale = Vector2(2, 2)
+	lectern.position = Vector2(0, -LECTERN.get_height())
+	holder.add_child(lectern)
+	_body(holder, Vector2(0, -4), Vector2(30, 10))
 	_bestiary_position = holder.position
 	for dx in range(-1, 2):
 		for dy in range(-1, 2):
 			_blocked[BESTIARY_TILE + Vector2i(dx, dy)] = true
-
-
-## Olvasóállvány: faoszlop, ferde tartó, rajta nyitott, vörös kötésű könyv.
-class Lectern:
-	extends Node2D
-
-	func _draw() -> void:
-		var wood := Color(0.42, 0.27, 0.15)
-		var dark := Color(0.22, 0.13, 0.07)
-		draw_rect(Rect2(-12, -4, 24, 6), dark)
-		draw_rect(Rect2(-4, -30, 8, 28), wood)
-		draw_rect(Rect2(-4, -30, 2, 28), dark)
-		draw_colored_polygon(PackedVector2Array([Vector2(-20, -40), Vector2(20, -40), Vector2(16, -28), Vector2(-16, -28)]), dark)
-		# A könyv: vörös kötés, két sárgás lap, középen a gerinc.
-		draw_colored_polygon(PackedVector2Array([Vector2(-19, -50), Vector2(19, -50), Vector2(17, -38), Vector2(-17, -38)]),
-			Color(0.5, 0.1, 0.1))
-		draw_colored_polygon(PackedVector2Array([Vector2(-17, -52), Vector2(-1, -50), Vector2(-1, -40), Vector2(-15, -40)]),
-			Color(0.93, 0.86, 0.66))
-		draw_colored_polygon(PackedVector2Array([Vector2(1, -50), Vector2(17, -52), Vector2(15, -40), Vector2(1, -40)]),
-			Color(0.88, 0.8, 0.6))
-		for y in [-48, -45, -42]:
-			draw_line(Vector2(-14, y), Vector2(-4, y + 0.5), Color(0.45, 0.35, 0.25), 1.0)
-			draw_line(Vector2(4, y + 0.5), Vector2(14, y), Color(0.45, 0.35, 0.25), 1.0)
 
 
 ## A 30. emelet híre után Gáspár feláll, magához veszi a kardját és a botját, és útvonal-

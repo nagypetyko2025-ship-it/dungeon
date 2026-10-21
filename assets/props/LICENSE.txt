@@ -1,1 +1,2 @@
 cane.png: a "16x16 RPG items" lapból (Jetrel, CC0, https://opengameart.org/content/16x16-rpg-items), kivágva, átlátszó háttérrel.
+lectern.png: olvasóállvány nyitott könyvvel, ehhez a projekthez rajzolva (pixel art), szabadon használható (CC0).
