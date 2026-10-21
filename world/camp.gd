@@ -70,7 +70,7 @@ const ROAD_ROW := 17
 ## A világ keleti széle (a város mögötti erdő vége).
 const WORLD_END_X := 94 + FOREST_DEPTH
 ## A nyugati tisztás (a várossal ellentétes irányban): ide vezet egy kis sáros ösvény a
-## táborból; a végén egyelőre nincs semmi (később lesz).
+## táborból; a végén a romos ház áll (lásd Ruin).
 const WEST_RECT := Rect2i(-30, 9, 20, 16)
 ## A világ nyugati széle (a nyugati tisztás mögötti erdő vége).
 const WORLD_START_X := WEST_RECT.position.x - FOREST_DEPTH
@@ -163,6 +163,12 @@ func _ready() -> void:
 	_town.setup(self)
 	_town.build()
 	_town.message.connect(_toast)
+	# A nyugati tisztáson a romos ház (benne a tolvaj rejtekszobája).
+	var ruin := Ruin.new()
+	ruin.name = "Ruin"
+	add_child(ruin)
+	ruin.setup(self)
+	ruin.build()
 	add_child(QuestTracker.new())
 	var cheats := CheatMenu.new()
 	cheats.name = "CheatMenu"
@@ -326,7 +332,7 @@ func _build_dirt() -> void:
 	for tile in Town.path_tiles():
 		_dirt[tile] = true
 	# Kis sáros ösvény nyugatra (a várossal ellentétes irányba): a tisztásokon kanyarog,
-	# az erdőben egyenes, és a nyugati tisztáson ér véget (a végén egyelőre nincs semmi).
+	# az erdőben egyenes, és a nyugati tisztáson ér véget (a végén a romos ház).
 	for x in range(WEST_RECT.position.x + 3, FIRE_TILE.x - 8):
 		var row := ROAD_ROW
 		if x > 2 or x < WEST_RECT.end.x - 2:
@@ -334,6 +340,9 @@ func _build_dirt() -> void:
 		for tile: Vector2i in [Vector2i(x, row), Vector2i(x, row + 1)]:
 			if not _dirt.has(tile):
 				_mud[tile] = true
+	# Rövid sáros ösvény a romos ház ajtajáig.
+	for tile in Ruin.path_tiles():
+		_mud[tile] = true
 	var tile_set := TileSet.new()
 	tile_set.tile_size = Vector2i(16, 16)
 	var source := TileSetAtlasSource.new()
@@ -705,7 +714,7 @@ func _build_trees() -> void:
 	for x in range(west.position.x, west.end.x):
 		for y in range(west.position.y, west.end.y):
 			var tile := Vector2i(x, y)
-			if _blocked.has(tile) or _near_blocked(tile, 1):
+			if _blocked.has(tile) or _near_blocked(tile, 1) or Ruin.blocked_rect().has_point(tile):
 				continue
 			var edge := mini(mini(x - west.position.x, west.end.x - 1 - x), mini(y - west.position.y, west.end.y - 1 - y))
 			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.3):

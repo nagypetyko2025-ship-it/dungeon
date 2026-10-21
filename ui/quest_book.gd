@@ -7,8 +7,9 @@ extends CanvasLayer
 const LEATHER := Color(0.36, 0.18, 0.1)
 const LEATHER_DARK := Color(0.2, 0.09, 0.05)
 const PAGE_SIZE := Vector2(400, 420)
-## Fülek: 0 = általános küldetések (Quests), 1 = a veterán küldetései (Dialogues).
-const TAB_NAMES: Array[String] = ["Általános", "Veterán"]
+## Fülek: 0 = általános küldetések (Quests), 1 = a veterán küldetései (Dialogues),
+## 2 = a tolvaj küldetései (Thief).
+const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj"]
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 
 var _ids: Array = []
@@ -30,15 +31,24 @@ func _ready() -> void:
 	_load_ids()
 
 
-## A fül lapjai: az általános küldetések mind; a veteránéból csak amit már kért.
+## A fül lapjai: az általános küldetések mind; az NPC-kéből csak amit már kért.
 func _load_ids() -> void:
 	if _tab == 0:
 		_ids = Quests.ALL.keys()
 		return
 	_ids = []
-	for id: String in Dialogues.VETERAN_QUESTS:
+	for id: String in _npc_quests():
 		if Progress.npc_quest_state(id) != "":
 			_ids.append(id)
+
+
+## Az aktuális NPC-fül küldetései és a megbízó neve.
+func _npc_quests() -> Dictionary:
+	return Thief.QUESTS if _tab == 2 else Dialogues.VETERAN_QUESTS
+
+
+func _npc_name() -> String:
+	return Thief.NAME if _tab == 2 else Dialogues.VETERAN_NAME
 
 
 func _set_tab(tab: int) -> void:
@@ -204,6 +214,9 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 		if _tab == 1 and _ids.is_empty() and index == 0:
 			empty_text = "Gáspár, a veterán még nem kért tőled semmit.\n\n" \
 				+ "Beszélgess vele a táborban (a tábor nyugati részén ül, a sátra előtt)."
+		elif _tab == 2 and _ids.is_empty() and index == 0:
+			empty_text = "Még nem találkoztál a tolvajjal.\n\n" \
+				+ "Állítólag a sáros ösvény végén, egy romos házban rejtőzik valaki..."
 		var end := UiStyle.label(empty_text, 17, UiStyle.INK_LIGHT)
 		end.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		end.custom_minimum_size.x = PAGE_SIZE.x - 40
@@ -213,7 +226,7 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 		page.add_child(end)
 		return
 	var id: String = _ids[index]
-	if _tab == 1:
+	if _tab != 0:
 		_fill_npc_page(page, id)
 		return
 	var quest: Dictionary = Quests.ALL[id]
@@ -274,9 +287,9 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 	page.add_child(state)
 
 
-## A veterán egy küldetésének lapja: feladat, megbízó, jutalom, állapot.
+## Egy NPC (veterán, tolvaj) küldetésének lapja: feladat, megbízó, jutalom, állapot.
 func _fill_npc_page(page: VBoxContainer, id: String) -> void:
-	var quest: Dictionary = Dialogues.VETERAN_QUESTS[id]
+	var quest: Dictionary = _npc_quests()[id]
 	var done := Progress.npc_quest_state(id) == "done"
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 10)
@@ -301,7 +314,7 @@ func _fill_npc_page(page: VBoxContainer, id: String) -> void:
 	task.add_theme_font_size_override("bold_font_size", 18)
 	task.text = quest["text"]
 	page.add_child(task)
-	page.add_child(UiStyle.label("Megbízó: " + Dialogues.VETERAN_NAME, 17, UiStyle.INK_LIGHT))
+	page.add_child(UiStyle.label("Megbízó: " + _npc_name(), 17, UiStyle.INK_LIGHT))
 	page.add_child(UiStyle.label("Jutalom: " + quest["reward"], 17, Color(0.6, 0.38, 0.05)))
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL

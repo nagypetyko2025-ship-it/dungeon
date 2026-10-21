@@ -31,7 +31,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 
 ## Felépítés (fő fájlok)
 - `world/dungeon.gd` emelet-generálás (boss minden 3. emeleten, 20. emelet: Vérfarkas + győzelem), `world/camp.gd` tábor
-  (város keletre: `world/town.gd`, kovács: `world/smithy.gd`, veterán + sáros ösvény nyugatra), `world/shop_interior.gd` bolt.
+  (város keletre: `world/town.gd`, kovács: `world/smithy.gd`, veterán + sáros ösvény nyugatra, a végén a romos ház:
+  `world/ruin.gd`, benne a tolvaj rejtekszobája: `world/thief.gd`), `world/shop_interior.gd` bolt.
 - Állapot: `world/game_state.gd` (futás; `reset()`), `world/progress.gd` (mentett tábor: arany, láda, fejlesztések, küldetések).
 - Ellenségek: `enemies/enemy_types.gd` (statok, 10. emeleti ugrás), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`.
 - Tárgyak: `items/items.gd` (DEFINITIONS); statok: `components/stats.gd`; szintlépés-kártyák: `components/upgrades.gd`.
