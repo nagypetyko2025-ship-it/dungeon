@@ -497,6 +497,9 @@ func _shoot(aim_angle: float) -> void:
 
 
 func _on_hurt(hitbox: Hitbox) -> void:
+	# Halhatatlanság (csalás): semmi nem sebez.
+	if GameState.god_mode:
+		return
 	# A védelem a sebzés egy részét kivédi (legalább 1 marad).
 	var amount := _stats.reduce_damage(hitbox.damage)
 	if _health.damage(amount):

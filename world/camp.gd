@@ -158,6 +158,9 @@ func _ready() -> void:
 	_town.build()
 	_town.message.connect(_toast)
 	add_child(QuestTracker.new())
+	var cheats := CheatMenu.new()
+	cheats.name = "CheatMenu"
+	add_child(cheats)
 	var quick_bar := QuickBar.new()
 	quick_bar.bottom_offset = -16.0
 	add_child(quick_bar)
@@ -1052,13 +1055,22 @@ func _is_near_stairs() -> bool:
 
 
 ## Új futás indul az 1. emeletről.
-func _enter_dungeon() -> void:
+## Csalás (CheatMenu): leszállás egyenesen a megadott emeletre. Pihenő közben nem megy.
+func cheat_teleport(target_depth: int) -> bool:
+	if _on_break or _leaving:
+		return false
+	_enter_dungeon(target_depth)
+	return true
+
+
+func _enter_dungeon(start_depth := 1) -> void:
 	_leaving = true
 	Audio.play("stairs")
 	var tween := create_tween()
 	tween.tween_property(_fade, "color:a", 1.0, 0.5)
 	await tween.finished
 	GameState.reset()
+	GameState.depth = start_depth
 	# A nálad lévő felszereléssel szállsz le; az a táborból "elfogy" (a futásban veszhet el).
 	GameState.saved_inventory = _player.get_node("Inventory").save_data()
 	Progress.camp_inventory = {}

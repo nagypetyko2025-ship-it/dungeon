@@ -208,6 +208,9 @@ func _ready() -> void:
 	add_child(QuestTracker.new())
 	add_child(QuickBar.new())
 	_add_quest_book()
+	var cheats := CheatMenu.new()
+	cheats.name = "CheatMenu"
+	add_child(cheats)
 	if tutorial:
 		_hud.show_message("Gyakorló pálya")
 		var guide := TutorialGuide.new()
@@ -349,6 +352,16 @@ func _teleport(target: Vector2, message: String) -> void:
 	_teleporting = false
 	if not message.is_empty():
 		_hud.show_message(message)
+
+
+## Csalás (CheatMenu): ugrás a megadott emeletre a mostani állapottal. A gyakorló pályán nem megy.
+func cheat_teleport(target_depth: int) -> bool:
+	if GameState.tutorial or _teleporting:
+		return false
+	_player.save_state()
+	GameState.depth = target_depth
+	get_tree().reload_current_scene.call_deferred()
+	return true
 
 
 func _go_deeper() -> void:

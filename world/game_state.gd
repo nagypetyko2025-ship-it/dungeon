@@ -46,6 +46,8 @@ static var tutorial := false
 ## Épp most győzted le a Vérfarkast (20. emelet): a tábor egyszer kiírja a győzelmet.
 ## (A reset() nem törli: a futás vége után állítjuk be.)
 static var dungeon_won := false
+## Csalás (CheatMenu): a játékos nem sebződik. A reset() nem törli, csak a menü kapcsolja.
+static var god_mode := false
 
 ## Az ablak már teljes képernyőre lett állítva indításkor (nem a futás része, reset nem törli).
 static var display_initialized := false
