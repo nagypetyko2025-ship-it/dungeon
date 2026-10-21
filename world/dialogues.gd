@@ -48,6 +48,9 @@ const VETERAN_QUESTS := {
 const ROYAL_SWORD := "sword_royal"
 const LORD_TRUST := 20
 const SWORD_TRUST := 15
+const DEPTH_30_TRUST := 20
+## Belső jelző (Progress.npc_quests): Gáspár elköltözött a kocsmába (a táborban már nem ül).
+const TAVERN_FLAG := "gaspar_tavern"
 const WOUND_TRUST := 5
 ## A vérfarkas termének története (a kard átadásakor, és később a "20. szint" kérdésre).
 const FLOOR20_STORY := "Tudod, mi volt a legrosszabb? Nem a fogai. Az, hogy várt ránk. Mire beértünk a terembe, " \
@@ -78,7 +81,28 @@ static func veteran_options(inventory: Inventory) -> Array[Dictionary]:
 	if Progress.npc_quest_state("slay_lord") == "done" and not Progress.asked_topics(VETERAN_ID).has("report_lord"):
 		list.append({"id": "report_lord", "text": "Legyőztem a Mélység Urát.",
 			"on_choose": func() -> String: return _report_lord(inventory)})
+	if Progress.npc_quest_state("depth_30") == "done" and not Progress.asked_topics(VETERAN_ID).has("report_30"):
+		list.append({"id": "report_30", "text": "Lejutottam a 30. emeletre.",
+			"on_choose": func() -> String: return _report_depth_30()})
 	return list
+
+
+## A 30. emelet híre: Gáspár elbúcsúzik a tábortól, és (a beszélgetés után) besétál a kocsmába.
+static func _report_depth_30() -> String:
+	Progress.mark_asked(VETERAN_ID, "report_30")
+	Progress.change_trust(VETERAN_ID, DEPTH_30_TRUST)
+	Progress.set_npc_quest(TAVERN_FLAG, "done")
+	Audio.play("level_up")
+	return "[i]Sokáig néz rád, mintha nem hinné el. Aztán halkan felnevet, először évek óta.[/i]\n\n" \
+		+ "A harmincadik... Ennyire mélyen még a király térképein sincs semmi. És te visszajöttél, " \
+		+ "a saját lábadon. Mi harmincan sem jutottunk el a huszadikon túl.\n\n" \
+		+ "[i]A tűz felé fordul, és egy darabig csak a lángokat nézi.[/i]\n\n" \
+		+ "Tizenkét évig ültem ezen a rönkön, és vártam, hogy valaki kimondja: vége. Most kimondtad. " \
+		+ "A fiaim nyugodhatnak, és én is.\n\n" \
+		+ "[i]Feltápászkodik, kezébe veszi a botját, és leveri a hamut a köpenyéről.[/i]\n\n" \
+		+ "Elég volt a hideg földből. Lemegyek a városba, a Mélységi kocsmába, és iszom egyet a fiúkra. " \
+		+ "Aztán... ki tudja. Ha egyszer újra kell egy öreg kard melletted, tudod, hol keress.\n\n" \
+		+ "[color=#7a4a10](Ha elköszöntél, Gáspár elindul a városba, és leül a kocsmában.)[/color]"
 
 
 ## A vérfarkas legyőzésének híre: köszönet, Gáspár királyi kardja, és az új küldetés (30. emelet).
@@ -168,6 +192,22 @@ static func _tell_floor20() -> String:
 	if Progress.npc_quest_state("slay_lord") == "done":
 		ending = "\n\n[i]Hosszan hallgat.[/i] De ez már a múlt. Te bevégezted, amit mi nem tudtunk."
 	return "[i]A tűzbe néz, és halkan beszélni kezd.[/i]\n\n" + FLOOR20_STORY + ending
+
+
+## Gáspár sprite-kockái (assets/characters/veteran.png): "idle" (álló, lassan lélegzik) és "run".
+static func veteran_frames() -> SpriteFrames:
+	var sheet: Texture2D = load("res://assets/characters/veteran.png")
+	var frames := SpriteFrames.new()
+	frames.remove_animation("default")
+	for anim: String in ["idle", "run"]:
+		frames.add_animation(anim)
+		frames.set_animation_speed(anim, 2.5 if anim == "idle" else 8.0)
+		for i in 4:
+			var frame := AtlasTexture.new()
+			frame.atlas = sheet
+			frame.region = Rect2((i + (0 if anim == "idle" else 4)) * 16, 0, 16, 28)
+			frames.add_frame(anim, frame)
+	return frames
 
 
 static func is_epic_sword(item: Variant) -> bool:

@@ -54,6 +54,8 @@ const STONE_FLOOR := Rect2(16, 64, 16, 16)
 const INTERACT_RANGE := 56.0
 ## A veterán előtt a rönk miatt messzebbről is meg lehet szólítani.
 const VETERAN_RANGE := 76.0
+## Gáspár sétájának sebessége a kocsmáig (pixel / mp).
+const GASPAR_SPEED := 95.0
 ## Esti szürkület.
 const EVENING := Color(0.26, 0.3, 0.48)
 
@@ -108,6 +110,10 @@ var _npc_position := Vector2.ZERO
 ## A veterán helye (később ide jön a beszélgetés a régi időkről).
 var _veteran_position := Vector2.ZERO
 var _veteran_dialogue: DialoguePanel
+var _veteran_sprite: AnimatedSprite2D
+## A kardja és a botja (ezeket magával viszi, amikor elmegy).
+var _veteran_props: Array[Node2D] = []
+var _veteran_walking := false
 ## Pihenő közben (főellenség után kimentél) vagy.
 var _on_break := false
 var _town: Town
@@ -455,22 +461,18 @@ func _build_smithy() -> void:
 func _build_veteran() -> void:
 	_tent(VETERAN_TENT, 1)
 	var seat := _tile_center(VETERAN_TENT + Vector2i(1, 2)) + Vector2(-4, 8)
-	_veteran_position = seat
+	# Ha már elköltözött a kocsmába, csak a sátra, a rönk és a tűz marad.
+	var moved_out := Progress.npc_quest_state(Dialogues.TAVERN_FLAG) == "done"
+	_veteran_position = Vector2.INF if moved_out else seat
 	# A veterán: lassan "lélegzik" (álló kockák lassan), lejjebb ülve, a lábát a rönk takarja.
-	var frames := SpriteFrames.new()
-	frames.set_animation_speed("default", 2.5)
-	for i in 4:
-		var frame := AtlasTexture.new()
-		frame.atlas = VETERAN_SHEET
-		frame.region = Rect2(i * 16, 0, 16, 28)
-		frames.add_frame("default", frame)
-	var veteran := AnimatedSprite2D.new()
-	veteran.sprite_frames = frames
-	veteran.scale = Vector2(2, 2)
-	veteran.offset = Vector2(0, -14)
-	veteran.position = seat + Vector2(0, 6)
-	veteran.play()
-	_entities.add_child(veteran)
+	if not moved_out:
+		_veteran_sprite = AnimatedSprite2D.new()
+		_veteran_sprite.sprite_frames = Dialogues.veteran_frames()
+		_veteran_sprite.scale = Vector2(2, 2)
+		_veteran_sprite.offset = Vector2(0, -14)
+		_veteran_sprite.position = seat + Vector2(0, 6)
+		_veteran_sprite.play("idle")
+		_entities.add_child(_veteran_sprite)
 	# A rönk, amin ül (előtte, hogy takarja a lábát).
 	var log_holder := Node2D.new()
 	log_holder.position = seat + Vector2(0, 12)
@@ -481,20 +483,58 @@ func _build_veteran() -> void:
 	var sword_holder := Node2D.new()
 	sword_holder.position = seat + Vector2(30, 6)
 	_entities.add_child(sword_holder)
-	var sword := _sprite(SpriteSheet.region(VETERAN_SWORD), Vector2(0, -22), 0, sword_holder)
-	sword.rotation = deg_to_rad(172)
-	sword.scale = Vector2(1.5, 1.5)
-	sword.position = Vector2(0, -16)
-	sword.modulate = Color(0.7, 0.68, 0.66)
-	# (A bot képe átlós, a kampója balra fent: 35 fokkal elforgatva szinte függőleges.)
-	var cane := _sprite(CANE, Vector2(-26, -20), 0, log_holder)
-	cane.rotation = deg_to_rad(35)
-	cane.scale = Vector2(2.4, 2.4)
+	if not moved_out:
+		var sword := _sprite(SpriteSheet.region(VETERAN_SWORD), Vector2(0, -22), 0, sword_holder)
+		sword.rotation = deg_to_rad(172)
+		sword.scale = Vector2(1.5, 1.5)
+		sword.position = Vector2(0, -16)
+		sword.modulate = Color(0.7, 0.68, 0.66)
+		# (A bot képe átlós, a kampója balra fent: 35 fokkal elforgatva szinte függőleges.)
+		var cane := _sprite(CANE, Vector2(-26, -20), 0, log_holder)
+		cane.rotation = deg_to_rad(35)
+		cane.scale = Vector2(2.4, 2.4)
+		_veteran_props = [sword, cane]
 	# Kis tűz előtte, hogy esténként is látsszon.
 	_campfire(_tile_center(VETERAN_TENT + Vector2i(3, 2)) + Vector2(6, 4))
 	for dx in range(-1, 3):
 		_blocked[VETERAN_TENT + Vector2i(dx, 2)] = true
 		_blocked[VETERAN_TENT + Vector2i(dx, 3)] = true
+
+
+## A 30. emelet híre után Gáspár feláll, magához veszi a kardját és a botját, és útvonal-
+## pontokon át (a tábortüzet, a sátrakat és az árust kikerülve) a városba, a kocsmába sétál.
+func _start_gaspar_walk() -> void:
+	_veteran_walking = true
+	_veteran_position = Vector2.INF
+	for prop: Node2D in _veteran_props:
+		create_tween().tween_property(prop, "modulate:a", 0.0, 0.4)
+	FloatingText.spawn(_entities, _veteran_sprite.global_position + Vector2(0, -60),
+		"Ideje inni egyet a fiúkra...", Color(0.95, 0.9, 0.8), 18)
+	var road_y := (ROAD_ROW + 0.6) * TILE
+	var door := _town.door_position()
+	var path: Array[Vector2] = [
+		_veteran_sprite.position + Vector2(0, -14),
+		Vector2(12.5 * TILE, 18.5 * TILE), Vector2(19.5 * TILE, 18.5 * TILE),
+		Vector2(20.5 * TILE, 16.2 * TILE), Vector2(26.5 * TILE, 16.2 * TILE),
+		Vector2(28.5 * TILE, road_y), Vector2(door.x, road_y), door,
+	]
+	var walk := create_tween()
+	walk.tween_interval(1.0)
+	walk.tween_callback(func() -> void: _veteran_sprite.play("run"))
+	var from := _veteran_sprite.position
+	for point in path:
+		var target := point
+		walk.tween_callback(func() -> void:
+			if target.x != _veteran_sprite.position.x:
+				_veteran_sprite.flip_h = target.x < _veteran_sprite.position.x)
+		walk.tween_property(_veteran_sprite, "position", target, from.distance_to(target) / GASPAR_SPEED)
+		from = target
+	# Az ajtóban eltűnik, és bent leül.
+	walk.tween_property(_veteran_sprite, "modulate:a", 0.0, 0.4)
+	walk.tween_callback(func() -> void:
+		_veteran_sprite.queue_free()
+		_town.seat_gaspar()
+		Audio.play("door_unlock", -8.0))
 
 
 ## Fekvő farönk (ülőhely): kéreg, csíkok, világos évgyűrűs vége.
@@ -970,6 +1010,10 @@ func _show_title() -> void:
 
 
 func _process(delta: float) -> void:
+	# Gáspár elköszönt (30. emelet): amint bezárult a beszélgetés, elindul a kocsmába.
+	if is_instance_valid(_veteran_sprite) and not _veteran_walking and not get_tree().paused \
+			and Progress.npc_quest_state(Dialogues.TAVERN_FLAG) == "done":
+		_start_gaspar_walk()
 	var near_stairs := _is_near_stairs()
 	var near_tent := _is_near_tent()
 	var near_stash := _is_near_stash()
