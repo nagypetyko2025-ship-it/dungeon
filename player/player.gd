@@ -63,6 +63,12 @@ const PLAYER_ARROW := preload("res://player/player_arrow.gd")
 const DASH_TIME := 0.18
 const DASH_SPEED := 1000.0
 const DASH_COOLDOWN := 5.0
+## Hadi kiáltás (Gáspár): ilyen körben löki el a szörnyeket, ekkorát, ennyi időre töri meg őket.
+const WAR_CRY_COOLDOWN := 7.0
+const WAR_CRY_RADIUS := 120.0
+const WAR_CRY_PUSH := 560.0
+const WAR_CRY_STUN := 0.5
+const BOSS_SCRIPT := preload("res://enemies/boss.gd")
 const MULTISHOT_SPREAD := 8.0
 const MULTISHOT_GAP := 16.0
 ## Ennyi megtett pixelenként szól egy lépés.
@@ -89,6 +95,7 @@ var _swing_side := 1.0
 ## A felszerelt fegyver fajtája: "sword" vagy "spear".
 var _weapon_type := "sword"
 var _step_distance := 0.0
+var _war_cry_left := 0.0
 var _dash_left := 0.0
 var _dash_cooldown_left := 0.0
 var _dash_dir := Vector2.RIGHT
@@ -163,6 +170,7 @@ func hit_damage() -> int:
 func _apply_character_base(id: String) -> void:
 	var definition := Characters.data(id)
 	_stats.base_accuracy = float(definition.get("accuracy", 75))
+	_stats.base_health_regen = float(definition.get("health_regen", 0.2))
 	_stats.base_multishot = float(definition.get("multishot", 1))
 	_stats.base_move_speed = float(definition.get("move_speed", 100))
 
@@ -339,6 +347,9 @@ func _physics_process(delta: float) -> void:
 		return
 	if Input.is_physical_key_pressed(KEY_CTRL) and _can_dash():
 		_start_dash(aim)
+	_war_cry_left = maxf(_war_cry_left - delta, 0.0)
+	if Input.is_physical_key_pressed(KEY_CTRL) and _can_war_cry():
+		_war_cry()
 	velocity = input_dir * BASE_SPEED * (_stats.move_speed / 100.0) + _knockback
 	_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
 	move_and_slide()
@@ -355,6 +366,40 @@ func _physics_process(delta: float) -> void:
 
 	# Villogás, amíg sérthetetlen.
 	_visual.visible = not _hurtbox.is_invincible() or fmod(Time.get_ticks_msec() / 80.0, 2.0) < 1.0
+
+
+## Hadi kiáltás (csak Gáspár, Ctrl): "A többiekért!" — a közeli szörnyeket ellöki és egy
+## pillanatra megtöri (a főellenségeket nem mozdítja). WAR_CRY_COOLDOWN mp-enként.
+func _can_war_cry() -> bool:
+	return Characters.data(Progress.character).get("war_cry", false) and _war_cry_left <= 0.0 \
+		and not get_tree().paused
+
+
+func _war_cry() -> void:
+	_war_cry_left = WAR_CRY_COOLDOWN
+	Audio.play("boss_roar", -4.0, 0.1)
+	Audio.play("boss_slam", -10.0)
+	FloatingText.spawn(get_parent(), global_position + Vector2(0, -60), "A többiekért!", Color(1, 0.8, 0.35), 22)
+	var ring = BOSS_SCRIPT.Shockwave.new()
+	ring.radius = WAR_CRY_RADIUS
+	ring.position = position
+	get_parent().add_child(ring)
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		var body := enemy as Node2D
+		if body == null or body.global_position.distance_to(global_position) > WAR_CRY_RADIUS:
+			continue
+		var resist := 0.0
+		var enemy_stats: Variant = body.get("stats")
+		if enemy_stats is Dictionary:
+			var dict: Dictionary = enemy_stats
+			resist = float(dict.get("resist", 0.0))
+		var push := body.global_position - global_position
+		body.set("_knockback", (push.normalized() if push.length() > 1.0 else Vector2.RIGHT) * WAR_CRY_PUSH * (1.0 - resist))
+		body.set("_stun_left", WAR_CRY_STUN * (1.0 - resist))
+
+
+func war_cry_cooldown_ratio() -> float:
+	return _war_cry_left / WAR_CRY_COOLDOWN
 
 
 ## Suhanás (csak az íjász, Ctrl): rövid, gyors ugrás a kurzor felé; közben a szörnyeken

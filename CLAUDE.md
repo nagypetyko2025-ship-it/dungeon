@@ -38,6 +38,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - UI: minden ablak CanvasLayer `open()/close()`-zal, a `ui/menus.gd` kezeli (KEYS: I, Tab, M, J). Stílus: `UiStyle`, `MenuStyle`.
 - NPC-beszélgetés: `ui/dialogue_panel.gd` (bizalom -100..+100, max 5 opció, 1-5 gomb), szövegek: `world/dialogues.gd`;
   bizalom és feltett kérdések: `Progress.trust` / `Progress.asked` (mentve).
+- Karakterek: `world/characters.gd` (lovag, íjász, Gáspár/"veteran" — utóbbi az "unlock" jelzővel, a 30. emelet
+  után; Ctrl: íjász suhanás, Gáspár hadi kiáltás a `player.gd`-ben). Kocsmai székek: `world/town.gd`.
 - Csalómenü: [0], kód `147258` (`ui/cheat_menu.gd`): teleport a 20. emeletre (`cheat_teleport` a Dungeon/Camp jeleneten),
   halhatatlanság (`GameState.god_mode`). Teszteléshez is hasznos.
 - Gyakorló pálya: `ui/tutorial_guide.gd` (lépések), kézikönyv: `ui/tutorial_manual.gd` (az irányítás szövege a Beállítások fülön is).

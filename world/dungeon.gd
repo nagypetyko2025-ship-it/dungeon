@@ -231,7 +231,12 @@ func _ready() -> void:
 		add_child(guide)
 		guide.call("setup", self, rooms)
 	else:
-		if final_floor:
+		if final_floor and Progress.character == "veteran":
+			# Gáspár visszatér oda, ahol az emberei elestek.
+			_hud.show_message("Gáspár: „Visszatértem, barátaim!”")
+			FloatingText.spawn(_entities, _player.global_position + Vector2(0, -60), "Visszatértem, barátaim!",
+				Color(1, 0.85, 0.5), 22)
+		elif final_floor:
 			_hud.show_message("%d. emelet — keletre vár a Mélység Ura!" % depth)
 		elif depth >= QUEST_DEPTH and Progress.npc_quest_state("depth_30") == "active" and not GameState.cheated:
 			# Gáspár küldetése teljesül: elérted a 30. emeletet (hogy mi van itt, majd kiderül).

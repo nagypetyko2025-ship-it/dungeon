@@ -14,6 +14,9 @@ class_name Characters
 ## move_speed    a mozgási sebesség alapértéke (%, alapból 100)
 ## accuracy      a találati esély alapértéke (%): ennyi eséllyel találja el a szörnyet
 ## dash          van-e Suhanása (Ctrl: a kurzor felé, a szörnyeken át)
+## war_cry       van-e Hadi kiáltása (Ctrl: a közeli szörnyek ellökése)
+## health_regen  az élet-regeneráció alapértéke (élet / mp, alapból 0.2)
+## unlock        ha meg van adva: csak akkor játszható, ha ez a Progress.npc_quests jelző "done"
 ## role / traits / story   a bemutatkozó panel szövegei (a kocsmában, a karakter mellett)
 
 const DEFAULT := "knight"
@@ -50,7 +53,30 @@ const ALL := {
 			"Suhanás [Ctrl]: a kurzor felé ugrik, a szörnyeken át (5 mp)",
 		],
 	},
+	# Gáspár, a veterán: csak azután játszható, hogy a 30. emelet után beköltözött a kocsmába.
+	"veteran": {
+		"name": "Gáspár", "sheet": "res://assets/characters/veteran.png", "frame_size": Vector2(16, 28),
+		"start_weapon": "sword_lavish", "seat": 5, "weapons": "melee", "unlock": "gaspar_tavern",
+		"accuracy": 90, "health_regen": 0.1, "war_cry": true,
+		"description": "A királyi őrség egykori kapitánya: pontos, de sebei lassan gyógyulnak.",
+		"role": "Veterán közelharcos",
+		"story": "Tizenkét évig ült a tábor szélén egy rönkön, miután a Mélység Ura megölte az embereit. "
+			+ "Most, hogy a farkas elesett, újra kardot fog. A fiaiért.",
+		"traits": [
+			"Díszkarddal indul (ritka őrkard)",
+			"Bármilyen közelharci fegyvert forgathat; íjat nem használhat",
+			"90% találati esély (veterán)",
+			"Sérült: csak 0.1 élet / mp regeneráció",
+			"Hadi kiáltás [Ctrl]: a közelben lévő szörnyeket ellöki (7 mp)",
+		],
+	},
 }
+
+
+## Játszható-e már a karakter ("unlock": egy Progress.npc_quests jelző, aminek "done"-nak kell lennie).
+static func is_unlocked(id: String) -> bool:
+	var unlock: String = data(id).get("unlock", "")
+	return unlock.is_empty() or Progress.npc_quest_state(unlock) == "done"
 
 static var _frames_cache := {}
 

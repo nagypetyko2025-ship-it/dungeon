@@ -19,7 +19,7 @@ const CHAPTERS := [
 		"[b]W A S D[/b] — mozgás\n[b]Bal klikk[/b] — támadás az egér irányába (nyomva tartva folyamatosan)\n"
 		+ "[b]E[/b] — használat (ajtó, lépcső, tárgylift, árus, karakterek)\n[b]I[/b] — felszerelés\n"
 		+ "[b]Tab[/b] — karakterlap\n[b]M[/b] — nagy térkép\n[b]J[/b] — küldetések könyve (lapozás: A / D)\n[b]1[/b] — HP bájital (gyorstár)\n[b]F[/b] — HP bájital vétele a boltos pultjánál\n[b]Esc[/b] — szünet menü / ablak bezárása\n"
-		+ "[b]Ctrl[/b] — suhanás (csak íjász)\n[b]F11[/b] vagy [b]Alt+Enter[/b] — teljes képernyő\n"
+		+ "[b]Ctrl[/b] — suhanás (íjász) / hadi kiáltás (Gáspár)\n[b]F11[/b] vagy [b]Alt+Enter[/b] — teljes képernyő\n"
 		+ "Szintlépéskor: [b]1 2 3[/b] — kártya választása, [b]R[/b] — újradobás aranyért"],
 	["A kazamata",
 		"Az emeletek szobákból és rövid folyosókból állnak. Ha belépsz egy szobába, az ajtók bezárulnak, amíg minden "

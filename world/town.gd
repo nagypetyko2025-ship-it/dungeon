@@ -28,8 +28,6 @@ const INTERIOR_DOOR := Vector2i(209, 14)
 ## Belső tér: meleg, gyertyafényes.
 const INTERIOR_LIGHT := Color(0.62, 0.52, 0.44)
 const INTERACT_RANGE := 52.0
-## Gáspár széke a kocsmában (a karakterek székei: lovag 0, íjász 3).
-const GASPAR_SEAT := 5
 # Kenney RPG lap (oszlop, sor)
 const ROOF_TOP := [Vector2i(34, 21), Vector2i(39, 21), Vector2i(35, 21)]
 const ROOF_MID := [Vector2i(38, 22), Vector2i(39, 22), Vector2i(40, 22)]
@@ -69,7 +67,6 @@ var _prompt: Label
 var _inside := false
 var _barkeep_line := 0
 var _busy := false
-var _gaspar: AnimatedSprite2D
 var _quest_panel: CanvasLayer
 var _quest_mark: Label
 
@@ -258,29 +255,18 @@ func _on_table(table: Sprite2D, coords: Vector2i, offset: Vector2, scale_factor:
 
 # ---------------------------------------------------------------- karakterek
 
-## Minden nem aktív karakter a saját székén ül (és Gáspár is, ha már beköltözött).
+## Minden nem aktív, már játszható karakter a saját székén ül (Gáspár csak a 30. emelet után).
 func _seat_characters() -> void:
 	for id: String in Characters.ALL:
-		if id != Progress.character:
+		if id != Progress.character and Characters.is_unlocked(id):
 			_sit(id)
-	if Progress.npc_quest_state(Dialogues.TAVERN_FLAG) == "done":
-		seat_gaspar()
 
 
-## Gáspár, a veterán a kocsmában ül (a 30. emelet után költözik ide). Egyelőre csak ül:
-## később ő is játszható lesz. A karakterváltás nem érinti (nincs a _seated-ben).
+## Gáspár beért a kocsmába (a táborból sétált ide): leül a helyére, és onnantól játszható.
 func seat_gaspar() -> void:
-	if is_instance_valid(_gaspar):
+	if _seated.has("veteran") or Progress.character == "veteran":
 		return
-	var seat: Array = seats[GASPAR_SEAT % seats.size()]
-	_gaspar = AnimatedSprite2D.new()
-	_gaspar.sprite_frames = Dialogues.veteran_frames()
-	_gaspar.scale = Vector2(2, 2)
-	_gaspar.offset = Vector2(0, -14)
-	_gaspar.position = seat[0] + Vector2(0, 10)
-	_gaspar.flip_h = not seat[1]
-	_gaspar.play("idle")
-	_entities.add_child(_gaspar)
+	_sit("veteran")
 
 
 func _sit(id: String) -> AnimatedSprite2D:

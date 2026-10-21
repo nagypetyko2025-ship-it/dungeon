@@ -50,31 +50,46 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	var has_dash: bool = player != null and Characters.data(Progress.character).get("dash", false)
+	var has_cry: bool = player != null and Characters.data(Progress.character).get("war_cry", false)
+	if has_cry:
+		_update_skill_label("Hadi kiáltás", player.call("war_cry_cooldown_ratio") * player.WAR_CRY_COOLDOWN)
+		return
 	if _dash_label == null:
 		if not has_dash:
 			return
-		_dash_label = Label.new()
-		_dash_label.add_theme_font_size_override("font_size", 18)
-		_dash_label.add_theme_color_override("font_outline_color", Color.BLACK)
-		_dash_label.add_theme_constant_override("outline_size", 5)
-		_dash_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-		# A gyorstár (QuickBar) fölött.
-		_dash_label.offset_top = -124
-		_dash_label.offset_bottom = -100
-		_dash_label.offset_left = -200
-		_dash_label.offset_right = 200
-		_dash_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		add_child(_dash_label)
+		_create_skill_label()
 	_dash_label.visible = has_dash
 	if not has_dash:
 		return
-	var left: float = player.call("dash_cooldown_ratio") * player.DASH_COOLDOWN
+	_update_skill_label("Suhanás", player.call("dash_cooldown_ratio") * player.DASH_COOLDOWN)
+
+
+## A Ctrl-képesség felirata (suhanás / hadi kiáltás): kész, vagy mennyi idő van még hátra.
+func _update_skill_label(skill: String, left: float) -> void:
+	if _dash_label == null:
+		_create_skill_label()
+	_dash_label.visible = true
 	if left <= 0.0:
-		_dash_label.text = "Suhanás [Ctrl]: kész"
+		_dash_label.text = "%s [Ctrl]: kész" % skill
 		_dash_label.add_theme_color_override("font_color", Color(0.6, 0.95, 1.0))
 	else:
-		_dash_label.text = "Suhanás [Ctrl]: %.1f mp" % left
+		_dash_label.text = "%s [Ctrl]: %.1f mp" % [skill, left]
 		_dash_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
+
+
+func _create_skill_label() -> void:
+	_dash_label = Label.new()
+	_dash_label.add_theme_font_size_override("font_size", 18)
+	_dash_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_dash_label.add_theme_constant_override("outline_size", 5)
+	_dash_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	# A gyorstár (QuickBar) fölött.
+	_dash_label.offset_top = -124
+	_dash_label.offset_bottom = -100
+	_dash_label.offset_left = -200
+	_dash_label.offset_right = 200
+	_dash_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_dash_label)
 
 
 func _on_gold_changed(gold: int) -> void:
