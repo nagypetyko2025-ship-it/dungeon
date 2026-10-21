@@ -1,4 +1,4 @@
-﻿Sound effects (assets/audio/sfx) - all CC0 1.0 Universal, by Kenney (www.kenney.nl):
+Sound effects (assets/audio/sfx) - all CC0 1.0 Universal, by Kenney (www.kenney.nl):
   "RPG Audio" https://kenney.nl/assets/rpg-audio
   "Impact Sounds" https://kenney.nl/assets/impact-sounds
   "Interface Sounds" https://kenney.nl/assets/interface-sounds
@@ -7,3 +7,6 @@ Music (assets/audio/music) - all CC0 1.0 Universal:
   dungeon_ambience.ogg = "Loopable Dungeon Ambience" by JaggedStone - https://opengameart.org/content/loopable-dungeon-ambience
   menu_ambience.ogg = "Dungeon Ambience" by yd - https://opengameart.org/content/dungeon-ambience
   boss_battle.wav = "Boss Battle #2 [Symphonic Metal]" by nene - https://opengameart.org/node/84428
+
+anvil_1.wav, anvil_2.wav, anvil_3.wav: "Metal Impact Sounds" (clink1-3) by Brian MacIntosh, CC0 1.0,
+  https://opengameart.org/content/metal-impact-sounds

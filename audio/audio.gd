@@ -15,11 +15,12 @@ const VARIANTS := {
 	"arrow": 0, "magic": 0, "item_pickup": 0, "equip": 0, "buy": 0, "sell": 0, "stairs": 0,
 	"ui_click": 0, "ui_hover": 0, "ui_open": 0, "ui_close": 0, "ui_error": 0,
 	"boss_slam": 0, "boss_roar": 0, "level_up": 0, "boss_defeated": 0, "death": 0,
+	"anvil": 3,
 }
 ## Néhány effekt alap-hangereje (dB); a többi 0.
 const VOLUMES := {
 	"footstep": -16.0, "xp": -10.0, "coin": -6.0, "ui_hover": -14.0, "swing": -4.0,
-	"thrust": -4.0, "dodge": -6.0, "magic": -6.0,
+	"thrust": -4.0, "dodge": -6.0, "magic": -6.0, "anvil": -8.0,
 }
 const MUSIC_TRACKS := {
 	"menu": "res://assets/audio/music/menu_ambience.ogg",
@@ -100,6 +101,9 @@ func _play(effect: String, volume_db: float, pitch_variation: float) -> void:
 	var count: int = VARIANTS[effect]
 	var file := effect if count == 0 else "%s_%d" % [effect, randi_range(1, count)]
 	var stream := _load(SFX_DIR + file + ".ogg")
+	if stream == null:
+		# Néhány effekt (pl. az üllő) .wav-ban van.
+		stream = _load(SFX_DIR + file + ".wav")
 	if stream == null:
 		return
 	var voice := _voices[_next_voice]

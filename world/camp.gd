@@ -58,6 +58,8 @@ const EVENING := Color(0.26, 0.3, 0.48)
 ## A tábor elrendezése (csempékben).
 const STAIRS_TILE := Vector2i(22, 7)
 const FIRE_TILE := Vector2i(22, 17)
+## A kovács bódéjának bal felső csempéje (a tábor jobb alsó sarkában, az úttól délre).
+const SMITHY_TILE := FIRE_TILE + Vector2i(5, 1)
 const CAMP_RADIUS := Vector2(9.5, 6.0)
 ## Az út sorai (2 csempe széles), keletre a tábortól az erdő széléig.
 const ROAD_ROW := 17
@@ -118,6 +120,7 @@ func _ready() -> void:
 	_build_entrance()
 	_build_dirt()
 	_build_camp()
+	_build_smithy()
 	_build_trees()
 	_build_forest()
 	_build_bounds()
@@ -346,6 +349,14 @@ func _build_camp() -> void:
 	_entities.add_child(holder)
 	_sprite(chest, Vector2(0, -16), 0, holder)
 	_body(holder, Vector2(0, -6), Vector2(28, 12))
+
+
+## A kovács bódéja a tábor jobb alsó sarkában (lásd Smithy); egyelőre nem lehet vele beszélni.
+func _build_smithy() -> void:
+	var smithy := Smithy.new()
+	smithy.name = "Smithy"
+	smithy.tile = SMITHY_TILE
+	_entities.add_child(smithy)
 
 
 ## Fegyverállvány a kiképzősátor előtt: néhány kard egy ládának támasztva.
