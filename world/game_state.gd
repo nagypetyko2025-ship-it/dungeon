@@ -36,6 +36,8 @@ static var exits := 0
 static var merchant_stock: Array = []
 ## Szintlépéskor hányszor dobtad újra a fejlesztéseket (minden újradobás drágább).
 static var rerolls := 0
+## HP bájitalok a gyorstár első helyén ([1]): a futáshoz tartoznak (boltban vehető, főellenség után jár).
+static var potions := 0
 
 ## Gyakorló pálya (tutorial) megy: rögzített pálya, lépésről lépésre vezetés; semmi nem
 ## mentődik belőle (eredmény, tábori arany, tárgylift). A reset() nem törli, csak a kilépés.
@@ -68,3 +70,4 @@ static func reset() -> void:
 	exits = 0
 	merchant_stock = []
 	rerolls = 0
+	potions = 0

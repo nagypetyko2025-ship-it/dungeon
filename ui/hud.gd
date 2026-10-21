@@ -58,8 +58,9 @@ func _process(_delta: float) -> void:
 		_dash_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		_dash_label.add_theme_constant_override("outline_size", 5)
 		_dash_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-		_dash_label.offset_top = -100
-		_dash_label.offset_bottom = -76
+		# A gyorstár (QuickBar) fölött.
+		_dash_label.offset_top = -124
+		_dash_label.offset_bottom = -100
 		_dash_label.offset_left = -200
 		_dash_label.offset_right = 200
 		_dash_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -18,7 +18,7 @@ const CHAPTERS := [
 	["Irányítás",
 		"[b]W A S D[/b] — mozgás\n[b]Bal klikk[/b] — támadás az egér irányába (nyomva tartva folyamatosan)\n"
 		+ "[b]E[/b] — használat (ajtó, lépcső, tárgylift, árus, karakterek)\n[b]I[/b] — felszerelés\n"
-		+ "[b]Tab[/b] — karakterlap\n[b]M[/b] — nagy térkép\n[b]J[/b] — küldetések könyve (lapozás: A / D)\n[b]Esc[/b] — szünet menü / ablak bezárása\n"
+		+ "[b]Tab[/b] — karakterlap\n[b]M[/b] — nagy térkép\n[b]J[/b] — küldetések könyve (lapozás: A / D)\n[b]1[/b] — HP bájital (gyorstár)\n[b]F[/b] — HP bájital vétele a boltos pultjánál\n[b]Esc[/b] — szünet menü / ablak bezárása\n"
 		+ "[b]Ctrl[/b] — suhanás (csak íjász)\n[b]F11[/b] vagy [b]Alt+Enter[/b] — teljes képernyő\n"
 		+ "Szintlépéskor: [b]1 2 3[/b] — kártya választása, [b]R[/b] — újradobás aranyért"],
 	["A kazamata",
@@ -44,8 +44,11 @@ const CHAPTERS := [
 	["Tárgyak és bolt",
 		"A tárgyaknak 4 ritkasága van: átlagos, ritka, epikus, legendás. Ládákból, szörnyekből és a boltból jutsz hozzájuk. "
 		+ "A felszerelés-helyek: fegyver, sisak, mellvért, nadrág, cipő, kesztyű, gyűrű, amulett, talizmán.\n\n"
-		+ "A boltba (a térképen narancs) nekimész az ajtajának: E-vel vásárolsz, a pultnál eladhatsz. Mellette a "
-		+ "[b]tárgylift[/b]: emeletenként egy tárgyat felküldhetsz a tábori ládába."],
+		+ "A boltba (a térképen narancs) nekimész az ajtajának: E-vel vásárolsz, a pultnál eladhatsz. A szoba közepén "
+		+ "lévő karral aranyért új árut kérhetsz. Mellette a [b]tárgylift[/b]: emeletenként egy tárgyat felküldhetsz a tábori ládába.\n\n"
+		+ "[b]HP bájital[/b]: a gyorstár (alul, az XP-csík fölött) első helyén. Az [b]1[/b]-es gombbal iszod meg: az "
+		+ "elvesztett életed felét tölti vissza. A gyanús boltostól a pultnál F-fel veheted (125 arany, boltonként "
+		+ "legfeljebb 2), és minden főellenség után kapsz egyet."],
 	["Tábor és fejlődés",
 		"A [b]táborban[/b] kezdesz. A [b]kiképzősátorban[/b] tábori aranyból veszel fejlesztéseket, amelyek minden karakterre "
 		+ "és minden futásra érvényesek. Halálkor a pénzed 20%-a, a futás feladásakor 40%-a kerül a táborba.\n\n"

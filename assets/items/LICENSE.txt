@@ -12,3 +12,4 @@ assets/ui/trash.png, trash_open.png: Kenney Game Icons (CC0, https://kenney.nl/a
 
 Típusonként +2 tárgy ikonjai: "496 pixel art icons" (7Soul1, CC0) — spear_crystal, spear_halberd, bow_feather, bow_shadow, axe_cleaver, axe_moon, dagger_viper, dagger_sun, mace_bone, mace_scepter, hat_apprentice, chest_leather, boots_leather, boots_ember, gloves_velvet, amulet_wolf, amulet_royal, trinket_mirror, trinket_fur.
 Átszínezett meglévő ikonok (CC0 forrásokból): helmet_dark, chest_night, pants_leather, pants_frost, gloves_ember, ring_gold, ring_onyx. A sword_saw és sword_katana a 0x72 lapról jön.
+assets/ui/potion_hp.png: "496 pixel art icons for medieval/fantasy RPG" (P_Red05), CC0.

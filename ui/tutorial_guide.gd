@@ -21,6 +21,7 @@ var _advancing := false
 var _start_position := Vector2.ZERO
 var _gold_at_step := 0
 var _was_in_shop := false
+var _potions_at_step := 0
 
 var _panel: PanelContainer
 var _counter: Label
@@ -80,8 +81,15 @@ func _build_steps() -> void:
 			+ "egyszerűen sétálj neki az ajtajának, és bemész.",
 			"done": func() -> bool: return _in_shop()},
 		{"title": "Vásárlás", "text": "A gyanús boltos árul: állj egy tárgy elé, és ha van elég aranyad, E-vel megveszed. "
-			+ "A pultnál E-vel el is adhatsz. Ha körülnéztél, gyere ki a lenti ajtón.",
+			+ "A pultnál E-vel el is adhatsz, [b]F[/b]-fel pedig HP bájitalt vehetsz tőle (125 arany, boltonként 2 db). "
+			+ "A szoba közepén lévő karral új árut kérhetsz. Ha körülnéztél, gyere ki a lenti ajtón.",
 			"done": func() -> bool: return _was_in_shop and not _in_shop()},
+		{"title": "HP bájital", "text": "Alul, az XP-csík fölött a [b]gyorstár[/b]: az első helyén vannak a HP bájitalaid "
+			+ "(a szám mutatja, mennyi van nálad). A boltos adott egyet kóstolónak, és közben megsérültél. "
+			+ "Nyomd meg az [b]1[/b]-es gombot: a bájital az elvesztett életed felét tölti vissza. "
+			+ "Minden főellenség után is kapsz egyet.",
+			"start": _start_potion_step,
+			"done": func() -> bool: return GameState.potions < _potions_at_step},
 		{"title": "Tárgylift", "text": "A bolt mellett a falban a [b]tárgylift[/b]: emeletenként egy tárgyat felküldhetsz vele a "
 			+ "táborba (a tábori ládába kerül, megmarad). Menj oda, és nyomd meg az [b]E[/b] gombot. "
 			+ "(Gyakorláskor nem küld fel semmit.)",
@@ -101,6 +109,15 @@ func _build_steps() -> void:
 		{"title": "Lépcső", "text": "A rács eltűnt. Lépj a lépcsőre: az igazi játékban ez visz a következő, egyre nehezebb emeletre.",
 			"done": func() -> bool: return false},
 	])
+
+
+## A bájital-lépés: egy ajándék bájital, és az élet a felére csökken, hogy legyen mit visszatölteni.
+func _start_potion_step() -> void:
+	GameState.potions += 1
+	_potions_at_step = GameState.potions
+	var health: Health = _player.get_node("Health")
+	health.current = maxi(1, health.max_health / 2)
+	health.changed.emit(health.current, health.max_health)
 
 
 func _process(_delta: float) -> void:

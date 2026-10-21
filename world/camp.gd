@@ -155,6 +155,9 @@ func _ready() -> void:
 	_town.build()
 	_town.message.connect(_toast)
 	add_child(QuestTracker.new())
+	var quick_bar := QuickBar.new()
+	quick_bar.bottom_offset = -16.0
+	add_child(quick_bar)
 	var book: CanvasLayer = preload("res://ui/quest_book.gd").new()
 	book.name = "QuestBook"
 	add_child(book)

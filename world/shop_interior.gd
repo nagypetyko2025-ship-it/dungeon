@@ -55,6 +55,10 @@ const GLOW_ENERGY := 0.7
 const RESTOCK_LEVER := Rect2(80, 208, 16, 16)
 const RESTOCK_BASE := 25
 const RESTOCK_STEP := 20
+## HP bájital a boltostól: ára és hány darab van belőle boltonként.
+const POTION_PRICE := 125
+const POTIONS_PER_SHOP := 2
+const POTION_ICON: Texture2D = preload("res://assets/ui/potion_hp.png")
 
 var _greeting_left := 0.0
 var _greeting_index := 0
@@ -73,6 +77,8 @@ var _stalls: Array = []
 var _restocks := 0
 var _lever_position := Vector2.ZERO
 var _lever_prompt: Label
+var _potions_left := POTIONS_PER_SHOP
+var _potion_nodes: Array[Sprite2D] = []
 
 
 static func entrance_position() -> Vector2:
@@ -103,6 +109,9 @@ func _process(delta: float) -> void:
 	if _lever_prompt:
 		_lever_prompt.visible = _near_lever()
 		_lever_prompt.text = "[E] Új áruk: %d arany" % restock_cost()
+	if _sell_prompt.visible:
+		_sell_prompt.text = "[E] Eladás   ·   [F] HP bájital: %d arany (%s)" % [POTION_PRICE,
+			("%d db" % _potions_left) if _potions_left > 0 else "elfogyott"]
 
 
 ## Polcok a hátsó fal előtt: két csempe magasak, tele áruval.
@@ -125,7 +134,15 @@ func _build_counter() -> void:
 	_solid(Rect2i(-3, y, pieces.size(), 1))
 	# Néhány tárgy a pulton.
 	_sprite(POTTERY, Rect2(48, 32, 16, 16), Vector2i(-2, y), -0.45, 0.8)
-	_sprite(POTTERY, Rect2(0, 0, 16, 16), Vector2i(2, y), -0.45, 0.8)
+	# HP bájitalok a pulton a boltos mellett (személyesen tőle lehet venni, F-fel).
+	for i in POTIONS_PER_SHOP:
+		var potion := Sprite2D.new()
+		potion.texture = POTION_ICON
+		potion.scale = Vector2(0.75, 0.75)
+		potion.position = Room.tile_center(Vector2i(1, y)) + Vector2(-6 + i * 16, -20)
+		potion.z_index = 1
+		add_child(potion)
+		_potion_nodes.append(potion)
 
 	_shopkeeper = AnimatedSprite2D.new()
 	_shopkeeper.sprite_frames = SpriteSheet.character_frames(SHOPKEEPER, true)
@@ -144,11 +161,11 @@ func _build_counter() -> void:
 			_at_counter = false
 			_sell_prompt.visible = false)
 
-	# "[E] Eladás" felirat a pult fölött, amikor a játékos előtte áll.
+	# "[E] Eladás · [F] HP bájital" felirat a pult fölött, amikor a játékos előtte áll.
 	_sell_prompt = UiStyle.label("[E] Eladás", 15, Color(1, 0.9, 0.6), true)
-	_sell_prompt.size = Vector2(120, 20)
+	_sell_prompt.size = Vector2(420, 20)
 	_sell_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_sell_prompt.position = Room.tile_center(Vector2i(0, y)) + Vector2(-60, -64)
+	_sell_prompt.position = Room.tile_center(Vector2i(0, y)) + Vector2(-210, -64)
 	_sell_prompt.z_index = 10
 	_sell_prompt.visible = false
 	add_child(_sell_prompt)
@@ -265,6 +282,11 @@ func _update_tooltip() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if _at_counter and key != null and key.pressed and not key.echo and key.physical_keycode == KEY_F:
+		_buy_potion()
+		get_viewport().set_input_as_handled()
+		return
 	if not event.is_action_pressed("interact"):
 		return
 	if _near_lever():
@@ -300,9 +322,30 @@ func _buy(index: int) -> void:
 	FloatingText.spawn(self, _shopkeeper.global_position + Vector2(0, -36), SOLD_LINES.pick_random(), Color(0.85, 0.75, 1))
 
 
-## "Új áruk" kar a pult jobb végén: E-re a boltos minden árut lecserél újakra, aranyért.
+## HP bájital a boltostól (a pultnál F-fel): POTION_PRICE arany, boltonként POTIONS_PER_SHOP darab.
+func _buy_potion() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	var say_at := _shopkeeper.global_position + Vector2(0, -36)
+	if _potions_left <= 0:
+		Audio.play("ui_error")
+		FloatingText.spawn(self, say_at, "Elfogyott... hehe.", Color(0.85, 0.75, 1))
+		return
+	if not player.call("spend_gold", POTION_PRICE):
+		Audio.play("ui_error")
+		FloatingText.spawn(self, say_at, "Ez %d arany... nincs annyid." % POTION_PRICE, Color(0.85, 0.75, 1))
+		return
+	_potions_left -= 1
+	GameState.potions += 1
+	if not _potion_nodes.is_empty():
+		_potion_nodes.pop_back().queue_free()
+	Audio.play("buy")
+	FloatingText.spawn(self, say_at, "Gyógyít... többnyire. Hehe.", Color(0.85, 0.75, 1))
+	FloatingText.spawn(self, player.global_position + Vector2(-60, -64), "+1 HP bájital (%d)" % GameState.potions, Color(1, 0.45, 0.5))
+
+
+## "Új áruk" kar a szoba közepén: E-re a boltos minden árut lecserél újakra, aranyért.
 func _build_restock_lever() -> void:
-	var tile := Vector2i(4, RECT.position.y + 3)
+	var tile := Vector2i(0, RECT.position.y + 5)
 	_sprite(SpriteSheet.TEXTURE, RESTOCK_LEVER, tile, -0.2)
 	_solid(Rect2i(tile.x, tile.y, 1, 1))
 	_lever_position = Room.tile_center(tile + Vector2i(0, 1))
@@ -390,7 +433,7 @@ func _build_barrels() -> void:
 	_barrel_stack(Vector2i(-4, top + 1), 2)
 	_barrel_stack(Vector2i(-4, top + 2), 1)
 	_crate(Vector2i(4, top + 1), BIG_CRATE)
-	# (A (4, top + 2) csempén az "Új áruk" kar áll, az zárja el a pult jobb végét.)
+	_barrel_stack(Vector2i(4, top + 2), 2)
 	_barrel_stack(Vector2i(right, bottom), 1)
 
 

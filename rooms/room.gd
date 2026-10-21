@@ -376,6 +376,11 @@ func _point_free(world_position: Vector2) -> bool:
 
 func _on_boss_defeated(boss: Node2D) -> void:
 	Quests.notify("boss")
+	# Minden főellenség után jár egy HP bájital (a gyorstár első helyére).
+	GameState.potions += 1
+	if is_instance_valid(_player):
+		FloatingText.spawn(get_parent(), _player.global_position + Vector2(-60, -80),
+			"+1 HP bájital (%d)" % GameState.potions, Color(1, 0.45, 0.5), 20)
 	if final_boss:
 		pass  # nincs lépcső: a Dungeon nyit portált a táborba
 	elif is_instance_valid(_gate):

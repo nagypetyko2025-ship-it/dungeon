@@ -197,6 +197,7 @@ func _ready() -> void:
 	# Küldetés: elért emelet (a gyakorló pályán nem számít).
 	Quests.notify("floor", depth)
 	add_child(QuestTracker.new())
+	add_child(QuickBar.new())
 	_add_quest_book()
 	if tutorial:
 		_hud.show_message("Gyakorló pálya")
