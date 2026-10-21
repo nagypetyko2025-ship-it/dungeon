@@ -84,7 +84,7 @@ func setup_boss(depth: int) -> void:
 		"power": 1.0,
 	}
 	# A 10. emelettől a főellenségek is hirtelen erősebbek (mint a szörnyek, lásd EnemyTypes).
-	if depth >= EnemyTypes.SURGE_DEPTH:
+	for i in EnemyTypes.surges(depth):
 		stats["health"] = roundi(stats["health"] * EnemyTypes.SURGE_HEALTH)
 		stats["damage"] = roundi(stats["damage"] * EnemyTypes.SURGE_DAMAGE)
 		stats["xp"] = roundi(stats["xp"] * EnemyTypes.SURGE_XP)

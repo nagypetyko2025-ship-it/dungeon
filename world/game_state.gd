@@ -48,6 +48,10 @@ static var tutorial := false
 static var dungeon_won := false
 ## Csalás (CheatMenu): a játékos nem sebződik. A reset() nem törli, csak a menü kapcsolja.
 static var god_mode := false
+## Ebben a futásban csaltál (teleport vagy halhatatlanság, akár csak egyszer is): a futásból
+## semmi nem mentődik (eredmény, arany, tárgyak, küldetések). Új futáskor törlődik, kivéve ha
+## a halhatatlanság még be van kapcsolva.
+static var cheated := false
 
 ## Az ablak már teljes képernyőre lett állítva indításkor (nem a futás része, reset nem törli).
 static var display_initialized := false
@@ -73,3 +77,4 @@ static func reset() -> void:
 	merchant_stock = []
 	rerolls = 0
 	potions = 0
+	cheated = god_mode

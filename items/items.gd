@@ -253,7 +253,7 @@ const DEFINITIONS := {
 		"stats": {"lifesteal": [3, 5], "attack_range": [4, 8]}},
 	# Egyedi jutalom Gáspártól (nem esik, nem kapható): a királyi őrség kapitányának kardja.
 	# A kép nagy felbontású ("swords cc0", SnoopethDuckDuck, CC0), a kézben 0.6x.
-	"sword_royal": {"name": "Gáspár királyi kardja", "slot": "weapon", "rarity": "legendary", "shop": false,
+	"sword_royal": {"name": "Gáspár királyi kardja", "slot": "weapon", "rarity": "legendary", "shop": false, "unique": true,
 		"base": [9, 10], "scaling": 1.6, "crit": 2.5, "hand_scale": 0.6,
 		"stats": {"damage_percent": [25, 25], "attack_speed": [30, 30], "crit_chance": [15, 15], "lifesteal": [10, 10],
 			"max_health": [15, 15], "defense": [8, 8], "accuracy": [10, 10]},
@@ -327,12 +327,188 @@ const DEFINITIONS := {
 		"stats": {"defense": [2, 3], "move_speed": [3, 5]}},
 	"trinket_mirror": {"name": "Igazmondó tükör", "slot": "trinket", "rarity": "epic",
 		"stats": {"accuracy": [6, 9], "crit_chance": [4, 6], "xp_bonus": [8, 12]}},
+
+	# --- Típusonként még +2 tárgy (ikonok: "496 pixel art icons", Dungeon Crawl, "swords cc0"; mind CC0) ---
+	# Kardok (álló, nagy felbontású kép: a kézben 0.6x)
+	"sword_venom": {"name": "Méregtüske", "slot": "weapon", "rarity": "rare", "hand_scale": 0.6,
+		"base": [2, 3], "scaling": 0.9, "crit": 1.6, "stats": {"lifesteal": [2, 4], "crit_chance": [2, 4]}},
+	"sword_dawn": {"name": "Hajnalpenge", "slot": "weapon", "rarity": "legendary", "hand_scale": 0.6,
+		"base": [4, 5], "scaling": 1.25, "crit": 1.75,
+		"stats": {"attack_speed": [20, 30], "damage_percent": [8, 12], "health_regen": [0.3, 0.5]}},
+	# Lándzsák
+	"spear_barbed": {"name": "Tüskés szigony", "slot": "weapon", "rarity": "common", "weapon_type": "spear",
+		"base": [1, 2], "scaling": 0.65, "crit": 1.75, "stats": {"attack_range": [5, 8], "thorns": [1, 1]}},
+	"spear_siege": {"name": "Ostromlándzsa", "slot": "weapon", "rarity": "legendary", "weapon_type": "spear",
+		"base": [5, 6], "scaling": 1.0, "crit": 2.25, "stats": {"attack_range": [20, 28], "defense": [4, 6], "damage_percent": [6, 9]}},
+	# Íjak
+	"bow_serpent": {"name": "Kígyóíj", "slot": "weapon", "rarity": "rare", "weapon_type": "bow",
+		"base": [2, 3], "scaling": 0.9, "crit": 1.6, "stats": {"crit_chance": [3, 5], "accuracy": [3, 5]}},
+	"bow_frost": {"name": "Fagyíj", "slot": "weapon", "rarity": "epic", "weapon_type": "bow",
+		"base": [3, 4], "scaling": 1.0, "crit": 1.8, "stats": {"ranged_damage": [1, 2], "attack_range": [10, 16], "dodge": [2, 4]}},
+	# Balták
+	"axe_headsman": {"name": "Hóhérbárd", "slot": "weapon", "rarity": "rare", "weapon_type": "axe",
+		"base": [3, 4], "scaling": 1.0, "crit": 1.7, "stats": {"crit_chance": [3, 5], "damage_percent": [2, 4]}},
+	"axe_double": {"name": "Kétélű csatabárd", "slot": "weapon", "rarity": "legendary", "weapon_type": "axe",
+		"base": [6, 8], "scaling": 1.35, "crit": 1.8, "stats": {"damage_percent": [8, 12], "attack_range": [10, 14], "max_health": [5, 7]}},
+	# Tőrök
+	"dagger_bone": {"name": "Csontkés", "slot": "weapon", "rarity": "common", "weapon_type": "dagger",
+		"base": [1, 1], "scaling": 0.7, "crit": 2.0, "stats": {"crit_chance": [3, 5], "lifesteal": [1, 2]}},
+	"dagger_ember": {"name": "Parázskés", "slot": "weapon", "rarity": "epic", "weapon_type": "dagger",
+		"base": [2, 3], "scaling": 0.95, "crit": 2.25, "stats": {"crit_chance": [8, 11], "attack_speed": [10, 15]}},
+	# Buzogányok
+	"mace_warhammer": {"name": "Hadikalapács", "slot": "weapon", "rarity": "rare", "weapon_type": "mace",
+		"base": [4, 5], "scaling": 1.1, "crit": 1.5, "stats": {"defense": [2, 3], "max_health": [2, 3]}},
+	"mace_star": {"name": "Csillagbuzogány", "slot": "weapon", "rarity": "legendary", "weapon_type": "mace",
+		"base": [7, 9], "scaling": 1.4, "crit": 1.75, "stats": {"damage_percent": [6, 9], "thorns": [2, 3], "max_health": [5, 7]}},
+	# Sisakok
+	"helmet_etched": {"name": "Vésett sisak", "slot": "helmet", "rarity": "rare",
+		"stats": {"defense": [3, 4], "max_health": [3, 5]}},
+	"helmet_plumed": {"name": "Tollas lovagsisak", "slot": "helmet", "rarity": "epic",
+		"stats": {"max_health": [6, 8], "crit_chance": [3, 5], "accuracy": [3, 4]}},
+	# Mellvértek
+	"chest_chain": {"name": "Láncing", "slot": "chest", "rarity": "rare",
+		"stats": {"defense": [4, 6], "max_health": [3, 5]}},
+	"chest_elven": {"name": "Tündepikkely vért", "slot": "chest", "rarity": "legendary",
+		"stats": {"dodge": [8, 12], "defense": [6, 8], "move_speed": [6, 10]}},
+	# Nadrágok
+	"pants_blue": {"name": "Kék posztónadrág", "slot": "pants", "rarity": "common",
+		"stats": {"move_speed": [4, 7], "max_health": [1, 2]}},
+	"pants_emerald": {"name": "Smaragd lábvért", "slot": "pants", "rarity": "epic",
+		"stats": {"defense": [4, 6], "dodge": [4, 6], "health_regen": [0.2, 0.3]}},
+	# Cipők
+	"boots_stripe": {"name": "Csíkos vándorcsizma", "slot": "boots", "rarity": "common",
+		"stats": {"move_speed": [7, 10], "dodge": [1, 2]}},
+	"boots_forest": {"name": "Erdőjáró csizma", "slot": "boots", "rarity": "epic",
+		"stats": {"move_speed": [12, 16], "dodge": [4, 6], "gold_find": [5, 10]}},
+	# Kesztyűk
+	"gloves_fencer": {"name": "Vívókesztyű", "slot": "gloves", "rarity": "rare",
+		"stats": {"attack_speed": [6, 9], "crit_chance": [2, 3], "accuracy": [2, 4]}},
+	"gloves_mithril": {"name": "Mithril kesztyű", "slot": "gloves", "rarity": "legendary",
+		"stats": {"defense": [6, 9], "attack_speed": [12, 18], "damage": [2, 3]}},
+	# Gyűrűk
+	"ring_emerald_cut": {"name": "Smaragdköves gyűrű", "slot": "ring", "rarity": "rare",
+		"stats": {"max_health": [3, 4], "health_regen": [0.2, 0.3]}},
+	"ring_bloodruby": {"name": "Vérrubin gyűrű", "slot": "ring", "rarity": "epic",
+		"stats": {"damage_percent": [5, 7], "lifesteal": [3, 5]}},
+	# Amulettek
+	"amulet_eye": {"name": "Látó szem medál", "slot": "amulet", "rarity": "epic",
+		"stats": {"crit_chance": [4, 6], "xp_bonus": [8, 12], "accuracy": [3, 5]}},
+	"amulet_sunking": {"name": "A Napkirály medálja", "slot": "amulet", "rarity": "legendary",
+		"stats": {"max_health": [8, 12], "damage_percent": [6, 9], "gold_find": [10, 15]}},
+	# Talizmánok
+	"trinket_lantern": {"name": "Koponyalámpás", "slot": "trinket", "rarity": "rare",
+		"stats": {"xp_bonus": [10, 15], "dodge": [2, 3]}},
+	"trinket_orb": {"name": "Vérgömb", "slot": "trinket", "rarity": "legendary",
+		"stats": {"damage_percent": [8, 12], "crit_chance": [5, 8], "lifesteal": [4, 6]}},
 }
 
 
-## Egy új példány véletlen statokkal és árral.
-static func create(id: String) -> Dictionary:
-	var definition: Dictionary = DEFINITIONS[id]
+## Ritkasági változatok: minden tárgynak mind a 4 ritkaságra van stat-változata. Az alap a
+## definícióban megadott (mostani) ritkaság; a többit szabály számolja (RARITY_POWER szorzók,
+## magasabb ritkaságon lépcsőnként +1, a tárgy jellegéhez illő extra stat: VARIANT_BONUS), és
+## tárgyanként felülírható ("variants": {ritkaság: {"stats": {...}, "base": [...]}}).
+## Elérhető (eshet, kapható) egyelőre csak a definíció saját ritkasága (available_rarities).
+const RARITY_POWER := {"common": 0.65, "rare": 0.85, "epic": 1.0, "legendary": 1.3}
+## Az extra stat helyenként (fegyvernél fajtánként) az epikus szintre méretezve.
+const VARIANT_BONUS := {
+	"sword": {"attack_speed": [6, 9]}, "spear": {"attack_range": [6, 9]}, "axe": {"damage_percent": [4, 6]},
+	"dagger": {"crit_chance": [3, 5]}, "mace": {"defense": [2, 4]}, "bow": {"ranged_damage": [1, 2]},
+	"helmet": {"max_health": [3, 5]}, "chest": {"defense": [3, 5]}, "pants": {"dodge": [2, 4]},
+	"boots": {"move_speed": [5, 8]}, "gloves": {"attack_speed": [5, 8]}, "ring": {"crit_chance": [2, 4]},
+	"amulet": {"health_regen": [0.2, 0.4]}, "trinket": {"xp_bonus": [6, 10]},
+}
+## Ezek a statok nem skálázódnak (a többlövés csak legendás tárgyon lehet).
+const UNSCALED_STATS: Array[String] = ["multishot"]
+
+
+## A tárgy megadott ritkaságú változata (definíció-másolat); üres ritkaság = a saját ritkasága.
+static func variant(id: String, rarity := "") -> Dictionary:
+	var base: Dictionary = DEFINITIONS[id]
+	var base_rarity: String = base["rarity"]
+	if rarity.is_empty() or rarity == base_rarity or base.get("unique", false):
+		return base
+	var result := base.duplicate(true)
+	result["rarity"] = rarity
+	var scale: float = RARITY_POWER[rarity] / RARITY_POWER[base_rarity]
+	var stats := {}
+	for stat: String in base["stats"]:
+		var pair: Array = base["stats"][stat]
+		if stat in UNSCALED_STATS:
+			if rarity == "legendary":
+				stats[stat] = pair
+			continue
+		# A hátrány (negatív) alacsonyabb ritkaságon nagyobb, magasabbon kisebb.
+		var factor := scale if pair[1] > 0 else 1.0 / scale
+		stats[stat] = _scaled_pair(stat, pair, factor)
+	# Magasabb ritkaságon lépcsőnként egy, a tárgyhoz illő extra stat (ha még nincs ilyen).
+	var steps := RARITY_ORDER.find(rarity) - RARITY_ORDER.find(base_rarity)
+	if steps > 0:
+		var kind: String = base.get("weapon_type", "sword") if base["slot"] == "weapon" else base["slot"]
+		var bonus: Dictionary = VARIANT_BONUS[kind]
+		for stat: String in bonus:
+			var factor: float = RARITY_POWER[rarity] / RARITY_POWER["epic"] * (0.6 + 0.2 * steps)
+			var extra := _scaled_pair(stat, bonus[stat], factor)
+			if stats.has(stat):
+				var have: Array = stats[stat]
+				stats[stat] = [have[0] + extra[0], have[1] + extra[1]]
+			else:
+				stats[stat] = extra
+	result["stats"] = stats
+	if base.has("base"):
+		var damage: Array = base["base"]
+		result["base"] = _scaled_pair("damage", damage, scale)
+		result["scaling"] = snappedf(float(base["scaling"]) * sqrt(scale), 0.05)
+	# Kézi igazítás: a tárgy saját felülírásai erre a ritkaságra.
+	var all_overrides: Dictionary = base.get("variants", {})
+	var overrides: Dictionary = all_overrides.get(rarity, {})
+	for key: String in overrides:
+		if key == "stats":
+			for stat: String in overrides["stats"]:
+				result["stats"][stat] = overrides["stats"][stat]
+		else:
+			result[key] = overrides[key]
+	return result
+
+
+## Mind a 4 ritkasági változat: ritkaság -> definíció.
+static func variants(id: String) -> Dictionary:
+	var all := {}
+	for rarity in RARITY_ORDER:
+		all[rarity] = variant(id, rarity)
+	return all
+
+
+## Milyen ritkaságban eshet / kapható a tárgy (egyelőre csak a saját ritkaságában).
+static func available_rarities(id: String) -> Array[String]:
+	var list: Array[String] = [DEFINITIONS[id]["rarity"]]
+	return list
+
+
+static func _scaled_pair(stat: String, pair: Array, factor: float) -> Array:
+	if stat == "health_regen":
+		var low := snappedf(float(pair[0]) * factor, 0.1)
+		var high := snappedf(float(pair[1]) * factor, 0.1)
+		if pair[1] > 0:
+			low = maxf(low, 0.1)
+			high = maxf(high, low)
+		else:
+			high = minf(high, -0.1)
+			low = minf(low, high)
+		return [low, high]
+	var low_i := roundi(float(pair[0]) * factor)
+	var high_i := roundi(float(pair[1]) * factor)
+	if pair[1] > 0:
+		low_i = maxi(low_i, 1)
+		high_i = maxi(high_i, low_i)
+	else:
+		high_i = mini(high_i, -1)
+		low_i = mini(low_i, high_i)
+	return [low_i, high_i]
+
+
+## Egy új példány véletlen statokkal és árral (`rarity`: melyik változat; üres = a sajátja).
+static func create(id: String, rarity := "") -> Dictionary:
+	var definition := variant(id, rarity)
 	var stats := {}
 	var quality := 0.0
 	for stat: String in definition["stats"]:
@@ -397,9 +573,10 @@ static func random_item(max_rarity := "legendary", min_rarity := "common") -> Di
 		if ticket <= 0:
 			chosen = rarity
 			break
+	# Csak azok a tárgyak, amelyeknek ez a ritkasága elérhető (egyelőre a sajátjuk).
 	var ids: Array = DEFINITIONS.keys().filter(func(id: String) -> bool:
-		return DEFINITIONS[id]["rarity"] == chosen and DEFINITIONS[id].get("shop", true))
-	return create(ids.pick_random())
+		return chosen in available_rarities(id) and DEFINITIONS[id].get("shop", true))
+	return create(ids.pick_random(), chosen)
 
 
 ## Ennyit fizet érte a boltos (a vételár SELL_RATIO része, legalább 1).

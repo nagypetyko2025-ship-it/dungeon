@@ -36,6 +36,8 @@ func open() -> void:
 	_grid.set_items(_items, 16)
 	_chosen.clear()
 	_gold_label.text = "A teljes pénzed a táborba kerül: %d arany (100%%)" % (int(player.get("gold")) + GameState.break_gold_left)
+	if GameState.cheated:
+		_gold_label.text = "Csalt futás: sem a pénz, sem a tárgyak nem kerülnek a táborba."
 	_update_choice()
 	_show_item(null)
 	visible = true
@@ -154,8 +156,10 @@ func _show_item(item: Variant) -> void:
 ## A futás vége: 2 tárgy a ládába, a pénz 100%-a a táborba, eredmény mentése, új futás.
 func _go_to_camp() -> void:
 	var player := get_tree().get_first_node_in_group("player")
-	for index in _chosen:
-		Progress.add_to_stash(_items[index])
+	# Csalt futásból semmi nem kerül a táborba (a Records és a rescue_gold is figyeli).
+	if not GameState.cheated:
+		for index in _chosen:
+			Progress.add_to_stash(_items[index])
 	Records.submit_run(player)
 	Progress.rescue_gold(int(player.get("gold")) + GameState.break_gold_left, 1.0)
 	GameState.reset()

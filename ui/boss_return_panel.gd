@@ -149,7 +149,8 @@ func _show_item(item: Variant) -> void:
 func _go_to_camp() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	var inventory: Inventory = player.get_node("Inventory")
-	if _selected >= 0:
+	# Csalt futásból nem kerül tárgy a tábori ládába.
+	if _selected >= 0 and not GameState.cheated:
 		var source: Array = _sources[_selected]
 		Progress.add_to_stash(_items[_selected])
 		if source[0] == "bag":

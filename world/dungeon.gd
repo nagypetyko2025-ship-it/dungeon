@@ -19,6 +19,15 @@ const BIG_ROOM_HEIGHT := Vector2i(11, 14)
 const BIG_ROOM_EXTRA_ENEMIES := 3
 const BIG_MAX_ENEMIES := 14
 const BIG_BOSS_ROOM_SIZE := Vector2i(21, 15)
+## A 21. emelettől (a második erősödéssel) még nagyobb termek és még több szörny.
+## (A rácscella magassága úgy van megválasztva, hogy a pálya ne érjen le a bolthoz: y = 300.)
+const HUGE_ROOMS_FROM := 21
+const HUGE_CELL := Vector2i(32, 23)
+const HUGE_ROOM_WIDTH := Vector2i(20, 25)
+const HUGE_ROOM_HEIGHT := Vector2i(14, 17)
+const HUGE_ROOM_EXTRA_ENEMIES := 7
+const HUGE_MAX_ENEMIES := 20
+const HUGE_BOSS_ROOM_SIZE := Vector2i(25, 17)
 ## A folyosók szélessége csempében (páratlan legyen).
 const CORRIDOR_WIDTH := 3
 const DIRECTIONS: Array[Vector2i] = [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]
@@ -80,6 +89,7 @@ var _shop_return := Vector2.ZERO
 var _teleporting := false
 var _cell := CELL
 var _big_rooms := false
+var _huge_rooms := false
 
 @onready var _floor_layer: TileMapLayer = $FloorLayer
 @onready var _wall_layer: TileMapLayer = $WallLayer
@@ -105,7 +115,8 @@ func _ready() -> void:
 
 	var depth := GameState.depth
 	_big_rooms = depth >= BIG_ROOMS_FROM
-	_cell = BIG_CELL if _big_rooms else CELL
+	_huge_rooms = depth >= HUGE_ROOMS_FROM
+	_cell = HUGE_CELL if _huge_rooms else BIG_CELL if _big_rooms else CELL
 	# Gyakorló pálya (tutorial): rögzített, egyenes sor: kezdőszoba, harc + láda, bolt, lépcső.
 	var tutorial := GameState.tutorial
 	var final_floor := depth == FINAL_DEPTH and not tutorial
@@ -129,7 +140,7 @@ func _ready() -> void:
 			room_rects[cell] = FINAL_START_ROOM if cell == Vector2i.ZERO \
 				else Rect2i(cell * _cell - FINAL_ARENA_SIZE / 2, FINAL_ARENA_SIZE)
 		elif boss_floor and cell == stairs_cell:
-			var boss_size := BIG_BOSS_ROOM_SIZE if _big_rooms else BOSS_ROOM_SIZE
+			var boss_size := HUGE_BOSS_ROOM_SIZE if _huge_rooms else BIG_BOSS_ROOM_SIZE if _big_rooms else BOSS_ROOM_SIZE
 			room_rects[cell] = Rect2i(cell * _cell - boss_size / 2, boss_size)
 		else:
 			room_rects[cell] = _random_room_rect(cell)
@@ -173,7 +184,9 @@ func _ready() -> void:
 			room.alcove_dir = alcove_dir
 			room.enemy_count = 1
 		elif distance > 0:
-			if _big_rooms:
+			if _huge_rooms:
+				room.enemy_count = mini(2 + HUGE_ROOM_EXTRA_ENEMIES + distance / 2 + depth - 1, HUGE_MAX_ENEMIES)
+			elif _big_rooms:
 				room.enemy_count = mini(2 + BIG_ROOM_EXTRA_ENEMIES + distance / 2 + depth - 1, BIG_MAX_ENEMIES)
 			else:
 				room.enemy_count = mini(2 + distance / 2 + depth - 1, max_enemies_per_room)
@@ -220,12 +233,14 @@ func _ready() -> void:
 	else:
 		if final_floor:
 			_hud.show_message("%d. emelet — keletre vár a Mélység Ura!" % depth)
-		elif depth >= QUEST_DEPTH and Progress.npc_quest_state("depth_30") == "active":
+		elif depth >= QUEST_DEPTH and Progress.npc_quest_state("depth_30") == "active" and not GameState.cheated:
 			# Gáspár küldetése teljesül: elérted a 30. emeletet (hogy mi van itt, majd kiderül).
 			Progress.set_npc_quest("depth_30", "done")
 			_hud.show_message("%d. emelet — ennyire mélyen még senki sem járt. Mondd el Gáspárnak!" % depth)
 		elif depth == EnemyTypes.SURGE_DEPTH:
 			_hud.show_message("%d. emelet — a szörnyek hirtelen megerősödtek!" % depth)
+		elif depth in EnemyTypes.SURGE_DEPTHS:
+			_hud.show_message("%d. emelet — a szörnyek ismét megerősödtek, a termek is hatalmasak!" % depth)
 		else:
 			_hud.show_message(("%d. emelet — főellenség vár!" if boss_floor else "%d. emelet") % depth)
 
@@ -262,7 +277,7 @@ func _on_boss_defeated(boss: Node2D) -> void:
 func _on_final_boss_defeated(room: Room) -> void:
 	_hud.show_message("A Mélység Ura legyőzve! Lépj a portálba — végigértél a kazamatán!")
 	# Gáspár küldetése: bosszú a fiaiért (a jutalmat majd ő mondja meg).
-	if Progress.npc_quest_state("slay_lord") == "active":
+	if Progress.npc_quest_state("slay_lord") == "active" and not GameState.cheated:
 		Progress.set_npc_quest("slay_lord", "done")
 		FloatingText.spawn(room, room.global_position + Vector2(0, -90), "Gáspár emberei megbosszulva", Color(1, 0.85, 0.4), 22)
 	var portal: Node2D = RETURN_PORTAL.new()
@@ -270,10 +285,9 @@ func _on_final_boss_defeated(room: Room) -> void:
 	portal.set("prompt_text", "[E] Győzelem — vissza a táborba")
 	portal.set("on_use", _open_victory_panel)
 	room.add_child.call_deferred(portal)
-	# Gáspár küldetése (A harmincadik emelet): a farkas mögött lépcső nyílik lefelé, a futás folytatható.
-	if Progress.npc_quest_state("depth_30") != "":
-		room.open_stairs.call_deferred(room.anchor + Vector2i(DEEPER_STAIRS_OFFSET, 0))
-		_hud.show_message("A Mélység Ura legyőzve! Portál a táborba — vagy a lépcsőn tovább a mélybe.")
+	# A farkas mögött mindig lépcső nyílik lefelé: hazamehetsz a portálon, vagy folytathatod a futást.
+	room.open_stairs.call_deferred(room.anchor + Vector2i(DEEPER_STAIRS_OFFSET, 0))
+	_hud.show_message("A Mélység Ura legyőzve! Portál a táborba — vagy a lépcsőn tovább a mélybe.")
 
 
 func _open_victory_panel() -> void:
@@ -409,8 +423,8 @@ func _farthest(distances: Dictionary) -> Vector2i:
 ## A szoba mindig tartalmazza a cella középső sorát és oszlopát,
 ## mert a folyosók ezek mentén futnak.
 func _random_room_rect(cell: Vector2i) -> Rect2i:
-	var widths := BIG_ROOM_WIDTH if _big_rooms else ROOM_WIDTH
-	var heights := BIG_ROOM_HEIGHT if _big_rooms else ROOM_HEIGHT
+	var widths := HUGE_ROOM_WIDTH if _huge_rooms else BIG_ROOM_WIDTH if _big_rooms else ROOM_WIDTH
+	var heights := HUGE_ROOM_HEIGHT if _huge_rooms else BIG_ROOM_HEIGHT if _big_rooms else ROOM_HEIGHT
 	var size := Vector2i(randi_range(widths.x, widths.y), randi_range(heights.x, heights.y))
 	var jitter := Vector2i(randi_range(-ROOM_JITTER, ROOM_JITTER), randi_range(-ROOM_JITTER, ROOM_JITTER))
 	return Rect2i(cell * _cell - size / 2 + jitter, size)

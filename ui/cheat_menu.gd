@@ -16,6 +16,7 @@ var _menu_box: VBoxContainer
 var _god_button: Button
 var _status: Label
 var _badge: CanvasLayer
+var _badge_label: Label
 
 
 func _ready() -> void:
@@ -39,7 +40,14 @@ func close() -> void:
 
 
 func _process(_delta: float) -> void:
-	_badge.visible = GameState.god_mode
+	# A felirat: halhatatlanság, és/vagy hogy a futás csalás miatt nem mentődik.
+	_badge.visible = GameState.god_mode or GameState.cheated
+	var parts: Array[String] = []
+	if GameState.god_mode:
+		parts.append("HALHATATLAN")
+	if GameState.cheated:
+		parts.append("csalt futás: nem mentődik")
+	_badge_label.text = "  ·  ".join(parts)
 
 
 func _menus() -> Node:
@@ -117,12 +125,13 @@ func _build_badge() -> void:
 	_badge.layer = 6
 	_badge.visible = false
 	add_child(_badge)
-	var label := _text("HALHATATLAN (csalás)", 16, Color(1, 0.85, 0.35))
+	var label := _text("", 16, Color(1, 0.85, 0.35))
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 5)
 	label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	label.offset_left = -200
-	label.offset_right = 200
+	label.offset_left = -320
+	label.offset_right = 320
+	_badge_label = label
 	label.offset_top = -150
 	label.offset_bottom = -128
 	_badge.add_child(label)
@@ -147,11 +156,15 @@ func _teleport() -> void:
 		Audio.play("ui_error")
 		_status.text = "Itt most nem lehet teleportálni."
 		return
+	GameState.cheated = true
 	_menus().call("close_current")
 
 
 func _toggle_god_mode() -> void:
 	GameState.god_mode = not GameState.god_mode
+	# Akár egyszer is bekapcsolva: a futás már nem számít (kikapcsolva sem).
+	if GameState.god_mode:
+		GameState.cheated = true
 	Audio.play("ui_click")
 	_update_god_button()
 

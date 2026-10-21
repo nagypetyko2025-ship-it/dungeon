@@ -45,6 +45,9 @@ static func submit_run(player: Node) -> int:
 	if GameState.run_recorded or player == null:
 		return 0
 	GameState.run_recorded = true
+	# Csalt futás nem kerül az eredmények közé.
+	if GameState.cheated:
+		return 0
 	var experience: Experience = player.get_node("Experience")
 	var gold := int(player.get("gold")) + GameState.break_gold_left
 	return submit(GameState.depth, gold, GameState.kills, experience.level, GameState.run_time, GameState.exits)

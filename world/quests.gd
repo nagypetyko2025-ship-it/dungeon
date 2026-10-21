@@ -37,7 +37,8 @@ const ALL := {
 ## Esemény a kazamatából: minden még futó, illő küldetés haladása.
 ## `value`: kill-nél a szörnytípus neve, gold-nál az összeg, floor/level-nél az érték.
 static func notify(kind: String, value: Variant = 1) -> void:
-	if GameState.tutorial:
+	# Gyakorláskor és csalt futásban a küldetések nem haladnak.
+	if GameState.tutorial or GameState.cheated:
 		return
 	var changed := false
 	for id: String in ALL:

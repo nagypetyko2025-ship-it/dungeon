@@ -199,9 +199,10 @@ const TYPES: Array[Dictionary] = [
 		"fire_interval": [2.6, 3.4], "arrow_speed": [230, 270], "keep_distance": [200, 260]},
 ]
 
-## A 10. emelettől a szörnyek hirtelen sokkal erősebbek: az addigi (emeletenkénti)
-## erősödés után ezekkel a szorzókkal; innen erről a szintről nőnek tovább emeletenként.
+## A 10. és a 21. emelettől a szörnyek hirtelen sokkal erősebbek: az addigi (emeletenkénti)
+## erősödés után ezekkel a szorzókkal (két ugrásnál kétszer); innen nőnek tovább emeletenként.
 const SURGE_DEPTH := 10
+const SURGE_DEPTHS: Array[int] = [10, 21]
 const SURGE_HEALTH := 1.6
 const SURGE_DAMAGE := 1.35
 const SURGE_DODGE := 5
@@ -218,6 +219,15 @@ const DODGE_PER_DEPTH := 1
 const FIRE_RATE_PER_DEPTH := 0.04
 const MAX_FIRE_RATE_BONUS := 0.4
 const XP_PER_DEPTH := 0.2
+
+
+## Hány hirtelen erősödésen van túl ez az emelet (0, 1 vagy 2).
+static func surges(depth: int) -> int:
+	var count := 0
+	for surge_depth in SURGE_DEPTHS:
+		if depth >= surge_depth:
+			count += 1
+	return count
 
 
 static func by_name(type_name: String) -> Dictionary:
@@ -259,7 +269,7 @@ static func roll(type: Dictionary, depth: int) -> Dictionary:
 		"resist": randf_range(type["resist"][0], type["resist"][1]),
 		"xp": roundi(_roll_int(type["xp"]) * (1.0 + XP_PER_DEPTH * level)),
 	}
-	if depth >= SURGE_DEPTH:
+	for i in surges(depth):
 		stats["health"] = roundi(stats["health"] * SURGE_HEALTH)
 		stats["damage"] = roundi(stats["damage"] * SURGE_DAMAGE)
 		stats["dodge"] = mini(stats["dodge"] + SURGE_DODGE, 50)

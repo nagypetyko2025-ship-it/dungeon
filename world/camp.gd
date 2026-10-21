@@ -1059,11 +1059,11 @@ func _is_near_stairs() -> bool:
 func cheat_teleport(target_depth: int) -> bool:
 	if _on_break or _leaving:
 		return false
-	_enter_dungeon(target_depth)
+	_enter_dungeon(target_depth, true)
 	return true
 
 
-func _enter_dungeon(start_depth := 1) -> void:
+func _enter_dungeon(start_depth := 1, cheat := false) -> void:
 	_leaving = true
 	Audio.play("stairs")
 	var tween := create_tween()
@@ -1071,6 +1071,8 @@ func _enter_dungeon(start_depth := 1) -> void:
 	await tween.finished
 	GameState.reset()
 	GameState.depth = start_depth
+	if cheat:
+		GameState.cheated = true
 	# A nálad lévő felszereléssel szállsz le; az a táborból "elfogy" (a futásban veszhet el).
 	GameState.saved_inventory = _player.get_node("Inventory").save_data()
 	Progress.camp_inventory = {}

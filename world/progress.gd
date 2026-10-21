@@ -218,6 +218,9 @@ static func rescue_gold(gold: int, ratio: float) -> int:
 	if GameState.gold_rescued:
 		return 0
 	GameState.gold_rescued = true
+	# Csalt futásból nem kerül arany a táborba.
+	if GameState.cheated:
+		return 0
 	var amount := floori(gold * ratio)
 	if amount > 0:
 		add_camp_gold(amount)
