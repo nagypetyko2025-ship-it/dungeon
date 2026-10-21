@@ -52,6 +52,8 @@ const NPC_RECT := Rect2(128, 292, 16, 28)
 const STAIRS_REGION := Rect2(80, 192, 16, 16)
 const STONE_FLOOR := Rect2(16, 64, 16, 16)
 const INTERACT_RANGE := 56.0
+## A veterán előtt a rönk miatt messzebbről is meg lehet szólítani.
+const VETERAN_RANGE := 76.0
 ## Esti szürkület.
 const EVENING := Color(0.26, 0.3, 0.48)
 
@@ -105,6 +107,7 @@ var _merchant_panel: CanvasLayer
 var _npc_position := Vector2.ZERO
 ## A veterán helye (később ide jön a beszélgetés a régi időkről).
 var _veteran_position := Vector2.ZERO
+var _veteran_dialogue: DialoguePanel
 ## Pihenő közben (főellenség után kimentél) vagy.
 var _on_break := false
 var _town: Town
@@ -170,6 +173,18 @@ func _ready() -> void:
 	_merchant_panel = MERCHANT_PANEL.new()
 	_merchant_panel.name = "MerchantPanel"
 	add_child(_merchant_panel)
+	# Beszélgetés a veteránnal (bizalom, kérdések: Dialogues).
+	_veteran_dialogue = DialoguePanel.new()
+	_veteran_dialogue.name = "VeteranDialogue"
+	_veteran_dialogue.npc_id = Dialogues.VETERAN_ID
+	_veteran_dialogue.npc_name = Dialogues.VETERAN_NAME
+	_veteran_dialogue.greeting = Dialogues.VETERAN_GREETING
+	_veteran_dialogue.options = Dialogues.VETERAN_OPTIONS
+	var face := AtlasTexture.new()
+	face.atlas = VETERAN_SHEET
+	face.region = Rect2(0, 0, 16, 28)
+	_veteran_dialogue.portrait = face
+	add_child(_veteran_dialogue)
 	# A táborban nálad lévő felszerelés mentett (a ládából kivett tárgyak nem vesznek el).
 	# Pihenő közben a futás felszerelése van nálad (az a futás része, nem a táboré).
 	var inventory: Inventory = _player.get_node("Inventory")
@@ -955,9 +970,12 @@ func _process(delta: float) -> void:
 	var near_tent := _is_near_tent()
 	var near_stash := _is_near_stash()
 	var near_npc := _is_near_npc()
+	var near_veteran := _is_near_veteran()
 	var near_block := _player.global_position.distance_to(_road_block_position) < 90.0
-	var any_near := near_stairs or near_tent or near_stash or near_npc or near_block
-	if near_block:
+	var any_near := near_stairs or near_tent or near_stash or near_npc or near_veteran or near_block
+	if near_veteran:
+		_prompt.text = "[E] Beszélgetés: %s" % Dialogues.VETERAN_NAME
+	elif near_block:
 		_prompt.text = "Pihenő közben nem mehetsz a városba"
 	elif near_stairs:
 		_prompt.text = "A kazamata lezárva — a kék portálon át folytathatod" if _on_break else "[E] Leszállás a mélybe"
@@ -975,6 +993,12 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("interact") or _leaving or get_tree().paused:
+		return
+	# A veteránnal pihenő közben is lehet beszélgetni.
+	if _is_near_veteran():
+		get_viewport().set_input_as_handled()
+		Audio.play("ui_open")
+		$Menus.open_menu(_veteran_dialogue)
 		return
 	var near_something := _is_near_stairs() or _is_near_tent() or _is_near_stash() or _is_near_npc()
 	if not near_something:
@@ -996,6 +1020,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif _is_near_stash():
 		Audio.play("chest_open", -4.0)
 		$Menus.open_menu(_stash_panel)
+
+
+func _is_near_veteran() -> bool:
+	return is_instance_valid(_player) and _player.global_position.distance_to(_veteran_position) < VETERAN_RANGE
 
 
 func _is_near_npc() -> bool:

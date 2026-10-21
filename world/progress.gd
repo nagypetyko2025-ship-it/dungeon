@@ -36,6 +36,9 @@ static var stash: Array = []
 ## Küldetések (Quests): mind egyszerre fut; id -> haladás, és a már átvett jutalmú küldetések.
 static var quest_progress := {}
 static var quests_done: Array = []
+## NPC-k bizalma (npc -> -100..+100) és a tőlük már megkérdezett témák (npc -> [téma]).
+static var trust := {}
+static var asked := {}
 ## Az aktív karakter tábori felszerelése (Inventory.save_data); üres = kezdő felszerelés.
 ## Leszálláskor magaddal viszed (és innen törlődik). Minden karakternek külön.
 static var camp_inventory := {}
@@ -60,6 +63,8 @@ static func load_game(force := false) -> void:
 	stash = []
 	quest_progress = {}
 	quests_done = []
+	trust = {}
+	asked = {}
 	var config := ConfigFile.new()
 	if config.load(PATH) == OK:
 		camp_gold = int(config.get_value("camp", "gold", 0))
@@ -88,6 +93,12 @@ static func load_game(force := false) -> void:
 		var saved_done: Variant = config.get_value("camp", "quests_done", [])
 		if saved_done is Array:
 			quests_done = saved_done
+		var saved_trust: Variant = config.get_value("camp", "trust", {})
+		if saved_trust is Dictionary:
+			trust = saved_trust
+		var saved_asked: Variant = config.get_value("camp", "asked", {})
+		if saved_asked is Dictionary:
+			asked = saved_asked
 	_activate(character)
 
 
@@ -101,7 +112,32 @@ static func save_game() -> void:
 	config.set_value("camp", "stash", stash)
 	config.set_value("camp", "quest_progress", quest_progress)
 	config.set_value("camp", "quests_done", quests_done)
+	config.set_value("camp", "trust", trust)
+	config.set_value("camp", "asked", asked)
 	config.save(PATH)
+
+
+## NPC bizalma (-100..+100, alapból 0).
+static func trust_of(npc_id: String) -> int:
+	return int(trust.get(npc_id, 0))
+
+
+static func change_trust(npc_id: String, delta: int) -> void:
+	trust[npc_id] = clampi(trust_of(npc_id) + delta, -100, 100)
+	save_game()
+
+
+## Az NPC-től már megkérdezett témák (opció-azonosítók).
+static func asked_topics(npc_id: String) -> Array:
+	return asked.get(npc_id, [])
+
+
+static func mark_asked(npc_id: String, topic: String) -> void:
+	var list: Array = asked_topics(npc_id).duplicate()
+	if not list.has(topic):
+		list.append(topic)
+	asked[npc_id] = list
+	save_game()
 
 
 ## Új játék: minden tábori haladás törlődik.
@@ -113,6 +149,8 @@ static func reset_game() -> void:
 	stash = []
 	quest_progress = {}
 	quests_done = []
+	trust = {}
+	asked = {}
 	_activate(Characters.DEFAULT)
 	save_game()
 
