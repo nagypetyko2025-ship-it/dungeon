@@ -15,6 +15,7 @@ class_name Characters
 ## accuracy      a találati esély alapértéke (%): ennyi eséllyel találja el a szörnyet
 ## dash          van-e Suhanása (Ctrl: a kurzor felé, a szörnyeken át)
 ## war_cry       van-e Hadi kiáltása (Ctrl: a közeli szörnyek ellökése)
+## card_bonus    szintlépési kártyák bónusza neki: stat -> többlet (pl. {"dodge": 0.25} = +25%)
 ## health_regen  az élet-regeneráció alapértéke (élet / mp, alapból 0.2)
 ## unlock        ha meg van adva: csak akkor játszható, ha ez a Progress.npc_quests jelző "done"
 ## role / traits / story   a bemutatkozó panel szövegei (a kocsmában, a karakter mellett)
@@ -57,7 +58,7 @@ const ALL := {
 	"veteran": {
 		"name": "Gáspár", "sheet": "res://assets/characters/veteran.png", "frame_size": Vector2(16, 28),
 		"start_weapon": "sword_lavish", "seat": 5, "weapons": "melee", "unlock": "gaspar_tavern",
-		"accuracy": 90, "health_regen": 0.1, "war_cry": true,
+		"accuracy": 90, "health_regen": 0.1, "war_cry": true, "card_bonus": {"dodge": 0.25},
 		"description": "A királyi őrség egykori kapitánya: pontos, de sebei lassan gyógyulnak.",
 		"role": "Veterán közelharcos",
 		"story": "Tizenkét évig ült a tábor szélén egy rönkön, miután a Mélység Ura megölte az embereit. "
@@ -68,6 +69,7 @@ const ALL := {
 			"90% találati esély (veterán)",
 			"Sérült: csak 0.1 élet / mp regeneráció",
 			"Hadi kiáltás [Ctrl]: a közelben lévő szörnyeket ellöki (7 mp)",
+			"Kikerülés kártya szintlépéskor: 25%-kal többet ad neki",
 		],
 	},
 }

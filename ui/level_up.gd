@@ -171,6 +171,9 @@ func _make_card(index: int, upgrade: Dictionary) -> Button:
 	box.add_child(icon)
 	box.add_child(_label(upgrade["title"], 24, Color(1, 0.88, 0.55)))
 	box.add_child(_label(upgrade["text"], 16, Color(0.9, 0.86, 0.8)))
+	# Karakter-bónusz (pl. Gáspár kikerülése): külön, zöldes sorban.
+	if upgrade.has("bonus_note"):
+		box.add_child(_label(upgrade["bonus_note"], 15, Color(0.55, 1.0, 0.6)))
 	if upgrade.get("legendary", false):
 		_make_legendary(card, box, icon)
 	return card

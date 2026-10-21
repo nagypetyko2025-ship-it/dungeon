@@ -66,7 +66,26 @@ static func roll(stats: Stats, count: int, has_bow := false) -> Array[Dictionary
 			legendary.append(upgrade)
 	if not legendary.is_empty() and randf() < LEGENDARY_CHANCE and not options.is_empty():
 		options[randi() % options.size()] = legendary.pick_random()
+	for i in options.size():
+		options[i] = _with_character_bonus(options[i])
 	return options
+
+
+## A karakter saját kártya-bónusza ("card_bonus": stat -> szorzó-többlet, pl. Gáspárnál a
+## kikerülés +25%): a kártya másolata nagyobb értékkel, a szövegben is, és egy megjegyzéssel.
+static func _with_character_bonus(upgrade: Dictionary) -> Dictionary:
+	var character := Characters.data(Progress.character)
+	var bonuses: Dictionary = character.get("card_bonus", {})
+	var stat: String = upgrade["stat"]
+	if not bonuses.has(stat):
+		return upgrade
+	var extra: float = bonuses[stat]
+	var result := upgrade.duplicate()
+	result["amount"] = float(upgrade["amount"]) * (1.0 + extra)
+	var shown := str(snappedf(result["amount"], 0.01))
+	result["text"] = String(upgrade["text"]).replace(str(upgrade["amount"]), shown)
+	result["bonus_note"] = "%s: +%d%% (csak neki)" % [character["name"], roundi(extra * 100)]
+	return result
 
 
 static func _available(stats: Stats, upgrade: Dictionary) -> bool:
