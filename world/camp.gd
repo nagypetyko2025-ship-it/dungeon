@@ -65,13 +65,18 @@ const CAMP_RADIUS := Vector2(9.5, 6.0)
 const ROAD_ROW := 17
 ## A világ keleti széle (a város mögötti erdő vége).
 const WORLD_END_X := 94 + FOREST_DEPTH
-## A nyugati tisztás (a várossal ellentétes irányban): ide vezet egy kis földút a táborból,
-## a végén majd lesz valami. A tisztáson a sebesült veterán sátra.
+## A nyugati tisztás (a várossal ellentétes irányban): ide vezet egy kis sáros ösvény a
+## táborból; a végén egyelőre nincs semmi (később lesz).
 const WEST_RECT := Rect2i(-30, 9, 20, 16)
 ## A világ nyugati széle (a nyugati tisztás mögötti erdő vége).
 const WORLD_START_X := WEST_RECT.position.x - FOREST_DEPTH
-## A veterán sátrának bal felső csempéje (az ösvénytől északra); előtte ül a veterán.
-const VETERAN_TENT := Vector2i(-21, ROAD_ROW - 5)
+## A veterán sátrának bal felső csempéje (a tábor nyugati részén, a sáros ösvénytől
+## délre); előtte ül a veterán.
+const VETERAN_TENT := Vector2i(9, 20)
+## A sáros ösvény színe (a földcsempék sötét, nedves árnyalata).
+const MUD_TINT := Color(0.42, 0.31, 0.25)
+## A veterán botja ("16x16 RPG items", Jetrel, CC0), a rönknek támasztva.
+const CANE: Texture2D = preload("res://assets/props/cane.png")
 const VETERAN_SHEET: Texture2D = preload("res://assets/characters/veteran.png")
 ## A veterán kardja (0x72 lap), a földbe szúrva mellette.
 const VETERAN_SWORD := Rect2(339, 98, 10, 29)
@@ -87,6 +92,8 @@ var _fade: ColorRect
 var _leaving := false
 ## Kitaposott csempék (föld), és ahová nem kerülhet fa / bokor.
 var _dirt := {}
+## A nyugati sáros ösvény csempéi (külön, sötétebb rétegen).
+var _mud := {}
 var _blocked := {}
 ## A kiképzősátor bejárata (a jobb oldali sátor eleje): itt E-re nyílik a fejlesztés-ablak.
 var _training_tent_position := Vector2.ZERO
@@ -287,23 +294,18 @@ func _build_dirt() -> void:
 			row += roundi(sin(x * 0.45) * 1.0)
 		_dirt[Vector2i(x, row)] = true
 		_dirt[Vector2i(x, row + 1)] = true
-	# Kis földút nyugatra (a várossal ellentétes irányba): a tisztásokon kanyarog, az
-	# erdőben egyenes, és a nyugati tisztás végén ér véget.
+	# Ösvény a kocsma ajtajától az útig.
+	for tile in Town.path_tiles():
+		_dirt[tile] = true
+	# Kis sáros ösvény nyugatra (a várossal ellentétes irányba): a tisztásokon kanyarog,
+	# az erdőben egyenes, és a nyugati tisztáson ér véget (a végén egyelőre nincs semmi).
 	for x in range(WEST_RECT.position.x + 3, FIRE_TILE.x - 8):
 		var row := ROAD_ROW
 		if x > 2 or x < WEST_RECT.end.x - 2:
 			row += roundi(sin(x * 0.4 + 1.0) * 1.0)
-		_dirt[Vector2i(x, row)] = true
-		_dirt[Vector2i(x, row + 1)] = true
-	# Az ösvény végén egy kis kitaposott tér (ide jön majd valami).
-	var end := Vector2i(WEST_RECT.position.x + 4, ROAD_ROW)
-	for x in range(-3, 4):
-		for y in range(-3, 4):
-			if pow(x / 3.0, 2) + pow(y / 2.6, 2) <= 1.0:
-				_dirt[end + Vector2i(x, y)] = true
-	# Ösvény a kocsma ajtajától az útig.
-	for tile in Town.path_tiles():
-		_dirt[tile] = true
+		for tile: Vector2i in [Vector2i(x, row), Vector2i(x, row + 1)]:
+			if not _dirt.has(tile):
+				_mud[tile] = true
 	var tile_set := TileSet.new()
 	tile_set.tile_size = Vector2i(16, 16)
 	var source := TileSetAtlasSource.new()
@@ -317,14 +319,53 @@ func _build_dirt() -> void:
 	for cell: Vector2i in _dirt:
 		_dirt_layer.set_cell(cell, DIRT_SOURCE, DIRT[_dirt_piece(cell)])
 		_blocked[cell] = true
+	# A sár ugyanazokból a földcsempékből, de egy külön, sötét, nedves rétegen (a földút
+	# fölött, hogy a csatlakozásnál a sár látsszon), tócsákkal.
+	var mud_layer := TileMapLayer.new()
+	mud_layer.name = "Mud"
+	mud_layer.tile_set = tile_set
+	mud_layer.z_index = _dirt_layer.z_index
+	mud_layer.scale = _dirt_layer.scale
+	mud_layer.modulate = MUD_TINT
+	add_child(mud_layer)
+	move_child(mud_layer, _dirt_layer.get_index() + 1)
+	for cell: Vector2i in _mud:
+		mud_layer.set_cell(cell, DIRT_SOURCE, DIRT[_dirt_piece(cell)])
+		_blocked[cell] = true
+	var cells: Array = _mud.keys()
+	cells.shuffle()
+	for cell: Vector2i in cells.slice(0, cells.size() / 6):
+		var puddle := Puddle.new()
+		puddle.position = _tile_center(cell) + Vector2(randf_range(-6, 6), randf_range(-6, 6))
+		puddle.size = Vector2(randf_range(7, 12), randf_range(3, 5))
+		puddle.z_index = -8
+		add_child(puddle)
+
+
+## Tócsa a sárban: sötét víz, apró csillanással.
+class Puddle:
+	extends Node2D
+	var size := Vector2(10, 4)
+
+	func _draw() -> void:
+		var points := PackedVector2Array()
+		for i in 16:
+			points.append(Vector2.from_angle(TAU * i / 16.0) * size)
+		draw_colored_polygon(points, Color(0.13, 0.12, 0.14, 0.85))
+		draw_line(Vector2(-size.x * 0.4, -size.y * 0.3), Vector2(size.x * 0.1, -size.y * 0.3), Color(0.55, 0.6, 0.7, 0.6), 1.0)
+
+
+func _is_path(tile: Vector2i) -> bool:
+	return _dirt.has(tile) or _mud.has(tile)
 
 
 ## A szomszédok alapján melyik szélezett földdarab kell (a széle lekerekített).
 func _dirt_piece(cell: Vector2i) -> String:
-	var up := _dirt.has(cell + Vector2i.UP)
-	var down := _dirt.has(cell + Vector2i.DOWN)
-	var left := _dirt.has(cell + Vector2i.LEFT)
-	var right := _dirt.has(cell + Vector2i.RIGHT)
+	# A föld és a sár egymásba folyik (a csatlakozásnál nincs lekerekített szél).
+	var up := _is_path(cell + Vector2i.UP)
+	var down := _is_path(cell + Vector2i.DOWN)
+	var left := _is_path(cell + Vector2i.LEFT)
+	var right := _is_path(cell + Vector2i.RIGHT)
 	var vertical := "t" if not up else ("b" if not down else "")
 	var horizontal := "l" if not left else ("r" if not right else "")
 	if vertical.is_empty() and horizontal.is_empty():
@@ -386,8 +427,8 @@ func _build_smithy() -> void:
 	_entities.add_child(smithy)
 
 
-## A nyugati tisztáson: sátor, előtte egy farönkön a sebesült veterán ül (kötés a sisakján),
-## mellette a földbe szúrt kardja és egy mankó, előtte kis tűz. Később a régi időkről
+## A tábor nyugati részén: sátor, előtte egy farönkön a sebesült veterán ül (kötés a
+## sisakján), mellette a földbe szúrt kardja és a botja, előtte kis tűz. Később a régi időkről
 ## (a kazamata történetéről) lehet majd vele beszélni; egyelőre nem mond semmit.
 func _build_veteran() -> void:
 	_tent(VETERAN_TENT, 1)
@@ -414,7 +455,7 @@ func _build_veteran() -> void:
 	_entities.add_child(log_holder)
 	log_holder.add_child(SeatLog.new())
 	_body(log_holder, Vector2(0, -4), Vector2(34, 10))
-	# A kardja a földbe szúrva, és egy mankó a sátornak támasztva.
+	# A kardja a földbe szúrva, és a botja a rönknek támasztva.
 	var sword_holder := Node2D.new()
 	sword_holder.position = seat + Vector2(30, 6)
 	_entities.add_child(sword_holder)
@@ -423,16 +464,10 @@ func _build_veteran() -> void:
 	sword.scale = Vector2(1.5, 1.5)
 	sword.position = Vector2(0, -16)
 	sword.modulate = Color(0.7, 0.68, 0.66)
-	var crutch := Line2D.new()
-	crutch.points = PackedVector2Array([Vector2(-34, 2), Vector2(-26, -40)])
-	crutch.width = 3.0
-	crutch.default_color = Color(0.42, 0.28, 0.16)
-	log_holder.add_child(crutch)
-	var crutch_top := Line2D.new()
-	crutch_top.points = PackedVector2Array([Vector2(-33, -40), Vector2(-19, -40)])
-	crutch_top.width = 3.0
-	crutch_top.default_color = Color(0.36, 0.23, 0.13)
-	log_holder.add_child(crutch_top)
+	# (A bot képe átlós, a kampója balra fent: 35 fokkal elforgatva szinte függőleges.)
+	var cane := _sprite(CANE, Vector2(-26, -20), 0, log_holder)
+	cane.rotation = deg_to_rad(35)
+	cane.scale = Vector2(2.4, 2.4)
 	# Kis tűz előtte, hogy esténként is látsszon.
 	_campfire(_tile_center(VETERAN_TENT + Vector2i(3, 2)) + Vector2(6, 4))
 	for dx in range(-1, 3):
@@ -636,9 +671,9 @@ func _build_forest() -> void:
 		for y in range(-FOREST_DEPTH, SIZE.y + FOREST_DEPTH):
 			var tile := Vector2i(x, y)
 			if Rect2i(Vector2i.ZERO, SIZE).has_point(tile) or Town.RECT.has_point(tile) or WEST_RECT.has_point(tile) \
-					or _dirt.has(tile):
+					or _is_path(tile):
 				continue
-			if _dirt.has(tile + Vector2i.UP) or _dirt.has(tile + Vector2i.DOWN):
+			if _is_path(tile + Vector2i.UP) or _is_path(tile + Vector2i.DOWN):
 				if randf() < 0.6:
 					continue
 			# Hány csempére van a tisztás szélétől.
