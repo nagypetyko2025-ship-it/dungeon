@@ -12,6 +12,8 @@ const MAX_OPTIONS := 5
 const TRUST_MIN := -100
 const TRUST_MAX := 100
 const BAR_SIZE := Vector2(420, 18)
+## A bal oldali oszlop (kép, név, választható mondatok) szélessége.
+const OPTIONS_WIDTH := 380.0
 
 var npc_id := ""
 var npc_name := ""
@@ -134,25 +136,39 @@ func _build() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 10)
 	window.add_child(root)
+	# Bal oldalt: az NPC képe és neve, alatta a választható mondatok; jobbra az NPC szövege.
 	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 16)
+	top.add_theme_constant_override("separation", 18)
 	top.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(top)
-	var portrait_box := VBoxContainer.new()
-	top.add_child(portrait_box)
+	var left := VBoxContainer.new()
+	left.add_theme_constant_override("separation", 8)
+	left.custom_minimum_size.x = OPTIONS_WIDTH
+	top.add_child(left)
+	var who := HBoxContainer.new()
+	who.add_theme_constant_override("separation", 12)
+	left.add_child(who)
 	var frame := PanelContainer.new()
 	frame.add_theme_stylebox_override("panel", UiStyle.plain_panel())
-	portrait_box.add_child(frame)
+	who.add_child(frame)
 	_portrait_rect = TextureRect.new()
-	_portrait_rect.custom_minimum_size = Vector2(96, 150)
+	_portrait_rect.custom_minimum_size = Vector2(72, 112)
 	_portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	frame.add_child(_portrait_rect)
-	_name_label = UiStyle.label("", 17, UiStyle.INK)
-	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_name_label = UiStyle.label("", 19, UiStyle.INK)
 	_name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_name_label.custom_minimum_size.x = 120
-	portrait_box.add_child(_name_label)
+	_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	who.add_child(_name_label)
+	left.add_child(UiStyle.label("Mit mondasz?", 16, UiStyle.INK_LIGHT))
+	_options_box = VBoxContainer.new()
+	_options_box.add_theme_constant_override("separation", 4)
+	left.add_child(_options_box)
+	var divider := ColorRect.new()
+	divider.color = Color(0.42, 0.28, 0.16, 0.5)
+	divider.custom_minimum_size.x = 2
+	top.add_child(divider)
 	_text = RichTextLabel.new()
 	_text.bbcode_enabled = true
 	_text.scroll_active = true
@@ -163,10 +179,6 @@ func _build() -> void:
 	_text.add_theme_font_size_override("normal_font_size", 17)
 	_text.add_theme_font_size_override("italics_font_size", 17)
 	top.add_child(_text)
-
-	_options_box = VBoxContainer.new()
-	_options_box.add_theme_constant_override("separation", 4)
-	root.add_child(_options_box)
 	var hint := UiStyle.label("1-5 / kattintás: választás   ·   [E] / [Esc] búcsú", 14, UiStyle.INK_LIGHT)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	root.add_child(hint)
@@ -186,6 +198,8 @@ func _refresh_options() -> void:
 		var button := Button.new()
 		button.text = "%d.  %s%s" % [i + 1, option["text"], "   ✔" if was_asked else ""]
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button.custom_minimum_size.x = OPTIONS_WIDTH
 		button.focus_mode = Control.FOCUS_NONE
 		button.add_theme_font_size_override("font_size", 17)
 		var ink := UiStyle.INK_LIGHT if was_asked else UiStyle.INK
@@ -214,8 +228,9 @@ func _choose(index: int) -> void:
 	var option: Dictionary = _current[index]
 	Audio.play("ui_click")
 	var trust_before := Progress.trust_of(npc_id)
-	# A bizalom csak az első kérdezéskor változik.
-	if not Progress.asked_topics(npc_id).has(option["id"]):
+	# A bizalom csak az első kérdezéskor változik. Egyedi opciónál ("on_choose") a Callable
+	# maga jelöli meg (pl. sikertelen átadásnál ne kapjon pipát), és ő kezeli a bizalmat is.
+	if not option.has("on_choose") and not Progress.asked_topics(npc_id).has(option["id"]):
 		Progress.mark_asked(npc_id, option["id"])
 		var delta: int = option.get("trust", 0)
 		if delta != 0:

@@ -48,14 +48,30 @@ const VETERAN_QUESTS := {
 const ROYAL_SWORD := "sword_royal"
 const LORD_TRUST := 20
 const SWORD_TRUST := 15
+const WOUND_TRUST := 5
+## A vérfarkas termének története (a kard átadásakor, és később a "20. szint" kérdésre).
+const FLOOR20_STORY := "Tudod, mi volt a legrosszabb? Nem a fogai. Az, hogy várt ránk. Mire beértünk a terembe, " \
+	+ "már ott ült középen, mintha vendégeket várna. Elsőnek Benedeket kapta el, a zászlóvivőnket. " \
+	+ "Aztán sorban a többieket. Minden harapással erősebb lett, és amikor végre levágtam... felkelt, " \
+	+ "dühösebben, mint előtte.\n\n" \
+	+ "Engem a fal mellé dobott, mint egy rongybabát. Ott feküdtem, és néztem, ahogy a fiaim egymás után " \
+	+ "elesnek. Mire magamhoz tértem, csak hárman álltunk. Ő pedig hagyta, hogy elmenjünk. Hogy meséljünk róla."
+const LORD_REQUEST := "\n\n[i]Feláll a rönkről, és egyenesen a szemedbe néz.[/i]\n\n" \
+	+ "A fiaim még mindig ott fekszenek a huszadik emeleten. Juss le odáig, és [b]öld meg a Mélység Urát[/b]. " \
+	+ "Nem a kincsért. Értük.\n\n" \
+	+ "És ha megtetted... gyere vissza hozzám. Akkor majd beszélünk."
 
 
 ## A veterán aktuális opciói: a sérülés kérdése mindig; ha kért kardot, az átadás is.
 static func veteran_options(inventory: Inventory) -> Array[Dictionary]:
 	var list: Array[Dictionary] = [
-		{"id": "wound", "text": "Hogy miért sérült meg?", "trust": 5,
+		{"id": "wound", "text": "Hogy miért sérült meg?",
 			"on_choose": func() -> String: return _ask_wound()},
 	]
+	# A kard után a 20. emeleti történet bármikor újra elmondatható.
+	if Progress.npc_quest_state("epic_sword") == "done":
+		list.append({"id": "floor20", "text": "És mi volt odalent a 20. szinten?",
+			"on_choose": func() -> String: return _tell_floor20()})
 	if Progress.npc_quest_state("epic_sword") == "active":
 		list.append({"id": "give_sword", "text": "Itt a kard, amit kért. (epikus kard átadása)",
 			"on_choose": func() -> String: return _give_sword(inventory)})
@@ -74,6 +90,7 @@ static func _report_lord(inventory: Inventory) -> String:
 		where = "a tábori ládába (tele volt a táskád)"
 	else:
 		inventory.add_item(sword)
+	Progress.mark_asked(VETERAN_ID, "report_lord")
 	Progress.change_trust(VETERAN_ID, LORD_TRUST)
 	if Progress.npc_quest_state("depth_30") == "":
 		Progress.set_npc_quest("depth_30", "active")
@@ -95,6 +112,10 @@ static func _report_lord(inventory: Inventory) -> String:
 
 ## A sérülés története; az első alkalommal a végén kardot kér (elindul a küldetés).
 static func _ask_wound() -> String:
+	# Az első kérdés: +5 bizalom (pipa a kérdésre).
+	if not Progress.asked_topics(VETERAN_ID).has("wound"):
+		Progress.mark_asked(VETERAN_ID, "wound")
+		Progress.change_trust(VETERAN_ID, WOUND_TRUST)
 	match Progress.npc_quest_state("epic_sword"):
 		"":
 			Progress.set_npc_quest("epic_sword", "active")
@@ -126,6 +147,7 @@ static func _give_sword(inventory: Inventory) -> String:
 		return "[i]Végigméri a fegyvereidet, aztán megrázza a fejét.[/i]\n\n" \
 			+ "Ez nem az, amit kértem. [b]Epikus kardot[/b] hozz. A lándzsát, baltát meg a kis késeket tartsd meg magadnak."
 	Progress.set_npc_quest("epic_sword", "done")
+	Progress.mark_asked(VETERAN_ID, "give_sword")
 	Progress.change_trust(VETERAN_ID, SWORD_TRUST)
 	# A kard után elmeséli, hogyan győzte le őket a vérfarkas, és új küldetést ad.
 	if Progress.npc_quest_state("slay_lord") == "":
@@ -134,16 +156,18 @@ static func _give_sword(inventory: Inventory) -> String:
 	return "[i]Kezébe veszi a(z) %s pengéjét, megforgatja, végighúzza a hüvelykujját az élén.[/i]\n\n" % sword["name"] \
 		+ "Ez jó fajta kard. Kiegyensúlyozott, és az acélja nem mai darab: ezt még törpe kovács edzette. " \
 		+ "Ilyen volt az enyém is.\n\n" \
-		+ "[i]Leteszi a térdére, és a tűzbe néz.[/i]\n\n" \
-		+ "Tudod, mi volt a legrosszabb? Nem a fogai. Az, hogy várt ránk. Mire beértünk a terembe, már ott ült " \
-		+ "középen, mintha vendégeket várna. Elsőnek Benedeket kapta el, a zászlóvivőnket. Aztán sorban a többieket. " \
-		+ "Minden harapással erősebb lett, és amikor végre levágtam... felkelt, dühösebben, mint előtte.\n\n" \
-		+ "Engem a fal mellé dobott, mint egy rongybabát. Ott feküdtem, és néztem, ahogy a fiaim egymás után elesnek. " \
-		+ "Mire magamhoz tértem, csak hárman álltunk. Ő pedig hagyta, hogy elmenjünk. Hogy meséljünk róla.\n\n" \
-		+ "[i]Feláll a rönkről, és egyenesen a szemedbe néz.[/i]\n\n" \
-		+ "A fiaim még mindig ott fekszenek a huszadik emeleten. Juss le odáig, és [b]öld meg a Mélység Urát[/b]. " \
-		+ "Nem a kincsért. Értük.\n\n" \
-		+ "És ha megtetted... gyere vissza hozzám. Akkor majd beszélünk."
+		+ "[i]Leteszi a térdére, és a tűzbe néz.[/i]\n\n" + FLOOR20_STORY + LORD_REQUEST
+
+
+## "És mi volt odalent a 20. szinten?": a vérfarkas termének története újra; a vége attól
+## függ, hol tart a küldetés.
+static func _tell_floor20() -> String:
+	Progress.mark_asked(VETERAN_ID, "floor20")
+	var ending := "\n\n[i]Megszorítja a kardja markolatát.[/i] A fiaim még mindig ott fekszenek. " \
+		+ "Ne feledd, amit kértem."
+	if Progress.npc_quest_state("slay_lord") == "done":
+		ending = "\n\n[i]Hosszan hallgat.[/i] De ez már a múlt. Te bevégezted, amit mi nem tudtunk."
+	return "[i]A tűzbe néz, és halkan beszélni kezd.[/i]\n\n" + FLOOR20_STORY + ending
 
 
 static func is_epic_sword(item: Variant) -> bool:
