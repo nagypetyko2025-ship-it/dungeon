@@ -83,6 +83,11 @@ func setup_boss(depth: int) -> void:
 		"xp": roundi(_def["xp"] * (1.0 + 0.2 * (depth - 1))),
 		"power": 1.0,
 	}
+	# A 10. emelettől a főellenségek is hirtelen erősebbek (mint a szörnyek, lásd EnemyTypes).
+	if depth >= EnemyTypes.SURGE_DEPTH:
+		stats["health"] = roundi(stats["health"] * EnemyTypes.SURGE_HEALTH)
+		stats["damage"] = roundi(stats["damage"] * EnemyTypes.SURGE_DAMAGE)
+		stats["xp"] = roundi(stats["xp"] * EnemyTypes.SURGE_XP)
 
 
 func _compute_size_scale() -> float:

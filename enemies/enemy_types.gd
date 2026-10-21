@@ -171,7 +171,41 @@ const TYPES: Array[Dictionary] = [
 		"sheet": "res://assets/enemies/skeleton_legionary.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.6,
 		"health": [20, 26], "damage": [4, 5], "speed": [75, 90], "dodge": [20, 30],
 		"knockback": [360, 400], "resist": [0.5, 0.6], "xp": [14, 16], "min_depth": 5, "weight": 2},
+	# --- Csak a 10. emelettől: a mélység urai (MiniWorld Sprites, CC0) ---
+	{"name": "mammoth", "abilities": ["war_cry"], "dash": true,
+		"sheet": "res://assets/enemies/mammoth.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 2.2,
+		"health": [40, 50], "damage": [6, 7], "speed": [70, 85], "dodge": [0, 5],
+		"knockback": [520, 580], "resist": [0.9, 0.95], "xp": [20, 22], "min_depth": 10, "weight": 2},
+	{"name": "giant_crab", "abilities": ["regenerate", "berserk"],
+		"sheet": "res://assets/enemies/giant_crab.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 2.0,
+		"health": [36, 44], "damage": [6, 7], "speed": [55, 70], "dodge": [5, 10],
+		"knockback": [440, 480], "resist": [0.85, 0.95], "xp": [18, 20], "min_depth": 10, "weight": 2},
+	{"name": "lich", "abilities": ["summon", "teleport"], "ranged": true,
+		"projectile": "magic", "weapon_region": Rect2(324, 129, 8, 30), "shots": 3, "spread": 20.0,
+		"sheet": "res://assets/enemies/lich.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.8,
+		"health": [26, 32], "damage": [5, 6], "speed": [60, 75], "dodge": [15, 25],
+		"knockback": [260, 300], "resist": [0.5, 0.6], "xp": [20, 22], "min_depth": 10, "weight": 2,
+		"fire_interval": [2.2, 3.0], "arrow_speed": [220, 260], "keep_distance": [220, 280]},
+	{"name": "purple_demon", "abilities": ["teleport", "death_burst"], "dash": true,
+		"sheet": "res://assets/enemies/purple_demon.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.8,
+		"health": [30, 36], "damage": [6, 7], "speed": [110, 130], "dodge": [20, 30],
+		"knockback": [380, 420], "resist": [0.6, 0.7], "xp": [19, 21], "min_depth": 10, "weight": 2},
+	# A sárkányfióka tűzcsóvát köp (5 lövedékes legyező); nincs a kezében bot ("no_weapon").
+	{"name": "fire_dragon", "abilities": ["zigzag"], "ranged": true, "no_weapon": true,
+		"projectile": "magic", "weapon_region": Rect2(324, 129, 8, 30), "shots": 5, "spread": 14.0,
+		"sheet": "res://assets/enemies/fire_dragon.png", "rect": Rect2(0, 0, 32, 32), "run": true, "size": 1.1,
+		"health": [32, 40], "damage": [6, 7], "speed": [90, 105], "dodge": [15, 25],
+		"knockback": [300, 340], "resist": [0.6, 0.7], "xp": [22, 24], "min_depth": 10, "weight": 2,
+		"fire_interval": [2.6, 3.4], "arrow_speed": [230, 270], "keep_distance": [200, 260]},
 ]
+
+## A 10. emelettől a szörnyek hirtelen sokkal erősebbek: az addigi (emeletenkénti)
+## erősödés után ezekkel a szorzókkal; innen erről a szintről nőnek tovább emeletenként.
+const SURGE_DEPTH := 10
+const SURGE_HEALTH := 1.6
+const SURGE_DAMAGE := 1.35
+const SURGE_DODGE := 5
+const SURGE_XP := 1.5
 
 ## Erősödés emeletenként (az 1. emelethez képest):
 ## HP +60%, sebzés +0.6 (lefelé kerekítve, kb. 5 emeletenként +3), sebesség +3.5%
@@ -225,6 +259,11 @@ static func roll(type: Dictionary, depth: int) -> Dictionary:
 		"resist": randf_range(type["resist"][0], type["resist"][1]),
 		"xp": roundi(_roll_int(type["xp"]) * (1.0 + XP_PER_DEPTH * level)),
 	}
+	if depth >= SURGE_DEPTH:
+		stats["health"] = roundi(stats["health"] * SURGE_HEALTH)
+		stats["damage"] = roundi(stats["damage"] * SURGE_DAMAGE)
+		stats["dodge"] = mini(stats["dodge"] + SURGE_DODGE, 50)
+		stats["xp"] = roundi(stats["xp"] * SURGE_XP)
 	if type.get("ranged", false):
 		for key in ["fire_interval", "arrow_speed", "keep_distance"]:
 			stats[key] = randf_range(type[key][0], type[key][1])

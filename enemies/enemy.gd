@@ -119,6 +119,8 @@ func _ready() -> void:
 		_bow.texture = SpriteSheet.region(_type.get("weapon_region", BOW_REGION))
 		_bow.scale = Vector2(2, 2)
 		_bow.position = Vector2(10, -24) * _size_scale
+		# Pl. a sárkány a szájából köp: nincs a kezében fegyver.
+		_bow.visible = not _type.get("no_weapon", false)
 		_visual.add_child(_bow)
 
 	_dash = _type.get("dash", false)

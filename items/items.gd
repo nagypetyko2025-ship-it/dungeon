@@ -245,6 +245,80 @@ const DEFINITIONS := {
 		"stats": {"defense": [2, 3], "max_health": [1, 3]}},
 	"ring_moon": {"name": "Holdkő gyűrű", "slot": "ring", "rarity": "rare",
 		"stats": {"dodge": [3, 5], "crit_chance": [2, 3], "xp_bonus": [5, 8]}},
+
+	# --- Típusonként +2 tárgy (ikonok: "496 pixel art icons" és 0x72, CC0; néhány átszínezve) ---
+	# Kardok (0x72 lap: a kézben is ez látszik)
+	"sword_saw": {"name": "Fűrészpenge", "slot": "weapon", "rarity": "rare",
+		"region": Rect2(307, 70, 10, 25), "base": [2, 3], "scaling": 0.95, "crit": 1.6,
+		"stats": {"lifesteal": [3, 5], "attack_range": [4, 8]}},
+	"sword_katana": {"name": "Holdfény katana", "slot": "weapon", "rarity": "epic",
+		"region": Rect2(293, 66, 6, 29), "base": [3, 4], "scaling": 1.05, "crit": 2.0,
+		"stats": {"attack_speed": [18, 26], "crit_chance": [6, 9], "accuracy": [4, 6]}},
+	# Lándzsák
+	"spear_crystal": {"name": "Kristályhegyű dárda", "slot": "weapon", "rarity": "common", "weapon_type": "spear",
+		"base": [1, 2], "scaling": 0.65, "crit": 1.8, "stats": {"attack_range": [6, 10], "accuracy": [2, 3]}},
+	"spear_halberd": {"name": "Alabárd", "slot": "weapon", "rarity": "epic", "weapon_type": "spear",
+		"base": [4, 5], "scaling": 0.85, "crit": 1.9, "stats": {"attack_range": [16, 22], "defense": [2, 4], "attack_speed": [-6, -3]}},
+	# Íjak
+	"bow_feather": {"name": "Tollíj", "slot": "weapon", "rarity": "rare", "weapon_type": "bow",
+		"base": [2, 3], "scaling": 0.9, "crit": 1.6, "stats": {"attack_speed": [8, 12], "move_speed": [4, 6]}},
+	"bow_shadow": {"name": "Árnyíj", "slot": "weapon", "rarity": "epic", "weapon_type": "bow",
+		"base": [3, 4], "scaling": 1.05, "crit": 1.9, "stats": {"crit_chance": [6, 9], "ranged_damage": [1, 2], "dodge": [3, 5]}},
+	# Balták
+	"axe_cleaver": {"name": "Hentesbárd", "slot": "weapon", "rarity": "common", "weapon_type": "axe",
+		"base": [2, 3], "scaling": 0.9, "crit": 1.6, "stats": {"damage_percent": [2, 4]}},
+	"axe_moon": {"name": "Holdsarló bárd", "slot": "weapon", "rarity": "legendary", "weapon_type": "axe",
+		"base": [6, 7], "scaling": 1.3, "crit": 1.9, "stats": {"crit_chance": [6, 9], "lifesteal": [4, 6], "attack_speed": [8, 12]}},
+	# Tőrök
+	"dagger_viper": {"name": "Viperafog", "slot": "weapon", "rarity": "rare", "weapon_type": "dagger",
+		"base": [1, 2], "scaling": 0.8, "crit": 2.1, "stats": {"crit_chance": [5, 7], "lifesteal": [2, 4]}},
+	"dagger_sun": {"name": "Napkés", "slot": "weapon", "rarity": "legendary", "weapon_type": "dagger",
+		"base": [3, 4], "scaling": 1.05, "crit": 2.5, "stats": {"crit_chance": [12, 16], "attack_speed": [15, 22], "accuracy": [5, 8]}},
+	# Buzogányok
+	"mace_bone": {"name": "Csontbuzogány", "slot": "weapon", "rarity": "common", "weapon_type": "mace",
+		"base": [3, 4], "scaling": 1.0, "crit": 1.5, "stats": {"max_health": [1, 2]}},
+	"mace_scepter": {"name": "Égi jogar", "slot": "weapon", "rarity": "epic", "weapon_type": "mace",
+		"base": [5, 6], "scaling": 1.2, "crit": 1.6, "stats": {"health_regen": [0.3, 0.5], "xp_bonus": [10, 15]}},
+	# Sisakok
+	"hat_apprentice": {"name": "Mágustanonc süvege", "slot": "helmet", "rarity": "common",
+		"stats": {"xp_bonus": [5, 8], "crit_chance": [1, 2]}},
+	"helmet_dark": {"name": "Éjfekete sisak", "slot": "helmet", "rarity": "epic",
+		"stats": {"defense": [5, 7], "max_health": [4, 6], "thorns": [1, 2]}},
+	# Mellvértek
+	"chest_leather": {"name": "Bőrvért", "slot": "chest", "rarity": "common",
+		"stats": {"defense": [2, 3], "dodge": [1, 2]}},
+	"chest_night": {"name": "Éjacél vért", "slot": "chest", "rarity": "epic",
+		"stats": {"defense": [7, 9], "max_health": [6, 9], "dodge": [-2, -1]}},
+	# Nadrágok
+	"pants_leather": {"name": "Vörös bőrnadrág", "slot": "pants", "rarity": "common",
+		"stats": {"defense": [1, 2], "move_speed": [4, 6]}},
+	"pants_frost": {"name": "Fagyacél lábvért", "slot": "pants", "rarity": "epic",
+		"stats": {"defense": [5, 7], "max_health": [5, 7], "move_speed": [-3, -1]}},
+	# Cipők
+	"boots_leather": {"name": "Bőrbakancs", "slot": "boots", "rarity": "common",
+		"stats": {"move_speed": [6, 9], "defense": [1, 2]}},
+	"boots_ember": {"name": "Parázsjáró csizma", "slot": "boots", "rarity": "epic",
+		"stats": {"move_speed": [14, 18], "damage_percent": [3, 5], "thorns": [1, 2]}},
+	# Kesztyűk
+	"gloves_velvet": {"name": "Bársonykesztyű", "slot": "gloves", "rarity": "rare",
+		"stats": {"crit_chance": [3, 5], "accuracy": [3, 5]}},
+	"gloves_ember": {"name": "Parázskesztyű", "slot": "gloves", "rarity": "epic",
+		"stats": {"damage": [1, 2], "attack_speed": [10, 14], "damage_percent": [3, 5]}},
+	# Gyűrűk
+	"ring_gold": {"name": "Aranygyűrű", "slot": "ring", "rarity": "rare",
+		"stats": {"gold_find": [15, 25], "max_health": [2, 3]}},
+	"ring_onyx": {"name": "Ónix pecsétgyűrű", "slot": "ring", "rarity": "legendary",
+		"stats": {"damage": [2, 3], "lifesteal": [5, 8], "crit_chance": [5, 8]}},
+	# Amulettek
+	"amulet_wolf": {"name": "Gyógyfőzetes nyaklánc", "slot": "amulet", "rarity": "rare",
+		"stats": {"health_regen": [0.4, 0.6], "dodge": [2, 3]}},
+	"amulet_royal": {"name": "Királyi zafír", "slot": "amulet", "rarity": "epic",
+		"stats": {"max_health": [6, 8], "damage_percent": [4, 6], "defense": [2, 3]}},
+	# Talizmánok
+	"trinket_fur": {"name": "Farkasprém", "slot": "trinket", "rarity": "common",
+		"stats": {"defense": [2, 3], "move_speed": [3, 5]}},
+	"trinket_mirror": {"name": "Igazmondó tükör", "slot": "trinket", "rarity": "epic",
+		"stats": {"accuracy": [6, 9], "crit_chance": [4, 6], "xp_bonus": [8, 12]}},
 }
 
 

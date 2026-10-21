@@ -207,6 +207,8 @@ func _ready() -> void:
 	else:
 		if final_floor:
 			_hud.show_message("%d. emelet — keletre vár a Mélység Ura!" % depth)
+		elif depth == EnemyTypes.SURGE_DEPTH:
+			_hud.show_message("%d. emelet — a szörnyek hirtelen megerősödtek!" % depth)
 		else:
 			_hud.show_message(("%d. emelet — főellenség vár!" if boss_floor else "%d. emelet") % depth)
 
