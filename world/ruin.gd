@@ -72,7 +72,8 @@ func setup(camp: Node2D) -> void:
 	_dialogue.npc_id = Thief.ID
 	_dialogue.npc_name = Thief.NAME
 	_dialogue.portrait = Thief.portrait()
-	_dialogue.options_provider = Thief.options
+	_dialogue.options_provider = func() -> Array[Dictionary]:
+		return Thief.options(_player.get_node("Inventory"))
 	camp.add_child.call_deferred(_dialogue)
 
 

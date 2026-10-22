@@ -9,12 +9,19 @@ const SHEET: Texture2D = preload("res://assets/characters/thief.png")
 const GOLD_QUEST := "thief_gold"
 const GOLD_AMOUNT := 500
 const PAID_TRUST := 15
+## A második kérés (a fizetés után): egy epikus tőr; utána elmondja, honnan van a zsákmány.
+const DAGGER_QUEST := "thief_dagger"
+const DAGGER_TRUST := 20
 
 const FIRST_GREETING := "[i]A gyertya lángja megremeg. Egy kendős alak pattan fel a ládáról, " \
 	+ "a kezében kés villan.[/i]\n\nHé! Ki engedett be? [b]Mit csinálsz itt?[/b]"
 const GREETING := "[i]Fel sem néz, tovább számolja az érméket.[/i]\n\nMegint te? Hozod már, amit kértem?"
 const PAID_GREETING := "[i]Biccent, és egy aranyat pörget az ujjai között.[/i]\n\n" \
 	+ "Á, a kedvenc ügyfelem. Üljön le, ha talál helyet a zsákmány között."
+const DAGGER_GREETING := "[i]Felnéz a konyhakésről, amivel épp a körmét pucolja.[/i]\n\n" \
+	+ "Na? Megvan a tőröm? Ezzel a vacakkal még egy kenyeret sem lehet rendesen megszegni."
+const FRIEND_GREETING := "[i]Az új tőrét élezi, és elvigyorodik, amikor meglát.[/i]\n\n" \
+	+ "Gyere csak, barátom. Neked mindig nyitva az ajtó... a ládák mögött."
 const QUEST_REQUEST := "\n\n[i]Legyint, és visszadugja a kést az övébe.[/i]\n\n" \
 	+ "Mindegy. Van egy küldetésem a számodra: [b]hozz nekem %d aranyat[/b]. " % GOLD_AMOUNT \
 	+ "Ne kérdezd, mire kell. Ha meghozod, nem fogod megbánni: van itt elég szép holmi, " \
@@ -30,18 +37,47 @@ const QUESTS := {
 			+ "(a tábortól nyugatra, a sáros ösvény végén, a ládák mögötti ajtón át).",
 		"reward": "valami a zsákmányából", "doing": "vigyél neki %d aranyat" % GOLD_AMOUNT,
 		"done": "kifizetve"},
+	DAGGER_QUEST: {"name": "Egy kisebb szívesség",
+		"text": "A tolvaj régi tőrét elvették tőle, és újat akar, de nem akármilyet: hozz neki egy "
+			+ "[b]epikus tőrt[/b] a Mélységből (bármilyen tőr jó, csak epikus legyen). A táskádból vagy "
+			+ "a kezedből is átadhatod.",
+		"reward": "a tolvaj bizalma (és egy történet)", "doing": "vigyél neki egy epikus tőrt",
+		"done": "a tőr átadva"},
 }
+## A második kérés: a fizetés után (és ha egy régebbi mentésben már fizettél, a "Van még munkád?" kérdésre).
+const DAGGER_REQUEST := "\n\n[i]Aztán elkomolyodik, és a szemedbe néz.[/i]\n\n" \
+	+ "Ha már ilyen megbízható vagy... volna még egy kisebb szívességem. A régi tőrömet tavaly elvették " \
+	+ "tőlem, egy kocsmai verekedésben. Azóta ezzel a konyhakéssel járok, és szégyellem magam.\n\n" \
+	+ "Hozz nekem egy [b]epikus tőrt[/b] a Mélységből. Nem érdekel, milyet: fagyosat, lángolót, csak " \
+	+ "éles legyen, és ne törjön el az első zárnál. Odalent elég sok halott kalandor hagyott hátra ilyesmit."
+## A tőr átadása után: honnan van a zsákmány (később a "Honnan van ez a sok holmi?" kérdésre is).
+const LOOT_STORY := "[i]Leül a ládára, és a gyertya fényében körbemutat a zsákmányon.[/i]\n\n" \
+	+ "Tudni akarod, honnan van mindez? Jó. Megérdemled.\n\n" \
+	+ "A gyűrűk és a nyakláncok nagy része a városi urak ládáiból jött. Gazdag, kövér emberek, akik " \
+	+ "azt hiszik, egy lakat megvédi őket. Az óra, az a megállított óra ott a sarokban... azt a polgármester " \
+	+ "hálószobájából hoztam el, miközben horkolt. Azóta nem tudja, hány óra van.\n\n" \
+	+ "A borosüvegek a kocsmáros pincéjéből vannak. Ő a patkányokra fogja. A patkányok nem panaszkodnak.\n\n" \
+	+ "[i]Elhalkul a hangja.[/i]\n\n" \
+	+ "A kardok, a sisak és a vértek viszont... azokat a Mélységből hoztam fel. A tizedik emelet környékén, " \
+	+ "egy nagy teremben, csupa halott katona feküdt, a király címerével a pajzsukon. Harminc pajzs, ha jól " \
+	+ "számoltam... nem, tizenöt. A többit lejjebb vitte valami. Nekik már nem kellett.\n\n" \
+	+ "[i]Megforgatja a kezében az új tőrt.[/i]\n\n" \
+	+ "Ha valaha találkozol egy öreg katonával, egy bekötött fejű kapitánnyal... ne mondd el " \
+	+ "neki, honnan van ez a sok holmi. Ő is ott volt. És szerintem még mindig ott van, legalábbis fejben."
 
 
 ## A köszönése: az első találkozáskor rád kérdez, utána már ismer.
 static func greeting() -> String:
 	match Progress.npc_quest_state(GOLD_QUEST):
 		"": return FIRST_GREETING
-		"done": return PAID_GREETING
-	return GREETING
+		"active": return GREETING
+	match Progress.npc_quest_state(DAGGER_QUEST):
+		"active": return DAGGER_GREETING
+		"done": return FRIEND_GREETING
+	return PAID_GREETING
 
 
-static func options() -> Array[Dictionary]:
+static func options(inventory: Inventory) -> Array[Dictionary]:
 	var state := Progress.npc_quest_state(GOLD_QUEST)
 	if state == "":
 		# Az első találkozás: három válasz, mindegyik végén a küldetés.
@@ -68,6 +104,18 @@ static func options() -> Array[Dictionary]:
 	if state == "active":
 		list.append({"id": "pay", "text": "Itt az %d arany. (tábori aranyból)" % GOLD_AMOUNT,
 			"on_choose": func() -> String: return _pay()})
+		return list
+	match Progress.npc_quest_state(DAGGER_QUEST):
+		"":
+			# Régebbi mentés: már fizettél, de a tőrt még nem kérte.
+			list.append({"id": "more_work", "text": "Van még munkád számomra?",
+				"on_choose": func() -> String: return _more_work()})
+		"active":
+			list.append({"id": "give_dagger", "text": "Itt a tőr, amit kértél. (epikus tőr átadása)",
+				"on_choose": func() -> String: return _give_dagger(inventory)})
+		"done":
+			list.append({"id": "loot_story", "text": "Honnan van ez a sok holmi?",
+				"on_choose": func() -> String: return _loot_story()})
 	return list
 
 
@@ -98,6 +146,7 @@ static func _pay() -> String:
 	var item := Items.random_item("epic", "epic")
 	Progress.add_to_stash(item)
 	Progress.set_npc_quest(GOLD_QUEST, "done")
+	Progress.set_npc_quest(DAGGER_QUEST, "active")
 	Progress.mark_asked(ID, "pay")
 	Progress.change_trust(ID, PAID_TRUST)
 	Progress.save_game()
@@ -107,7 +156,55 @@ static func _pay() -> String:
 		+ "[i]Belenyúl a háta mögötti zsákba, és odadob neked valamit.[/i]\n\n" \
 		+ "Tessék, ezt [b]%s[/b] néven ismerik. Nekem túl feltűnő, neked épp jó lesz. " % item["name"] \
 		+ "Ha kérdezik, nem tőlem kaptad.\n\n" \
-		+ "[color=#7a4a10](-%d tábori arany; a(z) %s a tábori ládába került.)[/color]" % [GOLD_AMOUNT, item["name"]]
+		+ "[color=#7a4a10](-%d tábori arany; a(z) %s a tábori ládába került.)[/color]" % [GOLD_AMOUNT, item["name"]] \
+		+ DAGGER_REQUEST
+
+
+## Régebbi mentés: a fizetés már megvolt, de a tőrt még nem kérte; most kéri.
+static func _more_work() -> String:
+	Progress.mark_asked(ID, "more_work")
+	Progress.set_npc_quest(DAGGER_QUEST, "active")
+	return "[i]Elgondolkodva megvakarja az állát a kendő alatt.[/i]\n\nMost, hogy mondod..." + DAGGER_REQUEST
+
+
+## Epikus tőr átadása: a táskából vagy a kézből (a kezedben lévő helyére a rozsdás kard kerül).
+static func _give_dagger(inventory: Inventory) -> String:
+	var dagger: Variant = null
+	for i in inventory.bag.size():
+		if is_epic_dagger(inventory.bag[i]):
+			dagger = inventory.take_from_bag(i)
+			break
+	if dagger == null and is_epic_dagger(inventory.equipment["weapon"]):
+		dagger = inventory.equipment["weapon"]
+		inventory.equipment["weapon"] = Items.create("sword_rusty")
+		inventory.changed.emit()
+	if dagger == null:
+		Audio.play("ui_error")
+		return "[i]Végignéz a fegyvereiden, aztán csalódottan legyint.[/i]\n\n" \
+			+ "Ez nem az, amit kértem. [b]Epikus tőrt[/b] hozz, ne ilyen kenyérvágót. Odalent a Mélységben " \
+			+ "keresd, a ládákban vagy a halottaknál."
+	Progress.set_npc_quest(DAGGER_QUEST, "done")
+	Progress.mark_asked(ID, "give_dagger")
+	Progress.change_trust(ID, DAGGER_TRUST)
+	Progress.save_game()
+	Audio.play("level_up")
+	return "[i]Elveszi a(z) %s pengét, és sokáig forgatja a gyertya fényében. " % dagger["name"] \
+		+ "Végighúzza a hüvelykujját az élén, aztán halkan füttyent.[/i]\n\n" \
+		+ "Ez... ez gyönyörű. Ilyen pengével bármelyik zár kinyílik, és bármelyik vita gyorsan véget ér. " \
+		+ "Köszönöm, barátom. Komolyan.\n\n" \
+		+ "[i]Kidobja a konyhakést a sarokba, a tőrt pedig az övébe csúsztatja.[/i]\n\n" \
+		+ "Te többet tettél értem, mint bárki ebben a nyomorult városban. Úgyhogy most elmondok valamit, " \
+		+ "amit eddig senkinek.\n\n" + LOOT_STORY
+
+
+static func _loot_story() -> String:
+	Progress.mark_asked(ID, "loot_story")
+	return LOOT_STORY
+
+
+static func is_epic_dagger(item: Variant) -> bool:
+	return item is Dictionary and item.get("slot", "") == "weapon" \
+		and item.get("weapon_type", "") == "dagger" and item.get("rarity", "") == "epic"
 
 
 ## Az álló kockája a beszélgetés képéhez.
