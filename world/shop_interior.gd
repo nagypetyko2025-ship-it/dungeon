@@ -112,6 +112,9 @@ func _process(delta: float) -> void:
 	if _sell_prompt.visible:
 		_sell_prompt.text = "[E] Eladás   ·   [F] HP bájital: %d arany (%s)" % [POTION_PRICE,
 			("%d db" % _potions_left) if _potions_left > 0 else "elfogyott"]
+		# A tolvaj levele (a 10. emeleten, ha nálad van): G-vel adod át.
+		if _letter_here():
+			_sell_prompt.text += "   ·   [G] Levél átadása"
 
 
 ## Polcok a hátsó fal előtt: két csempe magasak, tele áruval.
@@ -287,6 +290,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		_buy_potion()
 		get_viewport().set_input_as_handled()
 		return
+	if _at_counter and key != null and key.pressed and not key.echo and key.physical_keycode == KEY_G:
+		_give_letter()
+		get_viewport().set_input_as_handled()
+		return
 	if not event.is_action_pressed("interact"):
 		return
 	if _near_lever():
@@ -323,6 +330,33 @@ func _buy(index: int) -> void:
 
 
 ## HP bájital a boltostól (a pultnál F-fel): POTION_PRICE arany, boltonként POTIONS_PER_SHOP darab.
+func _letter_here() -> bool:
+	if Progress.npc_quest_state(Thief.LETTER_QUEST) != "active" or GameState.depth != Thief.LETTER_FLOOR:
+		return false
+	var player := get_tree().get_first_node_in_group("player")
+	return player != null and Thief.has_letter(player.get_node("Inventory"))
+
+
+## A tolvaj levele a boltosnak (G a pultnál, csak a 10. emeleten): arany a jutalom.
+func _give_letter() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	var say_at := _shopkeeper.global_position + Vector2(0, -36)
+	var answer := Thief.deliver_to_shopkeeper(player) if player else ""
+	if answer.is_empty():
+		Audio.play("ui_error")
+		var line := "Levél? Milyen levél?" if Progress.npc_quest_state(Thief.LETTER_QUEST) != "active" \
+			else "Ha levelet hoztál, a táskádban legyen... és a tizedik emeleten keress."
+		FloatingText.spawn(self, say_at, line, Color(0.85, 0.75, 1))
+		return
+	Audio.play("coin")
+	FloatingText.spawn(self, say_at, "Bencétől? Végre!", Color(1, 0.9, 0.6), 18)
+	var hud := get_tree().current_scene.get_node_or_null("HUD")
+	if hud and hud.has_method("show_message"):
+		hud.call("show_message", "Boltos: „%s”" % answer)
+	FloatingText.spawn(self, player.global_position + Vector2(0, -60), "+%d arany" % Thief.LETTER_GOLD,
+		Color(1, 0.85, 0.3), 20)
+
+
 func _buy_potion() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	var say_at := _shopkeeper.global_position + Vector2(0, -36)

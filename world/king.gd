@@ -2,7 +2,7 @@ class_name King
 ## IV. Aurél király a királyi vár tróntermében (lásd Castle): a beszélgetése (DialoguePanel) és
 ## a küldetései (a J könyv "Király" fülén). Az első kihallgatáskor két küldetést ad (a hét király,
 ## a kincstár ajándéka); ha már találkoztál a tolvajjal, a tolvajról is kérdez: elárulhatod
-## (az őrök elviszik, és jutalmat kapsz), vagy hallgathatsz (a tolvaj később meghálálja).
+## (jutalmat kapsz, de az őrök nem találják meg), vagy hallgathatsz (a tolvaj később meghálálja).
 
 const ID := "king"
 const NAME := "IV. Aurél király"
@@ -15,7 +15,7 @@ const THIEF_QUEST := "king_thief"
 ## A tolvaj sorsa (Progress.npc_quests): "betrayed" (elárultad) vagy "protected" (hallgattál).
 const THIEF_FATE := "thief_fate"
 const TREASURY_GOLD := 1000
-const BETRAY_GOLD := 500
+const BETRAY_GOLD := 120
 
 ## A király küldetései (az engedély a vár kapujánál indul, lásd Castle).
 const QUESTS := {
@@ -171,7 +171,6 @@ static func _betray() -> String:
 	Progress.set_npc_quest(THIEF_FATE, "betrayed")
 	Progress.mark_asked(ID, "betray")
 	Progress.change_trust(ID, 15)
-	Progress.change_trust(Thief.ID, -100)
 	Progress.camp_gold += BETRAY_GOLD
 	Progress.save_game()
 	Audio.play("coin")
@@ -179,7 +178,7 @@ static func _betray() -> String:
 		+ "[i]A király elégedetten bólint, és int az őröknek. Két lándzsás kisiet a teremből.[/i]\n\n" \
 		+ "A romos házban, mi? Ott, ahol senki sem keresné. Okos. De nem elég okos.\n\n" \
 		+ "Hűséges alattvaló vagy. Fogadd el ezt a fáradságodért.\n\n" \
-		+ "[color=#7a4a10](+%d tábori arany. A tolvaj rejtekhelyére őröket küldtek.)[/color]" % BETRAY_GOLD
+		+ "[color=#7a4a10](+%d tábori arany. Az őrök később üres kézzel tértek vissza: a tolvaj idejében elrejtőzött.)[/color]" % BETRAY_GOLD
 
 
 static func _protect() -> String:

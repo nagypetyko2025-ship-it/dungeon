@@ -339,7 +339,9 @@ func _alcove_rect(room_rect: Rect2i, anchor: Vector2i, dir: Vector2i) -> Rect2i:
 ## Emeletenként legfeljebb egy bolt, SHOP_CHANCE eséllyel; nem a kezdő-
 ## és nem a lépcsős szobába kerül. NO_SHOP, ha ezen az emeleten nincs bolt.
 func _pick_shop_cell(cells: Array[Vector2i], stairs_cell: Vector2i) -> Vector2i:
-	if randf() >= SHOP_CHANCE:
+	# A tolvaj levelével a 10. emeleten mindig van bolt (ott vár a címzett).
+	var letter_floor := GameState.depth == Thief.LETTER_FLOOR and Progress.npc_quest_state(Thief.LETTER_QUEST) == "active"
+	if randf() >= SHOP_CHANCE and not letter_floor:
 		return NO_SHOP
 	var candidates := cells.filter(func(c: Vector2i) -> bool: return c != Vector2i.ZERO and c != stairs_cell)
 	if candidates.is_empty():

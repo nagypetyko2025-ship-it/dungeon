@@ -610,6 +610,9 @@ static func format_stat(stat: String, value: float) -> String:
 ## BBCode leírás a tooltipekhez: ritkaság, statok (zöld = előny, piros = hátrány).
 static func describe_bbcode(item: Dictionary) -> String:
 	var lines: Array[String] = []
+	# Küldetéstárgy (pl. a tolvaj levele): nem vehető fel, csak a leírása.
+	if item.get("quest", false):
+		return "[color=#%s]Küldetéstárgy[/color]\n%s" % [SLOT_NOTE_INK.to_html(false), item.get("description", "")]
 	if item.has("rarity"):
 		lines.append("[color=#%s]%s[/color]" % [rarity_ink(item).to_html(false), rarity_name(item)])
 	if item.has("slot"):

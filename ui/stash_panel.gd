@@ -173,6 +173,10 @@ func _ask_trash(data: Dictionary) -> void:
 	var item: Variant = grid.item_at(index) if grid else null
 	if item == null:
 		return
+	if item.get("quest", false):
+		Audio.play("ui_error")
+		_message.text = "Küldetéstárgy: nem dobhatod ki."
+		return
 	ConfirmBox.ask(self, "Biztosan kidobod: %s? Nem lehet visszahozni." % item["name"], func() -> void:
 		if grid == _stash_grid:
 			Progress.stash.remove_at(_shown[index])

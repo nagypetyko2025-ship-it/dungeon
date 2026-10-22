@@ -218,6 +218,10 @@ func _ask_trash(index: int) -> void:
 	var item: Variant = _inventory.bag[index]
 	if item == null:
 		return
+	if item.get("quest", false):
+		Audio.play("ui_error")
+		_show_info(item, "Küldetéstárgy: nem dobhatod ki.")
+		return
 	ConfirmBox.ask(self, "Biztosan kidobod: %s? Nem lehet visszahozni." % item["name"], func() -> void:
 		_inventory.take_from_bag(index)
 		Audio.play("door_lock", -6.0)
@@ -227,6 +231,10 @@ func _ask_trash(index: int) -> void:
 func _sell_from_bag(index: int) -> void:
 	var item = _inventory.bag[index]
 	if item == null:
+		return
+	if item.get("quest", false):
+		Audio.play("ui_error")
+		_show_info(item, "Küldetéstárgy: nem adhatod el.")
 		return
 	var price := Items.sell_price(item)
 	_player.call("add_gold", price)
@@ -248,7 +256,8 @@ func _on_slot_hovered(item: Variant, slot: InventorySlot) -> void:
 	_mark_target(item["slot"] if item != null and slot.kind == "bag" else "")
 	if item != null and sell_mode:
 		if slot.kind == "bag":
-			_show_info(item, "Eladási ár: %d arany • húzd az eladás mezőre vagy jobb klikk" % Items.sell_price(item))
+			_show_info(item, "Küldetéstárgy: nem adható el" if item.get("quest", false)
+				else "Eladási ár: %d arany • húzd az eladás mezőre vagy jobb klikk" % Items.sell_price(item))
 		else:
 			_show_info(item, "Előbb vedd le (húzd a táskába), hogy eladhasd.")
 	elif item != null:

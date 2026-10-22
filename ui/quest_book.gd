@@ -334,7 +334,9 @@ func _fill_npc_page(page: VBoxContainer, id: String) -> void:
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page.add_child(spacer)
-	var state := UiStyle.label(("✔ TELJESÍTVE — " + quest["done"]) if done else ("★ FOLYAMATBAN — " + quest["doing"]),
+	# Köztes állapotnak saját szövege is lehet (pl. "doing_delivered").
+	var doing: String = quest.get("doing_" + Progress.npc_quest_state(id), quest["doing"])
+	var state := UiStyle.label(("✔ TELJESÍTVE — " + quest["done"]) if done else ("★ FOLYAMATBAN — " + doing),
 		19, Color(0.24, 0.5, 0.2) if done else Color(0.6, 0.3, 0.05))
 	state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	state.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
