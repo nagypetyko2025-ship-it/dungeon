@@ -8,8 +8,10 @@ const LEATHER := Color(0.36, 0.18, 0.1)
 const LEATHER_DARK := Color(0.2, 0.09, 0.05)
 const PAGE_SIZE := Vector2(400, 420)
 ## Fülek: 0 = általános küldetések (Quests), 1 = a veterán küldetései (Dialogues),
-## 2 = a tolvaj küldetései (Thief).
-const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj"]
+## 2 = a tolvaj küldetései (Thief), 3 = a király küldetései (Castle; csak a vár kapujánál
+## tett első látogatás után látszik).
+const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király"]
+const KING_TAB := 3
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 
 var _ids: Array = []
@@ -44,11 +46,17 @@ func _load_ids() -> void:
 
 ## Az aktuális NPC-fül küldetései és a megbízó neve.
 func _npc_quests() -> Dictionary:
-	return Thief.QUESTS if _tab == 2 else Dialogues.VETERAN_QUESTS
+	match _tab:
+		2: return Thief.QUESTS
+		KING_TAB: return Castle.KING_QUESTS
+	return Dialogues.VETERAN_QUESTS
 
 
 func _npc_name() -> String:
-	return Thief.NAME if _tab == 2 else Dialogues.VETERAN_NAME
+	match _tab:
+		2: return Thief.NAME
+		KING_TAB: return Castle.KING_NAME
+	return Dialogues.VETERAN_NAME
 
 
 func _set_tab(tab: int) -> void:
@@ -62,6 +70,10 @@ func _set_tab(tab: int) -> void:
 
 
 func open() -> void:
+	# A Király fül csak a vár kapujánál tett első látogatás után látszik.
+	_tab_buttons[KING_TAB].visible = Progress.npc_quest_state(Castle.PERMIT_QUEST) != ""
+	if _tab == KING_TAB and not _tab_buttons[KING_TAB].visible:
+		_set_tab(0)
 	_load_ids()
 	if _tab != 0:
 		_spread = 0
@@ -147,6 +159,7 @@ func _build() -> void:
 	leather.shadow_color = Color(0, 0, 0, 0.5)
 	leather.shadow_size = 12
 	cover.add_theme_stylebox_override("panel", leather)
+	cover.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	root.add_child(cover)
 	var spread := HBoxContainer.new()
 	spread.add_theme_constant_override("separation", 0)

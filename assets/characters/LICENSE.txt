@@ -1,3 +1,4 @@
 blacksmith.png: a 0x72 DungeonTileset II (CC0, https://0x72.itch.io/dungeontileset-ii) dwarf_m álló kockái, kovácsnak átszínezve (sötét haj és szakáll). CC0.
 veteran.png: a 0x72 DungeonTileset II (CC0, https://0x72.itch.io/dungeontileset-ii) knight_f álló kockái, átszínezve (kopott acél, kifakult forgó), rajzolt kötéssel és horpadással. CC0.
 thief.png: a 0x72 DungeonTileset II (CC0, https://0x72.itch.io/dungeontileset-ii) elf_m kockái (álló, futás, sebződés), tolvajnak átszínezve (sötét ruha és haj, rabló-kendő a szemén). CC0.
+royal_guard.png: a 0x72 DungeonTileset II (CC0, https://0x72.itch.io/dungeontileset-ii) knight_f kockái, királyi őrnek átszínezve (acélszürke páncél, vörös forgó). CC0.

@@ -147,6 +147,8 @@ func _ready() -> void:
 		GameState.reset()
 		GameState.run_recorded = true
 	Progress.load_game()
+	# Ha a futásban elérted a 30. emeletet, most "vissza is jöttél" (a királyi vár engedélye).
+	Castle.on_return_to_camp()
 	Audio.music("menu")
 	GameCursor.apply()
 	$CanvasModulate.color = EVENING
@@ -172,6 +174,13 @@ func _ready() -> void:
 	_town.setup(self)
 	_town.build()
 	_town.message.connect(_toast)
+	# A város északi része: lakóház, út a királyi várhoz, a kapuban két őr.
+	var castle := Castle.new()
+	castle.name = "Castle"
+	add_child(castle)
+	castle.setup(self)
+	castle.build()
+	castle.message.connect(_toast)
 	# A nyugati tisztáson a romos ház (benne a tolvaj rejtekszobája).
 	var ruin := Ruin.new()
 	ruin.name = "Ruin"
@@ -342,6 +351,9 @@ func _build_dirt() -> void:
 		_dirt[Vector2i(x, row + 1)] = true
 	# Ösvény a kocsma ajtajától az útig.
 	for tile in Town.path_tiles():
+		_dirt[tile] = true
+	# Út a kocsma mellett északra, a királyi vár kapujáig.
+	for tile in Castle.path_tiles():
 		_dirt[tile] = true
 	# Kis sáros ösvény nyugatra (a várossal ellentétes irányba): a tisztásokon kanyarog,
 	# az erdőben egyenes, és a nyugati tisztáson ér véget (a végén a romos ház).
@@ -733,11 +745,24 @@ func _build_trees() -> void:
 	for x in range(town.position.x, town.end.x):
 		for y in range(town.position.y, town.end.y):
 			var tile := Vector2i(x, y)
-			if _blocked.has(tile) or Town.blocked_rect().has_point(tile):
+			if _blocked.has(tile) or Town.blocked_rect().has_point(tile) or _castle_blocked(tile) \
+					or _near_path(tile):
 				continue
 			var edge := mini(mini(x - town.position.x, town.end.x - 1 - x), mini(y - town.position.y, town.end.y - 1 - y))
 			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.3):
 				_tree(tile, randf() < 0.6, true)
+	# A vár tisztásának szélén is fasor (az út és a vár kimarad).
+	var castle := Castle.RECT
+	for x in range(castle.position.x, castle.end.x):
+		for y in range(castle.position.y, castle.end.y):
+			var tile := Vector2i(x, y)
+			if _blocked.has(tile) or _castle_blocked(tile) or _near_path(tile):
+				continue
+			var edge := mini(mini(x - castle.position.x, castle.end.x - 1 - x), mini(y - castle.position.y, castle.end.y - 1 - y))
+			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.3):
+				_tree(tile, randf() < 0.6, true)
+			elif edge >= 3 and randf() < 0.04:
+				_rpg_sprite(FLOWERS.pick_random(), _tile_center(tile) + Vector2(randf_range(-8, 8), randf_range(-8, 8)), -9)
 	# A nyugati tisztás szélén is fasor (az ösvény kimarad).
 	var west := WEST_RECT
 	for x in range(west.position.x, west.end.x):
@@ -767,18 +792,23 @@ func _build_trees() -> void:
 ## Sűrű erdő a tisztáson túl, ameddig a kamera ellát (beljebb egyre sötétebb).
 ## Ezeknek a fáknak nincs ütközőjük (oda úgysem lehet bemenni), az útra nem kerül fa.
 func _build_forest() -> void:
+	# A vár tisztása fölött (és körülötte) magasabbra nyúlik az erdő.
+	var castle_forest := Rect2i(Castle.RECT.position - Vector2i(FOREST_DEPTH, FOREST_DEPTH),
+		Castle.RECT.size + Vector2i(FOREST_DEPTH * 2, FOREST_DEPTH))
 	for x in range(WORLD_START_X, WORLD_END_X):
-		for y in range(-FOREST_DEPTH, SIZE.y + FOREST_DEPTH):
+		for y in range(Castle.RECT.position.y - FOREST_DEPTH, SIZE.y + FOREST_DEPTH):
 			var tile := Vector2i(x, y)
+			if y < -FOREST_DEPTH and not castle_forest.has_point(tile):
+				continue
 			if Rect2i(Vector2i.ZERO, SIZE).has_point(tile) or Town.RECT.has_point(tile) or WEST_RECT.has_point(tile) \
-					or _is_path(tile):
+					or Castle.RECT.has_point(tile) or _is_path(tile):
 				continue
 			if _is_path(tile + Vector2i.UP) or _is_path(tile + Vector2i.DOWN):
 				if randf() < 0.6:
 					continue
 			# Hány csempére van a tisztás szélétől.
-			var depth := mini(mini(_outside_distance(tile, Rect2i(Vector2i.ZERO, SIZE)), _outside_distance(tile, Town.RECT)),
-				_outside_distance(tile, WEST_RECT))
+			var depth := mini(mini(mini(_outside_distance(tile, Rect2i(Vector2i.ZERO, SIZE)), _outside_distance(tile, Town.RECT)),
+				_outside_distance(tile, WEST_RECT)), _outside_distance(tile, Castle.RECT))
 			var shade := clampf(1.0 - depth * 0.06, 0.35, 1.0)
 			var tree := _tree(tile, randf() < 0.75, false)
 			tree.position += Vector2(randf_range(-8, 8), randf_range(-6, 6))
@@ -872,8 +902,17 @@ func _build_bounds() -> void:
 	var town := Rect2(Vector2(Town.RECT.position) * TILE, Vector2(Town.RECT.size) * TILE)
 	_solid(Rect2(Vector2(area.end.x, gap_top - thickness), Vector2(town.position.x - area.end.x, thickness)))
 	_solid(Rect2(Vector2(area.end.x, gap_bottom), Vector2(town.position.x - area.end.x, thickness)))
-	# A város tisztása körül (nyugaton nyílás az útnál; keleten egyelőre zárva).
-	_solid(Rect2(town.position - Vector2(thickness, thickness), Vector2(town.size.x + thickness * 2, thickness)))
+	# A város tisztása körül (nyugaton nyílás az útnál, északon a vár felé vezető útnál;
+	# keleten egyelőre zárva).
+	var castle_gap_left := Castle.PATH_COLUMN * TILE
+	var castle_gap_right := (Castle.PATH_COLUMN + 2) * TILE
+	_solid(Rect2(town.position - Vector2(thickness, thickness), Vector2(castle_gap_left - town.position.x + thickness, thickness)))
+	_solid(Rect2(Vector2(castle_gap_right, town.position.y - thickness), Vector2(town.end.x + thickness - castle_gap_right, thickness)))
+	# A vár tisztása közvetlenül a város fölött (délen a város északi fala zárja, az útnál nyitva).
+	var castle := Rect2(Vector2(Castle.RECT.position) * TILE, Vector2(Castle.RECT.size) * TILE)
+	_solid(Rect2(castle.position - Vector2(thickness, thickness), Vector2(castle.size.x + thickness * 2, thickness)))
+	_solid(Rect2(Vector2(castle.position.x - thickness, castle.position.y), Vector2(thickness, castle.size.y)))
+	_solid(Rect2(Vector2(castle.end.x, castle.position.y), Vector2(thickness, castle.size.y)))
 	_solid(Rect2(Vector2(town.position.x - thickness, town.end.y), Vector2(town.size.x + thickness * 2, thickness)))
 	_solid(Rect2(Vector2(town.end.x, town.position.y), Vector2(thickness, town.size.y)))
 	_solid(Rect2(Vector2(town.position.x - thickness, town.position.y), Vector2(thickness, gap_top - town.position.y)))
@@ -941,7 +980,7 @@ func _toast(text: String) -> void:
 func _setup_camera() -> void:
 	var camera: Camera2D = _player.get_node("Camera2D")
 	camera.limit_left = WORLD_START_X * TILE
-	camera.limit_top = -FOREST_DEPTH * TILE
+	camera.limit_top = (Castle.RECT.position.y - FOREST_DEPTH) * TILE
 	camera.limit_right = WORLD_END_X * TILE
 	camera.limit_bottom = (SIZE.y + FOREST_DEPTH) * TILE
 
@@ -1172,6 +1211,18 @@ func _enter_dungeon(start_depth := 1, cheat := false) -> void:
 	Progress.camp_inventory = {}
 	Progress.save_game()
 	get_tree().change_scene_to_file(DUNGEON_SCENE)
+
+
+func _castle_blocked(tile: Vector2i) -> bool:
+	for rect in Castle.blocked_rects():
+		if rect.has_point(tile):
+			return true
+	return false
+
+
+## Az út melletti csempe (ide se kerüljön ütköző fa, hogy kényelmesen el lehessen menni).
+func _near_path(tile: Vector2i) -> bool:
+	return _is_path(tile + Vector2i.LEFT) or _is_path(tile + Vector2i.RIGHT)
 
 
 func _near_blocked(tile: Vector2i, radius: int) -> bool:
