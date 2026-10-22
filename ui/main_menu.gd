@@ -246,36 +246,49 @@ func _build_footer() -> void:
 	add_child(footer)
 
 
-## Profilválasztó a jobb alsó sarokban: három gomb (név + rövid összefoglaló), az aktív kiemelve.
-## Másik profilra kattintva az a mentés töltődik be, és a menü újraépül (Folytatás / Új játék).
+## Profilválasztó a jobb alsó sarokban: ◄ előző / ► következő profil, középen a szám és egy
+## rövid összefoglaló. Lapozáskor az a mentés töltődik be, és a menü újraépül (Folytatás / Új játék).
 func _build_profiles() -> void:
 	_profiles_box = VBoxContainer.new()
-	_profiles_box.add_theme_constant_override("separation", 6)
-	_place(_profiles_box, Vector2(1.0, 1.0), Vector2(-490, -150), Vector2(470, 0))
+	_profiles_box.add_theme_constant_override("separation", 4)
+	_place(_profiles_box, Vector2(1.0, 1.0), Vector2(-380, -140), Vector2(360, 0))
 	add_child(_profiles_box)
-	var caption := Label.new()
-	caption.text = "Mentési profil"
-	caption.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
-	caption.add_theme_font_size_override("font_size", 16)
-	caption.add_theme_color_override("font_color", MenuStyle.PARCHMENT)
-	caption.add_theme_color_override("font_outline_color", MenuStyle.SHADOW)
-	caption.add_theme_constant_override("outline_size", 5)
-	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_profiles_box.add_child(caption)
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_END
 	row.add_theme_constant_override("separation", 8)
 	_profiles_box.add_child(row)
-	for profile in range(1, Profiles.COUNT + 1):
-		var active := profile == Profiles.current()
-		var button := MenuStyle.button("Profil %d
-%s" % [profile, Profiles.summary(profile)])
-		button.custom_minimum_size = Vector2(150, 64)
-		button.add_theme_font_size_override("font_size", 13)
-		button.modulate = Color(1.15, 1.05, 0.8) if active else Color(0.65, 0.6, 0.55)
-		button.tooltip_text = "Ez az aktív profil." if active else "Váltás erre a profilra."
-		button.pressed.connect(_select_profile.bind(profile))
-		row.add_child(button)
+	row.add_child(_profile_arrow("◄", -1))
+	var info := VBoxContainer.new()
+	info.custom_minimum_size.x = 210
+	info.alignment = BoxContainer.ALIGNMENT_CENTER
+	info.add_theme_constant_override("separation", 0)
+	row.add_child(info)
+	info.add_child(_profile_label("Profil %d / %d" % [Profiles.current(), Profiles.COUNT], 20, MenuStyle.GOLD))
+	info.add_child(_profile_label(Profiles.summary(Profiles.current()), 14, MenuStyle.PARCHMENT))
+	row.add_child(_profile_arrow("►", 1))
+
+
+func _profile_arrow(text: String, step: int) -> Button:
+	var button := MenuStyle.button(text)
+	button.custom_minimum_size = Vector2(56, 56)
+	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	button.add_theme_font_size_override("font_size", 20)
+	button.tooltip_text = "Előző profil" if step < 0 else "Következő profil"
+	button.pressed.connect(func() -> void:
+		_select_profile(wrapi(Profiles.current() - 1 + step, 0, Profiles.COUNT) + 1))
+	return button
+
+
+func _profile_label(text: String, size: int, color: Color) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
+	label.add_theme_font_size_override("font_size", size)
+	label.add_theme_color_override("font_color", color)
+	label.add_theme_color_override("font_outline_color", MenuStyle.SHADOW)
+	label.add_theme_constant_override("outline_size", 5)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return label
 
 
 func _select_profile(profile: int) -> void:
