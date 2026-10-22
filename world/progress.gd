@@ -5,7 +5,9 @@ class_name Progress
 ## megmarad; a futás maga (emelet, szint, felszerelés) nem menthető, mindig
 ## a táborban kezdesz.
 
-const PATH := "user://save.cfg"
+## A mentés helye az aktív profiltól függ (lásd Profiles; az 1. profil: user://save.cfg).
+static func path() -> String:
+	return Profiles.save_path()
 
 ## Tábori fejlesztések (minden alapstathoz egy). per_level: ennyit ad szintenként a
 ## `stat`-ra, minden futásra; costs: az egyes szintek ára tábori aranyban.
@@ -52,7 +54,7 @@ static var _loaded := false
 
 
 static func has_save() -> bool:
-	return FileAccess.file_exists(PATH)
+	return FileAccess.file_exists(path())
 
 
 ## Betölti a mentést (ha még nem történt meg, vagy `force`).
@@ -72,7 +74,7 @@ static func load_game(force := false) -> void:
 	npc_quests = {}
 	kills = {}
 	var config := ConfigFile.new()
-	if config.load(PATH) == OK:
+	if config.load(path()) == OK:
 		camp_gold = int(config.get_value("camp", "gold", 0))
 		character = str(config.get_value("camp", "character", Characters.DEFAULT))
 		if not Characters.ALL.has(character):
@@ -128,7 +130,7 @@ static func save_game() -> void:
 	config.set_value("camp", "asked", asked)
 	config.set_value("camp", "npc_quests", npc_quests)
 	config.set_value("camp", "kills", kills)
-	config.save(PATH)
+	config.save(path())
 
 
 static func npc_quest_state(quest_id: String) -> String:

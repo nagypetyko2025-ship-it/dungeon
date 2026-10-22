@@ -17,6 +17,8 @@ static var saved_inventory := {}
 
 # A futás statisztikái a death screenhez.
 static var kills := 0
+## Kinyitott ládák ebben a futásban (a gyakorló pálya is ebből látja, hogy kinyitottad).
+static var chests_opened := 0
 ## Játékidő másodpercben (szünet alatt nem nő).
 static var run_time := 0.0
 ## A futás már bekerült az eredménytáblába (halálkor vagy feladáskor egyszer).
@@ -67,6 +69,7 @@ static func reset() -> void:
 	saved_gold = 0
 	saved_inventory = {}
 	kills = 0
+	chests_opened = 0
 	run_time = 0.0
 	run_recorded = false
 	lift_used_floor = 0

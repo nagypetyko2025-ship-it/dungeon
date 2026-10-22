@@ -29,6 +29,8 @@ var _confirm_new_game := false
 var _tutorial: TutorialPanel
 var _tutorial_button: Button
 var _tutorial_extras: Array = []
+## A profilválasztó (jobb alul): Profil 1-3, lásd Profiles.
+var _profiles_box: VBoxContainer
 
 const TUTORIAL := "tutorial"
 const DUNGEON_SCENE := "res://world/dungeon.tscn"
@@ -55,6 +57,7 @@ func _ready() -> void:
 	_build_buttons()
 	_build_settings()
 	_build_footer()
+	_build_profiles()
 	_buttons.get_child(0).grab_focus()
 
 
@@ -238,9 +241,49 @@ func _build_footer() -> void:
 	footer.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
 	footer.add_theme_font_size_override("font_size", 14)
 	footer.add_theme_color_override("font_color", Color(0.6, 0.52, 0.45, 0.8))
-	_place(footer, Vector2(1.0, 1.0), Vector2(-260, -30), Vector2(240, 20))
+	_place(footer, Vector2(1.0, 1.0), Vector2(-260, -26), Vector2(240, 20))
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(footer)
+
+
+## Profilválasztó a jobb alsó sarokban: három gomb (név + rövid összefoglaló), az aktív kiemelve.
+## Másik profilra kattintva az a mentés töltődik be, és a menü újraépül (Folytatás / Új játék).
+func _build_profiles() -> void:
+	_profiles_box = VBoxContainer.new()
+	_profiles_box.add_theme_constant_override("separation", 6)
+	_place(_profiles_box, Vector2(1.0, 1.0), Vector2(-490, -150), Vector2(470, 0))
+	add_child(_profiles_box)
+	var caption := Label.new()
+	caption.text = "Mentési profil"
+	caption.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
+	caption.add_theme_font_size_override("font_size", 16)
+	caption.add_theme_color_override("font_color", MenuStyle.PARCHMENT)
+	caption.add_theme_color_override("font_outline_color", MenuStyle.SHADOW)
+	caption.add_theme_constant_override("outline_size", 5)
+	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_profiles_box.add_child(caption)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_END
+	row.add_theme_constant_override("separation", 8)
+	_profiles_box.add_child(row)
+	for profile in range(1, Profiles.COUNT + 1):
+		var active := profile == Profiles.current()
+		var button := MenuStyle.button("Profil %d
+%s" % [profile, Profiles.summary(profile)])
+		button.custom_minimum_size = Vector2(150, 64)
+		button.add_theme_font_size_override("font_size", 13)
+		button.modulate = Color(1.15, 1.05, 0.8) if active else Color(0.65, 0.6, 0.55)
+		button.tooltip_text = "Ez az aktív profil." if active else "Váltás erre a profilra."
+		button.pressed.connect(_select_profile.bind(profile))
+		row.add_child(button)
+
+
+func _select_profile(profile: int) -> void:
+	if profile == Profiles.current():
+		return
+	Audio.play("ui_click")
+	Profiles.select(profile)
+	get_tree().reload_current_scene()
 
 
 ## Egy panel (Eredmények / Beállítások) megnyitása a gombok helyén; "" = vissza a gombokhoz.
@@ -253,6 +296,7 @@ func _show_panel(panel: String) -> void:
 	for part in _subtitle_parts + _tutorial_extras:
 		part.modulate.a = 1.0 if panel.is_empty() else 0.0
 	_tutorial_button.visible = panel.is_empty()
+	_profiles_box.visible = panel.is_empty()
 	# A nagy Tutorial ablak a címig ér: ilyenkor a cím is eltűnik.
 	_title.get_parent().modulate.a = 0.0 if panel == TUTORIAL else 1.0
 	if panel.is_empty():

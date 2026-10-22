@@ -40,6 +40,7 @@ func _open() -> void:
 	if _opened:
 		return
 	_opened = true
+	GameState.chests_opened += 1
 	Quests.notify("chest")
 	Audio.play("chest_open")
 	_sprite.play()

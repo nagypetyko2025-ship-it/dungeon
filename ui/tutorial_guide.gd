@@ -6,6 +6,9 @@ extends CanvasLayer
 ## tárgylifton, (íjászként a suhanáson,) a szünet menün és a lépcsőn. A végén egy
 ## összefoglaló mondja el, ami a pályán nem fér bele (tábor, főellenségek, karakterek...).
 ## A Dungeon hozza létre, ha GameState.tutorial igaz.
+## Hülyebiztos: minden mozdulatot megjegyez, amikor csak megtörténik (_seen), így ha valamit
+## előre megcsinálsz (pl. kinyitod a ládát, mielőtt az lenne a feladat), az a lépés később
+## azonnal teljesül, nem akad el. Ha egy lépés már kész, a "start" része sem fut le.
 
 const MAIN_MENU := "res://ui/main_menu.tscn"
 const XP_ORB := preload("res://pickups/xp_orb.tscn")
@@ -19,9 +22,12 @@ var _steps: Array[Dictionary] = []
 var _index := 0
 var _advancing := false
 var _start_position := Vector2.ZERO
-var _gold_at_step := 0
 var _was_in_shop := false
 var _potions_at_step := 0
+## Ami már megtörtént (bármikor): mozgás, támadás, térkép, láda, karakterlap, bolt, lift...
+var _seen := {}
+var _last_potions := 0
+var _potion_step_started := false
 
 var _panel: PanelContainer
 var _counter: Label
@@ -53,12 +59,12 @@ func _build_steps() -> void:
 		+ ("Az íjászod nyilat lő (egyszerre többet is)." if archer else "A kard egyenesen előre döf; a Hatótáv stat azt adja meg, milyen messzire.")
 	_steps = [
 		{"title": "Mozgás", "text": "Üdv a Mélységben! Mozogj a [b]W A S D[/b] gombokkal.",
-			"done": func() -> bool: return _player.global_position.distance_to(_start_position) > 140.0},
+			"done": func() -> bool: return _seen.has("moved")},
 		{"title": "Támadás", "text": attack_text,
-			"done": func() -> bool: return Input.is_action_pressed("attack")},
+			"done": func() -> bool: return _seen.has("attack")},
 		{"title": "Térkép", "text": "Jobb fent a kis térkép. Nyomd meg az [b]M[/b] gombot a nagy térképhez (újra M: bezárás). "
 			+ "A piros szobák még tele vannak szörnnyel, a zöldek tiszták, a narancs a bolt, a háromszög a lépcső.",
-			"done": func() -> bool: return _dungeon.get_node("HUD/Minimap").get("_expanded") == true},
+			"done": func() -> bool: return _seen.has("map")},
 		{"title": "Harc", "text": "Menj át a jobb oldali szobába! Amint belépsz, az ajtók bezárulnak, és csak akkor nyílnak ki, "
 			+ "ha minden szörnyet legyőztél. Kerüld a tüskéket, és figyeld az életerődet bal fent.",
 			"done": func() -> bool: return _room(1).visited and _room(1).is_cleared()},
@@ -68,41 +74,40 @@ func _build_steps() -> void:
 			"start": _spawn_xp,
 			"done": func() -> bool: return _player.get_node("Experience").level >= 2 and not _dungeon.get_node("LevelUp").visible},
 		{"title": "Láda", "text": "A kitisztított szobában megjelent egy láda. Érintsd meg: aranyat dob, néha tárgyat is.",
-			"start": func() -> void: _gold_at_step = _player.gold,
-			"done": func() -> bool: return _player.gold > _gold_at_step},
+			"done": func() -> bool: return _seen.has("chest")},
 		{"title": "Felszerelés", "text": "Kaptál egy sisakot. Nyisd meg a felszerelést az [b]I[/b] gombbal, és húzd a sisakot a "
 			+ "helyére (vagy jobb klikk rá). Az egeret egy tárgy fölé víve látod a statjait és az összehasonlítást.",
 			"start": _give_helmet,
 			"done": func() -> bool: return _player.get_node("Inventory").equipment["helmet"] != null},
 		{"title": "Karakterlap", "text": "Csukd be (I), és nyomd meg a [b]Tab[/b] gombot: itt látod az összes statodat "
 			+ "(sebzés, élet, védelem, kikerülés, kritikus esély, hatótáv...) és a fegyvered sebzésképletét.",
-			"done": func() -> bool: return _dungeon.get_node("StatsScreen").visible},
+			"done": func() -> bool: return _seen.has("stats")},
 		{"title": "Bolt", "text": "Csukd be (Tab), és menj tovább jobbra. Ebben a szobában a falban egy bolt van: "
 			+ "egyszerűen sétálj neki az ajtajának, és bemész.",
-			"done": func() -> bool: return _in_shop()},
+			"done": func() -> bool: return _seen.has("shop_in")},
 		{"title": "Vásárlás", "text": "A gyanús boltos árul: állj egy tárgy elé, és ha van elég aranyad, E-vel megveszed. "
 			+ "A pultnál E-vel el is adhatsz, [b]F[/b]-fel pedig HP bájitalt vehetsz tőle (125 arany, boltonként 2 db). "
 			+ "A szoba közepén lévő karral új árut kérhetsz. Ha körülnéztél, gyere ki a lenti ajtón.",
-			"done": func() -> bool: return _was_in_shop and not _in_shop()},
+			"done": func() -> bool: return _seen.has("shop_out")},
 		{"title": "HP bájital", "text": "Alul, az XP-csík fölött a [b]gyorstár[/b]: az első helyén vannak a HP bájitalaid "
 			+ "(a szám mutatja, mennyi van nálad). A boltos adott egyet kóstolónak, és közben megsérültél. "
 			+ "Nyomd meg az [b]1[/b]-es gombot: a bájital az elvesztett életed felét tölti vissza. "
 			+ "Minden főellenség után is kapsz egyet.",
 			"start": _start_potion_step,
-			"done": func() -> bool: return GameState.potions < _potions_at_step},
+			"done": func() -> bool: return _seen.has("potion")},
 		{"title": "Tárgylift", "text": "A bolt mellett a falban a [b]tárgylift[/b]: emeletenként egy tárgyat felküldhetsz vele a "
 			+ "táborba (a tábori ládába kerül, megmarad). Menj oda, és nyomd meg az [b]E[/b] gombot. "
 			+ "(Gyakorláskor nem küld fel semmit.)",
-			"done": func() -> bool: return _dungeon.get_node_or_null("ItemLiftPanel") != null and _dungeon.get_node("ItemLiftPanel").visible},
+			"done": func() -> bool: return _seen.has("lift")},
 	]
 	if archer:
 		_steps.append({"title": "Suhanás", "text": "Íjászként a [b]Ctrl[/b] gombbal a kurzor felé suhansz: átmész a "
 			+ "szörnyeken, és közben nem sebezhetnek meg. 5 másodpercenként használhatod (alul látod, mikor kész).",
-			"done": func() -> bool: return _player.call("dash_cooldown_ratio") > 0.0})
+			"done": func() -> bool: return _seen.has("dash")})
 	_steps.append_array([
 		{"title": "Szünet", "text": "Az [b]Esc[/b] gombbal szünetelteted a játékot: innen állíthatod a hangot és a teljes "
 			+ "képernyőt, vagy feladhatod a futást (ilyenkor a pénzed 40%-a a táborba kerül). Nyomd meg az Esc-et.",
-			"done": func() -> bool: return _dungeon.get_node("PauseMenu").visible},
+			"done": func() -> bool: return _seen.has("pause")},
 		{"title": "Az utolsó szoba", "text": "Folytasd (Esc), és menj a jobb szélső szobába. A lépcsőn rács van, "
 			+ "amíg a szoba szörnyei élnek: győzd le mindet!",
 			"done": func() -> bool: return _room(3).visited and _room(3).is_cleared()},
@@ -115,19 +120,52 @@ func _build_steps() -> void:
 func _start_potion_step() -> void:
 	GameState.potions += 1
 	_potions_at_step = GameState.potions
+	_last_potions = GameState.potions
+	_potion_step_started = true
 	var health: Health = _player.get_node("Health")
 	health.current = maxi(1, health.max_health / 2)
 	health.changed.emit(health.current, health.max_health)
 
 
 func _process(_delta: float) -> void:
-	if _in_shop():
-		_was_in_shop = true
-	if _advancing or _index >= _steps.size() or not is_instance_valid(_player):
+	if not is_instance_valid(_player):
+		return
+	_remember()
+	if _advancing or _index >= _steps.size():
 		return
 	var done: Callable = _steps[_index]["done"]
 	if done.call():
 		_advance()
+
+
+## Minden képkockában feljegyzi, ami épp történik (akármelyik lépésnél tartasz).
+func _remember() -> void:
+	if _player.global_position.distance_to(_start_position) > 140.0:
+		_seen["moved"] = true
+	if Input.is_action_pressed("attack"):
+		_seen["attack"] = true
+	if _dungeon.get_node("HUD/Minimap").get("_expanded") == true:
+		_seen["map"] = true
+	if GameState.chests_opened > 0:
+		_seen["chest"] = true
+	if _dungeon.get_node("StatsScreen").visible:
+		_seen["stats"] = true
+	if _in_shop():
+		_was_in_shop = true
+		_seen["shop_in"] = true
+	elif _was_in_shop:
+		_seen["shop_out"] = true
+	var lift := _dungeon.get_node_or_null("ItemLiftPanel")
+	if lift != null and lift.visible:
+		_seen["lift"] = true
+	if Characters.data(Progress.character).get("dash", false) and _player.call("dash_cooldown_ratio") > 0.0:
+		_seen["dash"] = true
+	if _dungeon.get_node("PauseMenu").visible:
+		_seen["pause"] = true
+	# A bájital a saját lépésétől számít (akkor kapod az ajándékot).
+	if _potion_step_started and GameState.potions < _last_potions:
+		_seen["potion"] = true
+	_last_potions = GameState.potions
 
 
 func _advance() -> void:
@@ -149,7 +187,9 @@ func _show_step() -> void:
 	_title.text = step["title"]
 	_title.add_theme_color_override("font_color", UiStyle.INK)
 	_text.text = step["text"]
-	if step.has("start"):
+	# Ha már előre megcsináltad, nem kell újra előkészíteni (pl. XP-gömbök, ajándék sisak).
+	var already: bool = (step["done"] as Callable).call()
+	if step.has("start") and not already:
 		(step["start"] as Callable).call()
 	_panel.modulate.a = 0.0
 	create_tween().tween_property(_panel, "modulate:a", 1.0, 0.3)

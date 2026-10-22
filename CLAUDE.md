@@ -21,7 +21,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 2. Funkcióteszt: ideiglenes `_shot.gd` a projekt gyökerében (`extends SceneTree`, `_initialize`-ban jelenetváltás,
    `await process_frame`, képernyőkép: `root.get_texture().get_image().save_png(...)` a scratchpadbe), futtatás:
    `Godot --path . --script res://_shot.gd` (nem headless, hogy legyen kép). Utána `_shot.gd*` törlése.
-3. **Mindig** mentsd el és állítsd vissza a mentést: `Progress.PATH` (user://save.cfg) tartalmát a teszt elején
+3. **Mindig** mentsd el és állítsd vissza a mentést: `Progress.path()` (profilonként: save.cfg, save_2.cfg, save_3.cfg; lásd `world/profiles.gd`) tartalmát a teszt elején
    olvasd be, a végén írd vissza, és ellenőrizd ("mentés változatlan: true").
    **Ezen felül shellből is**: futtatás előtt `cp "$APPDATA/Godot/app_userdata/dungeon/save.cfg" <scratchpad>/save_backup.cfg`,
    utána *feltétel nélkül* vissza (ha a szkript elszáll, a GDScript-es visszaállítás nem fut le — egyszer már így

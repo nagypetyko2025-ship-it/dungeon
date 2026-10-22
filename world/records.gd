@@ -3,7 +3,9 @@ class_name Records
 ## mennyi aranyad volt és hány szörnyet öltél meg. Az 5 legjobbat tartja meg, rangsorolva:
 ## előbb a mélység, aztán az arany, aztán a megölt szörnyek száma dönt.
 
-const PATH := "user://records.cfg"
+## Az eredménytábla helye az aktív profiltól függ (lásd Profiles).
+static func path() -> String:
+	return Profiles.records_path()
 const MAX_ENTRIES := 5
 
 
@@ -12,7 +14,7 @@ const MAX_ENTRIES := 5
 static func top() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var config := ConfigFile.new()
-	if config.load(PATH) != OK:
+	if config.load(path()) != OK:
 		return result
 	var saved: Variant = config.get_value("records", "entries", [])
 	if saved is Array:
@@ -36,7 +38,7 @@ static func submit(depth: int, gold: int, kills: int, level: int, time: float, e
 	entries.resize(mini(entries.size(), MAX_ENTRIES))
 	var config := ConfigFile.new()
 	config.set_value("records", "entries", entries)
-	config.save(PATH)
+	config.save(path())
 	return rank if rank <= MAX_ENTRIES else 0
 
 
