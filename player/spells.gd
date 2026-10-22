@@ -44,7 +44,7 @@ static func damage(spell: String, base_hit: int) -> int:
 
 ## A varázslat elsütése (Player hívja): a lövedékek / tüskék a játékos szülőjébe kerülnek.
 static func cast(player: Node2D, spell: String, aim: Vector2) -> void:
-	var direction := aim.normalized() if aim.length() > 1.0 else Vector2.RIGHT
+	var direction := aim.normalized() if aim.length() > 0.001 else Vector2.RIGHT
 	var hit: int = damage(spell, player.call("hit_damage"))
 	var stats: Stats = player.get_node("Stats")
 	match spell:
