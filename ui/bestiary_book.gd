@@ -7,7 +7,7 @@ extends CanvasLayer
 const LEATHER := Color(0.22, 0.2, 0.26)
 const LEATHER_DARK := Color(0.11, 0.1, 0.14)
 const PAGE_SIZE := Vector2(420, 400)
-const PER_PAGE := 4
+const PER_PAGE := 3
 const ICON_SIZE := Vector2(52, 52)
 
 var _tab := 0
@@ -88,13 +88,16 @@ func _build() -> void:
 	root.add_theme_constant_override("separation", 10)
 	center.add_child(root)
 	root.add_child(MenuStyle.title_label("Szörnyek könyve", 44, MenuStyle.GOLD))
-	var tabs := HBoxContainer.new()
-	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
-	tabs.add_theme_constant_override("separation", 6)
+	# Kategória-fülek két sorban.
+	var tabs := GridContainer.new()
+	tabs.columns = ceili(Bestiary.CATEGORIES.size() / 2.0)
+	tabs.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	tabs.add_theme_constant_override("h_separation", 6)
+	tabs.add_theme_constant_override("v_separation", 4)
 	root.add_child(tabs)
 	for i in Bestiary.CATEGORIES.size():
 		var tab := MenuStyle.button(Bestiary.CATEGORIES[i][0])
-		tab.custom_minimum_size = Vector2(138, 40)
+		tab.custom_minimum_size = Vector2(170, 36)
 		tab.add_theme_font_size_override("font_size", 14)
 		tab.focus_mode = Control.FOCUS_NONE
 		tab.pressed.connect(_set_tab.bind(i))
@@ -222,6 +225,12 @@ func _entry(monster: String) -> HBoxContainer:
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	description.custom_minimum_size.x = PAGE_SIZE.x - ICON_SIZE.x - 50
 	text.add_child(description)
+	var abilities := Bestiary.abilities_text(monster)
+	if not abilities.is_empty():
+		var ability_label := UiStyle.label("Képességek: " + abilities, 13, Color(0.45, 0.22, 0.6))
+		ability_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		ability_label.custom_minimum_size.x = PAGE_SIZE.x - ICON_SIZE.x - 50
+		text.add_child(ability_label)
 	return row
 
 

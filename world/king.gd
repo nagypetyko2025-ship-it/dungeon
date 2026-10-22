@@ -120,7 +120,7 @@ static func _ask_thief(before: String) -> String:
 ## A hét szörnykirály közül, akit még nem győztél le (a Szörnyek könyve szerint).
 static func missing_kings() -> Array[String]:
 	var missing: Array[String] = []
-	for boss: String in Bestiary.CATEGORIES[7][1]:
+	for boss: String in Bestiary.KINGS:
 		if boss != "Vérfarkas, a Mélység Ura" and Bestiary.kills(boss) <= 0:
 			missing.append(boss)
 	return missing

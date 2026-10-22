@@ -7,20 +7,31 @@ class_name Bestiary
 const BOSS_SCRIPT := preload("res://enemies/boss.gd")
 const WEREWOLF_SCRIPT := preload("res://enemies/werewolf_boss.gd")
 
-## Kategóriák sorrendben: id -> [cím, szörnyek].
+## A hét szörnykirály (a 3. emelettől minden 3. emeleten), és a Mélység Ura.
+const KINGS := ["Ogrekirály", "Orkhadúr", "Gyíkkirály", "Démonúr", "Nekromanta-főpap", "Jégóriás", "Zombikirály"]
+const LORD := "Vérfarkas, a Mélység Ura"
+## Kategóriák sorrendben: [cím, szörnyek].
 const CATEGORIES := [
 	["Élőholtak", ["tiny_zombie", "zombie", "ice_zombie", "big_zombie", "skelet", "skeleton_legionary",
 		"necromancer", "lich"]],
-	["Zöldbőrűek", ["goblin", "orc_warrior", "masked_orc", "orc_shaman", "ogre"]],
+	["Zöldbőrűek", ["goblin", "spear_goblin", "kamikaze_goblin", "orc_warrior", "masked_orc", "orc_shaman", "ogre"]],
 	["Démonok", ["imp", "wogol", "chort", "big_demon", "armored_demon", "purple_demon"]],
-	["Nyálkák", ["tiny_slug", "slug", "muddy", "swampy"]],
+	["Nyálkák", ["tiny_slug", "slug", "green_slime", "frost_slime", "muddy", "swampy"]],
 	["Népek", ["archer", "huntress", "dark_mage", "fire_witch", "fallen_knight", "dwarf", "dwarf_berserker",
 		"plague_doctor", "lizard", "lizard_scout"]],
-	["Fenevadak", ["minotaur", "yeti", "wendigo", "mammoth", "giant_crab", "fire_dragon"]],
+	["Kalózok", ["pirate_grunt", "pirate_gunner", "pirate_captain"]],
+	["Fenevadak", ["minotaur", "yeti", "wendigo", "mammoth", "giant_crab"]],
+	["Sárkányok", ["fire_dragon", "frost_dragon", "shadow_dragon"]],
 	["Különös lények", ["mimic", "pumpkin_dude", "angel"]],
-	["Főellenségek", ["Ogrekirály", "Orkhadúr", "Gyíkkirály", "Démonúr", "Nekromanta-főpap", "Jégóriás", "Zombikirály",
-		"Vérfarkas, a Mélység Ura"]],
+	["Főellenségek", KINGS + [LORD]],
 ]
+## A képességek neve a könyvben (EnemyAbilities, és a típus "dash" / "ranged" jelzője).
+const ABILITY_NAMES := {
+	"zigzag": "cikázás", "teleport": "teleport", "summon": "idézés", "heal": "gyógyítás",
+	"war_cry": "harci kiáltás", "berserk": "dühöngés", "death_burst": "halálrobbanás",
+	"regenerate": "regeneráció", "poison": "méreg", "frost": "fagy", "plunder": "fosztogatás",
+	"shield": "pajzs", "explode": "kamikaze robbanás", "dash": "roham", "ranged": "távolsági",
+}
 
 ## szörny -> [név, rövid leírás]
 const ENTRIES := {
@@ -63,6 +74,15 @@ const ENTRIES := {
 	"mammoth": ["Mamut", "Ősi agyaras óriás, ami eltaposhat, ha elé állsz."],
 	"giant_crab": ["Óriásrák", "Páncélja alig enged, az ollói egy kardot is kettétörnek."],
 	"fire_dragon": ["Tűzsárkány", "A mélység ura alatti szintek réme. Tűzzáport lövell."],
+	"frost_dragon": ["Jégsárkány", "Jeges lehelete lelassít. Ha eltalál, alig tudsz elmenekülni előle."],
+	"shadow_dragon": ["Éjsárkány", "A legmélyebb termek ura: mérgező lángot köp, és pajzsot von maga köré."],
+	"green_slime": ["Zöld nyálka", "Ugráló, savas kocsonya. Ha hozzád ér, megmérgez."],
+	"frost_slime": ["Jégnyálka", "Hideg, kékes nyálka. Az érintése lelassít, és a sebei lassan begyógyulnak."],
+	"spear_goblin": ["Lándzsás goblin", "Mérgezett hegyű lándzsával ront rád. Ne hagyd, hogy nekifusson."],
+	"kamikaze_goblin": ["Kamikaze goblin", "Hordónyi puskaporral rohan feléd. Ha közel ér, felrobban."],
+	"pirate_grunt": ["Kalózmatróz", "Egy elsüllyedt hajó legénységéből. Minden ütésével aranyat lop."],
+	"pirate_gunner": ["Kalóz puskás", "Távolról lő, és a golyója az erszényedet is megcsapolja."],
+	"pirate_captain": ["Kalózkapitány", "A legénység feje: pajzsot von maga köré, és rohamra hívja az embereit."],
 	"mimic": ["Mimik", "Ládának álcázza magát. Ha közel mész, kitátja a fogas száját."],
 	"pumpkin_dude": ["Töklámpás", "Vigyorgó tökfej, ami halálakor szétrobban."],
 	"angel": ["Bukott angyal", "A többi szörnyet gyógyítja. Vele kezdd!"],
@@ -89,6 +109,20 @@ static func discovered(category: int) -> Array[String]:
 		if kills(monster) > 0:
 			result.append(monster)
 	return result
+
+
+## A szörny képességei olvashatóan (pl. "méreg, pajzs"); "" ha nincs (vagy főellenség).
+static func abilities_text(monster: String) -> String:
+	var type := EnemyTypes.by_name(monster)
+	if type["name"] != monster:
+		return ""
+	var names: Array[String] = []
+	for ability: String in type.get("abilities", []):
+		names.append(ABILITY_NAMES.get(ability, ability))
+	for flag: String in ["dash", "ranged"]:
+		if type.get(flag, false):
+			names.append(ABILITY_NAMES[flag])
+	return ", ".join(names)
 
 
 ## A szörny képe (az álló animáció első kockája) és a színezése.

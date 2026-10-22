@@ -3,3 +3,5 @@ minotaur.png, yeti.png, wendigo.png, armored_demon.png, skeleton_legionary.png: 
 
 werewolf.png: "Bloody Werewolf" (d36williams, CC0 a választható licencek közül, https://opengameart.org/content/bloody-werewolf), a szemből és oldalról látszó járás-kockákból összeállítva.
 mammoth.png, giant_crab.png, lich.png, purple_demon.png, fire_dragon.png: szintén a "MiniWorld Sprites" csomagból (CC0), az oldalnézeti (a ráknál a szemből látszó) kockákból összeállítva.
+
+pirate_grunt.png, pirate_gunner.png, pirate_captain.png, kamikaze_goblin.png, spear_goblin.png, green_slime.png, frost_slime.png, frost_dragon.png, shadow_dragon.png: szintén a "MiniWorld Sprites" csomagból (CC0, https://opengameart.org/content/miniworld-sprites), a jobbra néző oldalnézeti (a nyálkáknál a szemből látszó) kockákból összeállítva.

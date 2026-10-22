@@ -12,6 +12,11 @@ extends Node
 ##   berserk      fél élet alatt dühöng: sokkal gyorsabb és vöröses
 ##   death_burst  halálakor lövedékek repülnek szét belőle minden irányba
 ##   regenerate   lassan visszatölti az életét
+##   poison       a találata megmérgez: pár mp-ig másodpercenként sebződsz (zöld)
+##   frost        a találata megfagyaszt: pár mp-ig lassabban mozogsz (kékes)
+##   plunder      a találata aranyat lop tőled; ha megölöd, visszakapod (és még egy kicsit)
+##   shield       időnként pajzsot von maga köré: amíg tart, semmi nem sebzi
+##   explode      ha a közeledbe ér, felvillan és felrobban (a robbanás téged is megsebez)
 
 const MAGIC_BOLT := preload("res://enemies/magic_bolt.tscn")
 ## Ennyi ideig villog, mielőtt képességet használ (ilyenkor áll): ennyi időd van reagálni.
@@ -19,11 +24,13 @@ const WINDUP := 0.45
 const WINDUP_COLORS := {
 	"teleport": Color(1.8, 0.8, 2.6), "summon": Color(0.8, 2.0, 1.0),
 	"heal": Color(0.9, 2.2, 0.9), "war_cry": Color(2.4, 1.4, 0.5),
+	"shield": Color(1.0, 1.8, 2.6),
 }
 ## Két használat között eltelt idő (mp), [min, max].
 const COOLDOWNS := {
 	"teleport": Vector2(3.5, 5.5), "summon": Vector2(6.0, 8.0),
 	"heal": Vector2(3.5, 4.5), "war_cry": Vector2(6.0, 8.0),
+	"shield": Vector2(7.0, 9.0),
 }
 ## Ennél messzebbről nem használja a képességeit.
 const ACTIVE_RANGE := 420.0
@@ -42,6 +49,16 @@ const BERSERK_TINT := Color(1.4, 0.6, 0.55)
 const BURST_BOLTS := 8
 const BURST_SPEED := 190.0
 const REGEN_PER_SECOND := 0.6
+const POISON_TIME := 3.0
+const FROST_TIME := 2.0
+## Ennyi aranyat lop egy találattal (+ emeletenként egy kicsit), legfeljebb amennyi nálad van.
+const PLUNDER_GOLD := 4
+const SHIELD_TIME := 2.0
+const SHIELD_COLOR := Color(0.55, 0.85, 1.0)
+const EXPLODE_TRIGGER := 70.0
+const EXPLODE_RADIUS := 95.0
+const EXPLODE_WINDUP := 0.6
+const COIN := preload("res://pickups/coin.tscn")
 
 var enemy: CharacterBody2D
 var abilities: Array = []
@@ -52,6 +69,11 @@ var _zigzag_time := 0.0
 var _haste_left := 0.0
 var _berserk := false
 var _summoned := 0
+var _shield_left := 0.0
+var _shield: Node2D
+var _exploding := false
+## A fosztogató által ellopott arany (halálakor visszaesik).
+var _stolen := 0
 
 
 func setup(owner_enemy: CharacterBody2D, list: Array) -> void:
@@ -100,12 +122,24 @@ func haste(seconds: float) -> void:
 	_haste_left = maxf(_haste_left, seconds)
 
 
+## Pajzs alatt semmi nem sebzi.
+func is_shielded() -> bool:
+	return _shield_left > 0.0
+
+
 func _physics_process(delta: float) -> void:
 	_haste_left -= delta
+	if _shield_left > 0.0:
+		_shield_left -= delta
+		if _shield_left <= 0.0 and is_instance_valid(_shield):
+			_shield.queue_free()
 	if _busy or not enemy.is_physics_processing():
 		return
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	if player == null or enemy.global_position.distance_to(player.global_position) > ACTIVE_RANGE:
+		return
+	if has("explode") and not _exploding 			and enemy.global_position.distance_to(player.global_position) < EXPLODE_TRIGGER:
+		_explode(player)
 		return
 	for ability: String in abilities:
 		if not _cooldowns.has(ability):
@@ -141,6 +175,7 @@ func _use(ability: String, player: Node2D) -> void:
 		"summon": _summon()
 		"heal": _heal()
 		"war_cry": _war_cry()
+		"shield": _raise_shield()
 
 
 func _teleport(player: Node2D) -> void:
@@ -192,8 +227,88 @@ func _on_health_changed(current: int, maximum: int) -> void:
 	FloatingText.spawn(enemy.get_parent(), _head(), "Dühöng!", Color(1, 0.35, 0.25))
 
 
+## Az ellenség találata (közelharc vagy lövedék) a játékost: méreg, fagy, fosztogatás.
+func on_hit_player(player: Node2D) -> void:
+	if not is_instance_valid(player):
+		return
+	if has("poison"):
+		player.call("apply_poison", POISON_TIME)
+	if has("frost"):
+		player.call("apply_slow", FROST_TIME)
+	if has("plunder"):
+		var taken: int = player.call("lose_gold", PLUNDER_GOLD + int(enemy.get("_depth")) / 2)
+		if taken > 0:
+			_stolen += taken
+			Audio.play("coin", -6.0, 0.3)
+			FloatingText.spawn(enemy.get_parent(), _head(), "-%d arany!" % taken, Color(1, 0.8, 0.2))
+
+
+func _raise_shield() -> void:
+	Audio.play("magic", -8.0, 0.2)
+	_shield_left = SHIELD_TIME
+	if is_instance_valid(_shield):
+		_shield.queue_free()
+	_shield = ShieldBubble.new()
+	var size: Vector2 = enemy.get("_type")["rect"].size * 2.0 * float(enemy.get("_size_scale"))
+	_shield.set("radius", maxf(size.x, size.y) * 0.6)
+	_shield.position = Vector2(0, -size.y / 2.0)
+	enemy.add_child(_shield)
+
+
+## Kamikaze: megáll, vörösen felvillan, aztán felrobban (ő maga is meghal).
+func _explode(player: Node2D) -> void:
+	_exploding = true
+	_busy = true
+	var visual: Node2D = enemy.get_node("Visual")
+	var flash := create_tween().set_loops(3)
+	flash.tween_property(visual, "modulate", Color(3, 0.8, 0.5), EXPLODE_WINDUP / 6.0)
+	flash.tween_property(visual, "modulate", Color.WHITE, EXPLODE_WINDUP / 6.0)
+	await get_tree().create_timer(EXPLODE_WINDUP, false).timeout
+	if not is_instance_valid(enemy) or not enemy.is_physics_processing():
+		return
+	Audio.play("boss_slam", -4.0)
+	_blast(enemy.global_position + Vector2(0, -12))
+	if is_instance_valid(player) and player.global_position.distance_to(enemy.global_position) < EXPLODE_RADIUS:
+		var blast := Hitbox.new()
+		blast.damage = roundi(int(enemy.get("stats")["damage"]) * 1.5)
+		blast.knockback = 520.0
+		enemy.get_parent().add_child(blast)
+		blast.global_position = enemy.global_position
+		player.call("_on_hurt", blast)
+		blast.queue_free()
+	_busy = false
+	enemy.get_node("Health").damage(99999, false)
+
+
+func _blast(at: Vector2) -> void:
+	var fire := CPUParticles2D.new()
+	fire.one_shot = true
+	fire.emitting = true
+	fire.amount = 40
+	fire.lifetime = 0.55
+	fire.explosiveness = 1.0
+	fire.spread = 180.0
+	fire.initial_velocity_min = 80.0
+	fire.initial_velocity_max = 220.0
+	fire.scale_amount_min = 4.0
+	fire.scale_amount_max = 8.0
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(1, 0.9, 0.4))
+	gradient.set_color(1, Color(0.6, 0.15, 0.05, 0))
+	fire.color_ramp = gradient
+	enemy.get_parent().add_child(fire)
+	fire.global_position = at
+	get_tree().create_timer(1.2, false).timeout.connect(fire.queue_free)
+
+
 ## Halálkor hívja az ellenség.
 func on_died() -> void:
+	if _stolen > 0:
+		# A fosztogató elejti a zsákmányt (és egy kis ráadást).
+		var coin = COIN.instantiate()
+		coin.value = _stolen + 2
+		coin.position = enemy.position + Vector2(0, -8)
+		enemy.get_parent().add_child.call_deferred(coin)
 	if not has("death_burst"):
 		return
 	Audio.play("magic", -4.0)
@@ -252,3 +367,19 @@ func _puff(at: Vector2) -> void:
 	enemy.get_parent().add_child(puff)
 	puff.global_position = at + Vector2(0, -16)
 	get_tree().create_timer(1.0, false).timeout.connect(puff.queue_free)
+
+
+## Áttetsző kék pajzsbuborék az ellenség körül (a pajzs képesség ideje alatt).
+class ShieldBubble:
+	extends Node2D
+	var radius := 24.0
+	var _time := 0.0
+
+	func _process(delta: float) -> void:
+		_time += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		var pulse := 0.85 + 0.15 * sin(_time * 8.0)
+		draw_circle(Vector2.ZERO, radius * pulse, Color(SHIELD_COLOR, 0.22))
+		draw_arc(Vector2.ZERO, radius * pulse, 0.0, TAU, 32, Color(SHIELD_COLOR, 0.8), 2.0)

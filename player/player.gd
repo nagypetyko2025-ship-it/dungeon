@@ -102,6 +102,14 @@ var _weapon_type := "sword"
 var _step_distance := 0.0
 var _war_cry_left := 0.0
 var _shadow_left := 0.0
+## Szörny-képességek hatása rád: méreg (másodpercenként sebez) és fagy (lassít).
+var _poison_left := 0.0
+var _poison_tick := 0.0
+var _slow_left := 0.0
+const POISON_DAMAGE := 1
+const SLOW_MULTIPLIER := 0.6
+const POISON_TINT := Color(0.6, 1.25, 0.55)
+const FROST_TINT := Color(0.6, 0.85, 1.4)
 var _backstab_left := 0.0
 var _dash_left := 0.0
 var _dash_cooldown_left := 0.0
@@ -310,6 +318,41 @@ func on_hit_enemy(_damage: int) -> void:
 		FloatingText.spawn(get_parent(), global_position + Vector2(0, -56), "+1", Color(0.9, 0.3, 0.5))
 
 
+## Méreg (pl. nyálka, pestisdoktor találata): `seconds` mp-ig másodpercenként POISON_DAMAGE sebzés.
+func apply_poison(seconds: float) -> void:
+	if _poison_left <= 0.0:
+		_poison_tick = 1.0
+		FloatingText.spawn(get_parent(), global_position + Vector2(0, -70), "Megmérgeztek!", Color(0.5, 1, 0.4), 18)
+	_poison_left = maxf(_poison_left, seconds)
+
+
+## Fagy (pl. jégnyálka, jégsárkány): `seconds` mp-ig lassabban mozogsz.
+func apply_slow(seconds: float) -> void:
+	if _slow_left <= 0.0:
+		FloatingText.spawn(get_parent(), global_position + Vector2(0, -70), "Megfagytál!", Color(0.6, 0.85, 1), 18)
+	_slow_left = maxf(_slow_left, seconds)
+
+
+## Fosztogató szörny: elvesz ennyi aranyat (amennyi van); visszaadja, mennyit vett el.
+func lose_gold(amount: int) -> int:
+	var taken := mini(amount, gold)
+	if taken > 0:
+		add_gold(-taken)
+	return taken
+
+
+func _update_afflictions(delta: float) -> void:
+	_slow_left = maxf(_slow_left - delta, 0.0)
+	if _poison_left > 0.0:
+		_poison_left -= delta
+		_poison_tick -= delta
+		if _poison_tick <= 0.0:
+			_poison_tick = 1.0
+			if not GameState.god_mode and _health.damage(POISON_DAMAGE, false):
+				FloatingText.spawn(get_parent(), global_position + Vector2(0, -56), "-%d" % POISON_DAMAGE, Color(0.5, 1, 0.4))
+	_sprite.self_modulate = POISON_TINT if _poison_left > 0.0 else (FROST_TINT if _slow_left > 0.0 else Color.WHITE)
+
+
 ## Levonja az árat, ha van elég arany; különben hamisat ad.
 func spend_gold(amount: int) -> bool:
 	if gold < amount:
@@ -373,7 +416,9 @@ func _physics_process(delta: float) -> void:
 			_apply_stats()
 	if Input.is_physical_key_pressed(KEY_CTRL) and _can_shadow_step():
 		_shadow_step(get_global_mouse_position())
-	velocity = input_dir * BASE_SPEED * (_stats.move_speed / 100.0) + _knockback
+	_update_afflictions(delta)
+	var slow := SLOW_MULTIPLIER if _slow_left > 0.0 else 1.0
+	velocity = input_dir * BASE_SPEED * (_stats.move_speed / 100.0) * slow + _knockback
 	_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
 	move_and_slide()
 	_update_footsteps(delta, input_dir)

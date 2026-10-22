@@ -249,6 +249,8 @@ func _aim_and_shoot() -> void:
 		projectile.direction = aim.rotated((i - (shots - 1) / 2.0) * spread)
 		projectile.speed = stats["arrow_speed"]
 		projectile.damage = stats["damage"]
+		# A lövedék találata is az ellenségé (méreg, fagy, fosztogatás).
+		projectile.set_meta("source", self)
 		get_parent().add_child(projectile)
 		projectile.global_position = muzzle
 
@@ -327,6 +329,11 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	if is_instance_valid(source) and source.has_method("hit_chance") and randf() >= float(source.call("hit_chance")):
 		_on_missed()
 		return
+	# Pajzs alatt (pajzs képesség) semmi nem sebzi.
+	if _abilities.is_shielded():
+		Audio.play("door_lock", -10.0, 0.3)
+		FloatingText.spawn(get_parent(), _head_position(), "Pajzs!", EnemyAbilities.SHIELD_COLOR)
+		return
 	var hit := hitbox.roll_hit()
 	if not _health.damage(hit["damage"], not hit["pierce"]):
 		return
@@ -345,6 +352,11 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	_stun_left = HIT_STUN * (1.0 - resist)
 	_visual.modulate = Color(4, 4, 4)
 	create_tween().tween_property(_visual, "modulate", Color.WHITE, 0.15)
+
+
+## A játékos hívja, ha ez az ellenség (vagy a lövedéke) megsebezte: a képességek hatása.
+func on_hit_player(_amount: int) -> void:
+	_abilities.on_hit_player(_player)
 
 
 func _on_missed() -> void:

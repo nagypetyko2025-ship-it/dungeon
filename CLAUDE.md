@@ -34,7 +34,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   (város keletre: `world/town.gd`, kovács: `world/smithy.gd`, veterán + sáros ösvény nyugatra, a végén a romos ház:
   `world/ruin.gd`, benne a tolvaj rejtekszobája: `world/thief.gd`), `world/shop_interior.gd` bolt.
 - Állapot: `world/game_state.gd` (futás; `reset()`), `world/progress.gd` (mentett tábor: arany, láda, fejlesztések, küldetések).
-- Ellenségek: `enemies/enemy_types.gd` (statok, 10. emeleti ugrás), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`.
+- Ellenségek: `enemies/enemy_types.gd` (statok, 10. emeleti ugrás), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`;
+  képességek: `enemies/enemy_abilities.gd` (méreg/fagy/fosztogatás a `Player.apply_poison/apply_slow/lose_gold`-on át).
 - Tárgyak: `items/items.gd` (DEFINITIONS); statok: `components/stats.gd`; szintlépés-kártyák: `components/upgrades.gd`.
 - UI: minden ablak CanvasLayer `open()/close()`-zal, a `ui/menus.gd` kezeli (KEYS: I, Tab, M, J). Stílus: `UiStyle`, `MenuStyle`.
 - Város északi része: `world/castle.gd` (lakóház, út, királyi vár, őrök, trónterem; király: `world/king.gd`; a
