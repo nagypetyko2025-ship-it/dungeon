@@ -181,6 +181,12 @@ func _ready() -> void:
 	castle.setup(self)
 	castle.build()
 	castle.message.connect(_toast)
+	# Temető a kocsma alatt.
+	var graveyard := Graveyard.new()
+	graveyard.name = "Graveyard"
+	add_child(graveyard)
+	graveyard.setup(self)
+	graveyard.build()
 	# A nyugati tisztáson a romos ház (benne a tolvaj rejtekszobája).
 	var ruin := Ruin.new()
 	ruin.name = "Ruin"
@@ -319,8 +325,9 @@ func _build_ground() -> void:
 	for i in GRASS_TILES.size():
 		grass.create_tile(Vector2i(i, 0))
 	_ground.tile_set = tile_set
+	# (A királyi vár tisztása és a mögötte lévő erdő magasabbra nyúlik: ott is legyen fű.)
 	for x in range(WORLD_START_X, WORLD_END_X):
-		for y in range(-FOREST_DEPTH, SIZE.y + FOREST_DEPTH):
+		for y in range(Castle.RECT.position.y - FOREST_DEPTH, SIZE.y + FOREST_DEPTH):
 			_ground.set_cell(Vector2i(x, y), GRASS_SOURCE, Vector2i(randi() % GRASS_TILES.size(), 0))
 
 
@@ -362,6 +369,9 @@ func _build_dirt() -> void:
 		_dirt[tile] = true
 	# Út a kocsma mellett északra, a királyi vár kapujáig.
 	for tile in Castle.path_tiles():
+		_dirt[tile] = true
+	# Földút az úttól le a temetőhöz (a kocsma alatt).
+	for tile in Graveyard.path_tiles():
 		_dirt[tile] = true
 	# Kis sáros ösvény nyugatra (a várossal ellentétes irányba): a tisztásokon kanyarog,
 	# az erdőben egyenes, és a nyugati tisztáson ér véget (a végén a romos ház).
@@ -754,7 +764,7 @@ func _build_trees() -> void:
 		for y in range(town.position.y, town.end.y):
 			var tile := Vector2i(x, y)
 			if _blocked.has(tile) or Town.blocked_rect().has_point(tile) or _castle_blocked(tile) \
-					or _near_path(tile):
+					or Graveyard.blocked_rect().has_point(tile) or _near_path(tile):
 				continue
 			var edge := mini(mini(x - town.position.x, town.end.x - 1 - x), mini(y - town.position.y, town.end.y - 1 - y))
 			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.3):
@@ -767,7 +777,9 @@ func _build_trees() -> void:
 			if _blocked.has(tile) or _castle_blocked(tile) or _near_path(tile):
 				continue
 			var edge := mini(mini(x - castle.position.x, castle.end.x - 1 - x), mini(y - castle.position.y, castle.end.y - 1 - y))
-			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.3):
+			# A vár két oldalán (ahova úgysem lehet bemenni) sűrű erdő.
+			var beside_castle := y <= Castle.GATE_ROW
+			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.3) or (beside_castle and randf() < 0.6):
 				_tree(tile, randf() < 0.6, true)
 			elif edge >= 3 and randf() < 0.04:
 				_rpg_sprite(FLOWERS.pick_random(), _tile_center(tile) + Vector2(randf_range(-8, 8), randf_range(-8, 8)), -9)

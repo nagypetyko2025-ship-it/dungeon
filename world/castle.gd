@@ -183,6 +183,8 @@ func _build_castle() -> void:
 		torch.position = gate + Vector2(side * TILE * 3.5, -TILE * 1.2)
 		add_child(torch)
 	_solid(Rect2(Vector2(tl) * TILE, Vector2(w, bottom - tl.y) * TILE - Vector2(0, 6)))
+	# A vár mögé (és a két oldalán mellé) nem lehet bemenni: a tisztás teljes szélességében zárva.
+	_solid(Rect2(Vector2(RECT.position) * TILE, Vector2(RECT.size.x, bottom - RECT.position.y) * TILE - Vector2(0, 6)))
 	# A vár felirata a kapu fölött.
 	var sign_label := MenuStyle.title_label("Királyi vár", 26, MenuStyle.GOLD)
 	sign_label.size = Vector2(300, 34)
