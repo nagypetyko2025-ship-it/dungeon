@@ -19,6 +19,7 @@ class_name Characters
 ## dodge / crit_chance   a kikerülés / kritikus esély alapértéke (%, alapból 10 / 2)
 ## dagger_damage tőrrel ennyivel nagyobbat sebez (pl. 0.25 = +25%)
 ## gold_bonus    ennyivel több aranyat talál (pl. 0.2 = +20%)
+## spells        varázsló: varázspálcával a választott varázslatokat szórja (lásd Spells)
 ## shadow_step   van-e Árnyéklépése (Ctrl: a kurzorhoz legközelebbi szörny mögé, biztos kritikus)
 ## health_regen  az élet-regeneráció alapértéke (élet / mp, alapból 0.2)
 ## unlock        ha meg van adva: csak akkor játszható, ha ez a Progress.npc_quests jelző "done"
@@ -74,6 +75,23 @@ const ALL := {
 			"Sérült: csak 0.1 élet / mp regeneráció",
 			"Hadi kiáltás [Ctrl]: a közelben lévő szörnyeket ellöki (7 mp)",
 			"Kikerülés kártya szintlépéskor: 25%-kal többet ad neki",
+		],
+	},
+	# Lőrinc, a varázsló (egyelőre tesztelésre alapból a kocsmában ül).
+	"wizard": {
+		"name": "Lőrinc", "rect": Rect2(128, 164, 16, 28),
+		"start_weapon": "wand_lorinc", "seat": 6, "weapons": "wand", "accuracy": 85, "spells": true,
+		"health_regen": 0.25,
+		"description": "Öreg varázsló: varázsgömb, tűzgolyó vagy földtüskék.",
+		"role": "Varázsló",
+		"story": "A király egykori térképésze, aki a köveket kérdezi meg, merre vezetnek a járatok. " \
+			+ "Most újra lemegy a Mélységbe, de ezúttal nem térképpel, hanem tűzzel.",
+		"traits": [
+			"Fix varázspálcája van, mást nem használhat",
+			"A kazamatába lépve választ egy varázslatot: varázsgömb, tűzgolyó vagy földtüskék",
+			"Minden 5. szinten fejlesztheti, vagy megtanulhat egy másodikat (Q gomb)",
+			"A varázslatok Elemi sebzéssel sebeznek (csak neki van)",
+			"85% találati esély, 0.25 élet / mp regeneráció",
 		],
 	},
 	# Bence, a volt tolvaj (Benedek zászlóvivő fia): a levél-küldetés után költözik a kocsmába.
@@ -139,15 +157,21 @@ static func frames(id: String) -> SpriteFrames:
 static func can_use(item: Dictionary) -> bool:
 	if item.get("slot", "") != "weapon":
 		return true
+	var kind: String = data(Progress.character).get("weapons", "melee")
+	# A varázspálca csak a varázslóé, és ő mást nem foghat.
+	if kind == "wand" or item.get("weapon_type", "") == "wand":
+		return kind == "wand" and item.get("weapon_type", "") == "wand"
 	var bow: bool = Items.is_ranged(item)
-	return bow if data(Progress.character).get("weapons", "melee") == "ranged" else not bow
+	return bow if kind == "ranged" else not bow
 
 
 ## Ember-olvasható szöveg arról, ki használhatja a fegyvert ("" ha nem fegyver).
 static func weapon_restriction_text(item: Dictionary) -> String:
 	if item.get("slot", "") != "weapon":
 		return ""
-	return "Csak íjász használhatja." if Items.is_ranged(item) else "Íjász nem használhatja."
+	if item.get("weapon_type", "") == "wand":
+		return "Csak a varázsló használhatja."
+	return "Csak íjász használhatja." if Items.is_ranged(item) else "Íjász és varázsló nem használhatja."
 
 
 ## Az aktív karakter bónusza egy adott értékre (0, ha nincs).

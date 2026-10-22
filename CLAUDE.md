@@ -48,7 +48,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - NPC-beszélgetés: `ui/dialogue_panel.gd` (bizalom -100..+100, max 5 opció, 1-5 gomb), szövegek: `world/dialogues.gd`;
   bizalom és feltett kérdések: `Progress.trust` / `Progress.asked` (mentve).
 - Karakterek: `world/characters.gd` (lovag, íjász, Bence/"thief" a levél-küldetés után, Gáspár/"veteran" — utóbbi az "unlock" jelzővel, a 30. emelet
-  után; Ctrl: íjász suhanás, Gáspár hadi kiáltás, Bence árnyéklépés a `player.gd`-ben). Kocsmai székek: `world/town.gd`.
+  után; Ctrl: íjász suhanás, Gáspár hadi kiáltás, Bence árnyéklépés a `player.gd`-ben; Lőrinc/"wizard" varázsló: `player/spells.gd`, választó: `ui/spell_picker.gd`). Kocsmai székek: `world/town.gd`.
 - Csalómenü: [0], kód `147258` (`ui/cheat_menu.gd`): teleport a 20. emeletre (`cheat_teleport` a Dungeon/Camp jeleneten),
   halhatatlanság (`GameState.god_mode`). Teszteléshez is hasznos.
 - Gyakorló pálya: `ui/tutorial_guide.gd` (lépések), kézikönyv: `ui/tutorial_manual.gd` (az irányítás szövege a Beállítások fülön is).

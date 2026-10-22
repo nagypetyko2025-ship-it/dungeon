@@ -26,6 +26,8 @@ const ALL: Array[Dictionary] = [
 		"icon_path": "res://assets/ui/icon_defense.png"},
 	{"stat": "accuracy", "title": "Pontosság", "text": "+3% találati esély (ritkábban mész mellé)", "amount": 3,
 		"icon_path": "res://assets/ui/icon_accuracy.png"},
+	{"stat": "elemental_damage", "title": "Elemi erő", "text": "+1 elemi sebzés (a varázslatokat erősíti)",
+		"amount": 1, "icon_path": "res://assets/ui/spell_bolt.png", "only": "wizard"},
 	{"stat": "attack_range", "title": "Hosszú karok", "text": "+12% hatótáv (messzebbre ér a kardod)", "amount": 12,
 		"icon_path": "res://assets/ui/icon_range.png"},
 ]
@@ -90,6 +92,12 @@ static func _with_character_bonus(upgrade: Dictionary) -> Dictionary:
 
 static func _available(stats: Stats, upgrade: Dictionary) -> bool:
 	var stat: String = upgrade["stat"]
+	# Karakterhez kötött kártya (pl. Elemi erő: csak a varázsló); a varázslónak a sebzés-kártyák nem kellenek.
+	var only: String = upgrade.get("only", "")
+	if not only.is_empty() and only != Progress.character:
+		return false
+	if Characters.data(Progress.character).get("spells", false) and stat in ["damage", "ranged_damage"]:
+		return false
 	return not (LIMITS.has(stat) and stats.get(stat) >= LIMITS[stat])
 
 

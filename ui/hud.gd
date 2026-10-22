@@ -54,6 +54,13 @@ func _process(_delta: float) -> void:
 	if has_cry:
 		_update_skill_label("Hadi kiáltás", player.call("war_cry_cooldown_ratio") * player.WAR_CRY_COOLDOWN)
 		return
+	# A varázsló második varázslata (Q).
+	if player != null and Characters.data(Progress.character).get("spells", false):
+		if GameState.spells.size() > 1:
+			_update_skill_label(Spells.ALL[GameState.spells[1]]["name"], player.call("secondary_cooldown_left"), "Q")
+		elif _dash_label != null:
+			_dash_label.visible = false
+		return
 	if player != null and Characters.data(Progress.character).get("shadow_step", false):
 		_update_skill_label("Árnyéklépés", player.call("shadow_step_cooldown_ratio") * player.SHADOW_STEP_COOLDOWN)
 		return
@@ -68,15 +75,15 @@ func _process(_delta: float) -> void:
 
 
 ## A Ctrl-képesség felirata (suhanás / hadi kiáltás): kész, vagy mennyi idő van még hátra.
-func _update_skill_label(skill: String, left: float) -> void:
+func _update_skill_label(skill: String, left: float, key := "Ctrl") -> void:
 	if _dash_label == null:
 		_create_skill_label()
 	_dash_label.visible = true
 	if left <= 0.0:
-		_dash_label.text = "%s [Ctrl]: kész" % skill
+		_dash_label.text = "%s [%s]: kész" % [skill, key]
 		_dash_label.add_theme_color_override("font_color", Color(0.6, 0.95, 1.0))
 	else:
-		_dash_label.text = "%s [Ctrl]: %.1f mp" % [skill, left]
+		_dash_label.text = "%s [%s]: %.1f mp" % [skill, key, left]
 		_dash_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
 
 

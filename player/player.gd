@@ -47,6 +47,7 @@ const WEAPON_TYPES := {
 	"axe": {"style": "swing", "arc": 200.0, "cooldown": 1.3, "knockback": 380.0, "length": 58.0, "width": 34.0},
 	"mace": {"style": "swing", "arc": 160.0, "cooldown": 1.45, "knockback": 520.0, "length": 56.0, "width": 36.0},
 	"bow": {"style": "bow", "cooldown": 1.1, "knockback": 120.0, "length": 40.0, "width": 10.0},
+	"wand": {"style": "wand", "cooldown": 1.0, "knockback": 160.0, "length": 36.0, "width": 10.0},
 	"crossbow": {"style": "bow", "cooldown": 1.45, "knockback": 220.0, "length": 40.0, "width": 10.0},
 }
 ## Az átlós ikonú fegyvereknél a markolat ennyied része a forgáspont mögött.
@@ -107,6 +108,8 @@ var _weapon_type := "sword"
 var _step_distance := 0.0
 var _war_cry_left := 0.0
 var _shadow_left := 0.0
+## A varázsló második varázslatának (Q) hátralévő cooldownja.
+var _secondary_left := 0.0
 ## Szörny-képességek hatása rád: méreg (másodpercenként sebez) és fagy (lassít).
 var _poison_left := 0.0
 var _poison_tick := 0.0
@@ -142,6 +145,9 @@ func _ready() -> void:
 	# Minden szintlépéskor minden alapstat nő egy kicsit (a választott fejlesztésen felül).
 	_experience.leveled_up.connect(func(level: int) -> void:
 		_stats.apply_level_growth()
+		# A varázsló elemi sebzése szintenként magától is nő egy kicsit.
+		if Characters.data(Progress.character).get("spells", false):
+			_stats.add_base("elemental_damage", 0.15)
 		# (A táborban nincs futás: ott nem számít a küldetésbe.)
 		if get_tree().current_scene.name == "Dungeon":
 			Quests.notify("level", level))
@@ -181,7 +187,7 @@ func weapon_crit_multiplier() -> float:
 ## Távolsági sebzés erősíti (a többit a Közelharci), és az íjász karakter íjjal többet sebez.
 func hit_damage() -> int:
 	var bow := _weapon_type in Items.RANGED_TYPES
-	var damage := _stats.hit_damage(weapon_base_damage(), weapon_scaling(), bow)
+	var damage := _stats.hit_damage(weapon_base_damage(), weapon_scaling(), bow, _weapon_type == "wand")
 	if bow:
 		damage = roundi(damage * (1.0 + Characters.bonus("bow_damage")))
 	elif _weapon_type == "dagger":
@@ -267,6 +273,11 @@ func _update_sword_geometry() -> void:
 		_sword_sprite.position.x = length / 2.0 - length * ICON_WEAPON_GRIP
 		if type_data["style"] == "swing":
 			_sword_sprite.position.x += maxf((reach - 1.0) * SWING_REACH_OFFSET, -10.0)
+		elif type_data["style"] == "wand":
+			# A pálca ikonja függőleges (8x30): a célzás irányába fordítva, kis méretben.
+			_sword_sprite.rotation = PI / 2.0
+			_sword_sprite.scale = Vector2(1.2, 1.2)
+			_sword_sprite.position.x = 14.0
 		elif type_data["style"] == "bow":
 			# Az íj ikonja átlós; 45°-kal elforgatva függőlegesen áll a célzás irányára merőlegesen.
 			_sword_sprite.rotation = PI / 4.0
@@ -407,7 +418,7 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		if _dash_left <= 0.0:
 			_end_dash()
-		_cooldown_bar.set_ratio(1.0 - _cooldown_left / attack_cooldown())
+		_cooldown_bar.set_ratio(1.0 - _cooldown_left / _primary_cooldown())
 		return
 	if Input.is_physical_key_pressed(KEY_CTRL) and _can_dash():
 		_start_dash(aim)
@@ -415,6 +426,10 @@ func _physics_process(delta: float) -> void:
 	if Input.is_physical_key_pressed(KEY_CTRL) and _can_war_cry():
 		_war_cry()
 	_shadow_left = maxf(_shadow_left - delta, 0.0)
+	_secondary_left = maxf(_secondary_left - delta, 0.0)
+	if Input.is_physical_key_pressed(KEY_Q) and _secondary_left <= 0.0 and GameState.spells.size() > 1 \
+			and _weapon_type == "wand" and not get_tree().paused:
+		_cast(1, (get_global_mouse_position() - _weapon_pivot.global_position).angle())
 	if _backstab_left > 0.0:
 		_backstab_left -= delta
 		if _backstab_left <= 0.0:
@@ -435,7 +450,7 @@ func _physics_process(delta: float) -> void:
 	_cooldown_left = maxf(_cooldown_left - delta, 0.0)
 	if Input.is_action_pressed("attack") and _cooldown_left <= 0.0:
 		_swing(aim.angle())
-	_cooldown_bar.set_ratio(1.0 - _cooldown_left / attack_cooldown())
+	_cooldown_bar.set_ratio(1.0 - _cooldown_left / _primary_cooldown())
 
 	# Villogás, amíg sérthetetlen.
 	_visual.visible = not _hurtbox.is_invincible() or fmod(Time.get_ticks_msec() / 80.0, 2.0) < 1.0
@@ -608,6 +623,9 @@ func _swing(aim_angle: float) -> void:
 		"bow":
 			_shoot(aim_angle)
 			return
+		"wand":
+			_cast(0, aim_angle)
+			return
 	_cooldown_left = attack_cooldown()
 	Audio.play("swing")
 	_swing_side = -_swing_side
@@ -650,6 +668,37 @@ func _thrust(aim_angle: float) -> void:
 
 
 ## Íj: nyílvessző a kurzor felé; a hatótáv a nyíl repülési távolsága.
+## Varázslat (varázspálcával): `slot` 0 = elsődleges (bal egér), 1 = másodlagos (Q).
+func _cast(slot: int, aim_angle: float) -> void:
+	if GameState.spells.size() <= slot:
+		return
+	var spell: String = GameState.spells[slot]
+	var cooldown := attack_cooldown() * Spells.cooldown_multiplier(spell)
+	if slot == 0:
+		_cooldown_left = cooldown
+	else:
+		_secondary_left = cooldown
+	_weapon_pivot.visible = true
+	_weapon_pivot.rotation = aim_angle
+	_weapon_pivot.position = WEAPON_PIVOT_POSITION
+	Spells.cast(self, spell, Vector2.from_angle(aim_angle))
+	await get_tree().create_timer(0.18, false).timeout
+	if _weapon_pivot.rotation == aim_angle:
+		_weapon_pivot.visible = false
+
+
+## A bal egeres támadás teljes cooldownja (varázspálcánál a varázslat szorzójával).
+func _primary_cooldown() -> float:
+	if _weapon_type == "wand" and not GameState.spells.is_empty():
+		return attack_cooldown() * Spells.cooldown_multiplier(GameState.spells[0])
+	return attack_cooldown()
+
+
+## A Q varázslat hátralévő cooldownja (mp; a HUD-nak).
+func secondary_cooldown_left() -> float:
+	return _secondary_left
+
+
 func _shoot(aim_angle: float) -> void:
 	_cooldown_left = attack_cooldown()
 	Audio.play("arrow")

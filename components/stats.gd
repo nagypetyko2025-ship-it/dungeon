@@ -14,7 +14,7 @@ signal changed
 
 const NAMES: Array[String] = [
 	"damage", "ranged_damage", "damage_percent", "max_health", "health_regen", "dodge", "move_speed", "attack_speed",
-	"crit_chance", "attack_range", "defense", "multishot", "accuracy",
+	"crit_chance", "attack_range", "defense", "multishot", "accuracy", "elemental_damage",
 ]
 const MAX_RANGE := 200
 ## Alapértelmezett kritikus szorzó (ha a fegyver nem ad meg sajátot).
@@ -67,6 +67,7 @@ const LIMITS := {
 	"defense": [0, MAX_DEFENSE],
 	"multishot": [1, MAX_MULTISHOT],
 	"accuracy": [5, MAX_ACCURACY],
+	"elemental_damage": [-99, 999],
 }
 
 ## Közelharci sebzés: a fegyver skálázása szerint adódik a fegyver alapsebzéséhez.
@@ -131,6 +132,11 @@ const LIMITS := {
 	set(value):
 		base_multishot = value
 		changed.emit()
+## Elemi sebzés: a varázsló (Lőrinc) varázslatai skálázódnak vele; egyelőre csak neki van.
+@export var base_elemental_damage := 0.0:
+	set(value):
+		base_elemental_damage = value
+		changed.emit()
 ## Találati esély százalékban (a lovagé 75, az íjászé 80; lásd Characters).
 @export var base_accuracy := 75.0:
 	set(value):
@@ -164,6 +170,8 @@ var multishot: int:
 	get: return floori(_final("multishot"))
 var accuracy: int:
 	get: return roundi(_final("accuracy"))
+var elemental_damage: int:
+	get: return floori(_final("elemental_damage"))
 
 ## stat -> a felvett tárgyakból jövő összeg.
 var _bonus := {}
@@ -190,9 +198,11 @@ func apply_level_growth() -> void:
 
 
 ## Egy találat sebzése a fegyver alapsebzéséből és skálázásából (lásd fent).
-## `ranged`: íjnál a Távolsági sebzés skálázódik a Közelharci helyett.
-func hit_damage(weapon_base: float, scaling: float, ranged := false) -> int:
-	var raw := weapon_base + (ranged_damage if ranged else damage) * scaling
+## `ranged`: íjnál a Távolsági sebzés skálázódik a Közelharci helyett; `elemental`: a
+## varázspálcánál az Elemi sebzés.
+func hit_damage(weapon_base: float, scaling: float, ranged := false, elemental := false) -> int:
+	var scaled := elemental_damage if elemental else (ranged_damage if ranged else damage)
+	var raw := weapon_base + scaled * scaling
 	return maxi(1, roundi(raw * (1.0 + damage_percent / 100.0)))
 
 

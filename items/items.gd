@@ -24,7 +24,7 @@ const SPEAR_NOTE_INK := Color(0.42, 0.28, 0.12)
 const SLOT_NOTE_INK := Color(0.3, 0.22, 0.14)
 const WEAPON_NOTE_INK := Color(0.45, 0.16, 0.1)
 const WEAPON_KIND_NAMES := {"sword": "Kard", "spear": "Lándzsa", "axe": "Balta", "dagger": "Tőr", "mace": "Buzogány", "bow": "Íj",
-	"crossbow": "Számszeríj"}
+	"crossbow": "Számszeríj", "wand": "Varázspálca"}
 ## A fegyverfajták rövid leírása (a kard az alap, ahhoz nincs).
 const WEAPON_NOTES := {
 	"spear": "Lándzsa: messzebbre ér és szúr. Átütés: a szúrást nem lehet kikerülni, és erősen hátralök.",
@@ -32,6 +32,7 @@ const WEAPON_NOTES := {
 	"dagger": "Tőr: rövid, de nagyon gyors; nagy kritikus szorzó.",
 	"mace": "Buzogány: lassú, de nagyot üt és messzire löki az ellenséget.",
 	"bow": "Íj: nyilat lő a kurzor felé; a Távolsági sebzés erősíti, a Hatótáv a nyíl repülési távolsága.",
+	"wand": "Varázspálca: a választott varázslatokat szórja (bal egér, Q); az Elemi sebzés erősíti.",
 	"crossbow": "Számszeríj: lassabban tölt, de nagyot üt; legfeljebb 3 vesszőt lő, szűk, egyenes sorban.",
 	"sword": "Kard: egyenesen előre döfi; a Hatótáv azt adja meg, milyen messzire.",
 }
@@ -46,6 +47,7 @@ const SLOT_ICON_ITEMS := {
 const STAT_LABELS := {
 	"damage": "közelharci sebzés",
 	"ranged_damage": "távolsági sebzés",
+	"elemental_damage": "elemi sebzés",
 	"multishot": "nyíl lövésenként (többlövés)",
 	"damage_percent": "sebzés",
 	"max_health": "max élet",
@@ -113,6 +115,11 @@ const DEFINITIONS := {
 	"bow_star": {"name": "Csillagíj", "slot": "weapon", "rarity": "legendary", "weapon_type": "bow",
 		"base": [4, 5], "scaling": 1.2, "crit": 2.0,
 		"stats": {"multishot": [1, 1], "ranged_damage": [2, 3], "attack_range": [15, 25], "crit_chance": [8, 12], "damage_percent": [6, 10], "accuracy": [6, 10]}},
+	# Lőrinc fix varázspálcája (csak ő használhatja, és ő mást nem): a varázslatai ezzel szólnak.
+	"wand_lorinc": {"name": "Lőrinc pálcája", "slot": "weapon", "rarity": "epic", "weapon_type": "wand",
+		"unique": true, "shop": false, "region": Rect2(324, 129, 8, 30),
+		"base": [3, 3], "scaling": 1.0, "crit": 1.6, "stats": {},
+		"description": "Régi, vörös kristályos pálca. A gazdája hangjára felizzik."},
 	# Számszeríjak (íjászoknak): lassabbak, de nagyobbat ütnek, mint az íjak; legfeljebb 3 vesszőt
 	# lőnek egyszerre, szűk sorban. Ugyanannyi van belőlük, mint íjból (ritkaságonként is).
 	"crossbow_light": {"name": "Könnyű számszeríj", "slot": "weapon", "rarity": "common", "weapon_type": "crossbow",
@@ -654,7 +661,8 @@ static func describe_bbcode(item: Dictionary) -> String:
 		lines.append("[color=#%s]Típus: %s  →  %s helyre tehető[/color]"
 			% [SLOT_NOTE_INK.to_html(false), kind, slot_name(item)])
 	if item.has("base_damage"):
-		var scaling_stat := "távolsági" if is_ranged(item) else "közelharci"
+		var scaling_stat := "elemi" if item.get("weapon_type", "") == "wand" \
+			else ("távolsági" if is_ranged(item) else "közelharci")
 		lines.append("[color=#%s]Alapsebzés: %d  ·  +%d%% %s sebzés\nKritikus szorzó: ×%s[/color]" % [
 			WEAPON_NOTE_INK.to_html(false), item["base_damage"], roundi(item["scaling"] * 100.0), scaling_stat,
 			str(item["crit_multiplier"])])

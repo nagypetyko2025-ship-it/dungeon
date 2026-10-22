@@ -68,7 +68,7 @@ func _reroll() -> void:
 		return
 	GameState.rerolls += 1
 	Audio.play("coin")
-	_options = Upgrades.roll(_stats, CARD_COUNT, _has_bow())
+	_options = _roll_options()
 	_show_cards()
 
 
@@ -99,8 +99,16 @@ func _on_leveled_up(level: int) -> void:
 		_open()
 
 
+## A választható kártyák: a varázslónál minden 5. szinten varázslat-kártyák (fejlesztés / új,
+## lásd Spells), máskor a szokásos fejlesztések.
+func _roll_options() -> Array[Dictionary]:
+	if Characters.data(Progress.character).get("spells", false) and not _level_queue.is_empty() 			and _level_queue[0] % Spells.SPELL_LEVEL_EVERY == 0 and not GameState.spells.is_empty():
+		return Spells.level_options()
+	return Upgrades.roll(_stats, CARD_COUNT, _has_bow())
+
+
 func _open() -> void:
-	_options = Upgrades.roll(_stats, CARD_COUNT, _has_bow())
+	_options = _roll_options()
 	_title.text = "Szintlépés! — %d. szint" % _level_queue[0]
 	_show_cards()
 	visible = true
@@ -123,7 +131,10 @@ func _choose(index: int) -> void:
 	if not _accepting_input or index >= _options.size():
 		return
 	Audio.play("ui_click")
-	Upgrades.apply(_stats, _options[index])
+	if _options[index].has("spell"):
+		Spells.choose(_options[index]["spell"])
+	else:
+		Upgrades.apply(_stats, _options[index])
 	_level_queue.pop_front()
 	if _level_queue.is_empty():
 		visible = false

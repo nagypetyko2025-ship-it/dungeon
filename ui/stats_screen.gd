@@ -9,7 +9,7 @@ const PLAYER_SCRIPT := preload("res://player/player.gd")
 const SPECIAL_INK := Color(0.48, 0.23, 0.66)
 ## A stat-oldalak: cím és a statok sorrendje.
 const PAGES := [
-	["Harc", ["damage", "ranged_damage", "damage_percent", "crit_chance", "attack_speed", "attack_range",
+	["Harc", ["damage", "ranged_damage", "elemental_damage", "damage_percent", "crit_chance", "attack_speed", "attack_range",
 		"accuracy", "multishot"]],
 	["Védekezés és mozgás", ["max_health", "health_regen", "defense", "dodge", "move_speed"]],
 	["Különleges", ["lifesteal", "thorns", "gold_find", "xp_bonus"]],
@@ -130,6 +130,9 @@ func _refresh() -> void:
 
 	_page_label.text = "%s  (%d / %d)" % [PAGES[_page][0], _page + 1, PAGES.size()]
 	for stat: String in PAGES[_page][1]:
+		# Az elemi sebzés csak a varázslónál látszik.
+		if stat == "elemental_damage" and not Characters.data(Progress.character).get("spells", false):
+			continue
 		_add_stat(stat, stats, health)
 
 	# A fegyver és a végső sebzés (Brotato-szerű képlet, lásd Stats).
@@ -140,7 +143,7 @@ func _refresh() -> void:
 	var scaling: float = _player.call("weapon_scaling")
 	var hit: int = _player.call("hit_damage")
 	_pair("Alapsebzés", str(base))
-	var scaled_stat: int = stats.ranged_damage if Items.is_ranged(weapon) else stats.damage
+	var scaled_stat: int = stats.elemental_damage if weapon and weapon.get("weapon_type", "") == "wand" else (stats.ranged_damage if Items.is_ranged(weapon) else stats.damage)
 	_pair("Képlet", "(%d + %d × %d%%) × %d%%" % [base, scaled_stat, roundi(scaling * 100.0), 100 + stats.damage_percent])
 	_pair("Karakter", Characters.data(Progress.character)["name"])
 	_pair("Sebzés / ütés", str(hit))
@@ -169,6 +172,7 @@ func _add_stat(stat: String, stats: Stats, health: Health) -> void:
 		"damage": _stat_row(stat, "Közelharci sebzés", "%+d" % stats.damage,
 			"×%d%% a fegyver szerint" % roundi(_player.call("weapon_scaling") * 100.0))
 		"ranged_damage": _stat_row(stat, "Távolsági sebzés", "%+d" % stats.ranged_damage, "az íjakat erősíti")
+		"elemental_damage": _stat_row(stat, "Elemi sebzés", "%+d" % stats.elemental_damage, "a varázslatokat erősíti")
 		"damage_percent": _stat_row(stat, "Sebzés", "%+d%%" % stats.damage_percent, "minden találat")
 		"max_health": _stat_row(stat, "Élet", "%d / %d" % [health.current, health.max_health], "")
 		"health_regen": _stat_row(stat, "Regeneráció", "%.1f / mp" % stats.health_regen, "")

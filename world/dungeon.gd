@@ -224,6 +224,9 @@ func _ready() -> void:
 	var cheats := CheatMenu.new()
 	cheats.name = "CheatMenu"
 	add_child(cheats)
+	# A varázsló a futás elején kiválasztja az első varázslatát.
+	if Characters.data(Progress.character).get("spells", false) and GameState.spells.is_empty():
+		add_child(preload("res://ui/spell_picker.gd").new())
 	if tutorial:
 		_hud.show_message("Gyakorló pálya")
 		var guide := TutorialGuide.new()

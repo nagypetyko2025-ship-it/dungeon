@@ -19,6 +19,9 @@ static var saved_inventory := {}
 static var kills := 0
 ## Kinyitott ládák ebben a futásban (a gyakorló pálya is ebből látja, hogy kinyitottad).
 static var chests_opened := 0
+## A varázsló varázslatai ebben a futásban (az első az elsődleges, a második a Q), és a szintjeik.
+static var spells: Array = []
+static var spell_levels := {}
 ## Játékidő másodpercben (szünet alatt nem nő).
 static var run_time := 0.0
 ## A futás már bekerült az eredménytáblába (halálkor vagy feladáskor egyszer).
@@ -70,6 +73,8 @@ static func reset() -> void:
 	saved_inventory = {}
 	kills = 0
 	chests_opened = 0
+	spells = []
+	spell_levels = {}
 	run_time = 0.0
 	run_recorded = false
 	lift_used_floor = 0

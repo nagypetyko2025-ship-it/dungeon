@@ -77,15 +77,6 @@ var _intro_portrait: TextureRect
 var _intro_role: Label
 var _intro_text: RichTextLabel
 var _intro_for := ""
-## Lőrinc, a varázsló (a király levele után ideköltözik; még nem játszható, csak beszél).
-var _lorinc: AnimatedSprite2D
-const LORINC_SEAT := 6
-const LORINC_LINES: Array[String] = [
-	"Itt legalább nem esik az ember kútba. Csak a kocsmáros borába.",
-	"A Főnixtoll még mindig meleg. Érzed? Mintha szívverése lenne.",
-	"Ha egyszer újra lemész, szólj. Egy öreg varázsló is jól jöhet odalent.",
-]
-var _lorinc_line := 0
 
 
 func setup(camp: Node2D) -> void:
@@ -355,33 +346,16 @@ func _focus() -> Array:
 		return ["exit", "[E] Kilépés a városba"]
 	if at.distance_to(get_meta("barkeep_position")) < INTERACT_RANGE + 10:
 		return ["barkeep", "[E] Küldetések (kocsmáros)"]
-	if is_instance_valid(_lorinc) and at.distance_to(_lorinc.position) < INTERACT_RANGE:
-		return ["lorinc", "[E] %s" % Stranger.REAL_NAME]
 	for id: String in _seated:
 		if at.distance_to(_seated[id].position) < INTERACT_RANGE:
 			return [id, "[E] %s" % Characters.data(id)["name"]]
 	return []
 
 
-## Lőrinc a saját székén (a kocsmába költözése után).
-func _seat_lorinc() -> void:
-	var seat: Array = seats[LORINC_SEAT % seats.size()]
-	_lorinc = AnimatedSprite2D.new()
-	_lorinc.sprite_frames = SpriteSheet.character_frames(Stranger.FIGURE, true)
-	_lorinc.scale = Vector2(2, 2)
-	_lorinc.offset = Vector2(0, -14)
-	_lorinc.position = seat[0] + Vector2(0, 10)
-	_lorinc.flip_h = not seat[1]
-	_lorinc.play("idle")
-	_entities.add_child(_lorinc)
-
-
 func _process(delta: float) -> void:
 	# Bence (a volt tolvaj) a levél után ideköltözik: leül a helyére, és onnantól játszható.
 	if Characters.is_unlocked("thief") and not _seated.has("thief") and Progress.character != "thief":
 		_sit("thief")
-	if _lorinc == null and Stranger.moved_to_tavern():
-		_seat_lorinc()
 	var focus := _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]
@@ -467,9 +441,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	match focus[0]:
 		"door": _enter()
 		"exit": _exit()
-		"lorinc":
-			message.emit("%s: \"%s\"" % [Stranger.REAL_NAME, LORINC_LINES[_lorinc_line % LORINC_LINES.size()]])
-			_lorinc_line += 1
 		"barkeep":
 			# A kocsmáros küldetéseket ad (és itt lehet leadni őket).
 			Audio.play("ui_open")

@@ -340,6 +340,9 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	# A játékos fegyvere talált: életlopás stb. (lásd Player.on_hit_enemy).
 	if is_instance_valid(source) and source.has_method("on_hit_enemy"):
 		source.call("on_hit_enemy", hit["damage"])
+	# Tűzgolyó: felgyullad (égés közben is sebződik).
+	if hitbox.has_meta("burn_time"):
+		ignite(float(hitbox.get_meta("burn_time")), int(hitbox.get_meta("burn_damage")))
 	Audio.play("crit" if hit["crit"] else "hit")
 	if hit["crit"]:
 		# Kritikus találat: nagyobb, piros-narancs szám felkiáltójellel.
@@ -357,6 +360,18 @@ func _on_hurt(hitbox: Hitbox) -> void:
 ## A játékos hívja, ha ez az ellenség (vagy a lövedéke) megsebezte: a képességek hatása.
 func on_hit_player(_amount: int) -> void:
 	_abilities.on_hit_player(_player)
+
+
+## Égés: `seconds` mp-ig félmásodpercenként `damage` sebzés, lángokkal a szörnyön.
+func ignite(seconds: float, damage: int) -> void:
+	var burn := get_node_or_null("Burn") as Burn
+	if burn == null:
+		burn = Burn.new()
+		burn.name = "Burn"
+		burn.position = Vector2(0, -_type["rect"].size.y * _size_scale)
+		add_child(burn)
+	burn.time_left = maxf(burn.time_left, seconds)
+	burn.damage = maxi(burn.damage, damage)
 
 
 func _on_missed() -> void:
@@ -410,3 +425,58 @@ func _drop_xp(total: int) -> void:
 		orb.value = total - (count - 1) if i == count - 1 else 1
 		orb.position = position + Vector2(0, -8)
 		get_parent().add_child(orb)
+
+
+## Égés a szörnyön: lobogó lángok (Kenney tűz-kockák, CC0) és szikrák; félmásodpercenként sebez.
+class Burn:
+	extends Node2D
+	const RPG: Texture2D = preload("res://assets/shop/kenney_rpg.png")
+	const TICK := 0.5
+	var time_left := 2.0
+	var damage := 1
+	var _tick := TICK
+
+	func _ready() -> void:
+		z_index = 3
+		var frames := SpriteFrames.new()
+		frames.set_animation_speed("default", 10.0)
+		for coords in [Vector2i(14, 8), Vector2i(15, 8)]:
+			var texture := AtlasTexture.new()
+			texture.atlas = RPG
+			texture.region = Rect2(Vector2(coords) * 17.0, Vector2(16, 16))
+			frames.add_frame("default", texture)
+		for side in [-1, 1]:
+			var flame := AnimatedSprite2D.new()
+			flame.sprite_frames = frames
+			flame.scale = Vector2(1.6, 1.6)
+			flame.position = Vector2(side * 8, 0)
+			flame.speed_scale = 1.0 + side * 0.2
+			flame.play()
+			add_child(flame)
+		var sparks := CPUParticles2D.new()
+		sparks.amount = 16
+		sparks.lifetime = 0.6
+		sparks.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+		sparks.emission_rect_extents = Vector2(10, 6)
+		sparks.gravity = Vector2(0, -70)
+		sparks.initial_velocity_min = 5.0
+		sparks.initial_velocity_max = 20.0
+		sparks.scale_amount_min = 1.5
+		sparks.scale_amount_max = 3.0
+		sparks.color = Color(1, 0.6, 0.2)
+		add_child(sparks)
+
+	func _process(delta: float) -> void:
+		time_left -= delta
+		_tick -= delta
+		var enemy := get_parent()
+		var health: Health = enemy.get_node("Health")
+		if _tick <= 0.0 and not health.is_dead():
+			_tick = TICK
+			if health.damage(damage, false):
+				FloatingText.spawn(enemy.get_parent(), enemy.global_position + position + Vector2(0, -16), str(damage),
+					Color(1, 0.55, 0.15), 16)
+		enemy.get_node("Visual").modulate = Color(1.4, 0.85, 0.6) if fmod(time_left, 0.3) < 0.15 else Color.WHITE
+		if time_left <= 0.0 or health.is_dead():
+			enemy.get_node("Visual").modulate = Color.WHITE
+			queue_free()
