@@ -65,6 +65,11 @@ const DASH_SPEED := 1000.0
 const DASH_COOLDOWN := 5.0
 ## Hadi kiáltás (Gáspár): ilyen körben löki el a szörnyeket, ekkorát, ennyi időre töri meg őket.
 const WAR_CRY_COOLDOWN := 7.0
+## Árnyéklépés (Bence): a kurzorhoz legközelebbi szörny mögé (ennyi távolságon belül), utána
+## BACKSTAB_TIME mp-ig a következő találat biztos kritikus.
+const SHADOW_STEP_COOLDOWN := 6.0
+const SHADOW_STEP_RANGE := 260.0
+const BACKSTAB_TIME := 2.0
 const WAR_CRY_RADIUS := 120.0
 const WAR_CRY_PUSH := 560.0
 const WAR_CRY_STUN := 0.5
@@ -96,6 +101,8 @@ var _swing_side := 1.0
 var _weapon_type := "sword"
 var _step_distance := 0.0
 var _war_cry_left := 0.0
+var _shadow_left := 0.0
+var _backstab_left := 0.0
 var _dash_left := 0.0
 var _dash_cooldown_left := 0.0
 var _dash_dir := Vector2.RIGHT
@@ -135,7 +142,8 @@ func _ready() -> void:
 ## A Stats értékeit átadja a fegyvernek és a Health-nek.
 func _apply_stats() -> void:
 	_sword_hitbox.damage = hit_damage()
-	_sword_hitbox.crit_chance = _stats.crit_chance / 100.0
+	# Árnyéklépés után a következő találat biztos kritikus.
+	_sword_hitbox.crit_chance = 1.0 if _backstab_left > 0.0 else _stats.crit_chance / 100.0
 	_sword_hitbox.crit_multiplier = weapon_crit_multiplier()
 	_health.set_max_health(_stats.max_health)
 	_health.regen_per_second = _stats.health_regen
@@ -163,6 +171,8 @@ func hit_damage() -> int:
 	var damage := _stats.hit_damage(weapon_base_damage(), weapon_scaling(), bow)
 	if bow:
 		damage = roundi(damage * (1.0 + Characters.bonus("bow_damage")))
+	elif _weapon_type == "dagger":
+		damage = roundi(damage * (1.0 + Characters.bonus("dagger_damage")))
 	return damage
 
 
@@ -173,6 +183,8 @@ func _apply_character_base(id: String) -> void:
 	_stats.base_health_regen = float(definition.get("health_regen", 0.2))
 	_stats.base_multishot = float(definition.get("multishot", 1))
 	_stats.base_move_speed = float(definition.get("move_speed", 100))
+	_stats.base_dodge = float(definition.get("dodge", 10))
+	_stats.base_crit_chance = float(definition.get("crit_chance", 2))
 
 
 ## Másik karakterre váltás (a kocsmában): kinézet, tábori felszerelés, fejlesztések.
@@ -277,7 +289,7 @@ func add_gold(amount: int) -> void:
 
 ## Felszedett arany (érme): az aranykereső tárgyak szerint több.
 func pick_up_gold(amount: int) -> void:
-	var total := roundi(amount * (1.0 + _stats.special("gold_find") / 100.0))
+	var total := roundi(amount * (1.0 + _stats.special("gold_find") / 100.0 + Characters.bonus("gold_bonus")))
 	add_gold(total)
 	Quests.notify("gold", total)
 
@@ -289,6 +301,10 @@ func hit_chance() -> float:
 
 ## Az ellenség hívja, ha a fegyvered eltalálta: életlopás.
 func on_hit_enemy(_damage: int) -> void:
+	# Az orvtámadás (Árnyéklépés utáni biztos kritikus) elhasználódott.
+	if _backstab_left > 0.0:
+		_backstab_left = 0.0
+		_apply_stats()
 	if randf() * 100.0 < _stats.special("lifesteal") and _health.current < _health.max_health:
 		_health.heal(1)
 		FloatingText.spawn(get_parent(), global_position + Vector2(0, -56), "+1", Color(0.9, 0.3, 0.5))
@@ -350,6 +366,13 @@ func _physics_process(delta: float) -> void:
 	_war_cry_left = maxf(_war_cry_left - delta, 0.0)
 	if Input.is_physical_key_pressed(KEY_CTRL) and _can_war_cry():
 		_war_cry()
+	_shadow_left = maxf(_shadow_left - delta, 0.0)
+	if _backstab_left > 0.0:
+		_backstab_left -= delta
+		if _backstab_left <= 0.0:
+			_apply_stats()
+	if Input.is_physical_key_pressed(KEY_CTRL) and _can_shadow_step():
+		_shadow_step(get_global_mouse_position())
 	velocity = input_dir * BASE_SPEED * (_stats.move_speed / 100.0) + _knockback
 	_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
 	move_and_slide()
@@ -400,6 +423,73 @@ func _war_cry() -> void:
 
 func war_cry_cooldown_ratio() -> float:
 	return _war_cry_left / WAR_CRY_COOLDOWN
+
+
+## Árnyéklépés (csak Bence, Ctrl): a kurzorhoz legközelebbi szörny háta mögé lép (SHADOW_STEP_RANGE-en
+## belül), egy pillanatig sérthetetlen, és a következő találata biztos kritikus. Ha nincs a közelben
+## szörny, nem történik semmi (és nem megy le a cooldown).
+func _can_shadow_step() -> bool:
+	return Characters.data(Progress.character).get("shadow_step", false) and _shadow_left <= 0.0 		and not get_tree().paused
+
+
+func _shadow_step(cursor: Vector2) -> void:
+	var target: Node2D = null
+	var best := INF
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		var body := enemy as Node2D
+		if body == null or body.global_position.distance_to(global_position) > SHADOW_STEP_RANGE:
+			continue
+		var to_cursor := body.global_position.distance_to(cursor)
+		if to_cursor < best:
+			best = to_cursor
+			target = body
+	if target == null:
+		return
+	_shadow_left = SHADOW_STEP_COOLDOWN
+	var away := (target.global_position - global_position).normalized()
+	if away == Vector2.ZERO:
+		away = Vector2.RIGHT
+	# A háta mögé; ha ott fal van, elé.
+	var behind := target.global_position + away * 30.0
+	var destination := behind if _point_free(behind) else target.global_position - away * 30.0
+	_shadow_puff(global_position)
+	global_position = destination
+	_knockback = Vector2.ZERO
+	_shadow_puff(global_position)
+	_sprite.flip_h = target.global_position.x < global_position.x
+	_hurtbox.set_deferred("monitoring", false)
+	get_tree().create_timer(0.35, false).timeout.connect(func() -> void: _hurtbox.set_deferred("monitoring", true))
+	_backstab_left = BACKSTAB_TIME
+	_apply_stats()
+	Audio.play("dodge")
+	FloatingText.spawn(get_parent(), global_position + Vector2(0, -60), "Orvtámadás!", Color(0.75, 0.5, 1.0), 20)
+
+
+func _point_free(at: Vector2) -> bool:
+	var query := PhysicsPointQueryParameters2D.new()
+	query.position = at
+	query.collision_mask = 1
+	return get_world_2d().direct_space_state.intersect_point(query, 1).is_empty()
+
+
+## Lila füstfelhő az árnyéklépés két végén.
+func _shadow_puff(at: Vector2) -> void:
+	var ghost := Sprite2D.new()
+	ghost.texture = _sprite.sprite_frames.get_frame_texture(_sprite.animation, _sprite.frame)
+	ghost.flip_h = _sprite.flip_h
+	ghost.scale = _sprite.scale
+	ghost.offset = _sprite.offset
+	ghost.modulate = Color(0.55, 0.3, 0.8, 0.7)
+	ghost.global_position = at + (_sprite.global_position - global_position)
+	get_parent().add_child(ghost)
+	var fade := ghost.create_tween()
+	fade.tween_property(ghost, "modulate:a", 0.0, 0.4)
+	fade.parallel().tween_property(ghost, "scale", _sprite.scale * 1.4, 0.4)
+	fade.tween_callback(ghost.queue_free)
+
+
+func shadow_step_cooldown_ratio() -> float:
+	return _shadow_left / SHADOW_STEP_COOLDOWN
 
 
 ## Suhanás (csak az íjász, Ctrl): rövid, gyors ugrás a kurzor felé; közben a szörnyeken

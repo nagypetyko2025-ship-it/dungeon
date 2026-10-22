@@ -16,6 +16,10 @@ class_name Characters
 ## dash          van-e Suhanása (Ctrl: a kurzor felé, a szörnyeken át)
 ## war_cry       van-e Hadi kiáltása (Ctrl: a közeli szörnyek ellökése)
 ## card_bonus    szintlépési kártyák bónusza neki: stat -> többlet (pl. {"dodge": 0.25} = +25%)
+## dodge / crit_chance   a kikerülés / kritikus esély alapértéke (%, alapból 10 / 2)
+## dagger_damage tőrrel ennyivel nagyobbat sebez (pl. 0.25 = +25%)
+## gold_bonus    ennyivel több aranyat talál (pl. 0.2 = +20%)
+## shadow_step   van-e Árnyéklépése (Ctrl: a kurzorhoz legközelebbi szörny mögé, biztos kritikus)
 ## health_regen  az élet-regeneráció alapértéke (élet / mp, alapból 0.2)
 ## unlock        ha meg van adva: csak akkor játszható, ha ez a Progress.npc_quests jelző "done"
 ## role / traits / story   a bemutatkozó panel szövegei (a kocsmában, a karakter mellett)
@@ -70,6 +74,24 @@ const ALL := {
 			"Sérült: csak 0.1 élet / mp regeneráció",
 			"Hadi kiáltás [Ctrl]: a közelben lévő szörnyeket ellöki (7 mp)",
 			"Kikerülés kártya szintlépéskor: 25%-kal többet ad neki",
+		],
+	},
+	# Bence, a volt tolvaj (Benedek zászlóvivő fia): a levél-küldetés után költözik a kocsmába.
+	"thief": {
+		"name": "Bence", "sheet": "res://assets/characters/thief.png", "frame_size": Vector2(16, 28),
+		"start_weapon": "dagger_curved", "seat": 4, "weapons": "melee", "unlock": "thief_tavern",
+		"accuracy": 85, "move_speed": 110, "dodge": 18, "crit_chance": 8, "dagger_damage": 0.25,
+		"gold_bonus": 0.2, "shadow_step": true,
+		"description": "Fürge tolvaj: tőrrel halálos, és a szörnyek háta mögé lép.",
+		"role": "Árnyékjáró tolvaj",
+		"story": "Benedek zászlóvivő fia. Az apja után ment a Mélységbe, és a tizedik emeleten tanult meg " \
+			+ "túlélni. Évekig lopott a városiaktól; most újra lemegy, de ezúttal nem egyedül.",
+		"traits": [
+			"Görbe késsel indul; közelharci fegyvert forgathat, íjat nem",
+			"Tőrrel +25% sebzés",
+			"18% kikerülés, 8% kritikus esély, 85% találati esély",
+			"10%-kal gyorsabban mozog, 20%-kal több aranyat talál",
+			"Árnyéklépés [Ctrl]: a kurzorhoz legközelebbi szörny háta mögé lép, a következő ütése biztos kritikus (6 mp)",
 		],
 	},
 }

@@ -54,6 +54,9 @@ func _process(_delta: float) -> void:
 	if has_cry:
 		_update_skill_label("Hadi kiáltás", player.call("war_cry_cooldown_ratio") * player.WAR_CRY_COOLDOWN)
 		return
+	if player != null and Characters.data(Progress.character).get("shadow_step", false):
+		_update_skill_label("Árnyéklépés", player.call("shadow_step_cooldown_ratio") * player.SHADOW_STEP_COOLDOWN)
+		return
 	if _dash_label == null:
 		if not has_dash:
 			return

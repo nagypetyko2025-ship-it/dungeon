@@ -77,15 +77,6 @@ var _intro_portrait: TextureRect
 var _intro_role: Label
 var _intro_text: RichTextLabel
 var _intro_for := ""
-## Bence, a volt tolvaj (a levél után ide költözik, Gáspár mellé; később játszható karakter lesz).
-var _bence: AnimatedSprite2D
-const BENCE_SEAT := 4
-const BENCE_LINES: Array[String] = [
-	"Még nem indulok le. Előbb beszélnem kell az öreg kapitánnyal.",
-	"Furcsa itt ülni, ahol mindenki lát. Hiányzik a sötét.",
-	"Ha egyszer kell valaki, aki ismeri a tizedik emelet titkos járatait... szólj.",
-]
-var _bence_line := 0
 
 
 func setup(camp: Node2D) -> void:
@@ -355,30 +346,16 @@ func _focus() -> Array:
 		return ["exit", "[E] Kilépés a városba"]
 	if at.distance_to(get_meta("barkeep_position")) < INTERACT_RANGE + 10:
 		return ["barkeep", "[E] Küldetések (kocsmáros)"]
-	if is_instance_valid(_bence) and at.distance_to(_bence.position) < INTERACT_RANGE:
-		return ["bence", "[E] %s" % Thief.REAL_NAME]
 	for id: String in _seated:
 		if at.distance_to(_seated[id].position) < INTERACT_RANGE:
 			return [id, "[E] %s" % Characters.data(id)["name"]]
 	return []
 
 
-## Bence a kocsmában ül (a saját székén), ha már ideköltözött.
-func _seat_bence() -> void:
-	var seat: Array = seats[BENCE_SEAT % seats.size()]
-	_bence = AnimatedSprite2D.new()
-	_bence.sprite_frames = Thief.frames()
-	_bence.scale = Vector2(2, 2)
-	_bence.offset = Vector2(0, -14)
-	_bence.position = seat[0] + Vector2(0, 10)
-	_bence.flip_h = not seat[1]
-	_bence.play()
-	_entities.add_child(_bence)
-
-
 func _process(delta: float) -> void:
-	if _bence == null and Progress.npc_quest_state(Thief.TAVERN_FLAG) == "done":
-		_seat_bence()
+	# Bence (a volt tolvaj) a levél után ideköltözik: leül a helyére, és onnantól játszható.
+	if Characters.is_unlocked("thief") and not _seated.has("thief") and Progress.character != "thief":
+		_sit("thief")
 	var focus := _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]
@@ -464,9 +441,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	match focus[0]:
 		"door": _enter()
 		"exit": _exit()
-		"bence":
-			message.emit("%s: \"%s\"" % [Thief.REAL_NAME, BENCE_LINES[_bence_line % BENCE_LINES.size()]])
-			_bence_line += 1
 		"barkeep":
 			# A kocsmáros küldetéseket ad (és itt lehet leadni őket).
 			Audio.play("ui_open")

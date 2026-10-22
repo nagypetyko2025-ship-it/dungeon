@@ -56,7 +56,7 @@ const LETTER_QUEST := "thief_letter"
 const LETTER_FLOOR := 10
 const LETTER_GOLD := 150
 const LETTER_ID := "thief_letter"
-## Belső jelző (Progress.npc_quests): a tolvaj a kocsmába költözött (később játszható karakter lesz).
+## Belső jelző (Progress.npc_quests): a tolvaj a kocsmába költözött (onnantól játszható karakter, lásd Characters).
 const TAVERN_FLAG := "thief_tavern"
 const REAL_NAME := "Bence"
 const LETTER_REQUEST := "\n\n[i]Aztán elhallgat, és sokáig babrál valamit a ládája mélyén. Végül egy " \
@@ -80,7 +80,7 @@ const DELIVERED_STORY := "[i]Amikor meghallja, hogy a levél célba ért, lassan
 	+ "Elmegyek a [b]kocsmába[/b]. Azt mondják, az öreg kapitány is ott iszik mostanában. Ideje, hogy " \
 	+ "beszéljek vele az apámról. És ha egyszer szükséged lesz valakire, aki odalent is ismeri az utat... " \
 	+ "ott megtalálsz.\n\n" \
-	+ "[color=#7a4a10](Bence a kocsmába költözött. Hamarosan játszható karakter lesz.)[/color]"
+	+ "[color=#7a4a10](Bence a kocsmába költözött. Mostantól játszható karakter: a kocsmában átveheted az irányítást.)[/color]"
 ## A második kérés: a fizetés után (és ha egy régebbi mentésben már fizettél, a "Van még munkád?" kérdésre).
 const DAGGER_REQUEST := "\n\n[i]Aztán elkomolyodik, és a szemedbe néz.[/i]\n\n" \
 	+ "Ha már ilyen megbízható vagy... volna még egy kisebb szívességem. A régi tőrömet tavaly elvették " \
