@@ -2,7 +2,8 @@ class_name Graveyard
 extends Node2D
 ## Temető a kocsma alatt (a városi út túloldalán, délre): sötét, kopár föld, középen egy
 ## elhalt fa, körülötte sírkövek és keresztek, korhadt kerítés, csontok, halvány köd.
-## Egy rövid földút vezet le hozzá az útról. (A tábor építi fel: setup(camp) + build().)
+## Egy rövid földút vezet le hozzá az útról. Az egyik sír feliratát E-vel el lehet olvasni
+## (INSCRIBED_TILE). (A tábor építi fel: setup(camp) + build().)
 
 const TILE := 32
 const RPG: Texture2D = preload("res://assets/shop/kenney_rpg.png")
@@ -18,15 +19,32 @@ const GRAVES: Array[Vector2i] = [Vector2i(51, 9), Vector2i(52, 9), Vector2i(53, 
 	Vector2i(53, 10), Vector2i(51, 11), Vector2i(52, 11), Vector2i(53, 11)]
 const FENCE := Vector2i(38, 8)
 const SOIL := Color(0.16, 0.12, 0.1)
+## Az olvasható sír (az alsó sorban, a kapu ösvényétől jobbra) és a felirata.
+const INSCRIBED_TILE := Vector2i(72, 26)
+const INSCRIPTION_TITLE := "Az ismeretlen kalandor"
+const INSCRIPTION := "[center][i]Itt nyugszik, aki lement, és nem jött vissza.\n" \
+	+ "A nevét elnyelte a Mélység, a kardját a fiai hozták fel.[/i]\n\n" \
+	+ "Ne sirasd: ő legalább tudta, mi van odalent.\n" \
+	+ "Te még csak sejted.\n\n" \
+	+ "[color=#6b5a48]— A tábor népe —[/color][/center]"
+const READ_RANGE := 50.0
 
 var _camp: Node2D
 var _entities: Node2D
 var _rng := RandomNumberGenerator.new()
+var _player: Node2D
+var _prompt: Label
+var _panel: InscriptionPanel
+var _inscribed_position := Vector2.INF
 
 
 func setup(camp: Node2D) -> void:
 	_camp = camp
 	_entities = camp.get_node("Entities")
+	_player = camp.get_node("Entities/Player")
+	_panel = InscriptionPanel.new()
+	_panel.name = "InscriptionPanel"
+	camp.add_child.call_deferred(_panel)
 
 
 ## Földút az úttól a temető kapujáig (a tábor rajzolja ki a többi földdel).
@@ -50,6 +68,7 @@ func build() -> void:
 	_build_tree()
 	_build_graves()
 	_build_fog()
+	_build_ui()
 
 
 ## Sötét, kopár föld, szabálytalan szélekkel, itt-ott fűcsomóval.
@@ -127,6 +146,8 @@ func _build_graves() -> void:
 			holder.position = _center(tile) + Vector2(0, 4)
 			_entities.add_child(holder)
 			var stone := _rpg(GRAVES[_rng.randi() % GRAVES.size()], Vector2(0, -12), 0, holder)
+			if tile == INSCRIBED_TILE:
+				_inscribed_position = holder.position
 			stone.rotation = _rng.randf_range(-0.12, 0.12)
 			stone.modulate = Color(0.75, 0.75, 0.8)
 			_body(holder, Vector2(0, -4), Vector2(22, 8))
@@ -140,6 +161,100 @@ func _build_fog() -> void:
 		fog.phase = _rng.randf() * TAU
 		fog.z_index = 2
 		add_child(fog)
+
+
+# ---------------------------------------------------------------- a sírfelirat
+
+func _build_ui() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 5
+	add_child(layer)
+	_prompt = MenuStyle.title_label("[E] Sírfelirat elolvasása", 32, MenuStyle.GOLD)
+	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_prompt.offset_top = -210
+	_prompt.offset_bottom = -160
+	_prompt.offset_left = -500
+	_prompt.offset_right = 500
+	_prompt.modulate.a = 0.0
+	layer.add_child(_prompt)
+
+
+func _near_grave() -> bool:
+	return is_instance_valid(_player) and _player.global_position.distance_to(_inscribed_position) < READ_RANGE
+
+
+func _process(delta: float) -> void:
+	var target := 1.0 if _near_grave() and not get_tree().paused else 0.0
+	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("interact") or get_tree().paused or not _near_grave():
+		return
+	get_viewport().set_input_as_handled()
+	Audio.play("ui_open")
+	_camp.get_node("Menus").call("open_menu", _panel)
+
+
+## A sírfelirat: kőszürke tábla, rajta a vésett szöveg (E / Esc: bezárás).
+class InscriptionPanel:
+	extends CanvasLayer
+
+	func _ready() -> void:
+		layer = 15
+		process_mode = Node.PROCESS_MODE_ALWAYS
+		visible = false
+		var dim := ColorRect.new()
+		dim.color = Color(0.02, 0.02, 0.03, 0.6)
+		dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+		add_child(dim)
+		var center := CenterContainer.new()
+		center.set_anchors_preset(Control.PRESET_FULL_RECT)
+		add_child(center)
+		var stone := PanelContainer.new()
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.55, 0.56, 0.6)
+		style.border_color = Color(0.3, 0.31, 0.35)
+		style.set_border_width_all(6)
+		style.corner_radius_top_left = 80
+		style.corner_radius_top_right = 80
+		style.set_content_margin_all(36)
+		style.content_margin_top = 56
+		style.shadow_color = Color(0, 0, 0, 0.5)
+		style.shadow_size = 14
+		stone.add_theme_stylebox_override("panel", style)
+		stone.custom_minimum_size = Vector2(520, 0)
+		center.add_child(stone)
+		var box := VBoxContainer.new()
+		box.add_theme_constant_override("separation", 14)
+		stone.add_child(box)
+		var title := MenuStyle.title_label(INSCRIPTION_TITLE, 34, Color(0.18, 0.18, 0.22))
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		box.add_child(title)
+		var text := RichTextLabel.new()
+		text.bbcode_enabled = true
+		text.fit_content = true
+		text.scroll_active = false
+		text.custom_minimum_size.x = 440
+		text.add_theme_color_override("default_color", Color(0.16, 0.16, 0.2))
+		text.add_theme_font_size_override("normal_font_size", 19)
+		text.add_theme_font_size_override("italics_font_size", 19)
+		text.text = INSCRIPTION
+		box.add_child(text)
+		var hint := UiStyle.label("[E] / [Esc] bezárás", 14, Color(0.25, 0.25, 0.3))
+		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		box.add_child(hint)
+
+	func open() -> void:
+		visible = true
+
+	func close() -> void:
+		visible = false
+
+	func _unhandled_input(event: InputEvent) -> void:
+		if visible and event.is_action_pressed("interact"):
+			get_viewport().set_input_as_handled()
+			get_tree().current_scene.get_node("Menus").call("close_current")
 
 
 # ---------------------------------------------------------------- segédek
