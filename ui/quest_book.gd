@@ -48,14 +48,14 @@ func _load_ids() -> void:
 func _npc_quests() -> Dictionary:
 	match _tab:
 		2: return Thief.QUESTS
-		KING_TAB: return Castle.KING_QUESTS
+		KING_TAB: return King.QUESTS
 	return Dialogues.VETERAN_QUESTS
 
 
 func _npc_name() -> String:
 	match _tab:
 		2: return Thief.NAME
-		KING_TAB: return Castle.KING_NAME
+		KING_TAB: return King.NAME
 	return Dialogues.VETERAN_NAME
 
 

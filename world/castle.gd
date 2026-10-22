@@ -43,34 +43,47 @@ const SPEAR := Rect2(309, 161, 6, 30)
 ## A királyi őr (a 0x72 knight_f átszínezve: acélszürke páncél, vörös forgó).
 const GUARD_SHEET: Texture2D = preload("res://assets/characters/royal_guard.png")
 
-## A király küldetései (a J könyv "Király" fülén), mint Dialogues.VETERAN_QUESTS.
-const KING_NAME := "A király"
+## A belépés küldetése (a király többi küldetése: King.QUESTS).
 const PERMIT_QUEST := "king_permit"
 ## Belső jelző (Progress.npc_quests): elérted a 30. emeletet ("reached"), és vissza is jöttél ("done").
 const DEEP_FLAG := "deep_30"
-const KING_QUESTS := {
-	PERMIT_QUEST: {"name": "Királyi engedély",
-		"text": "A királyi vár kapujában álló őrök csak engedéllyel engednek be, vagy olyan kalandort, "
-			+ "aki [b]elérte a Mélység 30. szintjét, és vissza is jött[/b]. Juss le a 30. emeletre, "
-			+ "aztán térj vissza a táborba.",
-		"reward": "belépés a királyi várba", "doing": "juss le a 30. emeletre, és gyere vissza",
-		"done": "az őrök beengednek"},
-}
 const WARNING := "Őr: „Megállj! A várba csak a király engedélyével léphetsz be, vagy ha elérted " \
 	+ "a Mélység 30. szintjét, és vissza is jöttél.”"
 const WELCOME := "Őr: „Üdv, kalandor! Hallottuk, hogy megjártad a harmincadik szintet. " \
-	+ "A király hamarosan fogad.”"
+	+ "A király vár rád.”   [E] Belépés"
+
+## A trónterem, messze a pályától (mint a kocsma belseje): bejárat délen, a trón a hátsó falnál.
+const THRONE_ROOM := Rect2i(300, 0, 16, 14)
+const THRONE_DOOR := Vector2i(307, 14)
+const THRONE_TILE := Vector2i(307, 1)
+const THRONE_LIGHT := Color(0.5, 0.45, 0.45)
+const FLOOR_TILES: Array[Rect2] = [Rect2(16, 64, 16, 16), Rect2(32, 64, 16, 16), Rect2(48, 64, 16, 16),
+	Rect2(16, 80, 16, 16)]
+const THRONE: Texture2D = preload("res://assets/props/throne.png")
+const INTERACT_RANGE := 56.0
+const KING_RANGE := 100.0
 
 var _camp: Node2D
 var _player: Node2D
 var _entities: Node2D
 var _prompt: Label
+var _dialogue: DialoguePanel
+var _inside := false
+var _busy := false
 
 
 func setup(camp: Node2D) -> void:
 	_camp = camp
 	_entities = camp.get_node("Entities")
 	_player = camp.get_node("Entities/Player")
+	_dialogue = DialoguePanel.new()
+	_dialogue.name = "KingDialogue"
+	_dialogue.npc_id = King.ID
+	_dialogue.npc_name = King.NAME
+	_dialogue.portrait = King.portrait()
+	_dialogue.options_provider = func() -> Array[Dictionary]:
+		return King.options(_player.get_node("Inventory"))
+	camp.add_child.call_deferred(_dialogue)
 
 
 ## Az út csempéi (a tábor rajzolja ki a többi földdel együtt): a városi úttól a kapuig.
@@ -105,6 +118,7 @@ func build() -> void:
 	_build_house()
 	_build_castle()
 	_build_guards()
+	_build_throne_room()
 	_build_ui()
 
 
@@ -232,21 +246,159 @@ func _build_ui() -> void:
 	layer.add_child(_prompt)
 
 
+## Ami előtt a játékos áll: [művelet ("" = csak felirat), felirat] vagy [].
+func _focus() -> Array:
+	if not is_instance_valid(_player) or _busy:
+		return []
+	var at: Vector2 = _player.global_position
+	if _inside:
+		if at.distance_to(_center(THRONE_DOOR) + Vector2(TILE / 2.0, 0)) < INTERACT_RANGE:
+			return ["leave", "[E] Kilépés a várból"]
+		if at.distance_to(_center(THRONE_TILE) + Vector2(TILE / 2.0, TILE)) < KING_RANGE:
+			return ["king", "[E] Kihallgatás: %s" % King.NAME]
+		return []
+	if at.distance_to(Vector2(PATH_COLUMN + 1, GATE_ROW + 1) * TILE) < GUARD_RANGE:
+		if Progress.npc_quest_state(PERMIT_QUEST) == "done":
+			return ["enter", WELCOME]
+		return ["", WARNING]
+	return []
+
+
 func _process(delta: float) -> void:
-	if not is_instance_valid(_player):
-		return
-	var gate := Vector2(PATH_COLUMN + 1, GATE_ROW + 1) * TILE
-	var near := _player.global_position.distance_to(gate) < GUARD_RANGE
-	if near and Progress.npc_quest_state(PERMIT_QUEST) == "":
+	var focus := _focus()
+	if not focus.is_empty() and not _inside and Progress.npc_quest_state(PERMIT_QUEST) == "":
 		# Az első figyelmeztetéskor új fül nyílik a küldetések könyvében.
 		Progress.set_npc_quest(PERMIT_QUEST, "done" if permit_earned() else "active")
 		Progress.save_game()
 		Audio.play("ui_open")
 		message.emit("Új fül a küldetések könyvében: Király  [J]")
-	if near:
-		_prompt.text = WELCOME if Progress.npc_quest_state(PERMIT_QUEST) == "done" else WARNING
-	var target := 1.0 if near and not get_tree().paused else 0.0
+		focus = _focus()
+	if not focus.is_empty():
+		_prompt.text = focus[1]
+	var target := 1.0 if not focus.is_empty() and not get_tree().paused else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 4.0)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("interact") or get_tree().paused:
+		return
+	var focus := _focus()
+	if focus.is_empty() or focus[0] == "":
+		return
+	get_viewport().set_input_as_handled()
+	match focus[0]:
+		"enter":
+			_move(true, _center(THRONE_DOOR) + Vector2(TILE / 2.0, -TILE))
+		"leave":
+			_move(false, Vector2(PATH_COLUMN + 1, GATE_ROW + 2) * TILE + Vector2(0, 20))
+		"king":
+			Audio.play("ui_open")
+			_dialogue.greeting = King.greeting()
+			_camp.get_node("Menus").call("open_menu", _dialogue)
+
+
+func _move(inside: bool, at: Vector2) -> void:
+	_busy = true
+	_inside = inside
+	Audio.play("door_unlock", -4.0)
+	var room := THRONE_ROOM
+	var limits := Rect2(Vector2(room.position - Vector2i(3, 4)) * TILE, Vector2(room.size + Vector2i(6, 8)) * TILE) \
+		if inside else Rect2()
+	_camp.call("teleport_player", at, limits, THRONE_LIGHT if inside else Color.BLACK)
+	await get_tree().create_timer(0.6).timeout
+	_busy = false
+
+
+# ---------------------------------------------------------------- a trónterem
+
+func _build_throne_room() -> void:
+	var r := THRONE_ROOM
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 42
+	for x in range(r.position.x, r.end.x):
+		for y in range(r.position.y, r.end.y):
+			_region_sprite(DUNGEON, FLOOR_TILES[rng.randi() % FLOOR_TILES.size()], _center(Vector2i(x, y)), -10) \
+				.modulate = Color(0.85, 0.82, 0.8)
+	# Hátsó fal pártázattal, zászlókkal és fáklyákkal.
+	for x in range(r.position.x, r.end.x):
+		_region_sprite(DUNGEON, WALL_TOP, _center(Vector2i(x, r.position.y - 2)), -9)
+		_region_sprite(DUNGEON, WALL_MID, _center(Vector2i(x, r.position.y - 1)), -9)
+		_region_sprite(DUNGEON, WALL_MID, _center(Vector2i(x, r.position.y)), -9)
+	for x in [2, 5, r.size.x - 6, r.size.x - 3]:
+		_region_sprite(DUNGEON, BANNER_RED if x % 2 == 0 else BANNER_YELLOW,
+			_center(Vector2i(r.position.x + x, r.position.y - 1)), -8)
+	for x in [4, r.size.x - 5]:
+		var torch: Node2D = TORCH.instantiate()
+		torch.position = _center(Vector2i(r.position.x + x, r.position.y)) + Vector2(0, -8)
+		add_child(torch)
+	# Oldalfalak és a déli fal (a kapu nyílásával).
+	var dark := Color(0.1, 0.08, 0.1)
+	for rect: Rect2 in [Rect2(Vector2(r.position.x - 1, r.position.y - 2) * TILE, Vector2(TILE, (r.size.y + 3) * TILE)),
+			Rect2(Vector2(r.end.x, r.position.y - 2) * TILE, Vector2(TILE, (r.size.y + 3) * TILE)),
+			Rect2(Vector2(r.position.x, r.end.y) * TILE, Vector2((THRONE_DOOR.x - r.position.x) * TILE, TILE)),
+			Rect2(Vector2(THRONE_DOOR.x + 2, r.end.y) * TILE, Vector2((r.end.x - THRONE_DOOR.x - 2) * TILE, TILE))]:
+		var wall := ColorRect.new()
+		wall.color = dark
+		wall.position = rect.position
+		wall.size = rect.size
+		wall.z_index = -9
+		add_child(wall)
+		_solid(rect)
+	_solid(Rect2(Vector2(r.position.x, r.position.y - 2) * TILE, Vector2(r.size.x * TILE, TILE * 2.6)))
+	_solid(Rect2(Vector2(THRONE_DOOR.x, r.end.y + 1) * TILE, Vector2(2 * TILE, TILE)))
+	_region_sprite(DUNGEON, DOOR_LEAF, Vector2(THRONE_DOOR.x + 1, r.end.y + 0.5) * TILE, -8)
+	# Vörös szőnyeg aranyszegéllyel a bejárattól a trónig.
+	var carpet := ColorRect.new()
+	carpet.color = Color(0.72, 0.56, 0.18)
+	carpet.position = Vector2(THRONE_DOOR.x, r.position.y + 2) * TILE + Vector2(-4, 0)
+	carpet.size = Vector2(2 * TILE + 8, (r.size.y - 2) * TILE)
+	carpet.z_index = -9
+	add_child(carpet)
+	var velvet := ColorRect.new()
+	velvet.color = Color(0.55, 0.1, 0.12)
+	velvet.position = carpet.position + Vector2(4, 0)
+	velvet.size = carpet.size - Vector2(8, 0)
+	velvet.z_index = -9
+	add_child(velvet)
+	# Emelvény a trón alatt (két lépcsőfok), rajta a trón és a király.
+	for step in 2:
+		var dais := ColorRect.new()
+		dais.color = Color(0.5, 0.48, 0.5) if step == 0 else Color(0.62, 0.6, 0.62)
+		dais.size = Vector2((6 - step * 2) * TILE, (2 - step) * TILE * 0.7 + TILE * 0.6)
+		dais.position = Vector2(THRONE_TILE.x + 1, r.position.y + 0.6) * TILE - Vector2(dais.size.x / 2.0, 0)
+		dais.z_index = -8
+		add_child(dais)
+	var throne := Sprite2D.new()
+	throne.texture = THRONE
+	throne.scale = Vector2(2, 2)
+	throne.position = Vector2(THRONE_TILE.x + 1, r.position.y + 0.4) * TILE
+	throne.z_index = -7
+	add_child(throne)
+	var king := AnimatedSprite2D.new()
+	king.sprite_frames = King.frames()
+	king.scale = Vector2(2, 2)
+	king.position = throne.position + Vector2(0, 4)
+	king.z_index = -6
+	king.play()
+	add_child(king)
+	_solid(Rect2(Vector2(THRONE_TILE.x - 1, r.position.y) * TILE, Vector2(4 * TILE, 1.6 * TILE)))
+	# Oszlopsor a szőnyeg két oldalán, és két őr a trón mellett.
+	for y in [4, 7, 10]:
+		for x in [THRONE_DOOR.x - 3, THRONE_DOOR.x + 4]:
+			_region_sprite(DUNGEON, COLUMN, _center(Vector2i(x, r.position.y + y)) + Vector2(0, -TILE), 0, _entities)
+			_solid(Rect2(Vector2(x, r.position.y + y) * TILE + Vector2(4, 4), Vector2(TILE - 8, TILE - 8)))
+	for side in [-1, 1]:
+		var holder := Node2D.new()
+		holder.position = _center(THRONE_TILE + Vector2i(1 + side * 3, 1)) + Vector2(side * -TILE / 2.0, 14)
+		_entities.add_child(holder)
+		var guard := AnimatedSprite2D.new()
+		guard.sprite_frames = _guard_frames()
+		guard.scale = Vector2(2, 2)
+		guard.offset = Vector2(0, -14)
+		guard.flip_h = side > 0
+		guard.play()
+		holder.add_child(guard)
+		_region_sprite(DUNGEON, SPEAR, Vector2(-side * 14, -34), 1, holder)
 
 
 # ---------------------------------------------------------------- segédek

@@ -187,6 +187,7 @@ func _ready() -> void:
 	add_child(ruin)
 	ruin.setup(self)
 	ruin.build()
+	ruin.message.connect(_toast)
 	add_child(QuestTracker.new())
 	var cheats := CheatMenu.new()
 	cheats.name = "CheatMenu"

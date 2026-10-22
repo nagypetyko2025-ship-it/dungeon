@@ -61,6 +61,12 @@ var _dialogue: DialoguePanel
 var _where := "outside"
 var _busy := false
 var _rng := RandomNumberGenerator.new()
+var _thief: AnimatedSprite2D
+
+
+## Elárultad a királynak: az őrök elvitték, a rejtekhely üres.
+static func thief_taken() -> bool:
+	return Progress.npc_quest_state(King.THIEF_FATE) == "betrayed"
 
 
 func setup(camp: Node2D) -> void:
@@ -229,13 +235,13 @@ func _build_backroom() -> void:
 	_walls(r, BACKROOM_DOOR, 1)
 	_tile(Town.DOUBLE_DOOR[0], Vector2i(BACKROOM_DOOR.x, r.end.y), -8)
 	# A tolvaj az asztala mögött, az asztalon gyertya (az egyetlen fény) és arany.
-	var thief := AnimatedSprite2D.new()
-	thief.sprite_frames = Thief.frames()
-	thief.scale = Vector2(2, 2)
-	thief.offset = Vector2(0, -14)
-	thief.position = _center(THIEF_TILE) + Vector2(0, 10)
-	thief.play()
-	_entities.add_child(thief)
+	_thief = AnimatedSprite2D.new()
+	_thief.sprite_frames = Thief.frames()
+	_thief.scale = Vector2(2, 2)
+	_thief.offset = Vector2(0, -14)
+	_thief.position = _center(THIEF_TILE) + Vector2(0, 10)
+	_thief.play()
+	_entities.add_child(_thief)
 	var table_tile := THIEF_TILE + Vector2i(0, 1)
 	var table := _tile(Town.TABLE, table_tile, 0, _entities)
 	_solid(Rect2(Vector2(table_tile) * TILE + Vector2(-4, 8), Vector2(TILE + 8, TILE - 12)))
@@ -311,11 +317,14 @@ func _focus() -> Array:
 			if at.distance_to(_center(BACKROOM_DOOR) + Vector2(0, TILE / 2.0)) < INTERACT_RANGE:
 				return ["back", "[E] Vissza a romos házba"]
 			if at.distance_to(_center(THIEF_TILE)) < THIEF_RANGE:
-				return ["thief", "[E] Beszélgetés: %s" % Thief.NAME]
+				if not thief_taken():
+					return ["thief", "[E] Beszélgetés: %s" % Thief.NAME]
 	return []
 
 
 func _process(delta: float) -> void:
+	if is_instance_valid(_thief):
+		_thief.visible = not thief_taken()
 	var focus := _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]
@@ -337,8 +346,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			_move("outside", door_position() + Vector2(0, 30), Rect2i(), Color.BLACK, "door_unlock")
 		"hidden":
 			_move("backroom", _center(BACKROOM_DOOR) + Vector2(0, -TILE), BACKROOM, BACKROOM_LIGHT, "chest_open")
+			if thief_taken():
+				await get_tree().create_timer(0.7).timeout
+				message.emit("A rejtekhely üres. A tolvajt elvitték a király őrei.")
 			# Az első alkalommal a tolvaj rögtön rád kérdez.
-			if Progress.npc_quest_state(Thief.GOLD_QUEST) == "":
+			elif Progress.npc_quest_state(Thief.GOLD_QUEST) == "":
 				await get_tree().create_timer(0.7).timeout
 				_talk()
 		"back":

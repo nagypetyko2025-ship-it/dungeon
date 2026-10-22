@@ -116,7 +116,33 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 		"done":
 			list.append({"id": "loot_story", "text": "Honnan van ez a sok holmi?",
 				"on_choose": func() -> String: return _loot_story()})
+	# Ha a királynál hallgattál róla, egyszer meghálálja.
+	if Progress.npc_quest_state(King.THIEF_FATE) == "protected" and not Progress.asked_topics(ID).has("king_secret"):
+		list.append({"id": "king_secret", "text": "A király kérdezett rólad. Nem árultalak el.",
+			"on_choose": func() -> String: return _thanks_for_silence(inventory)})
 	return list
+
+
+## Hálából a legendás Árnyékpengét adja (a táskádba, vagy ha tele van, a tábori ládába).
+static func _thanks_for_silence(inventory: Inventory) -> String:
+	Progress.mark_asked(ID, "king_secret")
+	Progress.change_trust(ID, 30)
+	var blade := Items.create("dagger_shadow")
+	var where := "a táskádba"
+	if inventory.is_bag_full():
+		Progress.add_to_stash(blade)
+		where = "a tábori ládába (tele volt a táskád)"
+	else:
+		inventory.add_item(blade)
+	Progress.save_game()
+	Audio.play("level_up")
+	return "[i]Egy pillanatig szóhoz sem jut. Aztán leveszi a kendőt, és most először látod az arcát: " \
+		+ "fiatalabb, mint gondoltad.[/i]\n\n" \
+		+ "A király... és te nem mondtad el neki. Pedig megfizetett volna érte, ugye? Biztosan.\n\n" \
+		+ "[i]A ládához lép, és a legaljáról kivesz egy fekete, szinte fényt elnyelő pengét.[/i]\n\n" \
+		+ "Ez az [b]Árnyékpenge[/b]. A király kincstárából hoztam el, a legszebb darab, ami valaha a kezembe " \
+		+ "került. Soha nem adtam volna el. Neked adom.\n\n" \
+		+ "[color=#7a4a10](Az Árnyékpenge %s került.)[/color]" % where
 
 
 static func _first_answer(topic: String, trust: int, answer: String) -> String:
