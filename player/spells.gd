@@ -17,13 +17,14 @@ const PLAYER_ARROW := preload("res://player/player_arrow.gd")
 
 const ALL := {
 	"bolt": {"name": "Varázsgömb", "icon_path": "res://assets/ui/spell_bolt.png", "cooldown": 1.0, "power": 1.0,
-		"text": "Lila varázsgömb repül a kurzor felé.", "upgrade": "+1 gömb, +20% sebzés"},
+		"text": "Lila varázsgömb repül a kurzor felé.", "short": "Lila gömb a kurzor felé.",
+		"upgrade": "+1 gömb, +20% sebzés"},
 	"fire": {"name": "Tűzgolyó", "icon_path": "res://assets/ui/spell_fire.png", "cooldown": 1.6, "power": 1.25,
 		"text": "Lassabb, de felgyújtja az ellenséget: égés közben is sebződik.",
-		"upgrade": "+20% sebzés, hosszabb és erősebb égés"},
+		"short": "Lassabb, de felgyújt: az ellenség ég.", "upgrade": "+20% sebzés, erősebb égés"},
 	"spikes": {"name": "Földtüskék", "icon_path": "res://assets/ui/spell_spikes.png", "cooldown": 1.4, "power": 1.0,
 		"text": "A kurzor irányában 3 tüske nő ki a földből: ellöki és megsebzi a szörnyeket.",
-		"upgrade": "+1 tüske, +15% sebzés"},
+		"short": "3 tüske nő ki: ellök és sebez.", "upgrade": "+1 tüske, +15% sebzés"},
 }
 
 
@@ -112,15 +113,14 @@ static func level_options() -> Array[Dictionary]:
 		var definition: Dictionary = ALL[spell]
 		options.append({"spell": spell, "stat": "", "amount": 0, "icon_path": definition["icon_path"],
 			"title": "%s %d." % [definition["name"], level(spell) + 1],
-			"text": "Fejlesztés: " + definition["upgrade"]})
+			"text": definition["upgrade"], "note": "fejlesztés"})
 	if GameState.spells.size() < MAX_SPELLS:
 		for spell: String in ALL:
 			if spell in GameState.spells:
 				continue
 			var definition: Dictionary = ALL[spell]
 			options.append({"spell": spell, "stat": "", "amount": 0, "icon_path": definition["icon_path"],
-				"title": "Új: " + definition["name"],
-				"text": definition["text"] + " (Q gombbal)"})
+				"title": definition["name"], "text": definition["short"], "note": "új varázslat · Q gomb"})
 	return options
 
 

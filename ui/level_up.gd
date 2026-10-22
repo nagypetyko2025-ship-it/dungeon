@@ -180,8 +180,19 @@ func _make_card(index: int, upgrade: Dictionary) -> Button:
 	icon.custom_minimum_size = Vector2(72, 72)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(icon)
-	box.add_child(_label(upgrade["title"], 24, Color(1, 0.88, 0.55)))
-	box.add_child(_label(upgrade["text"], 16, Color(0.9, 0.86, 0.8)))
+	# A varázslat-kártyák szövege hosszabb: kisebb ikon és betű, hogy beférjen a kártyába.
+	var spell := upgrade.has("spell")
+	if spell:
+		icon.custom_minimum_size = Vector2(52, 52)
+		box.add_theme_constant_override("separation", 6)
+	var title := _label(upgrade["title"], 20 if spell else 24, Color(1, 0.88, 0.55))
+	var text := _label(upgrade["text"], 14 if spell else 16, Color(0.9, 0.86, 0.8))
+	for label in [title, text]:
+		label.custom_minimum_size.x = CARD_SIZE.x - 36
+	box.add_child(title)
+	box.add_child(text)
+	if upgrade.has("note"):
+		box.add_child(_label(upgrade["note"], 13, Color(0.6, 0.85, 1.0)))
 	# Karakter-bónusz (pl. Gáspár kikerülése): külön, zöldes sorban.
 	if upgrade.has("bonus_note"):
 		box.add_child(_label(upgrade["bonus_note"], 15, Color(0.55, 1.0, 0.6)))
