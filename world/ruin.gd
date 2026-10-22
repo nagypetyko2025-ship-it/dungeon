@@ -4,7 +4,9 @@ extends Node2D
 ## a keleti fele egy kőkupac. Bent nagyon sötét (nincs fényforrás, csak a saját lámpásod),
 ## pókhálók, törött üvegek, felborult bútorok; hátul a ládák mögött egy rejtett ajtó. Mögötte
 ## a tolvaj rejtekszobája egyetlen gyertyával, tele lopott holmival (lásd Thief). Az első
-## belépéskor a tolvaj rád kérdez. (A tábor építi fel: setup(camp) + build(), mint a Várost.)
+## belépéskor a tolvaj rád kérdez. A ház mellett egy kút, az alján egy idegen (Stranger), aki
+## létrát kér; a létra a tisztás délnyugati sarkában hever, egy bokor tövében.
+## (A tábor építi fel: setup(camp) + build(), mint a Várost.)
 
 signal message(text: String)
 
@@ -39,6 +41,12 @@ const BACKROOM_LIGHT := Color(0.17, 0.14, 0.13)
 const LANTERN_INSIDE := 0.55
 const LANTERN_OUTSIDE := 0.5
 const INTERACT_RANGE := 52.0
+## A kút (a ház mellett, keletre) és a létra helye (a tisztás délnyugati sarkában, egy bokor tövében).
+const WELL: Texture2D = preload("res://assets/props/well.png")
+const LADDER: Texture2D = preload("res://assets/props/ladder.png")
+const WELL_TILE := Vector2i(-14, 12)
+const LADDER_TILE := Vector2i(-27, 22)
+const BUSH := Vector2i(19, 9)
 const THIEF_RANGE := 84.0
 
 const FLOOR_TILES: Array[Vector2i] = [Vector2i(8, 2), Vector2i(8, 3)]
@@ -62,6 +70,9 @@ var _where := "outside"
 var _busy := false
 var _rng := RandomNumberGenerator.new()
 var _thief: AnimatedSprite2D
+var _well_dialogue: DialoguePanel
+var _ladder: Node2D
+var _lorinc: AnimatedSprite2D
 
 
 ## A tolvaj (Bence) a levél után a kocsmába költözött: a rejtekhely üres.
@@ -81,6 +92,14 @@ func setup(camp: Node2D) -> void:
 	_dialogue.options_provider = func() -> Array[Dictionary]:
 		return Thief.options(_player.get_node("Inventory"))
 	camp.add_child.call_deferred(_dialogue)
+	# A kútba esett idegen: amíg nem mondja meg a nevét, "???" (és csak a sziluettje látszik).
+	_well_dialogue = DialoguePanel.new()
+	_well_dialogue.name = "WellDialogue"
+	_well_dialogue.npc_id = Stranger.ID
+	_well_dialogue.options_provider = func() -> Array[Dictionary]:
+		_refresh_stranger_panel()
+		return Stranger.options(_player.get_node("Inventory"))
+	camp.add_child.call_deferred(_well_dialogue)
 
 
 ## A ház ajtaja előtti sáros csempék (a tábor rajzolja ki a sárral együtt).
@@ -100,6 +119,7 @@ func build() -> void:
 	_build_exterior()
 	_build_interior()
 	_build_backroom()
+	_build_well()
 	_build_ui()
 
 
@@ -283,6 +303,58 @@ func _build_backroom() -> void:
 	_cobweb(Vector2i(r.position.x, r.end.y - 1), false, true, -7)
 
 
+# ---------------------------------------------------------------- a kút és a létra
+
+func _build_well() -> void:
+	# A kút (szilárd), mellette egy vödör; a megmentés után Lőrinc áll mellette.
+	var holder := Node2D.new()
+	holder.position = _center(WELL_TILE) + Vector2(0, 16)
+	_entities.add_child(holder)
+	var well := Sprite2D.new()
+	well.texture = WELL
+	well.scale = Vector2(2, 2)
+	well.position = Vector2(0, -WELL.get_height())
+	holder.add_child(well)
+	var body := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = Vector2(40, 18)
+	shape.shape = box
+	shape.position = Vector2(0, -10)
+	body.add_child(shape)
+	holder.add_child(body)
+	_lorinc = AnimatedSprite2D.new()
+	_lorinc.sprite_frames = SpriteSheet.character_frames(Stranger.FIGURE, true)
+	_lorinc.scale = Vector2(2, 2)
+	_lorinc.offset = Vector2(0, -14)
+	_lorinc.position = _center(WELL_TILE + Vector2i(-1, 1)) + Vector2(-6, 10)
+	_lorinc.play("idle")
+	_entities.add_child(_lorinc)
+	# A létra a fűben hever, félig egy bokor mögött.
+	_ladder = Node2D.new()
+	_ladder.position = _center(LADDER_TILE)
+	_entities.add_child(_ladder)
+	var ladder := Sprite2D.new()
+	ladder.texture = LADDER
+	ladder.scale = Vector2(1.6, 1.6)
+	ladder.rotation = PI / 2.0 - 0.25
+	ladder.modulate = Color(0.85, 0.8, 0.75)
+	_ladder.add_child(ladder)
+	_tile(BUSH, LADDER_TILE + Vector2i(1, 0), 1, _entities).position += Vector2(-10, 4)
+
+
+## A beszélgetés neve és képe: "???" és sziluett, amíg nem mondja meg a nevét.
+func _refresh_stranger_panel() -> void:
+	_well_dialogue.npc_name = Stranger.display_name()
+	_well_dialogue.portrait = Stranger.portrait()
+	var name_label: Label = _well_dialogue.get("_name_label")
+	var portrait_rect: TextureRect = _well_dialogue.get("_portrait_rect")
+	if name_label:
+		name_label.text = _well_dialogue.npc_name
+	if portrait_rect:
+		portrait_rect.texture = _well_dialogue.portrait
+
+
 # ---------------------------------------------------------------- irányítás
 
 func _build_ui() -> void:
@@ -308,6 +380,10 @@ func _focus() -> Array:
 		"outside":
 			if at.distance_to(door_position()) < INTERACT_RANGE:
 				return ["enter", "[E] Belépés: romos ház"]
+			if at.distance_to(_center(WELL_TILE) + Vector2(0, 20)) < INTERACT_RANGE + 8:
+				return ["well", "[E] Beszélgetés: %s" % Stranger.REAL_NAME if Stranger.is_rescued() else "[E] A kút"]
+			if is_instance_valid(_ladder) and _ladder.visible and at.distance_to(_ladder.position) < INTERACT_RANGE:
+				return ["ladder", "[E] Létra felvétele"]
 		"ruin":
 			if at.distance_to(_center(INTERIOR_DOOR) + Vector2(TILE / 2.0, TILE / 2.0)) < INTERACT_RANGE:
 				return ["leave", "[E] Kilépés a szabadba"]
@@ -325,6 +401,12 @@ func _focus() -> Array:
 func _process(delta: float) -> void:
 	if is_instance_valid(_thief):
 		_thief.visible = not thief_gone()
+	# A létra csak a küldetés alatt hever a fűben (amíg fel nem veszed); Lőrinc a megmentése után áll a kútnál.
+	if is_instance_valid(_ladder):
+		_ladder.visible = Progress.npc_quest_state(Stranger.LADDER_QUEST) == "active" \
+			and Progress.npc_quest_state(Stranger.LADDER_FOUND) != "done"
+	if is_instance_valid(_lorinc):
+		_lorinc.visible = Stranger.is_rescued()
 	var focus := _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]
@@ -340,6 +422,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	get_viewport().set_input_as_handled()
 	match focus[0]:
+		"well":
+			Audio.play("ui_open")
+			_well_dialogue.greeting = Stranger.greeting()
+			_refresh_stranger_panel()
+			_camp.get_node("Menus").call("open_menu", _well_dialogue)
+		"ladder":
+			Audio.play("door_unlock", -6.0)
+			var where := Stranger.pick_up_ladder(_player.get_node("Inventory"))
+			message.emit("Régi létra: %s került." % where)
 		"enter":
 			_move("ruin", _center(INTERIOR_DOOR) + Vector2(TILE / 2.0, -TILE), INTERIOR, RUIN_LIGHT, "door_unlock")
 		"leave":

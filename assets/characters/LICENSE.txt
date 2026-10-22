@@ -3,3 +3,4 @@ veteran.png: a 0x72 DungeonTileset II (CC0, https://0x72.itch.io/dungeontileset-
 thief.png: a 0x72 DungeonTileset II (CC0, https://0x72.itch.io/dungeontileset-ii) elf_m kockái (álló, futás, sebződés), tolvajnak átszínezve (sötét ruha és haj, rabló-kendő a szemén). CC0.
 royal_guard.png: a 0x72 DungeonTileset II (CC0, https://0x72.itch.io/dungeontileset-ii) knight_f kockái, királyi őrnek átszínezve (acélszürke páncél, vörös forgó). CC0.
 king.png: a 0x72 DungeonTileset II (CC0) elf_m kockái (álló, futás, sebződés) királynak átszínezve (bíbor palást, ősz haj), rajzolt koronával; a kockák 16x32-esek (fölül 4 px a koronának). CC0.
+stranger_silhouette.png: a 0x72 DungeonTileset II (CC0) wizzard_m álló kockája, egyszínű sötét sziluettként (a kútba esett idegen, amíg nem tudod a nevét).

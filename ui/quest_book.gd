@@ -10,8 +10,10 @@ const PAGE_SIZE := Vector2(400, 420)
 ## Fülek: 0 = általános küldetések (Quests), 1 = a veterán küldetései (Dialogues),
 ## 2 = a tolvaj küldetései (Thief), 3 = a király küldetései (Castle; csak a vár kapujánál
 ## tett első látogatás után látszik).
-const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király"]
+const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király", "Kutas idegen"]
 const KING_TAB := 3
+## 4 = a kútba esett idegen küldetései (Stranger).
+const WELL_TAB := 4
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 
 var _ids: Array = []
@@ -49,6 +51,7 @@ func _npc_quests() -> Dictionary:
 	match _tab:
 		2: return Thief.QUESTS
 		KING_TAB: return King.QUESTS
+		WELL_TAB: return Stranger.QUESTS
 	return Dialogues.VETERAN_QUESTS
 
 
@@ -56,6 +59,7 @@ func _npc_name() -> String:
 	match _tab:
 		2: return Thief.NAME
 		KING_TAB: return King.NAME
+		WELL_TAB: return Stranger.display_name()
 	return Dialogues.VETERAN_NAME
 
 
@@ -227,6 +231,10 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 		if _tab == 1 and _ids.is_empty() and index == 0:
 			empty_text = "Gáspár, a veterán még nem kért tőled semmit.\n\n" \
 				+ "Beszélgess vele a táborban (a tábor nyugati részén ül, a sátra előtt)."
+		elif _tab == WELL_TAB and _ids.is_empty() and index == 0:
+			empty_text = "Még senki nem kért tőled semmit a kútnál.
+
+" 				+ "A nyugati tisztáson, a romos ház mellett áll egy öreg kút..."
 		elif _tab == 2 and _ids.is_empty() and index == 0:
 			empty_text = "Még nem találkoztál a tolvajjal.\n\n" \
 				+ "Állítólag a sáros ösvény végén, egy romos házban rejtőzik valaki..."
