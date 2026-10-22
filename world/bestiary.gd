@@ -10,6 +10,8 @@ const WEREWOLF_SCRIPT := preload("res://enemies/werewolf_boss.gd")
 ## A hét szörnykirály (a 3. emelettől minden 3. emeleten), és a Mélység Ura.
 const KINGS := ["Ogrekirály", "Orkhadúr", "Gyíkkirály", "Démonúr", "Nekromanta-főpap", "Jégóriás", "Zombikirály"]
 const LORD := "Vérfarkas, a Mélység Ura"
+## A 21. emelet utáni új főellenségek (24., 27., 30., 33. emelet).
+const DEEP_BOSSES := ["Kalózkirály", "Lánggólem", "A Mélység Szeme", "Nyálkakirály"]
 ## Kategóriák sorrendben: [cím, szörnyek].
 const CATEGORIES := [
 	["Élőholtak", ["tiny_zombie", "zombie", "ice_zombie", "big_zombie", "skelet", "skeleton_legionary",
@@ -23,7 +25,7 @@ const CATEGORIES := [
 	["Fenevadak", ["minotaur", "yeti", "wendigo", "mammoth", "giant_crab"]],
 	["Sárkányok", ["fire_dragon", "frost_dragon", "shadow_dragon"]],
 	["Különös lények", ["mimic", "pumpkin_dude", "angel"]],
-	["Főellenségek", KINGS + [LORD]],
+	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES],
 ]
 ## A képességek neve a könyvben (EnemyAbilities, és a típus "dash" / "ranged" jelzője).
 const ABILITY_NAMES := {
@@ -95,6 +97,13 @@ const ENTRIES := {
 	"Zombikirály": ["Zombikirály", "A rothadás koronás ura; a halál nem tudja megállítani."],
 	"Vérfarkas, a Mélység Ura": ["Vérfarkas, a Mélység Ura", "A 20. emelet ura, aki Gáspár embereit legyilkolta. " \
 		+ "Ha elesik, fel is kel."],
+	"Kalózkirály": ["Kalózkirály", "Egy földalatti tengeren elsüllyedt flotta ura. Ágyútüzet zúdít rád, " \
+		+ "és minden ütésével kifosztja az erszényed."],
+	"Lánggólem": ["Lánggólem", "Élő láva és izzó kő. Ahová lép, kitör alóla a föld."],
+	"A Mélység Szeme": ["A Mélység Szeme", "Lebegő, pislogás nélküli szem. Jeges tekintete lelassít, " \
+		+ "és egy pillanat alatt melletted terem."],
+	"Nyálkakirály": ["Nyálkakirály", "Hatalmas, remegő kocsonya. Mérgező tócsákat hagy maga után, " \
+		+ "és kisebb nyálkákat szül."],
 }
 
 
@@ -131,6 +140,11 @@ static func icon(monster: String) -> Array:
 	if type["name"] != monster:
 		for boss: Dictionary in BOSS_SCRIPT.BOSSES:
 			if boss["name"] == monster:
+				if boss.has("sheet"):
+					var own := AtlasTexture.new()
+					own.atlas = load(boss["sheet"])
+					own.region = boss["rect"]
+					return [own, boss.get("tint", Color.WHITE)]
 				return [SpriteSheet.region(boss["rect"]), boss.get("tint", Color.WHITE)]
 		var sheet := AtlasTexture.new()
 		sheet.atlas = load(WEREWOLF_SCRIPT.SHEET)

@@ -5,3 +5,5 @@ werewolf.png: "Bloody Werewolf" (d36williams, CC0 a választható licencek köz�
 mammoth.png, giant_crab.png, lich.png, purple_demon.png, fire_dragon.png: szintén a "MiniWorld Sprites" csomagból (CC0), az oldalnézeti (a ráknál a szemből látszó) kockákból összeállítva.
 
 pirate_grunt.png, pirate_gunner.png, pirate_captain.png, kamikaze_goblin.png, spear_goblin.png, green_slime.png, frost_slime.png, frost_dragon.png, shadow_dragon.png: szintén a "MiniWorld Sprites" csomagból (CC0, https://opengameart.org/content/miniworld-sprites), a jobbra néző oldalnézeti (a nyálkáknál a szemből látszó) kockákból összeállítva.
+fire_golem.png: "Fire Golem" (teasloth, CC0, https://opengameart.org/content/fire-golem), a 2x2-es kockákból 8 kockás sávvá rendezve.
+deep_eye.png: "Gazer" (zwonky, CC0, https://opengameart.org/content/gazer), a fehér-vörös változat szemből látszó kockáiból, átlátszó háttérrel.
