@@ -7,3 +7,4 @@ mammoth.png, giant_crab.png, lich.png, purple_demon.png, fire_dragon.png: szint�
 pirate_grunt.png, pirate_gunner.png, pirate_captain.png, kamikaze_goblin.png, spear_goblin.png, green_slime.png, frost_slime.png, frost_dragon.png, shadow_dragon.png: szintén a "MiniWorld Sprites" csomagból (CC0, https://opengameart.org/content/miniworld-sprites), a jobbra néző oldalnézeti (a nyálkáknál a szemből látszó) kockákból összeállítva.
 fire_golem.png: "Fire Golem" (teasloth, CC0, https://opengameart.org/content/fire-golem), a 2x2-es kockákból 8 kockás sávvá rendezve.
 deep_eye.png: "Gazer" (zwonky, CC0, https://opengameart.org/content/gazer), a fehér-vörös változat szemből látszó kockáiból, átlátszó háttérrel.
+giant_skeleton.png: "Skeletons Rework" (antumdeluge, CC0, https://opengameart.org/content/skeletons-rework), a vörös szemű változat jobbra néző kockáiból (24x32), 8 kockás sávba rendezve.

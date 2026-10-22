@@ -228,6 +228,12 @@ const TYPES: Array[Dictionary] = [
 		"sheet": "res://assets/enemies/pirate_captain.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.6,
 		"health": [18, 22], "damage": [4, 5], "speed": [80, 95], "dodge": [10, 20],
 		"knockback": [360, 400], "resist": [0.5, 0.6], "xp": [10, 11], "min_depth": 6, "weight": 1},
+	# Az óriás csontváz ("Skeletons Rework", CC0): lassú, nagyon szívós, csontvázakat idéz,
+	# rohamra hívja őket, és halálakor szétrepülnek a csontjai.
+	{"name": "giant_skeleton", "abilities": ["summon", "war_cry", "death_burst"],
+		"sheet": "res://assets/enemies/giant_skeleton.png", "rect": Rect2(0, 0, 24, 32), "run": true, "size": 1.7,
+		"health": [34, 42], "damage": [5, 6], "speed": [50, 62], "dodge": [0, 5],
+		"knockback": [480, 540], "resist": [0.85, 0.95], "xp": [16, 18], "min_depth": 7, "weight": 1},
 	{"name": "frost_dragon", "abilities": ["frost", "zigzag"], "ranged": true, "no_weapon": true,
 		"projectile": "magic", "weapon_region": Rect2(324, 129, 8, 30), "shots": 3, "spread": 16.0,
 		"sheet": "res://assets/enemies/frost_dragon.png", "rect": Rect2(0, 0, 32, 32), "run": true, "size": 1.1,

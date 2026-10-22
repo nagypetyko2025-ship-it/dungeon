@@ -93,7 +93,8 @@ func _build_tree() -> void:
 	_body(holder, Vector2(0, -6), Vector2(20, 10))
 	# Két kisebb, kiszáradt csemete a temető sarkaiban.
 	for i in DEAD_SAPLINGS.size():
-		var corner := Vector2i(RECT.position.x + 1, RECT.end.y - 2) if i == 0 else Vector2i(RECT.end.x - 2, RECT.position.y + 1)
+		# (A sírok oszlopai közé, hogy ne kerüljenek egymásra.)
+		var corner := Vector2i(RECT.position.x, RECT.position.y + 2) if i == 0 else Vector2i(RECT.end.x - 2, RECT.position.y + 1)
 		var sapling := _rpg(DEAD_SAPLINGS[i], _center(corner), 0, _entities)
 		sapling.modulate = Color(0.5, 0.45, 0.45)
 	var bones := Sprite2D.new()
@@ -111,7 +112,8 @@ func _build_graves() -> void:
 	for row in [1, 3, 5]:
 		for x in range(RECT.position.x + 1, RECT.end.x - 1, 2):
 			var tile := Vector2i(x, RECT.position.y + row)
-			if absi(tile.x - tree_tile.x) <= 1 and absi(tile.y - tree_tile.y) <= 1:
+			# Az elhalt fa (és a koronája fölötte) körül nincs sír.
+			if absi(tile.x - tree_tile.x) <= 1 and tile.y >= tree_tile.y - 2 and tile.y <= tree_tile.y + 1:
 				continue
 			if x == GATE_COLUMN or x == GATE_COLUMN + 1:
 				continue

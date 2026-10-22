@@ -15,7 +15,7 @@ const DEEP_BOSSES := ["Kalózkirály", "Lánggólem", "A Mélység Szeme", "Nyá
 ## Kategóriák sorrendben: [cím, szörnyek].
 const CATEGORIES := [
 	["Élőholtak", ["tiny_zombie", "zombie", "ice_zombie", "big_zombie", "skelet", "skeleton_legionary",
-		"necromancer", "lich"]],
+		"giant_skeleton", "necromancer", "lich"]],
 	["Zöldbőrűek", ["goblin", "spear_goblin", "kamikaze_goblin", "orc_warrior", "masked_orc", "orc_shaman", "ogre"]],
 	["Démonok", ["imp", "wogol", "chort", "big_demon", "armored_demon", "purple_demon"]],
 	["Nyálkák", ["tiny_slug", "slug", "green_slime", "frost_slime", "muddy", "swampy"]],
@@ -42,6 +42,7 @@ const ENTRIES := {
 	"ice_zombie": ["Jégzombi", "A mélység hidegében fagyott meg. Halálakor jégszilánkokká robban."],
 	"big_zombie": ["Óriászombi", "Egy hústorony, amit alig lehet hátralökni. Lassan, de folyton gyógyul."],
 	"skelet": ["Csontváz", "Régi kalandorok maradványa. Gyenge, de mindig van belőle még egy."],
+	"giant_skeleton": ["Óriás csontváz", "Egy ősi óriás csontjai, amiket valami újra összerakott. Lassú, de alig lehet kidönteni; csontvázakat hív maga mellé, és ha elesik, a csontjai szétrepülnek."],
 	"skeleton_legionary": ["Csontlégiós", "Egy elesett hadsereg katonája; halála után is sorban menetel."],
 	"necromancer": ["Nekromanta", "Halottakat idéz maga mellé. Őt öld meg először, különben sosem fogy el a sereg."],
 	"lich": ["Lich", "Halhatatlanságot keresett, és megtalálta. Hideg varázslövedékeket szór legyezőben."],
