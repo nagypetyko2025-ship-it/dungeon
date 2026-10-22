@@ -10,7 +10,7 @@ const MAX_ENTRIES := 5
 
 
 ## Az eddigi legjobb futások, a legjobbtól kezdve. Minden elem:
-## {depth, gold, kills, level, time, date}
+## {character, depth, gold, kills, level, time, date, exits} (a régieknél nincs "character": lovag)
 static func top() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var config := ConfigFile.new()
@@ -28,6 +28,7 @@ static func top() -> Array[Dictionary]:
 ## Elmenti a futást; visszaadja, hányadik helyre került (1–5), vagy 0-t, ha nem fért be.
 static func submit(depth: int, gold: int, kills: int, level: int, time: float, exits := 0) -> int:
 	var entry := {
+		"character": Progress.character,
 		"depth": depth, "gold": gold, "kills": kills, "level": level,
 		"time": int(time), "date": Time.get_date_string_from_system(), "exits": exits,
 	}

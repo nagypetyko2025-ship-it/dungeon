@@ -139,7 +139,7 @@ static func frames(id: String) -> SpriteFrames:
 static func can_use(item: Dictionary) -> bool:
 	if item.get("slot", "") != "weapon":
 		return true
-	var bow: bool = item.get("weapon_type", "sword") == "bow"
+	var bow: bool = Items.is_ranged(item)
 	return bow if data(Progress.character).get("weapons", "melee") == "ranged" else not bow
 
 
@@ -147,7 +147,7 @@ static func can_use(item: Dictionary) -> bool:
 static func weapon_restriction_text(item: Dictionary) -> String:
 	if item.get("slot", "") != "weapon":
 		return ""
-	return "Csak íjász használhatja." if item.get("weapon_type", "") == "bow" else "Íjász nem használhatja."
+	return "Csak íjász használhatja." if Items.is_ranged(item) else "Íjász nem használhatja."
 
 
 ## Az aktív karakter bónusza egy adott értékre (0, ha nincs).

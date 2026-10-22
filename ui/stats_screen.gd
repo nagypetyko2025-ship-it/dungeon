@@ -140,7 +140,7 @@ func _refresh() -> void:
 	var scaling: float = _player.call("weapon_scaling")
 	var hit: int = _player.call("hit_damage")
 	_pair("Alapsebzés", str(base))
-	var scaled_stat: int = stats.ranged_damage if weapon and weapon.get("weapon_type", "") == "bow" else stats.damage
+	var scaled_stat: int = stats.ranged_damage if Items.is_ranged(weapon) else stats.damage
 	_pair("Képlet", "(%d + %d × %d%%) × %d%%" % [base, scaled_stat, roundi(scaling * 100.0), 100 + stats.damage_percent])
 	_pair("Karakter", Characters.data(Progress.character)["name"])
 	_pair("Sebzés / ütés", str(hit))

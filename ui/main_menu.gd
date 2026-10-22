@@ -203,7 +203,7 @@ func _build_settings() -> void:
 	_settings.closed.connect(_show_panel.bind(""))
 	add_child(_settings)
 	_records = RecordsPanel.new()
-	_place(_records, Vector2(0.5, 0.5), Vector2(-420, -175), Vector2(840, 0))
+	_place(_records, Vector2(0.5, 0.5), Vector2(-440, -175), Vector2(880, 0))
 	_records.visible = false
 	_records.closed.connect(_show_panel.bind(""))
 	add_child(_records)

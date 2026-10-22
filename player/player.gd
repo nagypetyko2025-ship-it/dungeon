@@ -47,6 +47,7 @@ const WEAPON_TYPES := {
 	"axe": {"style": "swing", "arc": 200.0, "cooldown": 1.3, "knockback": 380.0, "length": 58.0, "width": 34.0},
 	"mace": {"style": "swing", "arc": 160.0, "cooldown": 1.45, "knockback": 520.0, "length": 56.0, "width": 36.0},
 	"bow": {"style": "bow", "cooldown": 1.1, "knockback": 120.0, "length": 40.0, "width": 10.0},
+	"crossbow": {"style": "bow", "cooldown": 1.45, "knockback": 220.0, "length": 40.0, "width": 10.0},
 }
 ## Az átlós ikonú fegyvereknél a markolat ennyied része a forgáspont mögött.
 const ICON_WEAPON_GRIP := 0.15
@@ -76,6 +77,10 @@ const WAR_CRY_STUN := 0.5
 const BOSS_SCRIPT := preload("res://enemies/boss.gd")
 const MULTISHOT_SPREAD := 8.0
 const MULTISHOT_GAP := 16.0
+## Számszeríj: legfeljebb ennyi vessző, sokkal szűkebb ívben és közelebb egymáshoz.
+const CROSSBOW_MAX_BOLTS := 3
+const CROSSBOW_SPREAD := 2.0
+const CROSSBOW_GAP := 7.0
 ## Ennyi megtett pixelenként szól egy lépés.
 const STEP_LENGTH := 46.0
 
@@ -175,7 +180,7 @@ func weapon_crit_multiplier() -> float:
 ## Egy (nem kritikus) találat sebzése a jelenlegi fegyverrel és statokkal. Az íjat a
 ## Távolsági sebzés erősíti (a többit a Közelharci), és az íjász karakter íjjal többet sebez.
 func hit_damage() -> int:
-	var bow := _weapon_type == "bow"
+	var bow := _weapon_type in Items.RANGED_TYPES
 	var damage := _stats.hit_damage(weapon_base_damage(), weapon_scaling(), bow)
 	if bow:
 		damage = roundi(damage * (1.0 + Characters.bonus("bow_damage")))
@@ -365,7 +370,7 @@ func attack_cooldown() -> float:
 	var cooldown := BASE_ATTACK_COOLDOWN / (_stats.attack_speed / 100.0)
 	cooldown *= float(WEAPON_TYPES[_weapon_type]["cooldown"])
 	# Az íjász íjjal gyorsabban lő.
-	if _weapon_type == "bow":
+	if _weapon_type in Items.RANGED_TYPES:
 		cooldown *= 1.0 - Characters.bonus("bow_speed")
 	return cooldown
 
@@ -655,22 +660,27 @@ func _shoot(aim_angle: float) -> void:
 	_weapon_pivot.position = WEAPON_PIVOT_POSITION
 	# Többlövés: ennyi nyíl egyszerre, egymás mellett, kicsit szétterülve (nem egymásban).
 	var count := _stats.multishot
+	var crossbow := _weapon_type == "crossbow"
+	var spread := CROSSBOW_SPREAD if crossbow else MULTISHOT_SPREAD
+	var gap := CROSSBOW_GAP if crossbow else MULTISHOT_GAP
+	if crossbow:
+		count = mini(count, CROSSBOW_MAX_BOLTS)
 	# Az oldalirány ugyanarra mutat, amerre a szög is nő: így a nyilak egymás mellől indulnak,
 	# és szétfelé repülnek (sosem keresztezik egymást).
 	var side := direction.rotated(PI / 2.0)
 	for i in count:
 		var k := i - (count - 1) / 2.0
 		var arrow: Area2D = PLAYER_ARROW.new()
-		arrow.direction = direction.rotated(deg_to_rad(MULTISHOT_SPREAD) * k)
+		arrow.direction = direction.rotated(deg_to_rad(spread) * k)
 		arrow.speed = ARROW_SPEED
 		arrow.max_distance = BOW_RANGE * _stats.attack_range / 100.0
 		arrow.damage = hit_damage()
 		arrow.crit_chance = _stats.crit_chance / 100.0
 		arrow.crit_multiplier = weapon_crit_multiplier()
-		arrow.knockback = WEAPON_TYPES["bow"]["knockback"]
+		arrow.knockback = WEAPON_TYPES[_weapon_type]["knockback"]
 		arrow.set_meta("source", self)
 		get_parent().add_child(arrow)
-		arrow.global_position = _weapon_pivot.global_position + direction * 18.0 + side * MULTISHOT_GAP * k
+		arrow.global_position = _weapon_pivot.global_position + direction * 18.0 + side * gap * k
 	await get_tree().create_timer(0.15, false).timeout
 	if _weapon_pivot.rotation == aim_angle:
 		_weapon_pivot.visible = false

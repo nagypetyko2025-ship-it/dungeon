@@ -20,3 +20,5 @@ Típusonként még +2 tárgy (mind CC0):
   "Dungeon Crawl 32x32 tiles" (https://opengameart.org/content/dungeon-crawl-32x32-tiles), kivágva és 34x34-be nagyítva: helmet_etched, helmet_plumed, chest_chain, chest_elven, pants_blue, pants_emerald, boots_stripe, boots_forest, gloves_fencer, gloves_mithril, ring_emerald_cut, ring_bloodruby, amulet_eye, amulet_sunking, trinket_lantern, trinket_orb.
   "swords cc0" (SnoopethDuckDuck): sword_venom (3.png), sword_dawn (13.png).
 thief_letter.png: "Envelope" a "Pixelart icons" csomagból (darkagegames, CC0, https://opengameart.org/content/pixelart-icons), pergamenszínűre festve, viaszpecséttel.
+
+Számszeríjak (crossbow_*): "CC0 Ranged Icons" gyűjtemény (antumdeluge, https://opengameart.org/content/cc0-ranged-icons), a "Dungeon Crawl Stone Soup" (CC0) lapjáról kivágva, 34x34-re.

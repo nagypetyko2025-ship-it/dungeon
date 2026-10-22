@@ -14,7 +14,7 @@ const TYPE_FILTERS := [
 ]
 const KIND_FILTERS := [
 	[ALL, "Mind"], ["sword", "Kard"], ["dagger", "Tőr"], ["spear", "Lándzsa"], ["axe", "Balta"],
-	["mace", "Buzogány"], ["bow", "Íj"],
+	["mace", "Buzogány"], ["bow", "Íj"], ["crossbow", "Számszeríj"],
 ]
 
 var _type_filter := ALL

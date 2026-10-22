@@ -78,7 +78,7 @@ func _has_bow() -> bool:
 	if player == null:
 		return false
 	var weapon = player.get_node("Inventory").equipment.get("weapon")
-	return Progress.character == "archer" or (weapon is Dictionary and weapon.get("weapon_type", "") == "bow")
+	return Progress.character == "archer" or (weapon is Dictionary and Items.is_ranged(weapon))
 
 
 func _growth_text() -> String:

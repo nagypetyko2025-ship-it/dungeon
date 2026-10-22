@@ -1,12 +1,13 @@
 class_name RecordsPanel
 extends PanelContainer
 ## Eredmények panel a főmenüben: az 5 legjobb futás rangsorolva
-## (emelet, arany, megölt szörnyek, szint, hányszor mentél ki pihenni, idő, dátum).
+## (karakter, emelet, arany, megölt szörnyek, szint, hányszor mentél ki pihenni, idő, dátum).
+## A régi, karakter nélkül mentett futások a lovaggal készültek (akkor még csak ő volt).
 
 signal closed
 
-const HEADERS := ["#", "Emelet", "Arany", "Szörnyek", "Szint", "Kijutás", "Idő", "Dátum"]
-const COLUMN_WIDTHS := [44, 86, 86, 104, 66, 84, 76, 126]
+const HEADERS := ["#", "Karakter", "Emelet", "Arany", "Szörnyek", "Szint", "Kijutás", "Idő", "Dátum"]
+const COLUMN_WIDTHS := [40, 104, 80, 76, 100, 60, 80, 70, 116]
 const MEDALS := [Color(1, 0.82, 0.3), Color(0.82, 0.84, 0.88), Color(0.8, 0.5, 0.28)]
 
 var _grid: GridContainer
@@ -48,12 +49,13 @@ func refresh() -> void:
 		var color: Color = MEDALS[rank] if rank < MEDALS.size() else MenuStyle.PARCHMENT
 		if rank >= entries.size():
 			color = Color(MenuStyle.PARCHMENT, 0.35)
-		var values: Array = ["%d." % (rank + 1), "—", "—", "—", "—", "—", "—", "—"]
+		var values: Array = ["%d." % (rank + 1), "—", "—", "—", "—", "—", "—", "—", "—"]
 		if rank < entries.size():
 			var entry: Dictionary = entries[rank]
 			var seconds := int(entry.get("time", 0))
 			values = [
-				"%d." % (rank + 1), str(entry.get("depth", 0)), str(entry.get("gold", 0)),
+				"%d." % (rank + 1), Characters.data(str(entry.get("character", Characters.DEFAULT)))["name"],
+				str(entry.get("depth", 0)), str(entry.get("gold", 0)),
 				str(entry.get("kills", 0)), str(entry.get("level", 1)), str(entry.get("exits", 0)),
 				"%d:%02d" % [seconds / 60, seconds % 60], str(entry.get("date", "")),
 			]
