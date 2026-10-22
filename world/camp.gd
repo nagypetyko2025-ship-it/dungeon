@@ -188,6 +188,13 @@ func _ready() -> void:
 	ruin.setup(self)
 	ruin.build()
 	ruin.message.connect(_toast)
+	# A kút alja (Lőrinc megmentése után le lehet mászni).
+	var cave := WellCave.new()
+	cave.name = "WellCave"
+	add_child(cave)
+	cave.setup(self)
+	cave.build()
+	cave.message.connect(_toast)
 	add_child(QuestTracker.new())
 	var cheats := CheatMenu.new()
 	cheats.name = "CheatMenu"

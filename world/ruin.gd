@@ -327,7 +327,7 @@ func _build_well() -> void:
 	_lorinc.sprite_frames = SpriteSheet.character_frames(Stranger.FIGURE, true)
 	_lorinc.scale = Vector2(2, 2)
 	_lorinc.offset = Vector2(0, -14)
-	_lorinc.position = _center(WELL_TILE + Vector2i(-1, 1)) + Vector2(-6, 10)
+	_lorinc.position = _center(WELL_TILE + Vector2i(-2, 1)) + Vector2(-4, 10)
 	_lorinc.play("idle")
 	_entities.add_child(_lorinc)
 	# A létra a fűben hever, félig egy bokor mögött.
@@ -341,6 +341,11 @@ func _build_well() -> void:
 	ladder.modulate = Color(0.85, 0.8, 0.75)
 	_ladder.add_child(ladder)
 	_tile(BUSH, LADDER_TILE + Vector2i(1, 0), 1, _entities).position += Vector2(-10, 4)
+
+
+## Ide érkezel, ha a kútból felmászol (a kút elé).
+func well_exit_position() -> Vector2:
+	return _center(WELL_TILE + Vector2i(0, 2))
 
 
 ## A beszélgetés neve és képe: "???" és sziluett, amíg nem mondja meg a nevét.
@@ -380,8 +385,11 @@ func _focus() -> Array:
 		"outside":
 			if at.distance_to(door_position()) < INTERACT_RANGE:
 				return ["enter", "[E] Belépés: romos ház"]
+			# Lőrinc a megmentése után a kúttól kicsit arrébb áll; a kútba onnantól le lehet mászni.
+			if Stranger.is_rescued() and at.distance_to(_lorinc.position) < INTERACT_RANGE:
+				return ["lorinc", "[E] Beszélgetés: %s" % Stranger.REAL_NAME]
 			if at.distance_to(_center(WELL_TILE) + Vector2(0, 20)) < INTERACT_RANGE + 8:
-				return ["well", "[E] Beszélgetés: %s" % Stranger.REAL_NAME if Stranger.is_rescued() else "[E] A kút"]
+				return ["descend", "[E] Lemászás a kútba"] if Stranger.is_rescued() else ["well", "[E] A kút"]
 			if is_instance_valid(_ladder) and _ladder.visible and at.distance_to(_ladder.position) < INTERACT_RANGE:
 				return ["ladder", "[E] Létra felvétele"]
 		"ruin":
@@ -422,7 +430,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	get_viewport().set_input_as_handled()
 	match focus[0]:
-		"well":
+		"descend":
+			_camp.get_node("WellCave").call("enter")
+		"well", "lorinc":
 			Audio.play("ui_open")
 			_well_dialogue.greeting = Stranger.greeting()
 			_refresh_stranger_panel()

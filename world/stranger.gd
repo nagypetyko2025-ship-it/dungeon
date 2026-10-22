@@ -1,7 +1,8 @@
 class_name Stranger
 ## A kútba esett idegen a nyugati tisztáson, a romos ház mellett (lásd Ruin). Amíg nem mondja
 ## meg a nevét, "???" a neve. A "Hogy kerültél oda le?" kérdésre létrát kér (a J könyv
-## "Kutas idegen" fülén); a létra a tisztás délnyugati sarkában hever a fűben, egy bokor mögött.
+## "Kutas idegen" fülén); a létra a tisztás délnyugati sarkában hever a fűben, egy bokor mögött
+## (Lőrinc nem árulja el, hol). A megmentése után a kútba le lehet mászni (lásd WellCave).
 
 const ID := "stranger"
 const UNKNOWN_NAME := "???"
@@ -23,10 +24,9 @@ const RESCUED_GREETING := "[i]Lőrinc a kút kávájának dőlve rajzolgat valam
 const QUESTS := {
 	LADDER_QUEST: {"name": "Létra a kútba",
 		"text": "A romos ház melletti kút aljáról egy idegen kér segítséget: leszakadt alatta a kötél, "
-			+ "és nem tud kimászni. Keress neki egy [b]létrát[/b]. Azt mondja, valahol a nyugati tisztáson "
-			+ "látott egyet heverni, mielőtt beesett: a fák között, a bokrok tövében.",
+			+ "és nem tud kimászni. Keress neki valahonnan egy [b]létrát[/b], és engedd le neki a kútba.",
 		"reward": "%d tábori arany (és Lőrinc hálája)" % REWARD_GOLD,
-		"doing": "keress egy létrát a nyugati tisztáson", "doing_carrying": "vidd a létrát a kúthoz",
+		"doing": "keress valahol egy létrát", "doing_carrying": "vidd a létrát a kúthoz",
 		"done": "Lőrinc kijutott a kútból"},
 }
 
@@ -68,16 +68,16 @@ static func _ask_how() -> String:
 			return "Ne is emlékeztess rá. A kötél elszakadt, én meg zuhantam. Szerencsére víz volt alattam... " \
 				+ "meg egy csomó csiga."
 		"active", "carrying":
-			return "[i]Felsóhajt.[/i]\n\nMint mondtam: elszakadt a kötél. Kérlek, keress egy [b]létrát[/b]! " \
-				+ "A nyugati tisztáson láttam egyet, mielőtt beestem: valahol a fák között, a bokrok tövében."
+			return "[i]Felsóhajt.[/i]\n\nMint mondtam: elszakadt a kötél. Kérlek, keress valahol egy " \
+				+ "[b]létrát[/b]! Akármilyet, csak bírjon el."
 	Progress.set_npc_quest(LADDER_QUEST, "active")
 	Progress.save_game()
 	return "[i]Hosszan hallgat, aztán megszólal.[/i]\n\nKötélen ereszkedtem le, hogy feltérképezzem a kút " \
 		+ "alját. Azt beszélik, a falában egy régi járat nyílik, ami egészen a Mélységig vezet. Igaz is: ott " \
 		+ "van, csak éppen be van omolva. Amikor vissza akartam mászni, a kötél elszakadt.\n\n" \
 		+ "Három napja vagyok itt lent. Kiabáltam, de errefelé senki nem jár.\n\n" \
-		+ "[i]A hangja elcsuklik.[/i]\n\nKérlek... szerezz nekem egy [b]létrát[/b]. Mielőtt leereszkedtem, " \
-		+ "láttam egyet heverni a tisztáson, a fák között, valahol a bokrok tövében. Hozd ide, és engedd le."
+		+ "[i]A hangja elcsuklik.[/i]\n\nKérlek... szerezz nekem valahonnan egy [b]létrát[/b]. Hozd ide, " \
+		+ "és engedd le. Nem tudom, hol találsz, de nélküle innen nem jutok ki."
 
 
 static func _ask_who() -> String:
