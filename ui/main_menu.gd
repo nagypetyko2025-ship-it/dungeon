@@ -5,6 +5,7 @@ extends Control
 
 ## Az "Új játék" a táborba visz; onnan a lépcsőn lehet lemenni a kazamatába.
 const GAME_SCENE := "res://world/camp.tscn"
+const INTRO_SCENE := "res://ui/intro_story.tscn"
 const TORCH := preload("res://rooms/decor/torch.tscn")
 const FLOOR_TILE := Rect2(16, 64, 16, 16)
 const WALL_TILE := Rect2(32, 16, 16, 16)
@@ -350,4 +351,5 @@ func _on_new_game() -> void:
 		return
 	Progress.reset_game()
 	GameState.reset()
-	get_tree().change_scene_to_file(GAME_SCENE)
+	# Előbb a bevezető történet (Space hosszan: kihagyás), utána a tábor.
+	get_tree().change_scene_to_file(INTRO_SCENE)
