@@ -76,8 +76,15 @@ static func met_thief() -> bool:
 
 
 static func options(inventory: Inventory) -> Array[Dictionary]:
+	# Lőrinc aranypecsétes levele (az első kihallgatáskor is átadható).
+	var letter: Array[Dictionary] = []
+	if Progress.npc_quest_state(Stranger.ROYAL_LETTER_QUEST) == "active" and Stranger.has_royal_letter(inventory):
+		letter.append({"id": "royal_letter", "text": "Levelet hoztam Lőrinctől, felség.",
+			"on_choose": func() -> String: return _royal_letter(inventory)})
 	if Progress.npc_quest_state(SEVEN_QUEST) == "":
-		return [{"id": "why", "text": "Felség, miért hívatott?", "on_choose": func() -> String: return _intro()}]
+		var first: Array[Dictionary] = [{"id": "why", "text": "Felség, miért hívatott?",
+			"on_choose": func() -> String: return _intro()}]
+		return first + letter
 	var list: Array[Dictionary] = [
 		{"id": "deep", "text": "Mi van a Mélység alján?", "answer": DEEP_STORY},
 	]
@@ -97,7 +104,16 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 				"on_choose": func() -> String: return _betray()})
 			list.append({"id": "protect", "text": "Nem tudok róla semmit, felség.",
 				"on_choose": func() -> String: return _protect()})
-	return list
+	return list + letter
+
+
+static func _royal_letter(inventory: Inventory) -> String:
+	var answer := Stranger.deliver_to_king(inventory)
+	if answer.is_empty():
+		Audio.play("ui_error")
+		return "Levél? Nem látok nálad levelet, kalandor. (A táskádban legyen.)"
+	Progress.mark_asked(ID, "royal_letter")
+	return answer
 
 
 static func _intro() -> String:

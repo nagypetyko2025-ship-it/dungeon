@@ -22,3 +22,4 @@ Típusonként még +2 tárgy (mind CC0):
 thief_letter.png: "Envelope" a "Pixelart icons" csomagból (darkagegames, CC0, https://opengameart.org/content/pixelart-icons), pergamenszínűre festve, viaszpecséttel.
 
 Számszeríjak (crossbow_*): "CC0 Ranged Icons" gyűjtemény (antumdeluge, https://opengameart.org/content/cc0-ranged-icons), a "Dungeon Crawl Stone Soup" (CC0) lapjáról kivágva, 34x34-re.
+royal_letter.png: a thief_letter.png (Pixelart icons, CC0) átszínezve: világos papír, aranypecsét.

@@ -343,6 +343,27 @@ func _build_well() -> void:
 	_tile(BUSH, LADDER_TILE + Vector2i(1, 0), 1, _entities).position += Vector2(-10, 4)
 
 
+## Lőrinc első varázslata a talizmánnal: tűzgolyó a romos ház felé, végig az úton; a karaktered
+## meglepődik. Utána Lőrinc Főnixtollat kér (Stranger).
+func _fireball() -> void:
+	Progress.set_npc_quest(Stranger.FIREBALL_FLAG, "done")
+	Progress.save_game()
+	var ball := Fireball.new()
+	ball.position = _lorinc.position + Vector2(-10, -30)
+	_entities.add_child(ball)
+	Audio.play("magic", 0.0, 0.1)
+	FloatingText.spawn(_entities, _lorinc.position + Vector2(0, -70), "Ignis!", Color(1, 0.6, 0.2), 20)
+	var target := door_position() + Vector2(-40, -40)
+	var fly := ball.create_tween()
+	fly.tween_property(ball, "position", target, 1.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	fly.tween_callback(func() -> void:
+		Audio.play("boss_slam", -6.0)
+		ball.burst())
+	await get_tree().create_timer(1.4, false).timeout
+	if is_instance_valid(_player):
+		FloatingText.spawn(_entities, _player.global_position + Vector2(0, -70), "Hű... ez szép volt!", Color(1, 0.9, 0.6), 22)
+
+
 ## Ide érkezel, ha a kútból felmászol (a kút elé).
 func well_exit_position() -> Vector2:
 	return _center(WELL_TILE + Vector2i(0, 2))
@@ -386,7 +407,7 @@ func _focus() -> Array:
 			if at.distance_to(door_position()) < INTERACT_RANGE:
 				return ["enter", "[E] Belépés: romos ház"]
 			# Lőrinc a megmentése után a kúttól kicsit arrébb áll; a kútba onnantól le lehet mászni.
-			if Stranger.is_rescued() and at.distance_to(_lorinc.position) < INTERACT_RANGE:
+			if Stranger.is_rescued() and _lorinc.visible and at.distance_to(_lorinc.position) < INTERACT_RANGE:
 				return ["lorinc", "[E] Beszélgetés: %s" % Stranger.REAL_NAME]
 			if at.distance_to(_center(WELL_TILE) + Vector2(0, 20)) < INTERACT_RANGE + 8:
 				return ["descend", "[E] Lemászás a kútba"] if Stranger.is_rescued() else ["well", "[E] A kút"]
@@ -414,7 +435,12 @@ func _process(delta: float) -> void:
 		_ladder.visible = Progress.npc_quest_state(Stranger.LADDER_QUEST) == "active" \
 			and Progress.npc_quest_state(Stranger.LADDER_FOUND) != "done"
 	if is_instance_valid(_lorinc):
-		_lorinc.visible = Stranger.is_rescued()
+		# A kocsmába költözése után (a beszélgetés bezárásakor) eltűnik a kút mellől.
+		if not get_tree().paused:
+			_lorinc.visible = Stranger.is_rescued() and not Stranger.moved_to_tavern()
+		# A talizmán után, amint bezárult a beszélgetés, tűzgolyót lő a romos ház felé.
+		if Progress.npc_quest_state(Stranger.FIREBALL_FLAG) == "pending" and not get_tree().paused:
+			_fireball()
 	var focus := _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]
@@ -656,3 +682,70 @@ class GlassShards:
 				at + Vector2.from_angle(angle + 2.3) * size * 0.6, at + Vector2.from_angle(angle + 3.6) * size * 0.8])
 			draw_colored_polygon(points, Color(0.7, 0.85, 0.95, 0.55))
 			draw_line(points[0], points[1], Color(0.95, 1, 1, 0.8), 1.0)
+
+
+## Tűzgolyó: izzó gömb lángcsóvával; a végén szétrobban és eltűnik.
+class Fireball:
+	extends Node2D
+	var _trail: CPUParticles2D
+	var _t := 0.0
+
+	func _ready() -> void:
+		z_index = 5
+		_trail = CPUParticles2D.new()
+		_trail.amount = 40
+		_trail.lifetime = 0.45
+		_trail.local_coords = false
+		_trail.spread = 25.0
+		_trail.gravity = Vector2(0, -40)
+		_trail.initial_velocity_min = 10.0
+		_trail.initial_velocity_max = 30.0
+		_trail.scale_amount_min = 3.0
+		_trail.scale_amount_max = 6.0
+		var ramp := Gradient.new()
+		ramp.set_color(0, Color(1, 0.9, 0.4))
+		ramp.set_color(1, Color(0.8, 0.2, 0.05, 0))
+		_trail.color_ramp = ramp
+		add_child(_trail)
+		var light := PointLight2D.new()
+		var gradient := Gradient.new()
+		gradient.set_color(0, Color(1, 0.6, 0.2))
+		gradient.set_color(1, Color(0, 0, 0, 0))
+		var texture := GradientTexture2D.new()
+		texture.gradient = gradient
+		texture.fill = GradientTexture2D.FILL_RADIAL
+		texture.fill_from = Vector2(0.5, 0.5)
+		texture.fill_to = Vector2(0.5, 0.0)
+		light.texture = texture
+		light.texture_scale = 2.5
+		light.energy = 1.2
+		add_child(light)
+
+	func _process(delta: float) -> void:
+		_t += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		var pulse := 1.0 + 0.15 * sin(_t * 30.0)
+		draw_circle(Vector2.ZERO, 11.0 * pulse, Color(1, 0.45, 0.1, 0.8))
+		draw_circle(Vector2.ZERO, 7.0 * pulse, Color(1, 0.8, 0.3))
+		draw_circle(Vector2.ZERO, 3.5, Color(1, 1, 0.85))
+
+	func burst() -> void:
+		_trail.emitting = false
+		var boom := CPUParticles2D.new()
+		boom.one_shot = true
+		boom.emitting = true
+		boom.amount = 50
+		boom.lifetime = 0.6
+		boom.explosiveness = 1.0
+		boom.spread = 180.0
+		boom.initial_velocity_min = 60.0
+		boom.initial_velocity_max = 200.0
+		boom.scale_amount_min = 3.0
+		boom.scale_amount_max = 7.0
+		boom.color = Color(1, 0.6, 0.2)
+		add_child(boom)
+		var fade := create_tween()
+		fade.tween_property(self, "modulate:a", 0.0, 0.7)
+		fade.tween_callback(queue_free)

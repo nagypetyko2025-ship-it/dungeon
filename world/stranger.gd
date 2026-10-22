@@ -34,7 +34,27 @@ const QUESTS := {
 			+ "Hozz neki egy [b]epikus talizmánt[/b] (bármilyet, a táskádban legyen).",
 		"reward": "%d tábori arany (és Lőrinc tudása)" % TALISMAN_GOLD,
 		"doing": "vigyél Lőrincnek egy epikus talizmánt", "done": "Lőrinc újra varázsol"},
+	PHOENIX_QUEST: {"name": "A főnix tolla",
+		"text": "Lőrinc tűzgolyót lőtt az új talizmánjával, de azt mondja, ez még semmi. Az igazi "
+			+ "varázslatához egy [b]Főnixtoll[/b] kell (legendás talizmán). Ha a Mélységben rátalálsz, "
+			+ "vidd el neki a kúthoz (a táskádban legyen).",
+		"reward": "Lőrinc bizalma", "doing": "vigyél Lőrincnek egy Főnixtollat", "done": "a toll Lőrincnél"},
+	ROYAL_LETTER_QUEST: {"name": "Levél a királynak",
+		"text": "Lőrinc egy [b]aranypecsétes levelet[/b] bízott rád: vidd el a királynak a királyi várba "
+			+ "(a táskádban legyen), aztán mondd el Lőrincnek, hogy célba ért.",
+		"reward": "%d tábori arany a királytól" % ROYAL_LETTER_GOLD,
+		"doing": "vidd el a levelet a királynak", "doing_delivered": "mondd el Lőrincnek",
+		"done": "Lőrinc a kocsmába költözött"},
 }
+## A harmadik kérés: a talizmán után Lőrinc tűzgolyót lő (FIREBALL_FLAG), aztán Főnixtollat kér.
+const FIREBALL_FLAG := "well_fireball"
+const PHOENIX_QUEST := "well_phoenix"
+const PHOENIX_ID := "trinket_phoenix"
+## A negyedik: aranypecsétes levél a királynak; utána Lőrinc a kocsmába költözik (TAVERN_FLAG).
+const ROYAL_LETTER_QUEST := "well_royal_letter"
+const ROYAL_LETTER_ID := "royal_letter"
+const ROYAL_LETTER_GOLD := 150
+const TAVERN_FLAG := "lorinc_tavern"
 ## A második kérés (a megmentése után): egy epikus talizmán, mert varázsló.
 const TALISMAN_QUEST := "well_talisman"
 const TALISMAN_GOLD := 200
@@ -69,7 +89,141 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 			"done":
 				list.append({"id": "magic", "text": "Mutass egy varázslatot!",
 					"on_choose": func() -> String: return _show_magic()})
+	if Progress.npc_quest_state(FIREBALL_FLAG) == "done":
+		match Progress.npc_quest_state(PHOENIX_QUEST):
+			"":
+				list.append({"id": "fireball", "text": "Mi volt ez a tűzgolyó?!",
+					"on_choose": func() -> String: return _ask_phoenix()})
+			"active":
+				list.append({"id": "phoenix", "text": "Hoztam egy Főnixtollat.",
+					"on_choose": func() -> String: return _give_phoenix(inventory)})
+	match Progress.npc_quest_state(ROYAL_LETTER_QUEST):
+		"active":
+			if not has_royal_letter(inventory):
+				list.append({"id": "lost_royal_letter", "text": "Elvesztettem a levelet...",
+					"on_choose": func() -> String: return "[i]Felsóhajt, és új lapot vesz elő.[/i]\n\n" \
+						+ "Szerencse, hogy fejből tudom.\n\n" + _hand_royal_letter(inventory)})
+		"delivered":
+			list.append({"id": "royal_delivered", "text": "Átadtam a levelet a királynak.",
+				"on_choose": func() -> String: return _royal_letter_delivered()})
 	return list
+
+
+## A talizmán után (a beszélgetés bezárásakor a Ruin lövi ki a tűzgolyót): rákérdezel, és Főnixtollat kér.
+static func _ask_phoenix() -> String:
+	Progress.mark_asked(ID, "fireball")
+	Progress.set_npc_quest(PHOENIX_QUEST, "active")
+	Progress.save_game()
+	return "[i]Lőrinc fújja a tenyerét, mint aki forró kását fogott meg, de mosolyog.[/i]\n\n" \
+		+ "Szép volt, ugye? Pedig ez semmi. Egy kis szikra. A régi mesterek tűzből egész hidakat " \
+		+ "építettek, és a lángjuk nem aludt ki, akárhány évig égett.\n\n" \
+		+ "Ehhez azonban több kell egy talizmánnál. Egy [b]Főnixtoll[/b] kell. A főnix lángja nem éget " \
+		+ "el semmit, amit a gazdája nem akar elégetni... és sosem alszik ki.\n\n" \
+		+ "Ha egyszer a Mélységben rátalálsz egy ilyen tollra, hozd el nekem. Tudom, nagy kérés. " \
+		+ "De megéri, meglátod."
+
+
+static func _give_phoenix(inventory: Inventory) -> String:
+	for i in inventory.bag.size():
+		var item: Variant = inventory.bag[i]
+		if item is Dictionary and item.get("id", "") == PHOENIX_ID:
+			inventory.take_from_bag(i)
+			Progress.set_npc_quest(PHOENIX_QUEST, "done")
+			Progress.mark_asked(ID, "phoenix")
+			Progress.change_trust(ID, 30)
+			Audio.play("level_up")
+			return "[i]A tollat a tenyerére fekteti. A toll lassan felizzik, és apró, aranyszínű lángok " \
+				+ "táncolnak rajta, de a bőrét nem égetik meg.[/i]\n\n" \
+				+ "Él... még mindig él benne a tűz. Tudod, mit hoztál nekem? Ezzel a tollal újra minden " \
+				+ "eszembe jut. A tűz, a jég, a kő szava, a csillagok térképe... Rengeteg mágiát tudtam " \
+				+ "valaha, és most mind visszajön, mint egy elfelejtett dal.\n\n" \
+				+ "[i]Elkomolyodik, és a köpenye alól egy aranypecsétes levelet húz elő.[/i]\n\n" \
+				+ "Volna még egy utolsó szívességem. Ezt a levelet vidd el [b]a királynak[/b]. Ne nyisd fel. " \
+				+ "Tizenkét éve tartozom neki egy magyarázattal, és most végre meg tudom adni.\n\n" \
+				+ _ask_royal_letter(inventory)
+	Audio.play("ui_error")
+	return "[i]Végignéz a táskádon.[/i]\n\nNem látok Főnixtollat. Csak az jó, semmi más: [b]Főnixtoll[/b]."
+
+
+## Az aranypecsétes levél: küldetéstárgy a táskába (ha tele van, a tábori ládába).
+static func royal_letter() -> Dictionary:
+	return {"id": ROYAL_LETTER_ID, "name": "Aranypecsétes levél", "slot": "quest", "rarity": "epic", "stats": {},
+		"price": 0, "quest": true, "icon_path": "res://assets/items/royal_letter.png",
+		"description": "Lőrinc levele a királynak. Arany viaszpecsét zárja, rajta egy csillag és egy iránytű."}
+
+
+static func is_royal_letter(item: Variant) -> bool:
+	return item is Dictionary and item.get("id", "") == ROYAL_LETTER_ID
+
+
+static func has_royal_letter(inventory: Inventory) -> bool:
+	for item: Variant in inventory.bag:
+		if is_royal_letter(item):
+			return true
+	for item: Variant in Progress.stash:
+		if is_royal_letter(item):
+			return true
+	return false
+
+
+static func _ask_royal_letter(inventory: Inventory) -> String:
+	Progress.set_npc_quest(ROYAL_LETTER_QUEST, "active")
+	return _hand_royal_letter(inventory)
+
+
+static func _hand_royal_letter(inventory: Inventory) -> String:
+	var where := "a táskádba"
+	if inventory.is_bag_full():
+		Progress.add_to_stash(royal_letter())
+		where = "a tábori ládába (tele volt a táskád)"
+	else:
+		inventory.add_item(royal_letter())
+	Progress.save_game()
+	return "[color=#7a4a10](Az aranypecsétes levél %s került.)[/color]" % where
+
+
+## A királynál (King hívja): átveszi a levelet a táskából, és fizet érte. "" ha nincs nálad.
+static func deliver_to_king(inventory: Inventory) -> String:
+	for i in inventory.bag.size():
+		if is_royal_letter(inventory.bag[i]):
+			inventory.take_from_bag(i)
+			Progress.set_npc_quest(ROYAL_LETTER_QUEST, "delivered")
+			Progress.camp_gold += ROYAL_LETTER_GOLD
+			Progress.save_game()
+			Audio.play("coin")
+			return "[i]A király feltöri az aranypecsétet, és olvasni kezd. Az arca megkeményedik, aztán " \
+				+ "lassan ellágyul.[/i]\n\n" \
+				+ "Lőrinc... a térképészem. Azt hittem, ő is odalent maradt a többiekkel. Tizenkét éve várok " \
+				+ "erre a levélre, és nem is tudtam róla.\n\n" \
+				+ "[i]Összehajtja a levelet, és a keblébe teszi.[/i]\n\n" \
+				+ "Mondd meg neki, hogy nincs mit megbocsátanom. És hogy a kocsmában mindig lesz számára hely. " \
+				+ "Fogadd el ezt a fáradságodért.\n\n" \
+				+ "[color=#7a4a10](+%d tábori arany)[/color]" % ROYAL_LETTER_GOLD
+	return ""
+
+
+## A levél célba ért: Lőrinc megköszöni a segítséget, és a kocsmába költözik.
+static func _royal_letter_delivered() -> String:
+	Progress.set_npc_quest(ROYAL_LETTER_QUEST, "done")
+	Progress.set_npc_quest(TAVERN_FLAG, "done")
+	Progress.mark_asked(ID, "royal_delivered")
+	Progress.change_trust(ID, 20)
+	Progress.save_game()
+	Audio.play("level_up")
+	return "[i]Amikor meghallja, mit üzent a király, Lőrinc leül a kút kávájára, és egy darabig nem szól.[/i]\n\n" \
+		+ "Nincs mit megbocsátania... Tizenkét évig bujkáltam előle a kutak és a járatok között. " \
+		+ "Azt hittem, haragszik rám, amiért az én térképem vezette le őket.\n\n" \
+		+ "[i]Feláll, és megszorítja a kezed.[/i]\n\n" \
+		+ "Köszönöm. Mindent. A létrát, a talizmánt, a tollat, a levelet. Kihúztál egy kútból, és " \
+		+ "aztán valahogy az egész életemből is.\n\n" \
+		+ "Lemegyek a [b]kocsmába[/b]. Ideje, hogy újra emberek között legyek. Ha egyszer szükséged lesz " \
+		+ "egy öreg varázslóra odalent... ott megtalálsz.\n\n" \
+		+ "[color=#7a4a10](Lőrinc a kocsmába költözött. Hamarosan játszható karakter lesz.)[/color]"
+
+
+## Elment a kocsmába (a kút mellől eltűnik).
+static func moved_to_tavern() -> bool:
+	return Progress.npc_quest_state(TAVERN_FLAG) == "done"
 
 
 ## Bevallja, hogy varázsló, és egy epikus talizmánt kér (fókusznak).
@@ -94,6 +248,8 @@ static func _give_talisman(inventory: Inventory) -> String:
 		if item is Dictionary and item.get("slot", "") == "trinket" and item.get("rarity", "") == "epic":
 			inventory.take_from_bag(i)
 			Progress.set_npc_quest(TALISMAN_QUEST, "done")
+			# A beszélgetés bezárása után tűzgolyót lő (lásd Ruin).
+			Progress.set_npc_quest(FIREBALL_FLAG, "pending")
 			Progress.mark_asked(ID, "talisman")
 			Progress.change_trust(ID, 25)
 			Progress.camp_gold += TALISMAN_GOLD
