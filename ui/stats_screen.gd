@@ -177,47 +177,56 @@ func _section(grid: GridContainer, title: String, columns: int) -> void:
 		grid.add_child(Control.new())
 
 
-## A varázsló varázslatai: melyik egérgombon, szint, sebzés, töltési idő és amit tud.
+## A varázsló varázslatai: mind a három, leírással. A megtanultaknál melyik egérgombon van, szint,
+## sebzés, töltési idő és amit tud; a többinél, hogy még nem tanulta (a kazamatában / 5 szintenként).
 func _add_spells() -> void:
-	if GameState.spells.is_empty():
-		_left.add_child(Control.new())
-		_left.add_child(_cell("Még nincs varázslat", UiStyle.INK_LIGHT))
-		_left.add_child(Control.new())
-		_left.add_child(_cell("a kazamatába lépve választasz egyet", UiStyle.INK_LIGHT, 14))
-		return
 	var hit: int = _player.call("hit_damage")
-	for slot in GameState.spells.size():
-		var spell: String = GameState.spells[slot]
+	var order: Array = GameState.spells.duplicate()
+	for spell: String in Spells.ALL:
+		if not spell in order:
+			order.append(spell)
+	for spell: String in order:
 		var definition: Dictionary = Spells.ALL[spell]
+		var slot := GameState.spells.find(spell)
+		var learned := slot >= 0
 		var icon := TextureRect.new()
 		icon.texture = load(definition["icon_path"])
 		icon.custom_minimum_size = ICON_SIZE
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.modulate = Color.WHITE if learned else Color(1, 1, 1, 0.45)
 		_left.add_child(icon)
 		var title := VBoxContainer.new()
 		title.add_theme_constant_override("separation", -2)
 		title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		title.add_child(_cell("%s %d. szint" % [definition["name"], Spells.level(spell)], UiStyle.INK, 17))
-		title.add_child(_cell("bal egérgomb" if slot == 0 else "jobb egérgomb", Color(0.45, 0.22, 0.6), 14))
+		var name_text: String = "%s %d. szint" % [definition["name"], Spells.level(spell)] if learned else definition["name"]
+		title.add_child(_cell(name_text, UiStyle.INK if learned else UiStyle.INK_LIGHT, 17))
+		var where := ("bal egérgomb" if slot == 0 else "jobb egérgomb") if learned else "még nem tanultad"
+		title.add_child(_cell(where, Color(0.45, 0.22, 0.6) if learned else UiStyle.INK_LIGHT, 14))
 		_left.add_child(title)
-		var damage := Spells.damage(spell, hit)
-		_left.add_child(_cell("%d sebzés" % damage, UiStyle.INK, 18))
+		var damage := Spells.damage(spell, hit) if learned else maxi(1, roundi(hit * float(definition["power"])))
+		_left.add_child(_cell("%d sebzés" % damage, UiStyle.INK if learned else UiStyle.INK_LIGHT, 18))
 		var cooldown := float(_player.call("attack_cooldown")) * Spells.cooldown_multiplier(spell)
-		var lines: Array[String] = ["%.2f mp / varázslat, elemi sebzés" % cooldown]
-		match spell:
-			"bolt":
-				lines.append("%d gömb egyszerre, a kurzor felé" % Spells.bolt_count(spell))
-			"fire":
-				lines.append("égés: %d sebzés / 0.5 mp, %.1f mp-ig" % [Spells.burn_damage(spell, damage), Spells.burn_time(spell)])
-			"spikes":
-				lines.append("%d tüske a kurzor irányában, erősen ellök" % Spells.spike_count(spell))
-		lines.append("következő szint: " + definition["upgrade"])
+		var lines: Array[String] = [definition["text"], "%.2f mp / varázslat, elemi sebzés" % cooldown]
+		if learned:
+			match spell:
+				"bolt":
+					lines.append("%d gömb egyszerre" % Spells.bolt_count(spell))
+				"fire":
+					lines.append("égés: %d sebzés / 0.5 mp, %.1f mp-ig" % [Spells.burn_damage(spell, damage), Spells.burn_time(spell)])
+				"spikes":
+					lines.append("%d tüske, erősen ellök" % Spells.spike_count(spell))
+			lines.append("következő szint: " + definition["upgrade"])
+		else:
+			lines.append("az 5. szintenkénti választásnál tanulhatod meg")
 		var detail := VBoxContainer.new()
 		detail.add_theme_constant_override("separation", -2)
 		detail.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		for line in lines:
-			detail.add_child(_cell(line, UiStyle.INK_LIGHT, 14))
+			var label := _cell(line, UiStyle.INK_LIGHT, 14)
+			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			label.custom_minimum_size.x = 300
+			detail.add_child(label)
 		_left.add_child(detail)
 
 

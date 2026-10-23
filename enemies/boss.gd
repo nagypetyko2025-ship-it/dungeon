@@ -53,6 +53,12 @@ const BOSSES: Array[Dictionary] = [
 		"xp": 120, "attacks": ["slam", "pools", "summon"], "minion": "green_slime", "abilities": ["poison"]},
 ]
 const HEALTH_PER_DEPTH := 0.42
+## A főellenségek keménysége (élet / sebzés / XP szorzó), és hogy a Mélység Urának életéből
+## legfeljebb mekkora részt érhetnek el.
+const TOUGHNESS := 3.0
+const TOUGHNESS_DAMAGE := 1.3
+const TOUGHNESS_XP := 1.5
+const MAX_LORD_SHARE := 0.7
 const BOSS_SCALE := 1.8
 const ATTACK_INTERVAL := Vector2(2.2, 3.2)
 const ENRAGE_SPEED := 1.2
@@ -122,6 +128,14 @@ func setup_boss(depth: int) -> void:
 		stats["health"] = roundi(stats["health"] * EnemyTypes.SURGE_HEALTH)
 		stats["damage"] = roundi(stats["damage"] * EnemyTypes.SURGE_DAMAGE)
 		stats["xp"] = roundi(stats["xp"] * EnemyTypes.SURGE_XP)
+	# Keményebb főellenségek: TOUGHNESS-szeres élet, nagyobb sebzés és több XP, de a Mélység Ura
+	# (a nagy boss) szintjét nem érik el: az élet legfeljebb a vérfarkasénak MAX_LORD_SHARE része,
+	# a sebzés kisebb az övénél. (Ami eleve erősebb ennél, azt nem gyengíti.)
+	var lord: Dictionary = preload("res://enemies/werewolf_boss.gd").WEREWOLF
+	var health_cap := roundi(float(lord["health"]) * MAX_LORD_SHARE)
+	stats["health"] = maxi(stats["health"], mini(roundi(stats["health"] * TOUGHNESS), health_cap))
+	stats["damage"] = maxi(stats["damage"], mini(roundi(stats["damage"] * TOUGHNESS_DAMAGE), int(lord["damage"]) - 3))
+	stats["xp"] = roundi(stats["xp"] * TOUGHNESS_XP)
 
 
 func _compute_size_scale() -> float:

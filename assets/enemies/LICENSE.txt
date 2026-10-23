@@ -9,3 +9,4 @@ fire_golem.png: "Fire Golem" (teasloth, CC0, https://opengameart.org/content/fir
 deep_eye.png: "Gazer" (zwonky, CC0, https://opengameart.org/content/gazer), a fehér-vörös változat szemből látszó kockáiból, átlátszó háttérrel.
 giant_skeleton.png: "Skeletons Rework" (antumdeluge, CC0, https://opengameart.org/content/skeletons-rework), a vörös szemű változat jobbra néző kockáiból (24x32), 8 kockás sávba rendezve.
 orc_mage.png, club_goblin.png, archer_goblin.png, red_demon.png, gold_dragon.png: szintén a "MiniWorld Sprites" csomagból (CC0), az oldalnézeti kockákból (a balra nézőket tükrözve).
+fly.png: légy, ehhez a projekthez rajzolva (pixel art, 2 szárnycsapás-kocka), CC0.

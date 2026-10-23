@@ -228,6 +228,12 @@ const TYPES: Array[Dictionary] = [
 		"sheet": "res://assets/enemies/pirate_captain.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.6,
 		"health": [18, 22], "damage": [4, 5], "speed": [80, 95], "dodge": [10, 20],
 		"knockback": [360, 400], "resist": [0.5, 0.6], "xp": [10, 11], "min_depth": 6, "weight": 1},
+	# --- Bogarak ---
+	# Légy: gyenge, de gyors és cikázik (rajzolt sprite, 2 szárnycsapás-kocka).
+	{"name": "fly", "abilities": ["zigzag"],
+		"sheet": "res://assets/enemies/fly.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 0.9,
+		"health": [2, 3], "damage": [1, 1], "speed": [135, 155], "dodge": [20, 30],
+		"knockback": [120, 150], "resist": [0.0, 0.0], "xp": [1, 2], "min_depth": 2, "weight": 3},
 	# --- Még több szörny (MiniWorld Sprites, CC0) ---
 	{"name": "club_goblin", "abilities": ["berserk"], "dash": true,
 		"sheet": "res://assets/enemies/club_goblin.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.3,

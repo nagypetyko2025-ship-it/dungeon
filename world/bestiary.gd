@@ -24,6 +24,7 @@ const CATEGORIES := [
 	["Kalózok", ["pirate_grunt", "pirate_gunner", "pirate_captain"]],
 	["Fenevadak", ["minotaur", "yeti", "wendigo", "mammoth", "giant_crab"]],
 	["Sárkányok", ["fire_dragon", "frost_dragon", "gold_dragon", "shadow_dragon"]],
+	["Bogarak", ["fly"]],
 	["Különös lények", ["mimic", "pumpkin_dude", "angel"]],
 	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES],
 ]
@@ -47,6 +48,7 @@ const ENTRIES := {
 	"orc_mage": ["Orkmágus", "Varázslövedékeket szór, pajzsot von maga köré, és gyógyítja a társait."],
 	"red_demon": ["Vörös démon", "Lángoló bőrű démon: a semmiből terem melletted, és halálakor szétrobban."],
 	"gold_dragon": ["Aranysárkány", "Kincseken alszik; ha eltalál, a te aranyadat is a halmára gyűjti."],
+	"fly": ["Légy", "Zümmögő, dögevő légy a kazamata mélyéről. Gyenge, de gyors, és kiszámíthatatlanul cikázik."],
 	"giant_skeleton": ["Óriás csontváz", "Egy ősi óriás csontjai, amiket valami újra összerakott. Lassú, de alig lehet kidönteni; csontvázakat hív maga mellé, és ha elesik, a csontjai szétrepülnek."],
 	"skeleton_legionary": ["Csontlégiós", "Egy elesett hadsereg katonája; halála után is sorban menetel."],
 	"necromancer": ["Nekromanta", "Halottakat idéz maga mellé. Őt öld meg először, különben sosem fogy el a sereg."],

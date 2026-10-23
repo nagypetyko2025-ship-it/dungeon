@@ -115,6 +115,15 @@ const DEFINITIONS := {
 	"bow_star": {"name": "Csillagíj", "slot": "weapon", "rarity": "legendary", "weapon_type": "bow",
 		"base": [4, 5], "scaling": 1.2, "crit": 2.0,
 		"stats": {"multishot": [1, 1], "ranged_damage": [2, 3], "attack_range": [15, 25], "crit_chance": [8, 12], "damage_percent": [6, 10], "accuracy": [6, 10]}},
+	# Elemi sebzést adó tárgyak (a varázsló varázslatait erősítik; kicsit, de érezhetően).
+	"ring_ember": {"name": "Parázsgyűrű", "slot": "ring", "rarity": "rare",
+		"stats": {"elemental_damage": [1, 1], "crit_chance": [2, 3]}},
+	"hat_sorcerer": {"name": "Varázslósüveg", "slot": "helmet", "rarity": "rare",
+		"stats": {"elemental_damage": [1, 1], "xp_bonus": [5, 8], "max_health": [1, 2]}},
+	"amulet_arcane": {"name": "Arkánum medál", "slot": "amulet", "rarity": "epic",
+		"stats": {"elemental_damage": [1, 2], "max_health": [3, 5], "health_regen": [0.1, 0.2]}},
+	"trinket_flamecore": {"name": "Lángszív", "slot": "trinket", "rarity": "legendary",
+		"stats": {"elemental_damage": [2, 3], "damage_percent": [5, 8], "attack_speed": [5, 8]}},
 	# Lőrinc fix varázspálcája (csak ő használhatja, és ő mást nem): a varázslatai ezzel szólnak.
 	"wand_lorinc": {"name": "Lőrinc pálcája", "slot": "weapon", "rarity": "epic", "weapon_type": "wand",
 		"unique": true, "shop": false, "region": Rect2(324, 129, 8, 30),
