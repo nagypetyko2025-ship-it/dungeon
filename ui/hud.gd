@@ -54,10 +54,10 @@ func _process(_delta: float) -> void:
 	if has_cry:
 		_update_skill_label("Hadi kiáltás", player.call("war_cry_cooldown_ratio") * player.WAR_CRY_COOLDOWN)
 		return
-	# A varázsló második varázslata (Q).
+	# A varázsló második varázslata (jobb egérgomb).
 	if player != null and Characters.data(Progress.character).get("spells", false):
 		if GameState.spells.size() > 1:
-			_update_skill_label(Spells.ALL[GameState.spells[1]]["name"], player.call("secondary_cooldown_left"), "Q")
+			_update_skill_label(Spells.ALL[GameState.spells[1]]["name"], player.call("secondary_cooldown_left"), "Jobb klikk")
 		elif _dash_label != null:
 			_dash_label.visible = false
 		return

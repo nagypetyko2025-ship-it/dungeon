@@ -11,6 +11,9 @@ var speed := 560.0
 var max_distance := 420.0
 ## A lövedék kinézete: "arrow" (nyíl), "orb" (lila varázsgömb), "fire" (tűzgolyó).
 var look := "arrow"
+## A lövő teste (ha a kiinduló pont falba esne, innen indul).
+var origin := Vector2.INF
+var _started := false
 
 var _travelled := 0.0
 
@@ -24,7 +27,6 @@ func _ready() -> void:
 	rotation = direction.angle()
 	if look != "arrow":
 		_build_magic_look()
-		body_entered.connect(func(_body: Node2D) -> void: queue_free())
 		return
 	var sprite := Sprite2D.new()
 	var texture := AtlasTexture.new()
@@ -39,13 +41,25 @@ func _ready() -> void:
 	box.size = Vector2(20, 8)
 	shape.shape = box
 	add_child(shape)
-	body_entered.connect(func(_body: Node2D) -> void: queue_free())
 
 
+## A falakat (és oszlopokat) a repülési útján figyeli. Ha a kiinduló pont falba esne (fal / oszlop
+## mellett állva), a lövés a lövő testéből indul (`origin`), így a faltól elfelé lőve nem nyeli el
+## a fal, a fal felé lőve viszont igen.
 func _physics_process(delta: float) -> void:
+	if not _started:
+		_started = true
+		if origin != Vector2.INF and _in_wall(global_position):
+			global_position = origin
 	var step := speed * delta
+	var from := global_position
 	position += direction * step
 	_travelled += step
+	var query := PhysicsRayQueryParameters2D.create(from, global_position, 1)
+	var hit := get_world_2d().direct_space_state.intersect_ray(query)
+	if not hit.is_empty():
+		queue_free()
+		return
 	# A repülés végén elhalványul.
 	if _travelled > max_distance * 0.85:
 		modulate.a = clampf((max_distance - _travelled) / (max_distance * 0.15), 0.0, 1.0)
@@ -88,6 +102,13 @@ func _build_magic_look() -> void:
 	circle.radius = 9.0 if fire else 7.0
 	shape.shape = circle
 	add_child(shape)
+
+
+func _in_wall(at: Vector2) -> bool:
+	var query := PhysicsPointQueryParameters2D.new()
+	query.position = at
+	query.collision_mask = 1
+	return not get_world_2d().direct_space_state.intersect_point(query, 1).is_empty()
 
 
 ## A Hurtbox hívja, ha a nyíl talált.

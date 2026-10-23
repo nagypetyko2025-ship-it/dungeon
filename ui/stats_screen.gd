@@ -95,8 +95,15 @@ func _page_button(text: String, step: int) -> Button:
 	return button
 
 
+## Az oldalak: a varázslónál elöl a "Varázslatok" oldal (így neki 4 oldal van).
+func _pages() -> Array:
+	if Characters.data(Progress.character).get("spells", false):
+		return [["Varázslatok", []]] + PAGES
+	return PAGES
+
+
 func _turn_page(step: int) -> void:
-	_page = wrapi(_page + step, 0, PAGES.size())
+	_page = wrapi(_page + step, 0, _pages().size())
 	Audio.play("ui_click")
 	_refresh()
 
@@ -128,8 +135,12 @@ func _refresh() -> void:
 	var health: Health = _player.get_node("Health")
 	var experience: Experience = _player.get_node("Experience")
 
-	_page_label.text = "%s  (%d / %d)" % [PAGES[_page][0], _page + 1, PAGES.size()]
-	for stat: String in PAGES[_page][1]:
+	var pages := _pages()
+	_page = clampi(_page, 0, pages.size() - 1)
+	_page_label.text = "%s  (%d / %d)" % [pages[_page][0], _page + 1, pages.size()]
+	if pages[_page][0] == "Varázslatok":
+		_add_spells()
+	for stat: String in pages[_page][1]:
 		# Az elemi sebzés csak a varázslónál látszik.
 		if stat == "elemental_damage" and not Characters.data(Progress.character).get("spells", false):
 			continue
@@ -164,6 +175,50 @@ func _section(grid: GridContainer, title: String, columns: int) -> void:
 	grid.add_child(UiStyle.label(title, 19, UiStyle.INK, false))
 	for i in columns - 1:
 		grid.add_child(Control.new())
+
+
+## A varázsló varázslatai: melyik egérgombon, szint, sebzés, töltési idő és amit tud.
+func _add_spells() -> void:
+	if GameState.spells.is_empty():
+		_left.add_child(Control.new())
+		_left.add_child(_cell("Még nincs varázslat", UiStyle.INK_LIGHT))
+		_left.add_child(Control.new())
+		_left.add_child(_cell("a kazamatába lépve választasz egyet", UiStyle.INK_LIGHT, 14))
+		return
+	var hit: int = _player.call("hit_damage")
+	for slot in GameState.spells.size():
+		var spell: String = GameState.spells[slot]
+		var definition: Dictionary = Spells.ALL[spell]
+		var icon := TextureRect.new()
+		icon.texture = load(definition["icon_path"])
+		icon.custom_minimum_size = ICON_SIZE
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_left.add_child(icon)
+		var title := VBoxContainer.new()
+		title.add_theme_constant_override("separation", -2)
+		title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		title.add_child(_cell("%s %d. szint" % [definition["name"], Spells.level(spell)], UiStyle.INK, 17))
+		title.add_child(_cell("bal egérgomb" if slot == 0 else "jobb egérgomb", Color(0.45, 0.22, 0.6), 14))
+		_left.add_child(title)
+		var damage := Spells.damage(spell, hit)
+		_left.add_child(_cell("%d sebzés" % damage, UiStyle.INK, 18))
+		var cooldown := float(_player.call("attack_cooldown")) * Spells.cooldown_multiplier(spell)
+		var lines: Array[String] = ["%.2f mp / varázslat, elemi sebzés" % cooldown]
+		match spell:
+			"bolt":
+				lines.append("%d gömb egyszerre, a kurzor felé" % Spells.bolt_count(spell))
+			"fire":
+				lines.append("égés: %d sebzés / 0.5 mp, %.1f mp-ig" % [Spells.burn_damage(spell, damage), Spells.burn_time(spell)])
+			"spikes":
+				lines.append("%d tüske a kurzor irányában, erősen ellök" % Spells.spike_count(spell))
+		lines.append("következő szint: " + definition["upgrade"])
+		var detail := VBoxContainer.new()
+		detail.add_theme_constant_override("separation", -2)
+		detail.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		for line in lines:
+			detail.add_child(_cell(line, UiStyle.INK_LIGHT, 14))
+		_left.add_child(detail)
 
 
 ## Egy stat sora a megfelelő felirattal, értékkel és magyarázattal.

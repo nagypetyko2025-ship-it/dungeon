@@ -89,7 +89,7 @@ const ALL := {
 		"traits": [
 			"Fix varázspálcája van, mást nem használhat",
 			"A kazamatába lépve választ egy varázslatot: varázsgömb, tűzgolyó vagy földtüskék",
-			"Minden 5. szinten fejlesztheti, vagy megtanulhat egy másodikat (Q gomb)",
+			"Minden 5. szinten fejlesztheti, vagy megtanulhat egy másodikat (jobb egérgomb)",
 			"A varázslatok Elemi sebzéssel sebeznek (csak neki van)",
 			"85% találati esély, 0.25 élet / mp regeneráció",
 		],

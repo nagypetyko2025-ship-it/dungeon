@@ -1,7 +1,7 @@
 class_name Spells
 ## A varázsló (Lőrinc) varázslatai. A kazamatába lépve kiválasztja az elsőt (SpellPicker); minden
 ## 5. szintlépéskor fejlesztheti valamelyiket, vagy megtanulhat egy újat (legfeljebb MAX_SPELLS).
-## Az első az elsődleges támadása (bal egérgomb), a második a Q gombon van (ugyanannyi idő alatt töltődik, mint az első).
+## Az első az elsődleges támadása (bal egérgomb), a második a jobb egérgombon; mindkettő a saját töltési idejével, külön.
 ## Minden varázslat Elemi sebzéssel sebez (Stats.elemental_damage, csak a varázslónak).
 ## Az állapot a futás része: GameState.spells (sorrendben) és GameState.spell_levels.
 ##
@@ -43,6 +43,25 @@ static func damage(spell: String, base_hit: int) -> int:
 	return maxi(1, roundi(base_hit * float(ALL[spell]["power"]) * (1.0 + per_level * (level(spell) - 1))))
 
 
+## Varázsgömb: ennyi gömb repül egyszerre (szintenként +1).
+static func bolt_count(spell: String) -> int:
+	return level(spell)
+
+
+## Tűzgolyó: az égés hossza (mp) és félmásodpercenkénti sebzése a találat sebzéséből.
+static func burn_time(spell: String) -> float:
+	return 2.0 + 0.5 * (level(spell) - 1)
+
+
+static func burn_damage(spell: String, hit: int) -> int:
+	return maxi(1, roundi(hit * (0.2 + 0.04 * (level(spell) - 1))))
+
+
+## Földtüskék: ennyi tüske nő ki (szintenként +1).
+static func spike_count(spell: String) -> int:
+	return 2 + level(spell)
+
+
 ## A varázslat elsütése (Player hívja): a lövedékek / tüskék a játékos szülőjébe kerülnek.
 static func cast(player: Node2D, spell: String, aim: Vector2) -> void:
 	var direction := aim.normalized() if aim.length() > 0.001 else Vector2.RIGHT
@@ -51,7 +70,7 @@ static func cast(player: Node2D, spell: String, aim: Vector2) -> void:
 	match spell:
 		"bolt":
 			Audio.play("magic", -4.0, 0.15)
-			var count := level(spell)
+			var count := bolt_count(spell)
 			for i in count:
 				var k := i - (count - 1) / 2.0
 				_projectile(player, direction.rotated(deg_to_rad(10.0) * k), hit, stats, "orb")
@@ -60,10 +79,10 @@ static func cast(player: Node2D, spell: String, aim: Vector2) -> void:
 			var ball := _projectile(player, direction, hit, stats, "fire")
 			ball.speed = 420.0
 			# Égés: másodpercenként ennyit sebez, ennyi ideig.
-			ball.set_meta("burn_time", 2.0 + 0.5 * (level(spell) - 1))
-			ball.set_meta("burn_damage", maxi(1, roundi(hit * (0.2 + 0.04 * (level(spell) - 1)))))
+			ball.set_meta("burn_time", burn_time(spell))
+			ball.set_meta("burn_damage", burn_damage(spell, hit))
 		"spikes":
-			_spikes(player, direction, hit, 2 + level(spell))
+			_spikes(player, direction, hit, spike_count(spell))
 
 
 static func _projectile(player: Node2D, direction: Vector2, hit: int, stats: Stats, look: String) -> Area2D:
@@ -79,6 +98,7 @@ static func _projectile(player: Node2D, direction: Vector2, hit: int, stats: Sta
 	shot.set_meta("source", player)
 	player.get_parent().add_child(shot)
 	shot.global_position = player.global_position + Vector2(0, -20) + direction * 18.0
+	shot.origin = player.global_position + Vector2(0, -6)
 	return shot
 
 
@@ -120,7 +140,7 @@ static func level_options() -> Array[Dictionary]:
 				continue
 			var definition: Dictionary = ALL[spell]
 			options.append({"spell": spell, "stat": "", "amount": 0, "icon_path": definition["icon_path"],
-				"title": definition["name"], "text": definition["short"], "note": "új varázslat · Q gomb"})
+				"title": definition["name"], "text": definition["short"], "note": "új varázslat · jobb klikk"})
 	return options
 
 

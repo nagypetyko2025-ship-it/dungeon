@@ -32,7 +32,7 @@ const WEAPON_NOTES := {
 	"dagger": "Tőr: rövid, de nagyon gyors; nagy kritikus szorzó.",
 	"mace": "Buzogány: lassú, de nagyot üt és messzire löki az ellenséget.",
 	"bow": "Íj: nyilat lő a kurzor felé; a Távolsági sebzés erősíti, a Hatótáv a nyíl repülési távolsága.",
-	"wand": "Varázspálca: a választott varázslatokat szórja (bal egér, Q); az Elemi sebzés erősíti.",
+	"wand": "Varázspálca: a választott varázslatokat szórja (bal és jobb egérgomb); az Elemi sebzés erősíti.",
 	"crossbow": "Számszeríj: lassabban tölt, de nagyot üt; legfeljebb 3 vesszőt lő, szűk, egyenes sorban.",
 	"sword": "Kard: egyenesen előre döfi; a Hatótáv azt adja meg, milyen messzire.",
 }

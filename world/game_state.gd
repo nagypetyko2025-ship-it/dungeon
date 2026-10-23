@@ -19,7 +19,7 @@ static var saved_inventory := {}
 static var kills := 0
 ## Kinyitott ládák ebben a futásban (a gyakorló pálya is ebből látja, hogy kinyitottad).
 static var chests_opened := 0
-## A varázsló varázslatai ebben a futásban (az első az elsődleges, a második a Q), és a szintjeik.
+## A varázsló varázslatai ebben a futásban (az első az elsődleges, a második a jobb egérgomb), és a szintjeik.
 static var spells: Array = []
 static var spell_levels := {}
 ## Játékidő másodpercben (szünet alatt nem nő).

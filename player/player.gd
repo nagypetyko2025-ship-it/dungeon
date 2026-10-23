@@ -108,7 +108,7 @@ var _weapon_type := "sword"
 var _step_distance := 0.0
 var _war_cry_left := 0.0
 var _shadow_left := 0.0
-## A varázsló második varázslatának (Q) hátralévő cooldownja.
+## A varázsló második varázslatának (jobb egérgomb) hátralévő cooldownja.
 var _secondary_left := 0.0
 ## Szörny-képességek hatása rád: méreg (másodpercenként sebez) és fagy (lassít).
 var _poison_left := 0.0
@@ -427,7 +427,7 @@ func _physics_process(delta: float) -> void:
 		_war_cry()
 	_shadow_left = maxf(_shadow_left - delta, 0.0)
 	_secondary_left = maxf(_secondary_left - delta, 0.0)
-	if Input.is_physical_key_pressed(KEY_Q) and _secondary_left <= 0.0 and GameState.spells.size() > 1 \
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and _secondary_left <= 0.0 and GameState.spells.size() > 1 \
 			and _weapon_type == "wand" and not get_tree().paused:
 		_cast(1, (get_global_mouse_position() - _weapon_pivot.global_position).angle())
 	if _backstab_left > 0.0:
@@ -668,13 +668,14 @@ func _thrust(aim_angle: float) -> void:
 
 
 ## Íj: nyílvessző a kurzor felé; a hatótáv a nyíl repülési távolsága.
-## Varázslat (varázspálcával): `slot` 0 = elsődleges (bal egér), 1 = másodlagos (Q).
+## Varázslat (varázspálcával): `slot` 0 = elsődleges (bal egér), 1 = másodlagos (jobb egér).
+## Mindkettőnek saját cooldownja van (a varázslat saját töltési ideje), egyszerre is lőhetők.
 func _cast(slot: int, aim_angle: float) -> void:
 	if GameState.spells.size() <= slot:
 		return
 	var spell: String = GameState.spells[slot]
-	# A Q (másodlagos) varázslat pontosan olyan lassan töltődik, mint az elsődleges.
-	var cooldown := attack_cooldown() * Spells.cooldown_multiplier(GameState.spells[0])
+	# Mindkét helyen a varázslat a saját töltési idejével (mintha elsődleges lenne).
+	var cooldown := attack_cooldown() * Spells.cooldown_multiplier(spell)
 	if slot == 0:
 		_cooldown_left = cooldown
 	else:
@@ -695,7 +696,7 @@ func _primary_cooldown() -> float:
 	return attack_cooldown()
 
 
-## A Q varázslat hátralévő cooldownja (mp; a HUD-nak).
+## A jobb egeres varázslat hátralévő cooldownja (mp; a HUD-nak).
 func secondary_cooldown_left() -> float:
 	return _secondary_left
 
@@ -731,6 +732,7 @@ func _shoot(aim_angle: float) -> void:
 		arrow.set_meta("source", self)
 		get_parent().add_child(arrow)
 		arrow.global_position = _weapon_pivot.global_position + direction * 18.0 + side * gap * k
+		arrow.origin = global_position + Vector2(0, -6) + side * gap * k * 0.5
 	await get_tree().create_timer(0.15, false).timeout
 	if _weapon_pivot.rotation == aim_angle:
 		_weapon_pivot.visible = false

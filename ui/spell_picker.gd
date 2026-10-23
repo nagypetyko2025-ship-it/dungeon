@@ -26,7 +26,7 @@ func _ready() -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 	var hint := UiStyle.label("Ez lesz a fő támadásod (bal egér). Minden 5. szinten fejlesztheted, vagy egy másodikat " \
-		+ "tanulhatsz (Q gomb).", 17, MenuStyle.PARCHMENT)
+		+ "tanulhatsz (jobb egérgomb).", 17, MenuStyle.PARCHMENT)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(hint)
 	var row := HBoxContainer.new()
