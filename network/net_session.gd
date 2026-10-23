@@ -1,80 +1,53 @@
 class_name NetSession
-## A többjátékos mód hálózati alapja (előkészítés; a játékmenet még nem használja, a menüben
-## "hamarosan"). ENet, gazda–vendég felállás: az egyik játékos a gazda (host), ő futtatja a
-## kazamatát (a szörnyek, a sebzés és a zsákmány nála dől el), a többiek csatlakoznak hozzá.
+## A többjátékos mód közös beállításai és segédei (a váró maga: NetLobby).
 ##
-## A terv (lépésenként):
-##   1. Kapcsolat: host() / join() / leave(), a játékosok listája (név, karakter) – ez a fájl.
-##   2. Váró: a menüben a gazda látja a csatlakozókat, és ő indítja a futást (a kazamata magja
-##      közös: GameState-ben, hogy minden gépen ugyanaz az emelet generálódjon).
-##   3. Játékosok a pályán: minden csatlakozónak saját Player (MultiplayerSpawner), a mozgás és
-##      az animáció MultiplayerSynchronizerrel; a saját karakterét mindenki maga irányítja.
-##   4. Szörnyek és sebzés: csak a gazdán futnak, a vendégek a helyzetüket és az életüket kapják.
-##   5. Zsákmány: a tárgyak és az arany a felvevőé (minden játékos a saját táskájába gyűjt).
-## A tábor (NPC-k, küldetések, mentés) mindenkinél a saját gépén marad, egyjátékos.
+## Felállás: gazda–vendég (ENet). A gazda készít egy várót, kap egy 6 jegyű meghívókódot, és a
+## helyi hálózaton (LAN) másodpercenként bejelenti (UDP üzenetszórás). A csatlakozó a kódot
+## beírva figyeli ezeket a bejelentéseket, és amelyik váró kódja egyezik, ahhoz csatlakozik.
+## Kód alapján csak ugyanazon a hálózaton lehet csatlakozni (internethez szerver kellene).
+##
+## A tervezett lépések:
+##   1. Váró: kód, játékosok (legfeljebb 4), "készen állok", indítás – kész (NetLobby).
+##   2. Közös tábor: mindenki a saját táborába kerül, és látja a többieket – kész (NetAvatars).
+##   3. Közös kazamata: a gazda pályája (közös mag), a szörnyek és a sebzés a gazdánál dől el.
+##   4. Zsákmány: a tárgyak és az arany a felvevőé.
 
-## Amíg nincs kész, a menü nem engedi elindítani.
-const ENABLED := false
-const DEFAULT_PORT := 24565
+const ENABLED := true
+const GAME_PORT := 24565
+## Ezen a porton jelentik be magukat a várók a helyi hálózaton.
+const BEACON_PORT := 24566
 const MAX_PLAYERS := 4
-const DEFAULT_ADDRESS := "127.0.0.1"
-
-## A csatlakozott játékosok: peer id -> {"name": String, "character": String}.
-static var players := {}
-static var _tree: SceneTree
+const CODE_DIGITS := 6
+const NAME_MAX_LENGTH := 16
+const PLAYER_PATH := "user://player.cfg"
 
 
-## Gazdaként indul: várja a csatlakozókat. OK, vagy a hibakód (pl. foglalt a port).
-static func host(tree: SceneTree, player_name: String, port := DEFAULT_PORT) -> Error:
-	var peer := ENetMultiplayerPeer.new()
-	var error := peer.create_server(port, MAX_PLAYERS - 1)
-	if error != OK:
-		return error
-	_attach(tree, peer)
-	players = {1: _info(player_name)}
-	return OK
+## A beállításokban megadott fix név ("" ha nincs: ilyenkor a váró előtt rákérdez).
+static func fixed_name() -> String:
+	var config := ConfigFile.new()
+	if config.load(PLAYER_PATH) != OK:
+		return ""
+	return clean_name(str(config.get_value("player", "name", "")))
 
 
-## Csatlakozás egy gazdához (IP-cím és port). A kapcsolat létrejöttét a tree.get_multiplayer()
-## connected_to_server / connection_failed jelzése mondja meg.
-static func join(tree: SceneTree, player_name: String, address := DEFAULT_ADDRESS, port := DEFAULT_PORT) -> Error:
-	var peer := ENetMultiplayerPeer.new()
-	var error := peer.create_client(address, port)
-	if error != OK:
-		return error
-	_attach(tree, peer)
-	players = {}
-	tree.get_multiplayer().connected_to_server.connect(func() -> void:
-		players[tree.get_multiplayer().get_unique_id()] = _info(player_name), CONNECT_ONE_SHOT)
-	return OK
+static func set_fixed_name(value: String) -> void:
+	var config := ConfigFile.new()
+	config.load(PLAYER_PATH)
+	config.set_value("player", "name", clean_name(value))
+	config.save(PLAYER_PATH)
 
 
-## Kilépés a többjátékos módból (vissza egyjátékosba).
-static func leave() -> void:
-	if _tree != null:
-		var multiplayer := _tree.get_multiplayer()
-		if multiplayer.multiplayer_peer != null:
-			multiplayer.multiplayer_peer.close()
-		multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
-	players = {}
+static func clean_name(value: String) -> String:
+	return value.strip_edges().left(NAME_MAX_LENGTH)
 
 
-static func is_online() -> bool:
-	return _tree != null and not (_tree.get_multiplayer().multiplayer_peer is OfflineMultiplayerPeer) \
-		and _tree.get_multiplayer().multiplayer_peer != null
+## Véletlen 6 jegyű kód, ami nem egyezik egyik `taken` kóddal sem (a most hirdetett várókéval).
+static func new_code(taken: Array) -> String:
+	var code := ""
+	while code.is_empty() or taken.has(code):
+		code = str(randi_range(10 ** (CODE_DIGITS - 1), 10 ** CODE_DIGITS - 1))
+	return code
 
 
-## Ő a gazda-e (egyjátékosban mindig igaz: ott minden a saját gépen dől el).
-static func is_host() -> bool:
-	return not is_online() or _tree.get_multiplayer().is_server()
-
-
-static func _attach(tree: SceneTree, peer: ENetMultiplayerPeer) -> void:
-	_tree = tree
-	var multiplayer := tree.get_multiplayer()
-	multiplayer.multiplayer_peer = peer
-	multiplayer.peer_disconnected.connect(func(id: int) -> void: players.erase(id))
-
-
-static func _info(player_name: String) -> Dictionary:
-	return {"name": player_name, "character": Progress.character}
+static func is_valid_code(value: String) -> bool:
+	return value.length() == CODE_DIGITS and value.is_valid_int()

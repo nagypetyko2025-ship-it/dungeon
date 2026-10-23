@@ -42,6 +42,26 @@ func _ready() -> void:
 	_general.add_child(_slider_row("Effektek", audio.sfx_volume, func(value: float) -> void:
 		audio.set_sfx_volume(value)
 		Audio.play("ui_click")))
+	# Fix név a többjátékos módhoz: ha meg van adva, a váró előtt nem kérdez rá.
+	var name_row := HBoxContainer.new()
+	name_row.add_theme_constant_override("separation", 16)
+	_general.add_child(name_row)
+	var name_label := Label.new()
+	name_label.text = "Név"
+	name_label.custom_minimum_size = Vector2(110, 0)
+	name_label.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
+	name_label.add_theme_font_size_override("font_size", 22)
+	name_label.add_theme_color_override("font_color", MenuStyle.PARCHMENT)
+	name_row.add_child(name_label)
+	var name_edit := LineEdit.new()
+	name_edit.placeholder_text = "többjátékoshoz (üres: rákérdez)"
+	name_edit.max_length = NetSession.NAME_MAX_LENGTH
+	name_edit.text = NetSession.fixed_name()
+	name_edit.custom_minimum_size = Vector2(260, 44)
+	name_edit.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
+	name_edit.add_theme_font_size_override("font_size", 20)
+	name_edit.text_changed.connect(NetSession.set_fixed_name)
+	name_row.add_child(name_edit)
 
 	# Irányítás fül: ugyanaz a lista, mint a kézikönyv első fejezetében.
 	_controls = PanelContainer.new()

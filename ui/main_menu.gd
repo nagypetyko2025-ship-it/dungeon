@@ -57,6 +57,10 @@ func _ready() -> void:
 		if Audio.saved_fullscreen():
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	Audio.music("menu")
+	# A főmenübe érve véget ér a közös játék (a többjátékos ablakból lehet újat kezdeni).
+	var lobby := NetLobby.current(get_tree())
+	if lobby != null and lobby.state == "playing":
+		lobby.leave()
 	GameCursor.apply()
 	_build_background()
 	_build_title()
@@ -231,7 +235,7 @@ func _build_settings() -> void:
 	_records.closed.connect(_show_panel.bind(""))
 	add_child(_records)
 	_multiplayer = MultiplayerPanel.new()
-	_place(_multiplayer, Vector2(0.5, 0.5), Vector2(-260, -185), Vector2(520, 0))
+	_place(_multiplayer, Vector2(0.5, 0.5), Vector2(-260, -205), Vector2(520, 0))
 	_multiplayer.visible = false
 	_multiplayer.closed.connect(_show_panel.bind(""))
 	add_child(_multiplayer)

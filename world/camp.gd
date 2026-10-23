@@ -258,6 +258,13 @@ func _ready() -> void:
 		_setup_break()
 	_player.get_node("Camera2D").reset_smoothing()
 	_show_title()
+	# Közös játékban a többiek is itt járnak a táborban (lásd NetAvatars).
+	if NetLobby.is_playing(get_tree()):
+		var avatars := NetAvatars.new()
+		avatars.name = "NetAvatars"
+		add_child(avatars)
+		avatars.setup(self)
+		avatars.message.connect(_toast)
 	# Az első visszatéréskor a kazamatából: két katona hordágyon visz egy sebesültet az orvoshoz.
 	var returned := GameState.visited_dungeon
 	GameState.visited_dungeon = false
