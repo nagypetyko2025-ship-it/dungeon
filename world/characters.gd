@@ -100,8 +100,9 @@ const ALL := {
 	},
 	# Vendel, a csontváz sírásó: a legendás talizmán után költözik a kocsmába (a képességei még jönnek).
 	"gravedigger": {
-		"name": "Vendel", "sheet": "res://assets/characters/gravedigger.png", "frame_size": Vector2(24, 32),
-		"animations": {"idle": [0, 1, 2, 3], "run": [0, 1, 2, 3], "hit": [0]},
+		# Oldalnézet (jobbra néz; balra tükrözve), hogy a kurzor felé forduljon.
+		"name": "Vendel", "sheet": "res://assets/characters/gravedigger_side.png", "frame_size": Vector2(24, 32),
+		"animations": {"idle": [1], "run": [0, 1, 2, 3], "hit": [1]},
 		"start_weapon": "shovel_vendel", "seat": 1, "weapons": "shovel", "unlock": "vendel_tavern", "accuracy": 80,
 		"max_health": 9, "dodge": 20, "move_speed": 86, "card_bonus": {"attack_speed": 0.15}, "summon": true,
 		"description": "Csontváz sírásó: a halottak földjéről jött vissza, hogy hazahozza a többieket.",

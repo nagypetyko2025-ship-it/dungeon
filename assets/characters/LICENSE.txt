@@ -6,3 +6,4 @@ king.png: a 0x72 DungeonTileset II (CC0) elf_m kockái (álló, futás, sebződ�
 stranger_silhouette.png: a 0x72 DungeonTileset II (CC0) wizzard_m álló kockája, egyszínű sötét sziluettként (a kútba esett idegen, amíg nem tudod a nevét).
 gravedigger.png: a "Skeletons Rework" (antumdeluge, CC0, https://opengameart.org/content/skeletons-rework) szemből látszó csontváza, barna rongyos köpenyre átszínezve (a rajzolt ásó eltávolítva).
 shovel.png: "Shovel" (antumdeluge, CC0, https://opengameart.org/content/shovel-1), a 32x32-es változat.
+gravedigger_side.png: ugyanabból a "Skeletons Rework" (antumdeluge, CC0) csontvázból, a jobbra néző kockákból, ugyanígy barna köpenyre átszínezve.

@@ -6,6 +6,10 @@ extends CharacterBody2D
 ## megy át (megkerüli őket, lásd Dungeon.nav_path), a harc közbeni zárakon (Door) igen, hogy ne
 ## ragadjon kint, ha Vendel már bent van; a szörnyeken és a játékoson is átmegy.
 
+## A csontvázak ütközési rétege (a többi: 1 fal, 2 játékos, 4 szörny, 8/16 találatok).
+const MINION_LAYER := 32
+## Ennyire közel állva széttolják egymást.
+const SPACING := 22.0
 ## Ha nincs gazdája (nem kellene előfordulnia), ilyen gyors.
 const SPEED := 170.0
 const ATTACK_RANGE := 30.0
@@ -37,11 +41,12 @@ var _repath_left := 0.0
 
 func _ready() -> void:
 	add_to_group("minions")
-	collision_layer = 0
-	collision_mask = 1
+	# A csontvázak egymásba nem mehetnek (saját réteg), a falakon sem; a játékoson és a szörnyeken át.
+	collision_layer = MINION_LAYER
+	collision_mask = 1 | MINION_LAYER
 	var shape := CollisionShape2D.new()
 	var circle := CircleShape2D.new()
-	circle.radius = 6.0
+	circle.radius = 9.0
 	shape.shape = circle
 	add_child(shape)
 	for door in get_tree().get_nodes_in_group("doors"):
@@ -86,11 +91,25 @@ func _physics_process(delta: float) -> void:
 			create_tween().tween_property(_sprite, "modulate", TINT, 0.2)
 	elif is_instance_valid(owner_player) and global_position.distance_to(owner_player.global_position) > FOLLOW_DISTANCE:
 		dir = _direction_to(owner_player.global_position, delta)
-	velocity = dir * _speed()
+	velocity = dir * _speed() + _separation() * _speed() * 0.6
 	move_and_slide()
 	if dir.x != 0.0:
 		_sprite.flip_h = dir.x < 0.0
 	_sprite.play("run" if dir != Vector2.ZERO else "idle")
+
+
+## Széttolás: a túl közel álló társaitól eltávolodik (ha egymásra kerültek, ez szedi szét őket).
+func _separation() -> Vector2:
+	var push := Vector2.ZERO
+	for node in get_tree().get_nodes_in_group("minions"):
+		var other := node as Node2D
+		if other == self:
+			continue
+		var away := global_position - other.global_position
+		var distance := away.length()
+		if distance < SPACING:
+			push += (away / distance if distance > 0.5 else Vector2.from_angle(randf() * TAU)) * (1.0 - distance / SPACING)
+	return push.limit_length(1.0)
 
 
 ## Vendel mozgási sebessége (a lassítás nélkül): így mindig lépést tart vele.
