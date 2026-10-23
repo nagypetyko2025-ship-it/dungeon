@@ -233,8 +233,8 @@ const TYPES: Array[Dictionary] = [
 	# Káosz: a Mélység legaljáról feltörő, szabálytalan alakú lények (a 15. emelet után).
 	{"name": "chaos_spawn", "abilities": ["teleport", "zigzag", "death_burst"], "sheet": "res://assets/enemies/chaos_spawn.png",
 		"rect": Rect2(0, 0, 34, 34), "run": true, "size": 1.0,
-		"health": [30, 38], "damage": [6, 8], "speed": [95, 115], "dodge": [15, 25],
-		"knockback": [300, 360], "resist": [0.5, 0.6], "xp": [18, 22], "min_depth": 16, "weight": 2},
+		"health": [36, 45], "damage": [7, 9], "speed": [100, 120], "dodge": [18, 28],
+		"knockback": [320, 380], "resist": [0.55, 0.65], "xp": [21, 26], "min_depth": 16, "weight": 2},
 	# Kazamatapók (bogár): kicsi, gyors, mérges.
 	{"name": "spider", "abilities": ["poison", "zigzag"], "sheet": "res://assets/enemies/spider.png",
 		"rect": Rect2(0, 0, 12, 20), "run": true, "size": 1.1,
