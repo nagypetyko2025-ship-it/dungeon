@@ -9,12 +9,14 @@ class_name Quests
 ##         room (kitisztított szoba), boss (legyőzött főellenség)
 ## goal:   ennyi kell; "floor"/"level"-nél a legnagyobb elért érték számít
 ## reward: {"gold": n} vagy {"item": ritkaság}
-## tier:   nehézség, "easy" (könnyű: 40-100 arany vagy ritka tárgy) vagy "medium"
-##         (közepes: 150-300 arany vagy epikus tárgy), lásd TIERS
+## tier:   nehézség, "easy" (könnyű: 40-100 arany vagy ritka tárgy), "medium" (közepes:
+##         150-300 arany vagy epikus tárgy) vagy "hard" (nehéz: 400-800 arany vagy legendás tárgy),
+##         lásd TIERS
 
 const TIERS := {
 	"easy": {"name": "Könnyű", "color": Color(0.24, 0.5, 0.2)},
 	"medium": {"name": "Közepes", "color": Color(0.72, 0.4, 0.05)},
+	"hard": {"name": "Nehéz", "color": Color(0.7, 0.14, 0.12)},
 }
 
 const ALL := {
@@ -79,6 +81,28 @@ const ALL := {
 		"text": "Szedj fel összesen 250 aranyat.", "reward": {"gold": 70}},
 	"room_by_room": {"name": "Szobáról szobára", "kind": "room", "goal": 15, "tier": "easy",
 		"text": "Tisztíts ki 15 szobát.", "reward": {"gold": 80}},
+	# ---- Könnyű (második adag)
+	"fly_swatter": {"name": "Légycsapó", "kind": "kill", "goal": 10, "target": ["fly"], "tier": "easy",
+		"text": "Ölj meg 10 legyet.", "reward": {"gold": 45}},
+	"short_fuse": {"name": "Rövid kanóc", "kind": "kill", "goal": 5, "target": ["kamikaze_goblin"], "tier": "easy",
+		"text": "Ölj meg 5 robbanó goblint, mielőtt odaérnek hozzád.", "reward": {"item": "rare"}},
+	"goblin_army": {"name": "Goblinsereg", "kind": "kill", "goal": 10, "tier": "easy",
+		"target": ["spear_goblin", "club_goblin", "archer_goblin"],
+		"text": "Ölj meg 10 felfegyverzett goblint (lándzsás, bunkós vagy íjász).", "reward": {"gold": 60}},
+	"pirate_raid": {"name": "Kalózvadászat", "kind": "kill", "goal": 6, "target": ["pirate_grunt", "pirate_gunner"], "tier": "easy",
+		"text": "Ölj meg 6 kalózt (matróz vagy puskás).", "reward": {"gold": 60}},
+	"sticky_business": {"name": "Ragacsos ügy", "kind": "kill", "goal": 8, "target": ["green_slime", "frost_slime"], "tier": "easy",
+		"text": "Ölj meg 8 zselét (zöld vagy fagyos).", "reward": {"gold": 55}},
+	"hunter_hunted": {"name": "Vadászok vadásza", "kind": "kill", "goal": 4, "target": ["huntress"], "tier": "easy",
+		"text": "Ölj meg 4 vadásznőt.", "reward": {"item": "rare"}},
+	"ice_cold": {"name": "Jéghideg", "kind": "kill", "goal": 4, "target": ["ice_zombie"], "tier": "easy",
+		"text": "Ölj meg 4 jégzombit (vigyázz, megfagyasztanak!).", "reward": {"gold": 60}},
+	"fourth_floor": {"name": "A negyedik emelet", "kind": "floor", "goal": 4, "tier": "easy",
+		"text": "Juss le a 4. emeletre.", "reward": {"gold": 50}},
+	"chest_hunter": {"name": "Ládavadász", "kind": "chest", "goal": 12, "tier": "easy",
+		"text": "Nyiss ki 12 ládát.", "reward": {"gold": 90}},
+	"gold_fever": {"name": "Aranyláz", "kind": "gold", "goal": 400, "tier": "easy",
+		"text": "Szedj fel összesen 400 aranyat.", "reward": {"item": "rare"}},
 	# ---- Közepes
 	"first_king": {"name": "Az első király", "kind": "boss", "goal": 1, "tier": "medium",
 		"text": "Győzz le egy főellenséget (a 3. emeleten vár).", "reward": {"item": "epic"}},
@@ -102,6 +126,50 @@ const ALL := {
 		"text": "Szedj fel összesen 1000 aranyat.", "reward": {"gold": 200}},
 	"dungeon_sweeper": {"name": "Kazamata-takarító", "kind": "room", "goal": 50, "tier": "medium",
 		"text": "Tisztíts ki 50 szobát.", "reward": {"gold": 300}},
+	# ---- Közepes (második adag)
+	"shaman_hunt": {"name": "Sámánvadászat", "kind": "kill", "goal": 6, "target": ["orc_shaman", "orc_mage"], "tier": "medium",
+		"text": "Ölj meg 6 ork varázslót (sámán vagy mágus). Ők gyógyítják és védik a többit.", "reward": {"gold": 200}},
+	"fallen_order": {"name": "A bukott rend", "kind": "kill", "goal": 6, "target": ["fallen_knight"], "tier": "medium",
+		"text": "Ölj meg 6 bukott lovagot.", "reward": {"item": "epic"}},
+	"broken_wings": {"name": "Tört szárnyak", "kind": "kill", "goal": 4, "target": ["angel"], "tier": "medium",
+		"text": "Ölj meg 4 angyalt (a többi szörnyet gyógyítják).", "reward": {"gold": 220}},
+	"big_demons": {"name": "Nagy démonok", "kind": "kill", "goal": 5, "target": ["big_demon"], "tier": "medium",
+		"text": "Ölj meg 5 nagy démont.", "reward": {"item": "epic"}},
+	"maze_lord": {"name": "A labirintus ura", "kind": "kill", "goal": 4, "target": ["minotaur"], "tier": "medium",
+		"text": "Ölj meg 4 minotauruszt.", "reward": {"gold": 250}},
+	"legion": {"name": "Csontlégió", "kind": "kill", "goal": 8, "target": ["skeleton_legionary"], "tier": "medium",
+		"text": "Ölj meg 8 csontlégióst.", "reward": {"gold": 230}},
+	"fifteenth_floor": {"name": "A tizenötödik emelet", "kind": "floor", "goal": 15, "tier": "medium",
+		"text": "Juss le a 15. emeletre.", "reward": {"item": "epic"}},
+	"boss_hunter": {"name": "Főellenség-vadász", "kind": "boss", "goal": 5, "tier": "medium",
+		"text": "Győzz le összesen 5 főellenséget.", "reward": {"gold": 300}},
+	"deep_pockets": {"name": "Mély zsebek", "kind": "gold", "goal": 2500, "tier": "medium",
+		"text": "Szedj fel összesen 2500 aranyat.", "reward": {"gold": 250}},
+	"bloodbath": {"name": "Vérfürdő", "kind": "kill", "goal": 500, "target": [], "tier": "medium",
+		"text": "Ölj meg összesen 500 szörnyet.", "reward": {"gold": 300}},
+	# ---- Nehéz
+	"dragon_slayer": {"name": "Sárkányölő", "kind": "kill", "goal": 3, "tier": "hard",
+		"target": ["fire_dragon", "frost_dragon", "shadow_dragon", "gold_dragon"],
+		"text": "Ölj meg 3 sárkányt (tűz-, jég-, árnyék- vagy aranysárkányt).", "reward": {"item": "legendary"}},
+	"lich_bane": {"name": "Lichvész", "kind": "kill", "goal": 3, "target": ["lich"], "tier": "hard",
+		"text": "Ölj meg 3 lichet. Vendel hálás lesz érte.", "reward": {"gold": 500}},
+	"demon_lords": {"name": "Démonurak", "kind": "kill", "goal": 6, "tier": "hard",
+		"target": ["purple_demon", "red_demon", "armored_demon"],
+		"text": "Ölj meg 6 nagyúri démont (lila, vörös vagy páncélos).", "reward": {"item": "legendary"}},
+	"frozen_giants": {"name": "Fagyott óriások", "kind": "kill", "goal": 5, "target": ["yeti", "mammoth", "wendigo"], "tier": "hard",
+		"text": "Ölj meg 5 fagyos óriást (jeti, mamut vagy wendigo).", "reward": {"gold": 450}},
+	"crab_feast": {"name": "Rákpörkölt", "kind": "kill", "goal": 3, "target": ["giant_crab"], "tier": "hard",
+		"text": "Ölj meg 3 óriásrákot.", "reward": {"gold": 400}},
+	"bone_colossus": {"name": "Csontkolosszus", "kind": "kill", "goal": 3, "target": ["giant_skeleton"], "tier": "hard",
+		"text": "Ölj meg 3 óriás csontvázat.", "reward": {"item": "legendary"}},
+	"twentieth_floor": {"name": "A huszadik emelet", "kind": "floor", "goal": 20, "tier": "hard",
+		"text": "Juss le a 20. emeletre, a Mélység Urához.", "reward": {"item": "legendary"}},
+	"thirtieth_floor": {"name": "A harmincadik emelet", "kind": "floor", "goal": 30, "tier": "hard",
+		"text": "Juss le a 30. emeletre.", "reward": {"gold": 800}},
+	"legend": {"name": "Élő legenda", "kind": "level", "goal": 25, "tier": "hard",
+		"text": "Érd el a 25. karakterszintet egy futásban.", "reward": {"gold": 600}},
+	"king_terror": {"name": "A királyok réme", "kind": "boss", "goal": 10, "tier": "hard",
+		"text": "Győzz le összesen 10 főellenséget.", "reward": {"item": "legendary"}},
 }
 
 
