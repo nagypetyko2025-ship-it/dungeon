@@ -2,8 +2,8 @@ class_name Graveyard
 extends Node2D
 ## Temető a kocsma alatt (a városi út túloldalán, délre): sötét, kopár föld, középen egy
 ## elhalt fa, körülötte sírkövek és keresztek, korhadt kerítés, csontok, halvány köd.
-## Egy rövid földút vezet le hozzá az útról. Az egyik sír feliratát E-vel el lehet olvasni
-## (INSCRIBED_TILE), a sírásóval beszélgetni lehet. (A tábor építi fel: setup(camp) + build().)
+## Egy rövid földút vezet le hozzá az útról. A feliratos sírkő-táblák feliratát E-vel el lehet
+## olvasni (TABLETS, EPITAPHS), a sírásóval beszélgetni lehet. (A tábor építi fel: setup(camp) + build().)
 
 const TILE := 32
 const RPG: Texture2D = preload("res://assets/shop/kenney_rpg.png")
@@ -19,7 +19,10 @@ const GRAVES: Array[Vector2i] = [Vector2i(51, 9), Vector2i(52, 9), Vector2i(53, 
 	Vector2i(53, 10), Vector2i(51, 11), Vector2i(52, 11), Vector2i(53, 11)]
 const FENCE := Vector2i(38, 8)
 const SOIL := Color(0.16, 0.12, 0.1)
-## Az olvasható sír (az alsó sorban, a kapu ösvényétől jobbra) és a felirata.
+## A feliratos sírkő-táblák (a GRAVES alsó sora): minden ilyen sír felirata E-vel olvasható
+## (EPITAPHS, sorban kiosztva; az INSCRIBED_TILE sírja mindig tábla, rajta az ismeretlen kalandor).
+const TABLETS: Array[Vector2i] = [Vector2i(51, 11), Vector2i(52, 11), Vector2i(53, 11)]
+## A különleges sír (az alsó sorban, a kapu ösvényétől jobbra) és a felirata.
 const INSCRIBED_TILE := Vector2i(72, 26)
 const INSCRIPTION_TITLE := "Az ismeretlen kalandor"
 const INSCRIPTION := "[center][i]Itt nyugszik, aki lement, és nem jött vissza.\n" \
@@ -28,6 +31,21 @@ const INSCRIPTION := "[center][i]Itt nyugszik, aki lement, és nem jött vissza.
 	+ "Te még csak sejted.\n\n" \
 	+ "[color=#6b5a48]— A tábor népe —[/color][/center]"
 const READ_RANGE := 50.0
+## A többi tábla felirata: [név, szöveg] (a játék történetének halottai is itt nyugszanak).
+const EPITAPHS: Array[Array] = [
+	["Ambrus atya", "Harangozott, amíg bírt,\nés felírta a neveket, amíg volt fal.\n\nMost az ő nevét írta fel valaki más."],
+	["Kerekes Pál, molnár", "Lement a lányáért, hogy legyen kenyér a házban.\nA lánya felnőtt. A malom áll.\n\n„Aludj, apa.” — Zsófi"],
+	["Benedek, zászlóvivő", "A zászlót a Mélységben is magasan tartotta.\nA fia hazahozta helyette.\n\nA fiad jó ember lett, Benedek."],
+	["Gáspár emberei", "Kilencen mentek le a kapitányukkal.\nEgy jött vissza.\n\nA nevüket ő tudja. Elég, ha ő tudja."],
+	["Rézi, a dalnok", "Dalt akart írni a hetedik emelet sötétjéről.\nAz első versszakot hazaküldte.\n\nA többit odalent énekli."],
+	["Ismeretlen kovácsinas", "Csak a kalapácsa jött haza,\nmég meleg volt a markolata.\n\nA kovács azóta sem tanít inast."],
+	["Három testvér", "Egyszerre mentek le, egymást fogva.\nEgyszerre is temettük őket, egymás mellé.\n\nA Mélység sem tudta szétválasztani őket."],
+	["Vak Márton, zsoldos", "Fizetségért ment le, kétszer is.\nHarmadszorra ingyen ment: a barátjáért.\n\nAz volt a legjobb alkuja."],
+	["Ilona, a gyógyító", "Száz kalandort varrt össze a tábor szélén.\nA százegyediket a Mélységben.\n\nOtt maradt vele."],
+	["Egy kutya, Bundás", "Tizenkét emeletet ment le a gazdája után,\nés egyet sem fel nélküle.\n\nA legjobb fiú volt a táborban."],
+	["Névtelen kalandor", "Senki sem tudta a nevét,\nde mindenki látta, ahogy lement.\n\nAkkor is mosolygott."],
+	["Öreg Lajos, térképész", "Lőrinc tanítója volt.\nAzt mondta, minden térkép hazudik egy kicsit.\n\nAz övé csak a végén hazudott."],
+]
 ## A sírásó (Gravedigger): a kapu ösvényén áll, az első sírsor alatt (ott nincs sír). E-vel beszélni
 ## lehet vele; a küldetése elfogadása után (a beszélgetés bezárásakor) átsétál a kápolnába (Chapel).
 const DIGGER_TILE := Vector2i(69, 23)
@@ -40,7 +58,8 @@ var _rng := RandomNumberGenerator.new()
 var _player: Node2D
 var _prompt: Label
 var _panel: InscriptionPanel
-var _inscribed_position := Vector2.INF
+## A feliratos sírok: {"position": Vector2, "title": String, "text": String}.
+var _tablets: Array[Dictionary] = []
 var _digger_position := Vector2.INF
 var _dialogue: DialoguePanel
 var _digger: Node2D
@@ -164,9 +183,16 @@ func _build_graves() -> void:
 			var holder := Node2D.new()
 			holder.position = _center(tile) + Vector2(0, 4)
 			_entities.add_child(holder)
-			var stone := _rpg(GRAVES[_rng.randi() % GRAVES.size()], Vector2(0, -12), 0, holder)
+			var look: Vector2i = GRAVES[_rng.randi() % GRAVES.size()]
 			if tile == INSCRIBED_TILE:
-				_inscribed_position = holder.position
+				look = TABLETS[0]
+			var stone := _rpg(look, Vector2(0, -12), 0, holder)
+			if tile == INSCRIBED_TILE:
+				_tablets.append({"position": holder.position, "title": INSCRIPTION_TITLE, "text": INSCRIPTION})
+			elif look in TABLETS:
+				var epitaph: Array = EPITAPHS[(_tablets.size()) % EPITAPHS.size()]
+				_tablets.append({"position": holder.position, "title": epitaph[0],
+					"text": "[center][i]%s[/i][/center]" % epitaph[1]})
 			stone.rotation = _rng.randf_range(-0.12, 0.12)
 			stone.modulate = Color(0.75, 0.75, 0.8)
 			_body(holder, Vector2(0, -4), Vector2(22, 8))
@@ -225,7 +251,21 @@ func _build_ui() -> void:
 
 
 func _near_grave() -> bool:
-	return is_instance_valid(_player) and _player.global_position.distance_to(_inscribed_position) < READ_RANGE
+	return not _nearest_tablet().is_empty()
+
+
+## A legközelebbi feliratos sír (READ_RANGE-en belül), vagy üres.
+func _nearest_tablet() -> Dictionary:
+	if not is_instance_valid(_player):
+		return {}
+	var best := {}
+	var best_distance := READ_RANGE
+	for tablet in _tablets:
+		var distance := _player.global_position.distance_to(tablet["position"])
+		if distance < best_distance:
+			best_distance = distance
+			best = tablet
+	return best
 
 
 func _near_digger() -> bool:
@@ -283,12 +323,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	get_viewport().set_input_as_handled()
 	Audio.play("ui_open")
+	if not digger:
+		var tablet := _nearest_tablet()
+		_panel.show_text(tablet["title"], tablet["text"])
 	_camp.get_node("Menus").call("open_menu", _dialogue if digger else _panel)
 
 
 ## A sírfelirat: kőszürke tábla, rajta a vésett szöveg (E / Esc: bezárás).
 class InscriptionPanel:
 	extends CanvasLayer
+	var _title: Label
+	var _text: RichTextLabel
 
 	func _ready() -> void:
 		layer = 15
@@ -318,7 +363,8 @@ class InscriptionPanel:
 		var box := VBoxContainer.new()
 		box.add_theme_constant_override("separation", 14)
 		stone.add_child(box)
-		var title := MenuStyle.title_label(INSCRIPTION_TITLE, 34, Color(0.18, 0.18, 0.22))
+		_title = MenuStyle.title_label(INSCRIPTION_TITLE, 34, Color(0.18, 0.18, 0.22))
+		var title := _title
 		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		box.add_child(title)
 		var text := RichTextLabel.new()
@@ -330,10 +376,16 @@ class InscriptionPanel:
 		text.add_theme_font_size_override("normal_font_size", 19)
 		text.add_theme_font_size_override("italics_font_size", 19)
 		text.text = INSCRIPTION
+		_text = text
 		box.add_child(text)
 		var hint := UiStyle.label("[E] / [Esc] bezárás", 14, Color(0.25, 0.25, 0.3))
 		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		box.add_child(hint)
+
+	## Melyik sír feliratát mutassa (megnyitás előtt).
+	func show_text(title: String, text: String) -> void:
+		_title.text = title
+		_text.text = text
 
 	func open() -> void:
 		visible = true
