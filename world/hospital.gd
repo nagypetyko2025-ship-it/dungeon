@@ -3,7 +3,7 @@ extends Node2D
 ## A kalandorok kórháza a kocsmától jobbra (a régi lakóház helyén; ide vitték a katonák a hordágyon
 ## a sebesültet, lásd StretcherScene). Kívül fehérre meszelt falak, piros kereszt, az ajtó fölött
 ## tábla. Bent két sor betegágy, rajtuk bekötözött sebesültek (néha felnyögnek), középen Kálmán
-## doktor (pestisdoktor-maszkban; E: beszélgetés), mellette Rozi nővér; gyertyák, gyógyszeres polc,
+## doktor (pestisdoktor-maszkban; E: beszélgetés és küldetések, lásd Doctor), mellette Rozi nővér; gyertyák, gyógyszeres polc,
 ## ládák, mosdótál, véres kötések, paraván, száradó gyógyfüvek, a falnak támasztott hordágy.
 ## (A tábor építi fel: setup(camp) + build().)
 
@@ -33,29 +33,6 @@ const NURSE := Rect2(128, 4, 16, 28)
 const PATIENTS: Array[Rect2] = [Rect2(128, 100, 16, 28), Rect2(128, 36, 16, 28), Rect2(128, 292, 16, 28),
 	Rect2(128, 228, 16, 28), Rect2(128, 68, 16, 28), Rect2(128, 164, 16, 28)]
 const FLASKS: Array[Rect2] = [Rect2(288, 336, 16, 16), Rect2(304, 336, 16, 16), Rect2(320, 336, 16, 16)]
-const DOCTOR_ID := "doctor"
-const DOCTOR_NAME := "Kálmán doktor"
-const GREETING := "[i]A pestisdoktor-maszk mögül tompa, fáradt hang szól.[/i]\n\n" \
-	+ "Csak óvatosan, ne lépj a vödörbe. Ha nem vérzel, ülj le valahova. Ha vérzel... akkor is ülj le, és várj."
-const OPTIONS: Array[Dictionary] = [
-	{"id": "who", "text": "Ki vagy te?", "trust": 4,
-		"answer": "Kálmán. A tábor doktora, mióta az előző... nos, mióta ő is lement. Régen a pestises falvakat " \
-			+ "jártam, onnan a maszk. A Mélység szaga sem sokkal jobb, úgyhogy rajtam maradt.\n\n" \
-			+ "Rozi nővér segít. Nélküle a fele már a temetőben feküdne, Vendel nagy örömére."},
-	{"id": "stretcher", "text": "Mi lett azzal, akit a katonák hoztak?", "trust": 3,
-		"answer": "[i]Az ablak melletti ágy felé biccent.[/i]\n\n" \
-			+ "Ott fekszik. A kilencedik emeleten egy bukott lovag kardja találta el, a katonák a lépcső aljáról " \
-			+ "hozták fel. Sok vért vesztett, de él. Ha a láz lemegy, talán reggel már a nevét is megmondja.\n\n" \
-			+ "Azt motyogta, hogy odalent a szörnyek egyre okosabbak. Kerülgetik az oszlopokat. Nem tetszik ez nekem."},
-	{"id": "advice", "text": "Van valami tanácsod?", "trust": 2,
-		"answer": "Három dolog. Egy: a vörös bájital nem cukorka, de ne is spórold, ha baj van.\n" \
-			+ "Kettő: a mérget nem lehet kiizzadni. Ha zöldül a szél a szemed előtt, menekülj, és várd ki.\n" \
-			+ "Három: ha a kiképzősátorban edzel, ritkábban látlak itt. Az nekem is jó."},
-	{"id": "busy", "text": "Miért van itt ennyi sebesült?", "trust": 3,
-		"answer": "Mert egyre többen mennek le. A király aranyat ígér, a kocsmáros küldetéseket ad, a fiatalok " \
-			+ "hősök akarnak lenni.\n\n[i]Felsóhajt, a maszk csőre megbillen.[/i]\n\n" \
-			+ "A hősökből lesznek a betegeim. A szerencsésebbekből."},
-]
 const MOANS: Array[String] = ["Aúú...", "Vizet...", "Hol vagyok?", "Anyám...", "A tizedik emelet...",
 	"Ne... ne a pókok...", "Doktor úr...", "Fáj...", "Még egy kicsit...", "Kerülgetik az oszlopokat..."]
 
@@ -78,11 +55,12 @@ func setup(camp: Node2D) -> void:
 	_player = camp.get_node("Entities/Player")
 	_dialogue = DialoguePanel.new()
 	_dialogue.name = "DoctorDialogue"
-	_dialogue.npc_id = DOCTOR_ID
-	_dialogue.npc_name = DOCTOR_NAME
-	_dialogue.greeting = GREETING
-	_dialogue.options = OPTIONS
-	_dialogue.portrait = SpriteSheet.region(DOCTOR)
+	_dialogue.npc_id = Doctor.ID
+	_dialogue.npc_name = Doctor.NAME
+	_dialogue.greeting = Doctor.GREETING
+	_dialogue.portrait = Doctor.portrait()
+	_dialogue.options_provider = func() -> Array[Dictionary]:
+		return Doctor.options(_player.get_node("Inventory"))
 	camp.add_child.call_deferred(_dialogue)
 
 
@@ -259,7 +237,7 @@ func _focus() -> Array:
 	if at.distance_to(_center(INTERIOR_DOOR) + Vector2(TILE / 2.0, TILE / 2.0)) < INTERACT_RANGE:
 		return ["leave", "[E] Kilépés a szabadba"]
 	if at.distance_to(_doctor_position) < TALK_RANGE:
-		return ["talk", "[E] Beszélgetés: %s" % DOCTOR_NAME]
+		return ["talk", "[E] Beszélgetés: %s" % Doctor.NAME]
 	return []
 
 

@@ -10,12 +10,14 @@ const PAGE_SIZE := Vector2(400, 420)
 ## Fülek: 0 = általános küldetések (Quests), 1 = a veterán küldetései (Dialogues),
 ## 2 = a tolvaj küldetései (Thief), 3 = a király küldetései (Castle; csak a vár kapujánál
 ## tett első látogatás után látszik).
-const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király", "Kutas idegen", "Csontváz sírásó"]
+const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király", "Kutas idegen", "Csontváz sírásó", "Doktor"]
 const KING_TAB := 3
 ## 4 = a kútba esett idegen küldetései (Stranger).
 const WELL_TAB := 4
 ## 5 = a sírásó (Vendel) küldetései (Gravedigger).
 const DIGGER_TAB := 5
+## 6 = Kálmán doktor küldetései (Doctor; csak az első kérése után látszik).
+const DOCTOR_TAB := 6
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 
 var _ids: Array = []
@@ -55,6 +57,7 @@ func _npc_quests() -> Dictionary:
 		KING_TAB: return King.QUESTS
 		WELL_TAB: return Stranger.QUESTS
 		DIGGER_TAB: return Gravedigger.QUESTS
+		DOCTOR_TAB: return Doctor.QUESTS
 	return Dialogues.VETERAN_QUESTS
 
 
@@ -64,6 +67,7 @@ func _npc_name() -> String:
 		KING_TAB: return King.NAME
 		WELL_TAB: return Stranger.display_name()
 		DIGGER_TAB: return Gravedigger.NAME
+		DOCTOR_TAB: return Doctor.NAME
 	return Dialogues.VETERAN_NAME
 
 
@@ -80,6 +84,9 @@ func _set_tab(tab: int) -> void:
 func open() -> void:
 	# A Király fül csak a vár kapujánál tett első látogatás után látszik.
 	_tab_buttons[KING_TAB].visible = Progress.npc_quest_state(Castle.PERMIT_QUEST) != ""
+	_tab_buttons[DOCTOR_TAB].visible = Progress.npc_quest_state(Doctor.ORB_QUEST) != ""
+	if _tab == DOCTOR_TAB and not _tab_buttons[DOCTOR_TAB].visible:
+		_set_tab(0)
 	if _tab == KING_TAB and not _tab_buttons[KING_TAB].visible:
 		_set_tab(0)
 	_load_ids()
@@ -148,8 +155,8 @@ func _build() -> void:
 	root.add_child(tabs)
 	for i in TAB_NAMES.size():
 		var tab := MenuStyle.button(TAB_NAMES[i])
-		tab.custom_minimum_size = Vector2(180, 44)
-		tab.add_theme_font_size_override("font_size", 18)
+		tab.custom_minimum_size = Vector2(158, 44)
+		tab.add_theme_font_size_override("font_size", 16)
 		tab.focus_mode = Control.FOCUS_NONE
 		tab.modulate = Color.WHITE if i == 0 else Color(0.6, 0.55, 0.5)
 		tab.pressed.connect(_set_tab.bind(i))
