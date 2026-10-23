@@ -42,6 +42,8 @@ const ALL := {
 const CHAIN_RANGE := 340.0
 const CHAIN_CONE := 0.6
 const CHAIN_JUMP := 170.0
+## Ha a falba ütköző sugár ennyire megközelíti a szörnyet, az még találat.
+const CHAIN_WALL_SLACK := 22.0
 
 
 static func level(spell: String) -> int:
@@ -167,6 +169,9 @@ static func _chain(player: Node2D, direction: Vector2, hit: int, jumps: int, sta
 	Audio.play("magic", -3.0, 0.25)
 	var parent := player.get_parent()
 	var from := player.global_position + Vector2(0, -20) + direction * 14.0
+	# Fal mellett a pálca hegye a falban lehet: akkor a villám a testéből indul (mint a lövedékek).
+	if _in_wall(player, from):
+		from = player.global_position + Vector2(0, -6)
 	var reach := CHAIN_RANGE * stats.attack_range / 100.0
 	var target := _chain_first(player, from, direction, reach)
 	if target == null:
@@ -199,7 +204,7 @@ static func _chain_first(player: Node2D, from: Vector2, direction: Vector2, reac
 	for enemy: Node2D in _living_enemies(player):
 		var to := _enemy_center(enemy) - from
 		var angle := absf(direction.angle_to(to))
-		if to.length() > reach or angle > CHAIN_CONE or not _visible(player, from, from + to):
+		if to.length() > reach or angle > CHAIN_CONE or not _sees(player, from, enemy):
 			continue
 		var score := to.length() * (1.0 + angle * 2.0)
 		if score < best_score:
@@ -216,7 +221,7 @@ static func _chain_next(player: Node2D, from: Vector2, struck: Array[Node2D]) ->
 			continue
 		var at := _enemy_center(enemy)
 		var distance := from.distance_to(at)
-		if distance < best_distance and _visible(player, from, at):
+		if distance < best_distance and _sees(player, from, enemy):
 			best_distance = distance
 			best = enemy
 	return best
@@ -236,8 +241,20 @@ static func _enemy_center(enemy: Node2D) -> Vector2:
 	return shape.global_position if shape != null else enemy.global_position + Vector2(0, -12)
 
 
-static func _visible(player: Node2D, from: Vector2, to: Vector2) -> bool:
-	return _ray_end(player, from, to) == to
+## Látható-e a szörny: a fal előtt álló szörny teste (a találati területe) belelóghat a fal
+## ütközési sávjába, ezért a lába is számít, és az is, ha a sugár közvetlenül előtte áll meg.
+static func _sees(player: Node2D, from: Vector2, enemy: Node2D) -> bool:
+	for at: Vector2 in [_enemy_center(enemy), enemy.global_position + Vector2(0, -2)]:
+		if _ray_end(player, from, at).distance_to(at) < CHAIN_WALL_SLACK:
+			return true
+	return false
+
+
+static func _in_wall(player: Node2D, at: Vector2) -> bool:
+	var query := PhysicsPointQueryParameters2D.new()
+	query.position = at
+	query.collision_mask = 1
+	return not player.get_world_2d().direct_space_state.intersect_point(query, 1).is_empty()
 
 
 ## A faltól megállított végpont (1-es réteg: falak).
