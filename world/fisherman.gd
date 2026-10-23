@@ -2,7 +2,7 @@ class_name Fisherman
 extends Node2D
 ## Az öreg horgász a tó partján: egy ideig horgászik (a kezében a letöltött horgászbot, a végéről
 ## zsinór lóg az úszóig, az úszó billeg, néha "kapás" van), aztán a part mentén arrébb sétál, és ott
-## horgászik tovább. Egyelőre nem lehet vele beszélni.
+## horgászik tovább. E-vel beszélgetni lehet vele (három története van; küldetése egyelőre nincs).
 ## Kép: assets/characters/old_fisherman.png (0x72 öreg varázsló, zöldre színezve; 0-3: áll, 4-7: fut),
 ## bot: assets/items/fishing_rod_bare.png (CC0). (A tábor rakja le az Entities rétegbe.)
 
@@ -19,6 +19,28 @@ const ROD_HANDLE := Vector2(3, 13)
 const ROD_TIP := Vector2(10.5, 2.5)
 ## A kéz helye a figurán (jobbra nézve).
 const HAND := Vector2(8, -13)
+const ID := "fisherman"
+const NAME := "Öreg Ábel, a horgász"
+const TALK_RANGE := 60.0
+const STORIES: Array[Dictionary] = [
+	{"id": "lake", "text": "Mióta horgászol itt?", "trust": 3,
+		"answer": "[i]Nem néz fel, csak az úszót figyeli.[/i]\n\n" \
+			+ "Mióta tó van itt. Régen ez csak egy vizenyős rét volt. Aztán egy tavasszal, amikor a kazamata " \
+			+ "kapuját feltörték, megremegett a föld, és reggelre itt állt a víz. Alulról jött, fiam. Nem " \
+			+ "esőből, hanem a mélyből.\n\nAzóta itt állok. Valakinek figyelnie kell, mit hoz fel."},
+	{"id": "fish", "text": "Mit lehet itt fogni?", "trust": 3,
+		"answer": "[i]Megvakarja a szakállát.[/i]\n\n" \
+			+ "Mindenfélét. Pontyot, csukát... és olyat is, aminek nincs szeme. Fehér, áttetsző halakat, " \
+			+ "amik sosem láttak napot. Azokat visszadobom. Nem illik megenni, ami a sötétből jött.\n\n" \
+			+ "Egyszer egy rozsdás kulcs volt az egyik gyomrában. Azóta is őrzöm. Hátha egyszer megtalálom " \
+			+ "a zárat hozzá. Vagy ő talál meg engem."},
+	{"id": "advice", "text": "Adnál tanácsot egy kalandornak?", "trust": 5,
+		"answer": "[i]Végre rád néz. A szeme szürke és nyugodt, mint a víz hajnalban.[/i]\n\n" \
+			+ "A mélység olyan, mint ez a tó. Aki kapkod, annak elriasztja a halait. Aki türelmes, annak " \
+			+ "a víz magától adja oda, amit tartogat.\n\nNe akarj mindent egyszerre. Menj le egy emelettel, " \
+			+ "aztán még eggyel. A gyanús boltos odalent is egyre jobb portékát tart, minél mélyebbre jutsz. " \
+			+ "A mélység megjutalmazza azt, aki kitart."},
+]
 
 var _sprite: Sprite2D
 var _rod: Sprite2D
@@ -32,6 +54,9 @@ var _bite := 0.0
 ## A víz felé mutató egységvektor (horgászáskor).
 var _facing := Vector2.UP
 var _left := false
+var _player: Node2D
+var _prompt: Label
+var _dialogue: DialoguePanel
 
 
 func _ready() -> void:
@@ -51,10 +76,51 @@ func _ready() -> void:
 	_line = Node2D.new()
 	_line.draw.connect(_draw_line)
 	add_child(_line)
+	_build_dialogue.call_deferred()
 	# A délkeleti parton kezd (a mólótól jobbra).
 	_angle = PI / 2.0 - 0.6
 	_place()
 	_start_fishing()
+
+
+func _build_dialogue() -> void:
+	var camp := get_tree().current_scene
+	_player = camp.get_node_or_null("Entities/Player") as Node2D
+	_dialogue = DialoguePanel.new()
+	_dialogue.name = "FishermanDialogue"
+	_dialogue.npc_id = ID
+	_dialogue.npc_name = NAME
+	_dialogue.greeting = "[i]Az öreg a part szélén áll, a botját két kézzel tartja. Csak a szemével int, hogy " \
+		+ "halkabban.[/i]\n\nCsendesen, fiam. A halak mindent hallanak."
+	var face := AtlasTexture.new()
+	face.atlas = SHEET
+	face.region = Rect2(0, 0, FRAME.x, FRAME.y)
+	_dialogue.portrait = face
+	_dialogue.options = STORIES.duplicate()
+	camp.add_child(_dialogue)
+	var layer := CanvasLayer.new()
+	layer.layer = 5
+	add_child(layer)
+	_prompt = MenuStyle.title_label("[E] Beszélgetés: %s" % NAME, 32, MenuStyle.GOLD)
+	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_prompt.offset_top = -210
+	_prompt.offset_bottom = -160
+	_prompt.offset_left = -500
+	_prompt.offset_right = 500
+	_prompt.modulate.a = 0.0
+	layer.add_child(_prompt)
+
+
+func _near_player() -> bool:
+	return is_instance_valid(_player) and _player.global_position.distance_to(global_position) < TALK_RANGE
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("interact") or get_tree().paused or not _near_player() or _dialogue == null:
+		return
+	get_viewport().set_input_as_handled()
+	Audio.play("ui_open")
+	get_tree().current_scene.get_node("Menus").call("open_menu", _dialogue)
 
 
 ## A part egy pontja (szög szerint) képpontban.
@@ -116,6 +182,9 @@ func _set_frame(index: int) -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	if _prompt != null:
+		var shown := 1.0 if _near_player() and not get_tree().paused else 0.0
+		_prompt.modulate.a = move_toward(_prompt.modulate.a, shown, delta * 5.0)
 	if _fishing:
 		_timer -= delta
 		if _bite <= 0.0 and randf() < delta * 0.08:

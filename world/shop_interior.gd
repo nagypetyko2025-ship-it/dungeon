@@ -193,11 +193,11 @@ func _build_counter_column(x: int, top: int, bottom: int, facing: int, used_ids:
 		_sprite(RPG, MARKET_COUNTERS[(y - top) % MARKET_COUNTERS.size()], Vector2i(x, y))
 	_solid(Rect2i(x, top, 1, bottom - top + 1))
 	for y in range(top, bottom + 1, ITEM_SPACING):
-		var item := Items.random_item()
+		var item := Items.random_shop_item(GameState.depth)
 		for attempt in 10:
 			if not used_ids.has(item["id"]):
 				break
-			item = Items.random_item()
+			item = Items.random_shop_item(GameState.depth)
 		used_ids[item["id"]] = true
 		_stalls.append([Vector2i(x, y), Vector2i(x + facing, y), facing])
 		_add_stock(item, Vector2i(x, y), Vector2i(x + facing, y), facing)
@@ -427,11 +427,11 @@ func _restock() -> void:
 	_tooltip.hide_tooltip()
 	var used_ids := {}
 	for stall: Array in _stalls:
-		var item := Items.random_item()
+		var item := Items.random_shop_item(GameState.depth)
 		for attempt in 10:
 			if not used_ids.has(item["id"]):
 				break
-			item = Items.random_item()
+			item = Items.random_shop_item(GameState.depth)
 		used_ids[item["id"]] = true
 		_add_stock(item, stall[0], stall[1], stall[2])
 	FloatingText.spawn(self, _shopkeeper.global_position + Vector2(0, -36), "Friss áru... hehe.", Color(0.85, 0.75, 1))

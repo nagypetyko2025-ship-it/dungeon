@@ -28,7 +28,7 @@ static func stock() -> Array:
 	if GameState.merchant_stock.is_empty():
 		var seen := {}
 		while GameState.merchant_stock.size() < STOCK_SIZE:
-			var item := Items.random_item()
+			var item := Items.random_shop_item(GameState.depth)
 			if seen.has(item["id"]) and seen.size() < Items.DEFINITIONS.size():
 				continue
 			seen[item["id"]] = true

@@ -626,6 +626,39 @@ static func random_item(max_rarity := "legendary", min_rarity := "common") -> Di
 	return create(ids.pick_random(), chosen)
 
 
+## Bolti tárgy az adott emelethez: minél mélyebben vagy, annál erősebb (lásd for_depth).
+static func random_shop_item(depth: int) -> Dictionary:
+	return for_depth(random_item(), depth)
+
+
+## A mélyebb boltok jobb árut tartanak: emeletenként a pozitív statok +STAT_PER_FLOOR-ral, a fegyver
+## alapsebzése lassabban, +BASE_PER_FLOOR-ral nő (az 1. emeleten változatlan); az ár a statokkal együtt.
+## A hátrányok (negatív statok) nem nőnek.
+const STAT_PER_FLOOR := 0.035
+const BASE_PER_FLOOR := 0.02
+
+
+static func for_depth(item: Dictionary, depth: int) -> Dictionary:
+	var floors := maxi(depth - 1, 0)
+	if floors == 0:
+		return item
+	var factor := 1.0 + STAT_PER_FLOOR * floors
+	var stats: Dictionary = item["stats"]
+	for stat: String in stats:
+		var value: float = stats[stat]
+		if value <= 0.0:
+			continue
+		if stat == "health_regen":
+			stats[stat] = snappedf(value * factor, 0.1)
+		else:
+			stats[stat] = float(maxi(roundi(value * factor), int(value)))
+	if item.has("base_damage"):
+		item["base_damage"] = roundi(item["base_damage"] * (1.0 + BASE_PER_FLOOR * floors))
+	item["price"] = roundi(item["price"] * factor)
+	item["depth"] = depth
+	return item
+
+
 ## Távolsági fegyver-e (íj vagy számszeríj): a Távolsági sebzés erősíti, csak íjász használhatja.
 static func is_ranged(item: Variant) -> bool:
 	return item is Dictionary and item.get("weapon_type", "") in RANGED_TYPES
@@ -667,6 +700,9 @@ static func describe_bbcode(item: Dictionary) -> String:
 		return "[color=#%s]Küldetéstárgy[/color]\n%s" % [SLOT_NOTE_INK.to_html(false), item.get("description", "")]
 	if item.has("rarity"):
 		lines.append("[color=#%s]%s[/color]" % [rarity_ink(item).to_html(false), rarity_name(item)])
+	if item.get("depth", 1) > 1:
+		lines.append("[color=#%s]Mélységi áru (%d. emelet): +%d%% stat[/color]" % [SLOT_NOTE_INK.to_html(false),
+			item["depth"], roundi(STAT_PER_FLOOR * (item["depth"] - 1) * 100.0)])
 	if item.has("slot"):
 		var kind := slot_name(item)
 		# Fegyvernél a fajtája is: pl. "Fegyver (Tőr)".
