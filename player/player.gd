@@ -39,13 +39,16 @@ const WEAPON_PIVOT_POSITION := Vector2(0, -18)
 ##   swing  ívben suhint (balta, buzogány); a Hatótáv a testtől való távolságot növeli
 ##   bow    nyilat lő a kurzor felé; a Hatótáv a nyíl repülési távolsága
 ## A fegyver mérete sosem nő a hatótávval. length / width: az átlós ikonú fegyverek
-## hossza és a találati terület szélessége.
+## hossza és a találati terület szélessége. forward: a fegyver képe (és a találati terület)
+## ennyivel előrébb van a forgásponttól, hogy ne lógjon bele a testbe (pixel).
 const WEAPON_TYPES := {
 	"sword": {"style": "throw", "cooldown": 1.0, "knockback": 260.0, "throw": 64.0},
 	"dagger": {"style": "throw", "cooldown": 0.6, "knockback": 150.0, "throw": 56.0, "length": 34.0, "width": 24.0},
 	"spear": {"style": "throw", "cooldown": 1.2, "knockback": 470.0, "throw": 80.0},
-	"axe": {"style": "swing", "arc": 200.0, "cooldown": 1.3, "knockback": 380.0, "length": 58.0, "width": 34.0},
-	"mace": {"style": "swing", "arc": 160.0, "cooldown": 1.45, "knockback": 520.0, "length": 56.0, "width": 36.0},
+	"axe": {"style": "swing", "arc": 200.0, "cooldown": 1.3, "knockback": 380.0, "length": 58.0, "width": 34.0,
+		"forward": 18.0},
+	"mace": {"style": "swing", "arc": 160.0, "cooldown": 1.45, "knockback": 520.0, "length": 56.0, "width": 36.0,
+		"forward": 18.0},
 	"bow": {"style": "bow", "cooldown": 1.1, "knockback": 120.0, "length": 40.0, "width": 10.0},
 	"wand": {"style": "wand", "cooldown": 1.0, "knockback": 160.0, "length": 36.0, "width": 10.0},
 	"crossbow": {"style": "bow", "cooldown": 1.45, "knockback": 220.0, "length": 40.0, "width": 10.0},
@@ -270,7 +273,7 @@ func _update_sword_geometry() -> void:
 		var icon_length := _sword_sprite.texture.get_width() * sqrt(2.0)
 		_sword_sprite.rotation = SPEAR_SPRITE_ROTATION
 		_sword_sprite.scale = Vector2.ONE * length / icon_length
-		_sword_sprite.position.x = length / 2.0 - length * ICON_WEAPON_GRIP
+		_sword_sprite.position.x = length / 2.0 - length * ICON_WEAPON_GRIP + float(type_data.get("forward", 0.0))
 		if type_data["style"] == "swing":
 			_sword_sprite.position.x += maxf((reach - 1.0) * SWING_REACH_OFFSET, -10.0)
 		elif type_data["style"] == "wand":

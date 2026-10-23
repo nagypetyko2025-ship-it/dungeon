@@ -1216,6 +1216,13 @@ func cheat_teleport(target_depth: int) -> bool:
 	return true
 
 
+## Csalás (CheatMenu): karakterváltás a kocsma nélkül (a zárolt karakterekre is).
+func cheat_select_character(id: String) -> bool:
+	if _on_break or _leaving:
+		return false
+	return _town.cheat_switch_to(id)
+
+
 func _enter_dungeon(start_depth := 1, cheat := false) -> void:
 	_leaving = true
 	Audio.play("stairs")

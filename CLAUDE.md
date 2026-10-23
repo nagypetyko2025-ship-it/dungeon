@@ -49,6 +49,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   bizalom és feltett kérdések: `Progress.trust` / `Progress.asked` (mentve).
 - Karakterek: `world/characters.gd` (lovag, íjász, Bence/"thief" a levél-küldetés után, Gáspár/"veteran" — utóbbi az "unlock" jelzővel, a 30. emelet
   után; Ctrl: íjász suhanás, Gáspár hadi kiáltás, Bence árnyéklépés a `player.gd`-ben; Lőrinc/"wizard" varázsló: `player/spells.gd`, választó: `ui/spell_picker.gd`). Kocsmai székek: `world/town.gd`.
-- Csalómenü: [0], kód `147258` (`ui/cheat_menu.gd`): teleport a 20. emeletre (`cheat_teleport` a Dungeon/Camp jeleneten),
-  halhatatlanság (`GameState.god_mode`). Teszteléshez is hasznos.
+- Csalómenü: [0], kód nélkül (`ui/cheat_menu.gd`): teleport a 20. emeletre (`cheat_teleport` a Dungeon/Camp jeleneten),
+  halhatatlanság (`GameState.god_mode`), karakterváltás a táborban (zároltakra is; `cheat_select_character` a Camp-en →
+  `Town.cheat_switch_to`), tárgylap (bármelyik tárgy bármelyik ritkaságban a táskába). Teszteléshez is hasznos.
 - Gyakorló pálya: `ui/tutorial_guide.gd` (lépések), kézikönyv: `ui/tutorial_manual.gd` (az irányítás szövege a Beállítások fülön is).

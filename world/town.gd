@@ -317,6 +317,26 @@ func _switch_to(id: String) -> void:
 		_busy = false)
 
 
+## Csalás (CheatMenu): azonnali karakterváltás bárhol a táborban, a zárolt karakterekre is.
+## A játékos helyben marad; a kiválasztott eltűnik a székéről, a régi (ha már játszható) leül.
+func cheat_switch_to(id: String) -> bool:
+	if GameState.on_break or _busy or not Characters.ALL.has(id):
+		return false
+	var old_id := Progress.character
+	if id == old_id:
+		return true
+	if _seated.has(id):
+		var sprite: AnimatedSprite2D = _seated[id]
+		_seated.erase(id)
+		sprite.queue_free()
+	_player.call("set_character", id)
+	if Characters.is_unlocked(old_id) and not _seated.has(old_id):
+		_sit(old_id)
+	Audio.play("equip")
+	message.emit("Mostantól vele játszol: %s" % Characters.data(id)["name"])
+	return true
+
+
 # ---------------------------------------------------------------- belépés / kilépés, E
 
 func _build_ui() -> void:
