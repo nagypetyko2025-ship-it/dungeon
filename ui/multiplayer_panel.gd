@@ -36,7 +36,12 @@ func _ready() -> void:
 			_error = ""
 			_show("choose")
 		elif _lobby.state != "playing":
-			_lobby.leave())
+			# Bezáráskor nem marad nálunk a fókusz (egy elrejtett mezőn ragadva elnyelné a billentyűket),
+			# és a hálózatot csak a bezárás után zárjuk le (nem a gombnyomás közben).
+			var focused := get_viewport().gui_get_focus_owner()
+			if focused != null and is_ancestor_of(focused):
+				focused.release_focus()
+			_lobby.leave.call_deferred())
 	_show("choose")
 
 
@@ -51,7 +56,10 @@ func _on_lobby_changed() -> void:
 
 func _show(step: String) -> void:
 	_step = step
+	# A régi tartalom azonnal rejtve (a rejtett elem nem számít bele a méretbe), és a keret
+	# a reset_size()-zal az új tartalomra zsugorodik (különben egyre nő, és kilóg a képből).
 	for child in _box.get_children():
+		child.visible = false
 		child.queue_free()
 	_title("Többjátékos")
 	match step:
