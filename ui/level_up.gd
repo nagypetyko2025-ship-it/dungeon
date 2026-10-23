@@ -103,7 +103,10 @@ func _on_leveled_up(level: int) -> void:
 ## lásd Spells), máskor a szokásos fejlesztések.
 func _roll_options() -> Array[Dictionary]:
 	if Characters.data(Progress.character).get("spells", false) and not _level_queue.is_empty() 			and _level_queue[0] % Spells.SPELL_LEVEL_EVERY == 0 and not GameState.spells.is_empty():
-		return Spells.level_options()
+		var spell_options := Spells.level_options()
+		# Ha már minden varázslat a legmagasabb szinten van: a szokásos fejlesztések.
+		if not spell_options.is_empty():
+			return spell_options
 	return Upgrades.roll(_stats, CARD_COUNT, _has_bow())
 
 

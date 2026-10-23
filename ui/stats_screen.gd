@@ -216,7 +216,10 @@ func _add_spells() -> void:
 					lines.append("égés: %d sebzés / 0.5 mp, %.1f mp-ig" % [Spells.burn_damage(spell, damage), Spells.burn_time(spell)])
 				"spikes":
 					lines.append("%d tüske, erősen ellök" % Spells.spike_count(spell))
-			lines.append("következő szint: " + definition["upgrade"])
+				"chain":
+					lines.append("%d ugrás, mindegyik fele annyit sebez" % Spells.chain_jumps(spell))
+			var next := Spells.upgrade_text(spell)
+			lines.append("következő szint: " + next if not next.is_empty() else "legmagasabb szint (%d.)" % Spells.MAX_LEVEL)
 		else:
 			lines.append("az 5. szintenkénti választásnál tanulhatod meg")
 		var detail := VBoxContainer.new()

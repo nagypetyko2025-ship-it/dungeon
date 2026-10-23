@@ -4,4 +4,5 @@ thief.png: a 0x72 DungeonTileset II (CC0, https://0x72.itch.io/dungeontileset-ii
 royal_guard.png: a 0x72 DungeonTileset II (CC0, https://0x72.itch.io/dungeontileset-ii) knight_f kockái, királyi őrnek átszínezve (acélszürke páncél, vörös forgó). CC0.
 king.png: a 0x72 DungeonTileset II (CC0) elf_m kockái (álló, futás, sebződés) királynak átszínezve (bíbor palást, ősz haj), rajzolt koronával; a kockák 16x32-esek (fölül 4 px a koronának). CC0.
 stranger_silhouette.png: a 0x72 DungeonTileset II (CC0) wizzard_m álló kockája, egyszínű sötét sziluettként (a kútba esett idegen, amíg nem tudod a nevét).
-gravedigger.png: a "Skeletons Rework" (antumdeluge, CC0, https://opengameart.org/content/skeletons-rework) szemből látszó csontváza, barna rongyos köpenyre átszínezve, rajzolt ásóval.
+gravedigger.png: a "Skeletons Rework" (antumdeluge, CC0, https://opengameart.org/content/skeletons-rework) szemből látszó csontváza, barna rongyos köpenyre átszínezve (a rajzolt ásó eltávolítva).
+shovel.png: "Shovel" (antumdeluge, CC0, https://opengameart.org/content/shovel-1), a 32x32-es változat.

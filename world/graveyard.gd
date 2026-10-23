@@ -3,7 +3,7 @@ extends Node2D
 ## Temető a kocsma alatt (a városi út túloldalán, délre): sötét, kopár föld, középen egy
 ## elhalt fa, körülötte sírkövek és keresztek, korhadt kerítés, csontok, halvány köd.
 ## Egy rövid földút vezet le hozzá az útról. Az egyik sír feliratát E-vel el lehet olvasni
-## (INSCRIBED_TILE). (A tábor építi fel: setup(camp) + build().)
+## (INSCRIBED_TILE), a sírásóval beszélgetni lehet. (A tábor építi fel: setup(camp) + build().)
 
 const TILE := 32
 const RPG: Texture2D = preload("res://assets/shop/kenney_rpg.png")
@@ -29,9 +29,35 @@ const INSCRIPTION := "[center][i]Itt nyugszik, aki lement, és nem jött vissza.
 	+ "[color=#6b5a48]— A tábor népe —[/color][/center]"
 const READ_RANGE := 50.0
 ## A sírásó (csontváz fejű, ásóval): a kapu ösvényén áll, az első sírsor alatt (ott nincs sír).
-## Egyelőre nem beszél. Kép: assets/characters/gravedigger.png (4 kocka, 24x32).
+## E-vel beszélni lehet vele (DialoguePanel): elmondja, ki ő, és mesél egy keveset.
+## Kép: assets/characters/gravedigger.png (4 kocka, 24x32), az ásó: assets/characters/shovel.png.
 const DIGGER_SHEET: Texture2D = preload("res://assets/characters/gravedigger.png")
+const SHOVEL: Texture2D = preload("res://assets/characters/shovel.png")
 const DIGGER_TILE := Vector2i(69, 23)
+const DIGGER_ID := "gravedigger"
+const DIGGER_NAME := "Csontos Vendel, a sírásó"
+const TALK_RANGE := 56.0
+const DIGGER_GREETING := "[i]Felnéz az ásójáról. Az arca helyén csupasz koponya, a szemgödreiben halvány fény pislákol.[/i]\n\n" \
+	+ "Ne ijedj meg, vándor. Ha bántani akarnálak, már egy gödörrel arrébb feküdnél.\n" \
+	+ "Vendel vagyok. Én temetem el azokat, akik visszajönnek a Mélységből... meg azokat is, akik nem."
+const DIGGER_OPTIONS: Array[Dictionary] = [
+	{"id": "who", "text": "Ki vagy te valójában?", "trust": 5,
+		"answer": "Valaha én is kalandor voltam. Lementem a tizenkettedik emeletig, és ott egy lich megérintett.\n\n" \
+			+ "Nem haltam meg. Csak... elfelejtettem élni. A húsom lassan lekopott, a csontjaim maradtak.\n" \
+			+ "A tábor népe előbb félt tőlem, aztán megszokott. Most én vigyázok a halottaikra."},
+	{"id": "graves", "text": "Kik nyugszanak itt?", "trust": 3,
+		"answer": "Mindenféle népek. Kovácsinasok, zsoldosok, egy dalnok, aki a hetedik emeleten akart dalt írni a sötétről.\n\n" \
+			+ "A legtöbb sír üres, tudod. Csak a nevük jött vissza, meg néha egy kard vagy egy sisak.\n" \
+			+ "Azért mindegyiket rendesen megásom. Egy névnek is jár a hely."},
+	{"id": "shovel", "text": "Szép ásó. Honnan van?", "trust": 2,
+		"answer": "[i]Megsimítja a nyelét, mintha egy régi barát vállát veregetné.[/i]\n\n" \
+			+ "Ezt még a nagyapám kovácsolta, mikor a tábor csak három sátor volt. Háromszáz sírt ástam vele.\n" \
+			+ "Egyszer egy ghoult is agyoncsaptam vele, aki kimászott az egyikből. Azóta mélyebbre ások."},
+	{"id": "night", "text": "Nem félsz itt egyedül éjszaka?", "trust": 2,
+		"answer": "Félni? [i]Csontos nevetés, mintha kockák gurulnának egy dobozban.[/i]\n\n" \
+			+ "Éjjel néha hallom, ahogy a föld alatt kaparnak. De az csak a Mélység lélegzik.\n" \
+			+ "Ha egyszer kopogást hallasz egy sírból, fiam... akkor fuss. Addig ne."},
+]
 
 var _camp: Node2D
 var _entities: Node2D
@@ -40,6 +66,8 @@ var _player: Node2D
 var _prompt: Label
 var _panel: InscriptionPanel
 var _inscribed_position := Vector2.INF
+var _digger_position := Vector2.INF
+var _dialogue: DialoguePanel
 
 
 func setup(camp: Node2D) -> void:
@@ -49,6 +77,17 @@ func setup(camp: Node2D) -> void:
 	_panel = InscriptionPanel.new()
 	_panel.name = "InscriptionPanel"
 	camp.add_child.call_deferred(_panel)
+	_dialogue = DialoguePanel.new()
+	_dialogue.name = "GravediggerDialogue"
+	_dialogue.npc_id = DIGGER_ID
+	_dialogue.npc_name = DIGGER_NAME
+	_dialogue.greeting = DIGGER_GREETING
+	_dialogue.options = DIGGER_OPTIONS
+	var face := AtlasTexture.new()
+	face.atlas = DIGGER_SHEET
+	face.region = Rect2(0, 0, 24, 32)
+	_dialogue.portrait = face
+	camp.add_child.call_deferred(_dialogue)
 
 
 ## Földút az úttól a temető kapujáig (a tábor rajzolja ki a többi földdel).
@@ -176,6 +215,14 @@ func _build_digger() -> void:
 	digger.offset = Vector2(0, -16)
 	digger.play()
 	holder.add_child(digger)
+	# A letöltött ásó: a jobb oldalán, a földbe szúrva, a nyele a keze felé dől.
+	var shovel := Sprite2D.new()
+	shovel.texture = SHOVEL
+	shovel.position = Vector2(14, -18)
+	shovel.rotation = -0.45
+	shovel.scale = Vector2(1.4, 1.4)
+	holder.add_child(shovel)
+	_digger_position = holder.position
 	_body(holder, Vector2(0, -6), Vector2(22, 12))
 	# Mellette egy frissen ásott gödör, földkupaccal.
 	var pit := Mound.new()
@@ -215,17 +262,27 @@ func _near_grave() -> bool:
 	return is_instance_valid(_player) and _player.global_position.distance_to(_inscribed_position) < READ_RANGE
 
 
+func _near_digger() -> bool:
+	return is_instance_valid(_player) and _player.global_position.distance_to(_digger_position) < TALK_RANGE
+
+
 func _process(delta: float) -> void:
-	var target := 1.0 if _near_grave() and not get_tree().paused else 0.0
+	var digger := _near_digger()
+	if digger or _near_grave():
+		_prompt.text = "[E] Beszélgetés: Vendel" if digger else "[E] Sírfelirat elolvasása"
+	var target := 1.0 if (digger or _near_grave()) and not get_tree().paused else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or get_tree().paused or not _near_grave():
+	if not event.is_action_pressed("interact") or get_tree().paused:
+		return
+	var digger := _near_digger()
+	if not digger and not _near_grave():
 		return
 	get_viewport().set_input_as_handled()
 	Audio.play("ui_open")
-	_camp.get_node("Menus").call("open_menu", _panel)
+	_camp.get_node("Menus").call("open_menu", _dialogue if digger else _panel)
 
 
 ## A sírfelirat: kőszürke tábla, rajta a vésett szöveg (E / Esc: bezárás).

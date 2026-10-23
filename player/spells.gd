@@ -1,16 +1,22 @@
 class_name Spells
 ## A varázsló (Lőrinc) varázslatai. A kazamatába lépve kiválasztja az elsőt (SpellPicker); minden
-## 5. szintlépéskor fejlesztheti valamelyiket, vagy megtanulhat egy újat (legfeljebb MAX_SPELLS).
+## 5. szintlépéskor fejlesztheti valamelyiket (legfeljebb MAX_LEVEL szintig), vagy megtanulhat egy újat
+## (legfeljebb MAX_SPELLS). Az első fejlesztés (2. szint) csak sebzést ad; a többlet gömb / tüske / ugrás
+## a 3. szinttől jár.
 ## Az első az elsődleges támadása (bal egérgomb), a második a jobb egérgombon; mindkettő a saját töltési idejével, külön.
 ## Minden varázslat Elemi sebzéssel sebez (Stats.elemental_damage, csak a varázslónak).
 ## Az állapot a futás része: GameState.spells (sorrendben) és GameState.spell_levels.
 ##
-##   bolt    Varázsgömb: lila gömb a kurzor felé (szintenként +1 gömb legyezőben)
+##   bolt    Varázsgömb: lila gömb a kurzor felé (a 3. szinttől szintenként +1 gömb legyezőben)
 ##   fire    Tűzgolyó: lassabb, de felgyújtja az ellenséget (égés: sebez és lángol rajta)
 ##   spikes  Földtüskék: a kurzor irányában tőled indulva tüskék nőnek ki a földből, ellökve és
-##           megsebezve minden szörnyet (szintenként +1 tüske)
+##           megsebezve minden szörnyet (a 3. szinttől szintenként +1 tüske)
+##   chain   Láncvillám: gyenge villám a kurzorhoz legközelebbi szörnyre, ami utána fele annyi
+##           sebzéssel továbbugrik a következőre (a 3. szinttől szintenként +1 ugrás)
 
 const MAX_SPELLS := 2
+## Egy varázslat legmagasabb szintje.
+const MAX_LEVEL := 4
 ## Ennyi szintenként jön a varázslat-választás (fejlesztés vagy új).
 const SPELL_LEVEL_EVERY := 5
 const PLAYER_ARROW := preload("res://player/player_arrow.gd")
@@ -18,18 +24,40 @@ const PLAYER_ARROW := preload("res://player/player_arrow.gd")
 const ALL := {
 	"bolt": {"name": "Varázsgömb", "icon_path": "res://assets/ui/spell_bolt.png", "cooldown": 1.0, "power": 1.0,
 		"text": "Lila varázsgömb repül a kurzor felé.", "short": "Lila gömb a kurzor felé.",
-		"upgrade": "+1 gömb, +20% sebzés"},
+		"upgrade": "+20% sebzés", "upgrade_more": "+1 gömb, +20% sebzés"},
 	"fire": {"name": "Tűzgolyó", "icon_path": "res://assets/ui/spell_fire.png", "cooldown": 1.8, "power": 1.05,
 		"text": "Lassabb, de felgyújtja az ellenséget: égés közben is sebződik.",
-		"short": "Lassabb, de felgyújt: az ellenség ég.", "upgrade": "+20% sebzés, erősebb égés"},
+		"short": "Lassabb, de felgyújt: az ellenség ég.", "upgrade": "+20% sebzés",
+		"upgrade_more": "+20% sebzés, erősebb égés"},
 	"spikes": {"name": "Földtüskék", "icon_path": "res://assets/ui/spell_spikes.png", "cooldown": 1.4, "power": 1.0,
 		"text": "A kurzor irányában 3 tüske nő ki a földből: ellöki és megsebzi a szörnyeket.",
-		"short": "3 tüske nő ki: ellök és sebez.", "upgrade": "+1 tüske, +15% sebzés"},
+		"short": "3 tüske nő ki: ellök és sebez.", "upgrade": "+15% sebzés", "upgrade_more": "+1 tüske, +15% sebzés"},
+	"chain": {"name": "Láncvillám", "icon_path": "res://assets/ui/spell_chain.png", "cooldown": 1.3, "power": 0.75,
+		"text": "Gyenge villám a kurzorhoz legközelebbi szörnyre, ami fele annyi sebzéssel a következőre ugrik.",
+		"short": "Villám, ami fele sebzéssel továbbugrik.", "upgrade": "+20% sebzés",
+		"upgrade_more": "+1 ugrás, +20% sebzés"},
 }
+## Láncvillám: ilyen messze talál (a hatótáv-statisztikával), ilyen szögben a kurzor körül,
+## és ilyen messzire ugrik tovább.
+const CHAIN_RANGE := 340.0
+const CHAIN_CONE := 0.6
+const CHAIN_JUMP := 170.0
 
 
 static func level(spell: String) -> int:
 	return int(GameState.spell_levels.get(spell, 1))
+
+
+## A szinttel járó többlet (gömb / tüske / ugrás / erősebb égés): az első fejlesztés még nem ad.
+static func _extra(spell: String) -> int:
+	return maxi(0, level(spell) - 2)
+
+
+## Mit ad a következő fejlesztés ("" ha már a legmagasabb szinten van).
+static func upgrade_text(spell: String) -> String:
+	if level(spell) >= MAX_LEVEL:
+		return ""
+	return ALL[spell]["upgrade"] if level(spell) == 1 else ALL[spell]["upgrade_more"]
 
 
 ## A varázslat cooldownja a karakter ütési idejéhez képest.
@@ -43,23 +71,28 @@ static func damage(spell: String, base_hit: int) -> int:
 	return maxi(1, roundi(base_hit * float(ALL[spell]["power"]) * (1.0 + per_level * (level(spell) - 1))))
 
 
-## Varázsgömb: ennyi gömb repül egyszerre (szintenként +1).
+## Varázsgömb: ennyi gömb repül egyszerre (a 3. szinttől szintenként +1).
 static func bolt_count(spell: String) -> int:
-	return level(spell)
+	return 1 + _extra(spell)
 
 
 ## Tűzgolyó: az égés hossza (mp) és félmásodpercenkénti sebzése a találat sebzéséből.
 static func burn_time(spell: String) -> float:
-	return 2.0 + 0.5 * (level(spell) - 1)
+	return 2.0 + 0.5 * _extra(spell)
 
 
 static func burn_damage(spell: String, hit: int) -> int:
-	return maxi(1, roundi(hit * (0.2 + 0.04 * (level(spell) - 1))))
+	return maxi(1, roundi(hit * (0.2 + 0.04 * _extra(spell))))
 
 
-## Földtüskék: ennyi tüske nő ki (szintenként +1).
+## Földtüskék: ennyi tüske nő ki (a 3. szinttől szintenként +1).
 static func spike_count(spell: String) -> int:
-	return 2 + level(spell)
+	return 3 + _extra(spell)
+
+
+## Láncvillám: ennyiszer ugrik tovább (a 3. szinttől szintenként +1).
+static func chain_jumps(spell: String) -> int:
+	return 1 + _extra(spell)
 
 
 ## A varázslat elsütése (Player hívja): a lövedékek / tüskék a játékos szülőjébe kerülnek.
@@ -83,6 +116,8 @@ static func cast(player: Node2D, spell: String, aim: Vector2) -> void:
 			ball.set_meta("burn_damage", burn_damage(spell, hit))
 		"spikes":
 			_spikes(player, direction, hit, spike_count(spell))
+		"chain":
+			_chain(player, direction, hit, chain_jumps(spell), stats)
 
 
 static func _projectile(player: Node2D, direction: Vector2, hit: int, stats: Stats, look: String) -> Area2D:
@@ -125,15 +160,126 @@ static func _spikes(player: Node2D, direction: Vector2, hit: int, count: int) ->
 			return
 
 
+## Láncvillám: a kurzor irányába eső legközelebbi szörnyre csap, aztán (fele annyi sebzéssel)
+## a hozzá legközelebbi, még nem talált szörnyre ugrik, `jumps`-szor. Ha nincs célpont, a villám
+## a kurzor felé a falig / a hatótávig csap.
+static func _chain(player: Node2D, direction: Vector2, hit: int, jumps: int, stats: Stats) -> void:
+	Audio.play("magic", -3.0, 0.25)
+	var parent := player.get_parent()
+	var from := player.global_position + Vector2(0, -20) + direction * 14.0
+	var reach := CHAIN_RANGE * stats.attack_range / 100.0
+	var target := _chain_first(player, from, direction, reach)
+	if target == null:
+		var end := _ray_end(player, from, from + direction * reach)
+		_arc(parent, from, end)
+		return
+	var struck: Array[Node2D] = []
+	var damage := hit
+	for i in jumps + 1:
+		var to := _enemy_center(target)
+		_arc(parent, from, to)
+		_strike(player, target, from, damage, stats)
+		struck.append(target)
+		if i == jumps:
+			return
+		await player.get_tree().create_timer(0.09, false).timeout
+		if not is_instance_valid(player):
+			return
+		from = to
+		damage = maxi(1, damage / 2)
+		target = _chain_next(player, from, struck)
+		if target == null:
+			return
+
+
+## Az első célpont: a hatótávon belül, a kurzor irányától legfeljebb CHAIN_CONE szögre, látható.
+static func _chain_first(player: Node2D, from: Vector2, direction: Vector2, reach: float) -> Node2D:
+	var best: Node2D = null
+	var best_score := INF
+	for enemy: Node2D in _living_enemies(player):
+		var to := _enemy_center(enemy) - from
+		var angle := absf(direction.angle_to(to))
+		if to.length() > reach or angle > CHAIN_CONE or not _visible(player, from, from + to):
+			continue
+		var score := to.length() * (1.0 + angle * 2.0)
+		if score < best_score:
+			best_score = score
+			best = enemy
+	return best
+
+
+static func _chain_next(player: Node2D, from: Vector2, struck: Array[Node2D]) -> Node2D:
+	var best: Node2D = null
+	var best_distance := CHAIN_JUMP
+	for enemy: Node2D in _living_enemies(player):
+		if enemy in struck:
+			continue
+		var at := _enemy_center(enemy)
+		var distance := from.distance_to(at)
+		if distance < best_distance and _visible(player, from, at):
+			best_distance = distance
+			best = enemy
+	return best
+
+
+static func _living_enemies(player: Node2D) -> Array[Node2D]:
+	var result: Array[Node2D] = []
+	for node in player.get_tree().get_nodes_in_group("enemies"):
+		var hurtbox := node.get_node_or_null("Hurtbox") as Area2D
+		if node is Node2D and hurtbox != null and hurtbox.monitoring and hurtbox.has_signal("hurt"):
+			result.append(node)
+	return result
+
+
+static func _enemy_center(enemy: Node2D) -> Vector2:
+	var shape := enemy.get_node_or_null("Hurtbox/CollisionShape2D") as Node2D
+	return shape.global_position if shape != null else enemy.global_position + Vector2(0, -12)
+
+
+static func _visible(player: Node2D, from: Vector2, to: Vector2) -> bool:
+	return _ray_end(player, from, to) == to
+
+
+## A faltól megállított végpont (1-es réteg: falak).
+static func _ray_end(player: Node2D, from: Vector2, to: Vector2) -> Vector2:
+	var query := PhysicsRayQueryParameters2D.create(from, to, 1)
+	var result := player.get_world_2d().direct_space_state.intersect_ray(query)
+	return to if result.is_empty() else Vector2(result["position"])
+
+
+## Egy villám-találat: rövid életű Hitbox a szörny mellett, amit a szörny Hurtbox-a "megkap".
+static func _strike(player: Node2D, enemy: Node2D, from: Vector2, damage: int, stats: Stats) -> void:
+	var bolt := Hitbox.new()
+	bolt.damage = damage
+	bolt.knockback = 60.0
+	bolt.crit_chance = stats.crit_chance / 100.0
+	bolt.crit_multiplier = player.call("weapon_crit_multiplier")
+	bolt.set_meta("source", player)
+	enemy.get_parent().add_child(bolt)
+	# A villám felől: a szörnyet kicsit a becsapódás irányába löki.
+	bolt.global_position = enemy.global_position - from.direction_to(enemy.global_position) * 8.0
+	enemy.get_node("Hurtbox").emit_signal("hurt", bolt)
+	bolt.queue_free()
+
+
+static func _arc(parent: Node, from: Vector2, to: Vector2) -> void:
+	var arc := LightningArc.new()
+	arc.from = from
+	arc.to = to
+	parent.add_child(arc)
+
+
 ## A varázslat-választás kártyái (minden 5. szinten): a meglévők fejlesztése, és ha még van
 ## hely, egy új megtanulása.
 static func level_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	for spell: String in GameState.spells:
+		if level(spell) >= MAX_LEVEL:
+			continue
 		var definition: Dictionary = ALL[spell]
 		options.append({"spell": spell, "stat": "", "amount": 0, "icon_path": definition["icon_path"],
 			"title": "%s %d." % [definition["name"], level(spell) + 1],
-			"text": definition["upgrade"], "note": "fejlesztés"})
+			"text": upgrade_text(spell), "note": "fejlesztés"})
 	if GameState.spells.size() < MAX_SPELLS:
 		for spell: String in ALL:
 			if spell in GameState.spells:
@@ -147,7 +293,7 @@ static func level_options() -> Array[Dictionary]:
 ## Egy varázslat-kártya választása: fejlesztés vagy új varázslat.
 static func choose(spell: String) -> void:
 	if spell in GameState.spells:
-		GameState.spell_levels[spell] = level(spell) + 1
+		GameState.spell_levels[spell] = mini(level(spell) + 1, MAX_LEVEL)
 	elif GameState.spells.size() < MAX_SPELLS:
 		GameState.spells.append(spell)
 		GameState.spell_levels[spell] = 1
@@ -219,3 +365,59 @@ class SpikeShape:
 			draw_colored_polygon(PackedVector2Array([base_left, tip, base_right]), Color(0.52, 0.42, 0.34))
 			draw_colored_polygon(PackedVector2Array([base_left, tip, Vector2(x, 2)]), Color(0.68, 0.56, 0.44))
 			draw_polyline(PackedVector2Array([base_left, tip, base_right]), Color(0.25, 0.18, 0.13), 1.5)
+
+
+## A láncvillám rajza: cikcakkos, kék-fehér villám két pont között, ami gyorsan
+## remeg (újrarajzolva), aztán elhalványul; a becsapódásnál szikrák.
+class LightningArc:
+	extends Node2D
+	var from := Vector2.ZERO
+	var to := Vector2.ZERO
+	var _points := PackedVector2Array()
+	var _jitter := 0.0
+
+	func _ready() -> void:
+		top_level = true
+		z_index = 5
+		_zigzag()
+		var sparks := CPUParticles2D.new()
+		sparks.position = to
+		sparks.one_shot = true
+		sparks.emitting = true
+		sparks.amount = 12
+		sparks.lifetime = 0.3
+		sparks.explosiveness = 1.0
+		sparks.spread = 180.0
+		sparks.gravity = Vector2.ZERO
+		sparks.initial_velocity_min = 60.0
+		sparks.initial_velocity_max = 140.0
+		sparks.scale_amount_min = 1.5
+		sparks.scale_amount_max = 3.0
+		sparks.color = Color(0.75, 0.9, 1.0)
+		add_child(sparks)
+		var fade := create_tween()
+		fade.tween_interval(0.16)
+		fade.tween_property(self, "modulate:a", 0.0, 0.18)
+		fade.tween_callback(queue_free)
+
+	func _process(delta: float) -> void:
+		_jitter += delta
+		if _jitter > 0.04:
+			_jitter = 0.0
+			_zigzag()
+
+	func _zigzag() -> void:
+		_points.clear()
+		var length := from.distance_to(to)
+		var normal := from.direction_to(to).orthogonal()
+		var steps := maxi(3, int(length / 18.0))
+		for i in steps + 1:
+			var t := float(i) / steps
+			var offset := 0.0 if i == 0 or i == steps else randf_range(-9.0, 9.0)
+			_points.append(from.lerp(to, t) + normal * offset)
+		queue_redraw()
+
+	func _draw() -> void:
+		draw_polyline(_points, Color(0.35, 0.6, 1.0, 0.45), 7.0)
+		draw_polyline(_points, Color(0.7, 0.88, 1.0), 3.0)
+		draw_polyline(_points, Color.WHITE, 1.2)

@@ -67,9 +67,8 @@ func _update() -> void:
 	_label.text = text
 	var complete := not Quests.ready_ids().is_empty()
 	_label.add_theme_color_override("font_color", Color(0.55, 1.0, 0.55) if complete else MenuStyle.PARCHMENT)
-	# Épp most lett kész (nem a jelenet betöltésekor): hang és villogás.
+	# Épp most lett kész (nem a jelenet betöltésekor): villogás (hang nélkül).
 	if complete and not first:
-		Audio.play("level_up", -6.0)
 		var flash := _box.create_tween()
 		for i in 3:
 			flash.tween_property(_box, "modulate", Color(1.5, 1.8, 1.4), 0.2)

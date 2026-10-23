@@ -82,14 +82,14 @@ const ALL := {
 		"name": "Lőrinc", "rect": Rect2(128, 164, 16, 28),
 		"start_weapon": "wand_lorinc", "seat": 6, "weapons": "wand", "accuracy": 85, "spells": true,
 		"health_regen": 0.25,
-		"description": "Öreg varázsló: varázsgömb, tűzgolyó vagy földtüskék.",
+		"description": "Öreg varázsló: varázsgömb, tűzgolyó, földtüskék vagy láncvillám.",
 		"role": "Varázsló",
 		"story": "A király egykori térképésze, aki a köveket kérdezi meg, merre vezetnek a járatok. " \
 			+ "Most újra lemegy a Mélységbe, de ezúttal nem térképpel, hanem tűzzel.",
 		"traits": [
 			"Fix varázspálcája van, mást nem használhat",
-			"A kazamatába lépve választ egy varázslatot: varázsgömb, tűzgolyó vagy földtüskék",
-			"Minden 5. szinten fejlesztheti, vagy megtanulhat egy másodikat (jobb egérgomb)",
+			"A kazamatába lépve választ egy varázslatot: varázsgömb, tűzgolyó, földtüskék vagy láncvillám",
+			"Minden 5. szinten fejlesztheti (legfeljebb 4. szintig), vagy megtanulhat egy másodikat (jobb egérgomb)",
 			"A varázslatok Elemi sebzéssel sebeznek (csak neki van)",
 			"85% találati esély, 0.25 élet / mp regeneráció",
 		],

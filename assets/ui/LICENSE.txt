@@ -1,2 +1,3 @@
 
 spell_bolt.png: ehhez a projekthez rajzolva (CC0). spell_fire.png: tűzgolyó, ehhez a projekthez rajzolva (CC0). spell_spikes.png: 0x72 DungeonTileset II tüskecsapda (CC0).
+spell_chain.png: "496 pixel art icons for medieval/fantasy RPG" (7Soul1, CC0, https://opengameart.org/node/39455) S_Thunder06 ikonja, kékre színezve.
