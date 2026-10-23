@@ -12,3 +12,4 @@ orc_mage.png, club_goblin.png, archer_goblin.png, red_demon.png, gold_dragon.png
 fly.png: légy, ehhez a projekthez rajzolva (pixel art, 2 szárnycsapás-kocka), CC0.
 spider.png: "2D Spider Animated" (DungeonSpider.png, CC0, https://opengameart.org/content/2d-spider-animated), a 3 járó kockából.
 farmer_goblin.png, orc_raider.png: "MiniWorld Sprites" (CC0) FarmerGoblin és Orc; barbarian.png, fire_ninja.png, renegade_monk.png: ugyanonnan a Champions mappából (Börg, Kanji, Okomo), az oldalnézeti kockákból tükrözve.
+chaos_spawn.png: "Top-down Tentacle Creature" (Sean Noonan, CC0, https://opengameart.org/content/top-down-tentacle-creature), a húsos szem 8 kockája kicsinyítve, a lila test fekete-lilára sötétítve.

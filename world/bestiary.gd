@@ -26,6 +26,7 @@ const CATEGORIES := [
 	["Fenevadak", ["minotaur", "yeti", "wendigo", "mammoth", "giant_crab"]],
 	["Sárkányok", ["fire_dragon", "frost_dragon", "gold_dragon", "shadow_dragon"]],
 	["Bogarak", ["fly", "spider"]],
+	["Káosz", ["chaos_spawn"]],
 	["Különös lények", ["mimic", "pumpkin_dude", "angel"]],
 	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES],
 ]
@@ -49,6 +50,7 @@ const ENTRIES := {
 	"orc_mage": ["Orkmágus", "Varázslövedékeket szór, pajzsot von maga köré, és gyógyítja a társait."],
 	"red_demon": ["Vörös démon", "Lángoló bőrű démon: a semmiből terem melletted, és halálakor szétrobban."],
 	"gold_dragon": ["Aranysárkány", "Kincseken alszik; ha eltalál, a te aranyadat is a halmára gyűjti."],
+	"chaos_spawn": ["Káoszivadék", "Fekete-lila, folyton alakot váltó csápgomolyag egyetlen vörös szemmel. A Mélység legaljáról tör fel, ahol a világ szabályai már nem érvényesek: eltűnik, cikázik, és ha elpusztul, szétrobban."],
 	"spider": ["Kazamatapók", "Fekete, vörös szemű pók a sötét sarkokból. Gyorsan cikázik, és a csípése mérgez: ne hagyd, hogy sokáig rajtad lógjon."],
 	"farmer_goblin": ["Gyűjtögető goblin", "Kosárral a hátán járja a kazamatát, és mindent összeszed, ami csillog. A te aranyadat is, ha közel engeded."],
 	"orc_raider": ["Ork martalóc", "Nagydarab, zöld bőrű fosztogató. Ha megsebzik, csak még dühösebb lesz."],
