@@ -10,10 +10,12 @@ const PAGE_SIZE := Vector2(400, 420)
 ## Fülek: 0 = általános küldetések (Quests), 1 = a veterán küldetései (Dialogues),
 ## 2 = a tolvaj küldetései (Thief), 3 = a király küldetései (Castle; csak a vár kapujánál
 ## tett első látogatás után látszik).
-const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király", "Kutas idegen"]
+const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király", "Kutas idegen", "Csontváz sírásó"]
 const KING_TAB := 3
 ## 4 = a kútba esett idegen küldetései (Stranger).
 const WELL_TAB := 4
+## 5 = a sírásó (Vendel) küldetései (Gravedigger).
+const DIGGER_TAB := 5
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 
 var _ids: Array = []
@@ -52,6 +54,7 @@ func _npc_quests() -> Dictionary:
 		2: return Thief.QUESTS
 		KING_TAB: return King.QUESTS
 		WELL_TAB: return Stranger.QUESTS
+		DIGGER_TAB: return Gravedigger.QUESTS
 	return Dialogues.VETERAN_QUESTS
 
 
@@ -60,6 +63,7 @@ func _npc_name() -> String:
 		2: return Thief.NAME
 		KING_TAB: return King.NAME
 		WELL_TAB: return Stranger.display_name()
+		DIGGER_TAB: return Gravedigger.NAME
 	return Dialogues.VETERAN_NAME
 
 
@@ -144,8 +148,8 @@ func _build() -> void:
 	root.add_child(tabs)
 	for i in TAB_NAMES.size():
 		var tab := MenuStyle.button(TAB_NAMES[i])
-		tab.custom_minimum_size = Vector2(220, 44)
-		tab.add_theme_font_size_override("font_size", 20)
+		tab.custom_minimum_size = Vector2(180, 44)
+		tab.add_theme_font_size_override("font_size", 18)
 		tab.focus_mode = Control.FOCUS_NONE
 		tab.modulate = Color.WHITE if i == 0 else Color(0.6, 0.55, 0.5)
 		tab.pressed.connect(_set_tab.bind(i))
@@ -235,6 +239,10 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 			empty_text = "Még senki nem kért tőled semmit a kútnál.
 
 " 				+ "A nyugati tisztáson, a romos ház mellett áll egy öreg kút..."
+		elif _tab == DIGGER_TAB and _ids.is_empty() and index == 0:
+			empty_text = "Vendel, a sírásó még nem kért tőled semmit.
+
+" 				+ "A kocsma alatti temetőben áll, a kapu mögött. Kérdezd meg, segíthetsz-e neki."
 		elif _tab == 2 and _ids.is_empty() and index == 0:
 			empty_text = "Még nem találkoztál a tolvajjal.\n\n" \
 				+ "Állítólag a sáros ösvény végén, egy romos házban rejtőzik valaki..."
@@ -344,6 +352,8 @@ func _fill_npc_page(page: VBoxContainer, id: String) -> void:
 	page.add_child(spacer)
 	# Köztes állapotnak saját szövege is lehet (pl. "doing_delivered").
 	var doing: String = quest.get("doing_" + Progress.npc_quest_state(id), quest["doing"])
+	if _tab == DIGGER_TAB:
+		doing = Gravedigger.doing_text(id, doing)
 	var state := UiStyle.label(("✔ TELJESÍTVE — " + quest["done"]) if done else ("★ FOLYAMATBAN — " + doing),
 		19, Color(0.24, 0.5, 0.2) if done else Color(0.6, 0.3, 0.05))
 	state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

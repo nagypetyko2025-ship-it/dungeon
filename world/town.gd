@@ -373,9 +373,11 @@ func _focus() -> Array:
 
 
 func _process(delta: float) -> void:
-	# Bence (a volt tolvaj) a levél után ideköltözik: leül a helyére, és onnantól játszható.
-	if Characters.is_unlocked("thief") and not _seated.has("thief") and Progress.character != "thief":
-		_sit("thief")
+	# Bence (a volt tolvaj) a levél után, Lőrinc a királynak vitt levél után ideköltözik:
+	# leül a helyére, és onnantól játszható.
+	for id: String in ["thief", "wizard"]:
+		if Characters.is_unlocked(id) and not _seated.has(id) and Progress.character != id:
+			_sit(id)
 	var focus := _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]

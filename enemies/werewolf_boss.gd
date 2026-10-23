@@ -41,6 +41,7 @@ var _raging := false
 
 ## A vérfarkas beállítása a fába kerülés előtt (a setup_boss helyett).
 func setup_werewolf(depth: int) -> void:
+	mini_boss = false
 	_def = WEREWOLF
 	boss_name = WEREWOLF["name"]
 	_depth = depth

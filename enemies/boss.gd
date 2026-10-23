@@ -81,6 +81,13 @@ const BARRAGE_DELAY := 0.28
 const SLAM_RADIUS := 130.0
 const CHARGE_TIME := 0.45
 const CHARGE_MULTIPLIER := 4.5
+## A kis főellenségek (nem a Mélység Ura) kíméletesebbek: lassabban járnak és rohamoznak, tovább
+## villannak a roham előtt, és csak a testük közepe sebez (nem az egész, felnagyított kép).
+const MINI_WALK := 0.8
+const MINI_CHARGE_TIME := 0.6
+const MINI_CHARGE_MULTIPLIER := 2.6
+const MINI_CHARGE_WINDUP := 0.9
+const MINI_HIT_SHARE := Vector2(0.5, 0.5)
 const NOVA_BOLTS := 10
 const SUMMON_COUNT := 2
 const CANNON_SHOTS := 5
@@ -95,6 +102,8 @@ const POOL_RADIUS := 46.0
 const POOL_TIME := 5.0
 
 var boss_name := ""
+## Kis főellenség-e (a vérfarkas felülírja: ő a Mélység Ura, rá nem vonatkozik a kímélet).
+var mini_boss := true
 
 var _def: Dictionary = {}
 var _attack_left := 2.0
@@ -138,6 +147,17 @@ func setup_boss(depth: int) -> void:
 	stats["xp"] = roundi(stats["xp"] * TOUGHNESS_XP)
 
 
+## A kis főellenségnek csak a teste közepe sebez (a kép alsó-középső része).
+func _fit_shapes(size: Vector2) -> void:
+	super._fit_shapes(size)
+	if not mini_boss:
+		return
+	var hit := RectangleShape2D.new()
+	hit.size = size * MINI_HIT_SHARE
+	$Hitbox/CollisionShape2D.shape = hit
+	$Hitbox/CollisionShape2D.position.y = -size.y * 0.4
+
+
 func _compute_size_scale() -> float:
 	var boss_scale: float = _def.get("scale", BOSS_SCALE)
 	return boss_scale
@@ -157,13 +177,13 @@ func _physics_process(delta: float) -> void:
 	var dir := Vector2.ZERO
 	if _charge_left > 0.0:
 		_charge_left -= delta
-		dir = _charge_dir * CHARGE_MULTIPLIER
+		dir = _charge_dir * (MINI_CHARGE_MULTIPLIER if mini_boss else CHARGE_MULTIPLIER)
 	elif not _busy:
 		dir = global_position.direction_to(_player.global_position)
 		_attack_left -= delta
 		if _attack_left <= 0.0:
 			_attack(_def["attacks"].pick_random())
-	var speed: float = stats["speed"] * (ENRAGE_SPEED if _enraged else 1.0)
+	var speed: float = stats["speed"] * (ENRAGE_SPEED if _enraged else 1.0) * (MINI_WALK if mini_boss else 1.0)
 	velocity = dir * speed
 	move_and_slide()
 	if dir.x != 0.0:
@@ -174,7 +194,7 @@ func _physics_process(delta: float) -> void:
 ## Felvillanás (ilyenkor áll), aztán a támadás.
 func _attack(kind: String) -> void:
 	_busy = true
-	var windup: float = WINDUP[kind]
+	var windup: float = MINI_CHARGE_WINDUP if mini_boss and kind == "charge" else WINDUP[kind]
 	var flash := create_tween()
 	flash.tween_property(_visual, "modulate", WINDUP_COLORS[kind], windup)
 	await flash.finished
@@ -185,7 +205,7 @@ func _attack(kind: String) -> void:
 		"slam": _slam()
 		"charge":
 			_charge_dir = global_position.direction_to(_player.global_position)
-			_charge_left = CHARGE_TIME
+			_charge_left = MINI_CHARGE_TIME if mini_boss else CHARGE_TIME
 		"nova": _nova()
 		"summon": _summon()
 		"blink": _blink()

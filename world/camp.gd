@@ -187,6 +187,13 @@ func _ready() -> void:
 	add_child(graveyard)
 	graveyard.setup(self)
 	graveyard.build()
+	# A temető mellett (keletre) a régi kápolna; a sírásó a küldetése után ide költözik.
+	var chapel := Chapel.new()
+	chapel.name = "Chapel"
+	add_child(chapel)
+	chapel.setup(self)
+	chapel.build()
+	chapel.message.connect(_toast)
 	# A nyugati tisztáson a romos ház (benne a tolvaj rejtekszobája).
 	var ruin := Ruin.new()
 	ruin.name = "Ruin"
@@ -764,7 +771,7 @@ func _build_trees() -> void:
 		for y in range(town.position.y, town.end.y):
 			var tile := Vector2i(x, y)
 			if _blocked.has(tile) or Town.blocked_rect().has_point(tile) or _castle_blocked(tile) \
-					or Graveyard.blocked_rect().has_point(tile) or _near_path(tile):
+					or Graveyard.blocked_rect().has_point(tile) or Chapel.blocked_rect().has_point(tile) or _near_path(tile):
 				continue
 			var edge := mini(mini(x - town.position.x, town.end.x - 1 - x), mini(y - town.position.y, town.end.y - 1 - y))
 			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.3):

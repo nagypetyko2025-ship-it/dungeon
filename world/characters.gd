@@ -77,9 +77,9 @@ const ALL := {
 			"Kikerülés kártya szintlépéskor: 25%-kal többet ad neki",
 		],
 	},
-	# Lőrinc, a varázsló (egyelőre tesztelésre alapból a kocsmában ül).
+	# Lőrinc, a varázsló: csak azután játszható, hogy a küldetései végén a kocsmába költözött.
 	"wizard": {
-		"name": "Lőrinc", "rect": Rect2(128, 164, 16, 28),
+		"name": "Lőrinc", "rect": Rect2(128, 164, 16, 28), "unlock": "lorinc_tavern",
 		"start_weapon": "wand_lorinc", "seat": 6, "weapons": "wand", "accuracy": 85, "spells": true,
 		"health_regen": 0.25,
 		"description": "Öreg varázsló: varázsgömb, tűzgolyó, földtüskék vagy láncvillám.",

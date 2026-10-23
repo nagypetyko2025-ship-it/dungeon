@@ -218,7 +218,7 @@ static func _royal_letter_delivered() -> String:
 		+ "aztán valahogy az egész életemből is.\n\n" \
 		+ "Lemegyek a [b]kocsmába[/b]. Ideje, hogy újra emberek között legyek. Ha egyszer szükséged lesz " \
 		+ "egy öreg varázslóra odalent... ott megtalálsz.\n\n" \
-		+ "[color=#7a4a10](Lőrinc a kocsmába költözött. Hamarosan játszható karakter lesz.)[/color]"
+		+ "[color=#7a4a10](Lőrinc a kocsmába költözött: mostantól játszható karakter, a kocsmában válthatsz rá.)[/color]"
 
 
 ## Elment a kocsmába (a kút mellől eltűnik).
