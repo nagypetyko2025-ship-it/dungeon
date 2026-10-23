@@ -1,19 +1,20 @@
 class_name Engineer
 ## Bertalan, a mérnök a 10. emelet liftszobájában (lásd LiftRoom). Mesél, és a 4. kérdésre megmondja,
-## hogy 1200 aranyért (a kazamatában szerzett aranyból) megjavítja a liftet. Megjavítva a tábori
+## hogy 500 aranyért (a kazamatában szerzett aranyból) megjavítja a liftet. Megjavítva a tábori
 ## liftről (lásd CampLift) le lehet jönni a 10. emeletre, és onnan kezdeni a kazamatát.
 
 const ID := "engineer"
 const NAME := "Bertalan, a mérnök"
-## 0x72 törp (az első álló kocka).
-const FIGURE := Rect2(128, 292, 16, 28)
-const PRICE := 1200
+## A szerelő figurája (védőszemüveg, villáskulcs): 4 kocka, 20x18 (lásd assets/characters/engineer.png).
+const SHEET: Texture2D = preload("res://assets/characters/engineer.png")
+const FRAME_SIZE := Vector2(20, 18)
+const PRICE := 500
 ## Belső jelzők (Progress.npc_quests): megkérdezted az árát ("done"), és megjavította ("done").
 const OFFER_FLAG := "lift_offer"
 const REPAIRED_FLAG := "lift_repaired"
 const DEPTH := 10
 
-const GREETING := "[i]Egy kormos képű törp hajol egy hatalmas, rozsdás fogaskerék fölé. Fel sem néz.[/i]\n\n" \
+const GREETING := "[i]Egy védőszemüveges, kormos képű szerelő hajol egy hatalmas, rozsdás fogaskerék fölé. Fel sem néz.[/i]\n\n" \
 	+ "Ha szörny vagy, harapj gyorsan. Ha kalandor, ne állj a fényembe."
 
 const STORIES: Array[Dictionary] = [
@@ -88,4 +89,19 @@ static func _pay(player: Node) -> String:
 
 
 static func portrait() -> AtlasTexture:
-	return SpriteSheet.region(FIGURE)
+	var face := AtlasTexture.new()
+	face.atlas = SHEET
+	face.region = Rect2(Vector2.ZERO, FRAME_SIZE)
+	return face
+
+
+## Álló animáció (a villáskulcsát lóbálja).
+static func frames() -> SpriteFrames:
+	var result := SpriteFrames.new()
+	result.set_animation_speed("default", 4.0)
+	for i in 4:
+		var frame := AtlasTexture.new()
+		frame.atlas = SHEET
+		frame.region = Rect2(Vector2(i * FRAME_SIZE.x, 0), FRAME_SIZE)
+		result.add_frame("default", frame)
+	return result

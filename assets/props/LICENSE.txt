@@ -6,3 +6,4 @@ ladder.png: a Kenney "Roguelike Indoors" (CC0) létra-csempéiből összerakva.
 
 bell.png: "Bell" (somebodylarr, CC0, https://opengameart.org/content/bell), a nagy harang kivágva.
 lift_gate.png: "Elevator Grate" (oo, CC0, https://opengameart.org/content/elevator-grate), a csukott ollórács kockája.
+lift_cage.png: "Misc Dark Fantasy Scenery Sprites" (ETTiNGRiNDER, CC0, https://opengameart.org/content/misc-dark-fantasy-scenery-sprites), a láncon lógó vasketrec.

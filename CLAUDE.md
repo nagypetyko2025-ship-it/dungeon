@@ -60,7 +60,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   halhatatlanság (`GameState.god_mode`), karakterváltás a táborban (zároltakra is; `cheat_select_character` a Camp-en →
   `Town.cheat_switch_to`), tárgylap (bármelyik tárgy bármelyik ritkaságban a táskába). Teszteléshez is hasznos.
 - Lift: a táborban a lépcső mellett (`world/camp_lift.gd`, "Lefelé utazás"); a 10. emeleten kék liftszoba (`world/lift_room.gd`,
-  `Room.has_lift_room`) Bertalan mérnökkel (`world/engineer.gd`): 1200 kazamatai aranyért megjavítja, utána a lift a 10. emeletre is visz.
+  `Room.has_lift_room`) Bertalan mérnökkel (`world/engineer.gd`): 500 kazamatai aranyért megjavítja, utána a lift a 10. emeletre is visz.
 - Bejátszás az első visszatéréskor a kazamatából: `world/stretcher_scene.gd` (hordágyas katonák, `GameState.visited_dungeon`).
 - Többjátékos: `network/` — `net_session.gd` (beállítások, fix név: user://player.cfg, kód), `net_lobby.gd` (/root/NetLobby:
   váró, LAN-bejelentés a kóddal UDP-n, ENet, RPC-k, indítás → mindenki a táborba), `net_avatars.gd` (a többiek a táborban).

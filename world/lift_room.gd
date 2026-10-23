@@ -1,11 +1,13 @@
 class_name LiftRoom
 extends Node2D
-## A 10. emelet liftszobája (a Room teszi bele, ha has_lift_room): a hátsó falnál a liftakna
-## fülkéje, mellette egy nagy fogaskerék és Bertalan, a mérnök (E: beszélgetés, lásd Engineer).
+## A 10. emelet liftszobája (a Room teszi bele, ha has_lift_room): a hátsó fal előtt láncon lóg a
+## lift vasketrece, mellette egy nagy fogaskerék és Bertalan, a mérnök (E: beszélgetés, lásd Engineer).
 ## A szobában nincs szörny, csapda és láda; a térképen kék.
 
 const TILE := 32
-const GATE: Texture2D = preload("res://assets/props/lift_gate.png")
+## A lift vasketrece láncon (ETTiNGRiNDER, CC0).
+const CAGE: Texture2D = preload("res://assets/props/lift_cage.png")
+const CAGE_SCALE := 1.6
 const TALK_RANGE := 70.0
 
 var _player: Node2D
@@ -17,10 +19,36 @@ var _prompt: Label
 func _ready() -> void:
 	_player = get_tree().get_first_node_in_group("player")
 	# A liftfülke a hátsó fal előtt (a szoba közepén), mellette a fogaskerék és a mérnök.
-	var cabin := LiftCabin.new()
-	cabin.position = Vector2(0, -TILE * 0.2)
-	cabin.working = Engineer.repaired()
-	add_child(cabin)
+	var cage := Sprite2D.new()
+	cage.texture = CAGE
+	cage.scale = Vector2(CAGE_SCALE, CAGE_SCALE)
+	cage.offset = Vector2(0, -CAGE.get_height() / 2.0)
+	cage.position = Vector2(0, TILE * 0.6)
+	add_child(cage)
+	if Engineer.repaired():
+		# Megjavítva: lámpás ég a ketrecben.
+		var glow := PointLight2D.new()
+		var gradient := Gradient.new()
+		gradient.set_color(0, Color(1.0, 0.8, 0.45))
+		gradient.set_color(1, Color(0, 0, 0, 0))
+		var texture := GradientTexture2D.new()
+		texture.gradient = gradient
+		texture.fill = GradientTexture2D.FILL_RADIAL
+		texture.fill_from = Vector2(0.5, 0.5)
+		texture.fill_to = Vector2(0.5, 0.0)
+		glow.texture = texture
+		glow.texture_scale = 1.5
+		glow.energy = 0.8
+		glow.position = Vector2(0, -TILE * 0.8)
+		add_child(glow)
+	var cage_body := StaticBody2D.new()
+	var cage_shape := CollisionShape2D.new()
+	var cage_box := RectangleShape2D.new()
+	cage_box.size = Vector2(CAGE.get_width() * CAGE_SCALE, 14)
+	cage_shape.shape = cage_box
+	cage_shape.position = Vector2(0, TILE * 0.6 - 7)
+	cage_body.add_child(cage_shape)
+	add_child(cage_body)
 	var gear := Gear.new()
 	gear.position = Vector2(TILE * 1.6, -TILE * 0.6)
 	gear.spinning = Engineer.repaired()
@@ -29,11 +57,11 @@ func _ready() -> void:
 	_engineer.position = Vector2(TILE * 1.9, TILE * 1.0)
 	add_child(_engineer)
 	var figure := AnimatedSprite2D.new()
-	figure.sprite_frames = SpriteSheet.character_frames(Engineer.FIGURE, false)
+	figure.sprite_frames = Engineer.frames()
 	figure.scale = Vector2(2, 2)
-	figure.offset = Vector2(0, -Engineer.FIGURE.size.y / 2.0)
+	figure.offset = Vector2(0, -Engineer.FRAME_SIZE.y / 2.0)
 	figure.flip_h = true
-	figure.play("idle")
+	figure.play()
 	_engineer.add_child(figure)
 	var body := StaticBody2D.new()
 	var shape := CollisionShape2D.new()
