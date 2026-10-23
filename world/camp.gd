@@ -181,6 +181,12 @@ func _ready() -> void:
 	castle.setup(self)
 	castle.build()
 	castle.message.connect(_toast)
+	# A kocsmától jobbra a kalandorok kórháza (ide viszik a sebesülteket).
+	var hospital := Hospital.new()
+	hospital.name = "Hospital"
+	add_child(hospital)
+	hospital.setup(self)
+	hospital.build()
 	# Temető a kocsma alatt.
 	var graveyard := Graveyard.new()
 	graveyard.name = "Graveyard"

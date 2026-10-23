@@ -115,7 +115,7 @@ static func on_return_to_camp() -> void:
 
 
 func build() -> void:
-	_build_house()
+	# A lakóház helyén most a kalandorok kórháza áll (lásd Hospital).
 	_build_castle()
 	_build_guards()
 	_build_throne_room()
