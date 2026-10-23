@@ -24,3 +24,4 @@ thief_letter.png: "Envelope" a "Pixelart icons" csomagból (darkagegames, CC0, h
 Számszeríjak (crossbow_*): "CC0 Ranged Icons" gyűjtemény (antumdeluge, https://opengameart.org/content/cc0-ranged-icons), a "Dungeon Crawl Stone Soup" (CC0) lapjáról kivágva, 34x34-re.
 royal_letter.png: a thief_letter.png (Pixelart icons, CC0) átszínezve: világos papír, aranypecsét.
 ring_ember, amulet_arcane, hat_sorcerer, trinket_flamecore: a meglévő CC0 ikonok (ring_moon, amulet_heart, hat_apprentice, trinket_crystal) átszínezve.
+fishing_rod.png: a "16x16 Beginner Pixel Art Item Pack" (benjaminkford, CC0, https://benjaminkford.itch.io/16x16-beginner-pixel-art-item-pack) horgászbotja, háttér nélkül; fishing_rod_bare.png: ugyanaz zsinór és úszó nélkül (azokat a játék rajzolja a vízig).

@@ -8,4 +8,4 @@ gravedigger.png: a "Skeletons Rework" (antumdeluge, CC0, https://opengameart.org
 shovel.png: "Shovel" (antumdeluge, CC0, https://opengameart.org/content/shovel-1), a 32x32-es változat.
 gravedigger_side.png: ugyanabból a "Skeletons Rework" (antumdeluge, CC0) csontvázból, a jobbra néző kockákból, ugyanígy barna köpenyre átszínezve.
 engineer.png: "Mechanic (Animated)" (DezrasDragons, CC0, https://opengameart.org/content/mechanic-animated), az álló kockák, átlátszó háttérrel.
-old_fisherman.png: "Old Man 32x32 Overflow Sprite" (Josh Maines / Syrsly, CC0, https://opengameart.org/content/old-man-32x32-overflow-sprite-from-lightstone), változatlanul (4 irány); a horgászbotot a játék rajzolja hozzá.
+old_fisherman.png: a 0x72 DungeonTileset II (CC0) wizzard_m kockái (álló + futó, 16x28), a kék kalap és köpeny zöldre átszínezve (öreg horgász).
