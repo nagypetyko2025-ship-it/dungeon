@@ -1,7 +1,8 @@
 class_name Doctor
 ## Kálmán doktor a kalandorok kórházában (lásd Hospital): pestisdoktor-maszkos orvos. Kérdezgetni
-## lehet, és küldetéseket ad (a J könyv "Doktor" fülén, ami az első kérésével jelenik meg).
+## lehet, és küldetéseket ad (a J könyv "Doktor" fülén).
 ## 1. Vérgömb: egy legendás talizmán, a vérmágiájával a hordágyon hozott sebesültet menti meg.
+## 2. A tudós szeme: epikus talizmán, amivel a betegek bőre alá lát (a méreg és a rejtett sebek).
 
 const ID := "doctor"
 const NAME := "Kálmán doktor"
@@ -9,6 +10,9 @@ const FIGURE := Rect2(368, 345, 16, 23)
 const ORB_QUEST := "doctor_orb"
 const ORB_ID := "trinket_orb"
 const ORB_GOLD := 350
+const EYE_QUEST := "doctor_eye"
+const EYE_ID := "trinket_eye"
+const EYE_GOLD := 220
 
 const GREETING := "[i]A pestisdoktor-maszk mögül tompa, fáradt hang szól.[/i]\n\n" \
 	+ "Csak óvatosan, ne lépj a vödörbe. Ha nem vérzel, ülj le valahova. Ha vérzel... akkor is ülj le, és várj."
@@ -20,6 +24,12 @@ const QUESTS := {
 			+ "a vérmágiájával talán még megmentheti.",
 		"reward": "%d tábori arany (és egy megmentett élet)" % ORB_GOLD,
 		"doing": "vigyél a doktornak egy Vérgömböt", "done": "a sebesült túlélte"},
+	EYE_QUEST: {"name": "A tudós szeme",
+		"text": "Kálmán doktor nem látja, mi mérgezi a betegeit odabent: a Mélység mérgei a bőr alatt "
+			+ "bujkálnak. Hozz neki egy [b]A tudós szeme[/b] epikus talizmánt (a táskádban legyen): azzal "
+			+ "a betegei bőre alá is belát.",
+		"reward": "%d tábori arany" % EYE_GOLD,
+		"doing": "vigyél a doktornak egy A tudós szeme talizmánt", "done": "a doktor mindent lát"},
 }
 
 const SMALL_TALK: Array[Dictionary] = [
@@ -43,9 +53,25 @@ const SMALL_TALK: Array[Dictionary] = [
 ]
 
 
-## A beszélgetés opciói: a négy kérdés, ötödiknek a küldetés (kérés / átadás / köszönet).
+## A beszélgetés opciói: elöl a küldetések (kérés / átadás / köszönet), utána a kérdések; a
+## Vérgömb után a hordágyas fiúról szóló kérdés helyett a "Hogy van a sebesült?" jön (5 fér ki).
 static func options(inventory: Inventory) -> Array[Dictionary]:
-	var list: Array[Dictionary] = SMALL_TALK.duplicate()
+	var list: Array[Dictionary] = []
+	if Progress.npc_quest_state(ORB_QUEST) == "done":
+		match Progress.npc_quest_state(EYE_QUEST):
+			"":
+				list.append({"id": "more", "text": "Kell még valami?",
+					"on_choose": func() -> String: return _give_eye_quest()})
+			"active":
+				if _has(inventory, EYE_ID):
+					list.append({"id": "eye", "text": "Hoztam egy A tudós szeme talizmánt.",
+						"on_choose": func() -> String: return _give_eye(inventory)})
+			"done":
+				list.append({"id": "seeing", "text": "Mit látsz a szemmel?",
+					"on_choose": func() -> String: return "[i]A doktor a maszkja elé emeli a szemet, és " \
+						+ "végignéz a betegeken.[/i]\n\n" \
+						+ "Mindent. A pókméreg kék fonalként kúszik az erekben, a fagy fehér foltként ül a " \
+						+ "csontokon. Tegnap egy kalandor tüdejéből egy egész bogarat szedtem ki. Ne kérdezd."})
 	match Progress.npc_quest_state(ORB_QUEST):
 		"":
 			list.append({"id": "help", "text": "Kell segíteni valamiben?",
@@ -60,7 +86,50 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 					+ "és egy tál levest kanalaz, kicsit remegő kézzel.[/i]\n\n" \
 					+ "Látod? Ma reggel megmondta a nevét: Tamás. Holnap talán már járni is tud. A gömböt elzártam: " \
 					+ "ilyen erő nem való egy kórház polcára."})
+	for option in SMALL_TALK:
+		if option["id"] == "stretcher" and Progress.npc_quest_state(ORB_QUEST) == "done":
+			continue
+		list.append(option)
 	return list
+
+
+static func _has(inventory: Inventory, id: String) -> bool:
+	for item: Variant in inventory.bag:
+		if item is Dictionary and item.get("id", "") == id:
+			return true
+	return false
+
+
+static func _give_eye_quest() -> String:
+	Progress.set_npc_quest(EYE_QUEST, "active")
+	Progress.mark_asked(ID, "more")
+	Progress.save_game()
+	Audio.play("ui_open")
+	return "[i]A doktor egy beteg fölé hajol, aztán bosszúsan kiegyenesedik.[/i]\n\n" \
+		+ "Kell. Látod ezt a fiút? Nincs rajta seb, mégis lázas, és napról napra gyengül. A Mélység mérgei " \
+		+ "a bőr alatt bujkálnak, és én nem látom őket. Vakon gyógyítok, mint egy falusi kuruzsló.\n\n" \
+		+ "Hallottam egy talizmánról, amit [b]A tudós szemének[/b] hívnak. Aki a markában tartja, a dolgok " \
+		+ "belsejébe lát. Ha rátalálsz odalent, hozd el nekem. Rozi már előre fél tőle.\n\n" \
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Doktor fülön.)[/color]"
+
+
+static func _give_eye(inventory: Inventory) -> String:
+	for i in inventory.bag.size():
+		var item: Variant = inventory.bag[i]
+		if not (item is Dictionary and item.get("id", "") == EYE_ID):
+			continue
+		inventory.take_from_bag(i)
+		Progress.set_npc_quest(EYE_QUEST, "done")
+		Progress.add_camp_gold(EYE_GOLD)
+		Progress.change_trust(ID, 20)
+		Progress.save_game()
+		Audio.play("level_up")
+		return "[i]A doktor a maszkja elé tartja a szemet. Hosszan, mozdulatlanul néz a lázas fiúra, aztán " \
+			+ "halkan felnevet.[/i]\n\n" \
+			+ "Ott vagy, te kis féreg. Pókméreg, a bal vállában, egy apró tüske. Rozi, a csipeszt!\n\n" \
+			+ "[i]Feléd fordul.[/i]\n\nEzzel a szemmel több életet mentek meg, mint az elmúlt tíz évben " \
+			+ "összesen. Fogadd el ezt. [color=#7a4a10](+%d tábori arany)[/color]" % EYE_GOLD
+	return "Hm? Nem látom nálad a szemet."
 
 
 static func _give_orb_quest() -> String:

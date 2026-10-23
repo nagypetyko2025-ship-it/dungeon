@@ -16,7 +16,7 @@ const KING_TAB := 3
 const WELL_TAB := 4
 ## 5 = a sírásó (Vendel) küldetései (Gravedigger).
 const DIGGER_TAB := 5
-## 6 = Kálmán doktor küldetései (Doctor; csak az első kérése után látszik).
+## 6 = Kálmán doktor küldetései (Doctor).
 const DOCTOR_TAB := 6
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 
@@ -84,9 +84,6 @@ func _set_tab(tab: int) -> void:
 func open() -> void:
 	# A Király fül csak a vár kapujánál tett első látogatás után látszik.
 	_tab_buttons[KING_TAB].visible = Progress.npc_quest_state(Castle.PERMIT_QUEST) != ""
-	_tab_buttons[DOCTOR_TAB].visible = Progress.npc_quest_state(Doctor.ORB_QUEST) != ""
-	if _tab == DOCTOR_TAB and not _tab_buttons[DOCTOR_TAB].visible:
-		_set_tab(0)
 	if _tab == KING_TAB and not _tab_buttons[KING_TAB].visible:
 		_set_tab(0)
 	_load_ids()
@@ -245,6 +242,9 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 		elif _tab == WELL_TAB and _ids.is_empty() and index == 0:
 			empty_text = "Még senki nem kért tőled semmit a kútnál.\n\n" \
 				+ "A nyugati tisztáson, a romos ház mellett áll egy öreg kút..."
+		elif _tab == DOCTOR_TAB and _ids.is_empty() and index == 0:
+			empty_text = "Kálmán doktor még nem kért tőled semmit.\n\n" \
+				+ "A kalandorok kórházában dolgozik, a kocsmától jobbra. Kérdezd meg, kell-e neki segítség."
 		elif _tab == DIGGER_TAB and _ids.is_empty() and index == 0:
 			empty_text = "Vendel, a sírásó még nem kért tőled semmit.\n\n" \
 				+ "A kocsma alatti temetőben áll, a kapu mögött. Kérdezd meg, segíthetsz-e neki."
