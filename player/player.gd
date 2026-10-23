@@ -673,7 +673,8 @@ func _cast(slot: int, aim_angle: float) -> void:
 	if GameState.spells.size() <= slot:
 		return
 	var spell: String = GameState.spells[slot]
-	var cooldown := attack_cooldown() * Spells.cooldown_multiplier(spell)
+	# A Q (másodlagos) varázslat pontosan olyan lassan töltődik, mint az elsődleges.
+	var cooldown := attack_cooldown() * Spells.cooldown_multiplier(GameState.spells[0])
 	if slot == 0:
 		_cooldown_left = cooldown
 	else:

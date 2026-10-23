@@ -1,7 +1,7 @@
 class_name Spells
 ## A varázsló (Lőrinc) varázslatai. A kazamatába lépve kiválasztja az elsőt (SpellPicker); minden
 ## 5. szintlépéskor fejlesztheti valamelyiket, vagy megtanulhat egy újat (legfeljebb MAX_SPELLS).
-## Az első az elsődleges támadása (bal egérgomb), a második a Q gombon van, saját cooldownnal.
+## Az első az elsődleges támadása (bal egérgomb), a második a Q gombon van (ugyanannyi idő alatt töltődik, mint az első).
 ## Minden varázslat Elemi sebzéssel sebez (Stats.elemental_damage, csak a varázslónak).
 ## Az állapot a futás része: GameState.spells (sorrendben) és GameState.spell_levels.
 ##
@@ -19,7 +19,7 @@ const ALL := {
 	"bolt": {"name": "Varázsgömb", "icon_path": "res://assets/ui/spell_bolt.png", "cooldown": 1.0, "power": 1.0,
 		"text": "Lila varázsgömb repül a kurzor felé.", "short": "Lila gömb a kurzor felé.",
 		"upgrade": "+1 gömb, +20% sebzés"},
-	"fire": {"name": "Tűzgolyó", "icon_path": "res://assets/ui/spell_fire.png", "cooldown": 1.6, "power": 1.25,
+	"fire": {"name": "Tűzgolyó", "icon_path": "res://assets/ui/spell_fire.png", "cooldown": 1.8, "power": 1.05,
 		"text": "Lassabb, de felgyújtja az ellenséget: égés közben is sebződik.",
 		"short": "Lassabb, de felgyújt: az ellenség ég.", "upgrade": "+20% sebzés, erősebb égés"},
 	"spikes": {"name": "Földtüskék", "icon_path": "res://assets/ui/spell_spikes.png", "cooldown": 1.4, "power": 1.0,
@@ -60,8 +60,8 @@ static func cast(player: Node2D, spell: String, aim: Vector2) -> void:
 			var ball := _projectile(player, direction, hit, stats, "fire")
 			ball.speed = 420.0
 			# Égés: másodpercenként ennyit sebez, ennyi ideig.
-			ball.set_meta("burn_time", 2.5 + 0.75 * (level(spell) - 1))
-			ball.set_meta("burn_damage", maxi(1, roundi(hit * (0.3 + 0.05 * (level(spell) - 1)))))
+			ball.set_meta("burn_time", 2.0 + 0.5 * (level(spell) - 1))
+			ball.set_meta("burn_damage", maxi(1, roundi(hit * (0.2 + 0.04 * (level(spell) - 1)))))
 		"spikes":
 			_spikes(player, direction, hit, 2 + level(spell))
 
