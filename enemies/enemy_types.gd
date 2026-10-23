@@ -235,6 +235,11 @@ const TYPES: Array[Dictionary] = [
 		"rect": Rect2(0, 0, 34, 34), "run": true, "size": 1.0,
 		"health": [36, 45], "damage": [7, 9], "speed": [100, 120], "dodge": [18, 28],
 		"knockback": [320, 380], "resist": [0.55, 0.65], "xp": [21, 26], "min_depth": 16, "weight": 2},
+	# Patkány: kicsi, nagyon gyors, alig lehet eltalálni, kevés élete van, és mérgez.
+	{"name": "rat", "abilities": ["poison", "zigzag"], "sheet": "res://assets/enemies/rat.png",
+		"rect": Rect2(0, 0, 20, 20), "run": true, "size": 0.9,
+		"health": [2, 3], "damage": [1, 1], "speed": [145, 165], "dodge": [35, 45],
+		"knockback": [140, 180], "resist": [0.0, 0.0], "xp": [1, 2], "min_depth": 1, "weight": 2},
 	# Kazamatapók (bogár): kicsi, gyors, mérges.
 	{"name": "spider", "abilities": ["poison", "zigzag"], "sheet": "res://assets/enemies/spider.png",
 		"rect": Rect2(0, 0, 12, 20), "run": true, "size": 1.1,
