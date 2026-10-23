@@ -12,6 +12,33 @@ const PRICE := 500
 ## Belső jelzők (Progress.npc_quests): megkérdezted az árát ("done"), és megjavította ("done").
 const OFFER_FLAG := "lift_offer"
 const REPAIRED_FLAG := "lift_repaired"
+## A küldetés a J könyv "Mérnök" fülén (az ára elhangzásakor "active", a javításkor "done").
+const LIFT_QUEST := "lift_repair"
+## A javítás után (a beszélgetés bezárásakor) felmegy a lifttel a táborba: "pending", aztán "done".
+const RIDE_FLAG := "lift_ride"
+
+const QUESTS := {
+	LIFT_QUEST: {"name": "Az elszakadt kötél",
+		"text": "Bertalan, a mérnök a 10. emelet liftszobájában húsz éve vigyáz a régi bányaliftre. "
+			+ "Ha hozol neki [b]%d aranyat[/b] (a kazamatában szerzettből, a tábori pénz odalent semmit sem ér), " % PRICE
+			+ "megjavítja a liftet, és onnantól a táborból egyenesen a 10. emeletre jöhetsz le.",
+		"reward": "a tábori lift a 10. emeletre is levisz",
+		"doing": "vigyél Bertalannak %d aranyat a 10. emeletre" % PRICE, "done": "a lift újra jár"},
+}
+
+## A táborban (miután feljött a lifttel): két új történet.
+const CAMP_STORIES: Array[Dictionary] = [
+	{"id": "sunlight", "text": "Milyen volt húsz év után feljönni?", "trust": 4,
+		"answer": "[i]Hunyorogva néz fel az égre, a szemüvegét a homlokára tolja.[/i]\n\n" \
+			+ "Vakító. Elfelejtettem, hogy az ég ennyire... nagy. Odalent a legnagyobb dolog egy fogaskerék volt.\n\n" \
+			+ "Az első éjjel nem tudtam aludni. Túl csend volt. Nem csikorgott semmi, nem morgott semmi a falak " \
+			+ "mögött. Végül beraktam egy csavart a párnám alá, hogy valami ismerős legyen a közelben."},
+	{"id": "plans", "text": "Mit fogsz most csinálni?", "trust": 3,
+		"answer": "Karbantartani! Egy lift olyan, mint egy öreg ló: ha nem eteted, megbokrosodik.\n\n" \
+			+ "[i]Közelebb hajol, és lehalkítja a hangját.[/i]\n\n" \
+			+ "És van egy tervem. A huszadik emeletig is le lehetne vinni egy aknát. Persze ahhoz kellene egy " \
+			+ "bátor kalandor, aki lekíséri a munkásokat... meg egy halom arany. Majd szólok, ha eljön az ideje."},
+]
 const DEPTH := 10
 
 const GREETING := "[i]Egy védőszemüveges, kormos képű szerelő hajol egy hatalmas, rozsdás fogaskerék fölé. Fel sem néz.[/i]\n\n" \
@@ -41,6 +68,24 @@ static func repaired() -> bool:
 	return Progress.npc_quest_state(REPAIRED_FLAG) == "done"
 
 
+## A táborban van-e már (a javítás után felment a lifttel).
+static func in_camp() -> bool:
+	return repaired() and Progress.npc_quest_state(RIDE_FLAG) != "pending"
+
+
+## A táborban: az új történetek elöl, a régiek közül a még fel nem tettek, a végén a lift.
+static func camp_options() -> Array[Dictionary]:
+	var list: Array[Dictionary] = CAMP_STORIES.duplicate()
+	var asked: Array = Progress.asked_topics(ID)
+	for option in STORIES:
+		if not asked.has(option["id"]):
+			list.append(option)
+	list.append({"id": "running", "text": "Működik a lift?",
+		"on_choose": func() -> String: return "[i]Büszkén megpaskolja a rácsos fülkét.[/i]\n\n" \
+			+ "Mint a svájci óra. Szállj be, és válaszd a tizedik emeletet. Én innen figyelem a kötelet."})
+	return list
+
+
 ## A beszélgetés opciói: a három történet, negyediknek a lift (az ára, a fizetés, vagy a köszönet).
 static func options(player: Node) -> Array[Dictionary]:
 	var list: Array[Dictionary] = STORIES.duplicate()
@@ -60,6 +105,7 @@ static func options(player: Node) -> Array[Dictionary]:
 
 static func _offer() -> String:
 	Progress.set_npc_quest(OFFER_FLAG, "done")
+	Progress.set_npc_quest(LIFT_QUEST, "active")
 	Progress.mark_asked(ID, "repair")
 	Progress.save_game()
 	return "[i]Most először néz fel rád. A szeme csillog a korom alatt.[/i]\n\n" \
@@ -77,6 +123,8 @@ static func _pay(player: Node) -> String:
 			+ "Ez nem %d arany, barátom. Szedj még össze odalent, és gyere vissza. Megvárlak, nem megyek sehova." % PRICE
 	player.call("spend_gold", PRICE)
 	Progress.set_npc_quest(REPAIRED_FLAG, "done")
+	Progress.set_npc_quest(LIFT_QUEST, "done")
+	Progress.set_npc_quest(RIDE_FLAG, "pending")
 	Progress.mark_asked(ID, "pay")
 	Progress.change_trust(ID, 30)
 	Progress.save_game()
@@ -85,6 +133,8 @@ static func _pay(player: Node) -> String:
 		+ "aztán egy hosszú, mély nyikorgás után a lift zúgva életre kel.[/i]\n\n" \
 		+ "Na tessék! Húsz év után újra jár. Mostantól a táborból egyenesen ide jöhetsz le: a lépcső melletti " \
 		+ "liftbe szállsz, és a tizedik emeletet választod.\n\n" \
+		+ "[i]Leporolja a nadrágját, és a ketrec felé indul.[/i]\n\nÉn meg felmegyek vele. Húsz év elég volt " \
+		+ "a sötétből. Fent találkozunk, a lépcső mellett!\n\n" \
 		+ "[color=#7a4a10](-%d arany. A tábori lift mostantól a 10. emeletre is levisz.)[/color]" % PRICE
 
 

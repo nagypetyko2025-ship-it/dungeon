@@ -10,7 +10,8 @@ const PAGE_SIZE := Vector2(400, 420)
 ## Fülek: 0 = általános küldetések (Quests), 1 = a veterán küldetései (Dialogues),
 ## 2 = a tolvaj küldetései (Thief), 3 = a király küldetései (Castle; csak a vár kapujánál
 ## tett első látogatás után látszik).
-const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király", "Kutas idegen", "Csontváz sírásó", "Doktor"]
+const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király", "Kutas idegen", "Csontváz sírásó", "Doktor",
+	"Mérnök"]
 const KING_TAB := 3
 ## 4 = a kútba esett idegen küldetései (Stranger).
 const WELL_TAB := 4
@@ -18,6 +19,8 @@ const WELL_TAB := 4
 const DIGGER_TAB := 5
 ## 6 = Kálmán doktor küldetései (Doctor).
 const DOCTOR_TAB := 6
+## 7 = Bertalan, a mérnök küldetése (Engineer).
+const ENGINEER_TAB := 7
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 
 var _ids: Array = []
@@ -58,6 +61,7 @@ func _npc_quests() -> Dictionary:
 		WELL_TAB: return Stranger.QUESTS
 		DIGGER_TAB: return Gravedigger.QUESTS
 		DOCTOR_TAB: return Doctor.QUESTS
+		ENGINEER_TAB: return Engineer.QUESTS
 	return Dialogues.VETERAN_QUESTS
 
 
@@ -68,6 +72,7 @@ func _npc_name() -> String:
 		WELL_TAB: return Stranger.display_name()
 		DIGGER_TAB: return Gravedigger.NAME
 		DOCTOR_TAB: return Doctor.NAME
+		ENGINEER_TAB: return Engineer.NAME
 	return Dialogues.VETERAN_NAME
 
 
@@ -148,12 +153,12 @@ func _build() -> void:
 	# Fülek: általános / veterán.
 	var tabs := HBoxContainer.new()
 	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
-	tabs.add_theme_constant_override("separation", 12)
+	tabs.add_theme_constant_override("separation", 8)
 	root.add_child(tabs)
 	for i in TAB_NAMES.size():
 		var tab := MenuStyle.button(TAB_NAMES[i])
-		tab.custom_minimum_size = Vector2(158, 44)
-		tab.add_theme_font_size_override("font_size", 16)
+		tab.custom_minimum_size = Vector2(142, 44)
+		tab.add_theme_font_size_override("font_size", 15)
 		tab.focus_mode = Control.FOCUS_NONE
 		tab.modulate = Color.WHITE if i == 0 else Color(0.6, 0.55, 0.5)
 		tab.pressed.connect(_set_tab.bind(i))
@@ -242,6 +247,9 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 		elif _tab == WELL_TAB and _ids.is_empty() and index == 0:
 			empty_text = "Még senki nem kért tőled semmit a kútnál.\n\n" \
 				+ "A nyugati tisztáson, a romos ház mellett áll egy öreg kút..."
+		elif _tab == ENGINEER_TAB and _ids.is_empty() and index == 0:
+			empty_text = "Bertalan, a mérnök még nem kért tőled semmit.\n\n" \
+				+ "A 10. emeleten dolgozik, a térképen kékkel jelölt liftszobában."
 		elif _tab == DOCTOR_TAB and _ids.is_empty() and index == 0:
 			empty_text = "Kálmán doktor még nem kért tőled semmit.\n\n" \
 				+ "A kalandorok kórházában dolgozik, a kocsmától jobbra. Kérdezd meg, kell-e neki segítség."

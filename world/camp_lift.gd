@@ -2,7 +2,8 @@ class_name CampLift
 extends Node2D
 ## A tábori lift a kazamata lépcsője mellett (a szürke köveken túl, balra): rácsos fülke, egy csempényi.
 ## E-re megnyílik a "Lefelé utazás" ablak: az 1. emelet mindig, a 10. emelet csak akkor, ha Bertalan,
-## a mérnök megjavította a liftet (lásd Engineer). (A tábor rakja le: setup(camp).)
+## a mérnök megjavította a liftet (lásd Engineer). A javítás után Bertalan feljön a lifttel, és
+## onnantól mellette áll (E: beszélgetés, két új történettel). (A tábor rakja le: setup(camp).)
 
 const TILE := 32
 const RANGE := 52.0
@@ -11,6 +12,9 @@ var _camp: Node2D
 var _player: Node2D
 var _prompt: Label
 var _panel: LiftPanel
+var _engineer: Node2D
+var _dialogue: DialoguePanel
+const TALK_RANGE := 56.0
 
 
 func setup(camp: Node2D) -> void:
@@ -32,6 +36,8 @@ func setup(camp: Node2D) -> void:
 	_panel.name = "LiftPanel"
 	_panel.chosen.connect(_on_chosen)
 	camp.add_child.call_deferred(_panel)
+	if Engineer.in_camp():
+		_build_engineer()
 	var layer := CanvasLayer.new()
 	layer.layer = 5
 	add_child(layer)
@@ -45,21 +51,64 @@ func setup(camp: Node2D) -> void:
 	layer.add_child(_prompt)
 
 
+## Bertalan a lift bal oldalán, a villáskulcsát lóbálva.
+func _build_engineer() -> void:
+	_engineer = Node2D.new()
+	_engineer.position = Vector2(-44, 18)
+	add_child(_engineer)
+	var figure := AnimatedSprite2D.new()
+	figure.sprite_frames = Engineer.frames()
+	figure.scale = Vector2(2, 2)
+	figure.offset = Vector2(0, -Engineer.FRAME_SIZE.y / 2.0)
+	figure.play()
+	_engineer.add_child(figure)
+	var body := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = Vector2(20, 10)
+	shape.shape = box
+	shape.position = Vector2(0, -4)
+	body.add_child(shape)
+	_engineer.add_child(body)
+	_dialogue = DialoguePanel.new()
+	_dialogue.name = "CampEngineerDialogue"
+	_dialogue.npc_id = Engineer.ID
+	_dialogue.npc_name = Engineer.NAME
+	_dialogue.greeting = "[i]Bertalan a lift kötelét vizsgálgatja, a szemüvege a homlokán.[/i]\n\n" \
+		+ "Á, a megmentőm! Nézd, mennyi fény! Idelent... akarom mondani, idefent mindig ilyen világos van?"
+	_dialogue.portrait = Engineer.portrait()
+	_dialogue.options_provider = func() -> Array[Dictionary]:
+		return Engineer.camp_options()
+	_camp.add_child.call_deferred(_dialogue)
+
+
 func _near() -> bool:
 	return is_instance_valid(_player) and _player.global_position.distance_to(global_position + Vector2(0, 20)) < RANGE
 
 
+func _near_engineer() -> bool:
+	return is_instance_valid(_engineer) and is_instance_valid(_player) \
+		and _player.global_position.distance_to(_engineer.global_position) < TALK_RANGE
+
+
 func _process(delta: float) -> void:
-	var target := 1.0 if _near() and not get_tree().paused else 0.0
+	if _near_engineer():
+		_prompt.text = "[E] Beszélgetés: %s" % Engineer.NAME
+	elif _near():
+		_prompt.text = "[E] Lift: lefelé utazás"
+	var target := 1.0 if (_near() or _near_engineer()) and not get_tree().paused else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or get_tree().paused or not _near():
+	if not event.is_action_pressed("interact") or get_tree().paused:
+		return
+	var talk := _near_engineer()
+	if not talk and not _near():
 		return
 	get_viewport().set_input_as_handled()
 	Audio.play("ui_open")
-	_camp.get_node("Menus").call("open_menu", _panel)
+	_camp.get_node("Menus").call("open_menu", _dialogue if talk else _panel)
 
 
 func _on_chosen(depth: int) -> void:

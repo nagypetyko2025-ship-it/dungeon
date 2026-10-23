@@ -12,6 +12,9 @@ const TALK_RANGE := 70.0
 
 var _player: Node2D
 var _engineer: Node2D
+var _engineer_body: CollisionShape2D
+var _cage: Sprite2D
+var _riding := false
 var _dialogue: DialoguePanel
 var _prompt: Label
 
@@ -20,6 +23,7 @@ func _ready() -> void:
 	_player = get_tree().get_first_node_in_group("player")
 	# A liftfülke a hátsó fal előtt (a szoba közepén), mellette a fogaskerék és a mérnök.
 	var cage := Sprite2D.new()
+	_cage = cage
 	cage.texture = CAGE
 	cage.scale = Vector2(CAGE_SCALE, CAGE_SCALE)
 	cage.offset = Vector2(0, -CAGE.get_height() / 2.0)
@@ -71,6 +75,10 @@ func _ready() -> void:
 	shape.position = Vector2(0, -4)
 	body.add_child(shape)
 	_engineer.add_child(body)
+	_engineer_body = shape
+	# A javítás után felment a lifttel: azóta a táborban van (lásd CampLift).
+	_engineer.visible = not Engineer.in_camp()
+	shape.disabled = Engineer.in_camp()
 	_dialogue = DialoguePanel.new()
 	_dialogue.name = "EngineerDialogue"
 	_dialogue.npc_id = Engineer.ID
@@ -96,12 +104,41 @@ func _ready() -> void:
 func _near() -> bool:
 	if not is_instance_valid(_player):
 		_player = get_tree().get_first_node_in_group("player")
-	return is_instance_valid(_player) and _player.global_position.distance_to(_engineer.global_position) < TALK_RANGE
+	return is_instance_valid(_player) and _engineer.visible and not _riding \
+		and _player.global_position.distance_to(_engineer.global_position) < TALK_RANGE
 
 
 func _process(delta: float) -> void:
+	# A javítás után, amint bezárult a beszélgetés: beszáll a ketrecbe, és felmegy vele.
+	if not _riding and not get_tree().paused and Progress.npc_quest_state(Engineer.RIDE_FLAG) == "pending":
+		_ride()
 	var target := 1.0 if _near() and not get_tree().paused else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
+
+
+## Bertalan a ketrechez sétál, beszáll, a ketrec felhúzódik az aknán; kis idő múlva üresen ereszkedik vissza.
+func _ride() -> void:
+	_riding = true
+	_engineer_body.disabled = true
+	var walk := create_tween()
+	walk.tween_property(_engineer, "position", Vector2(0, TILE * 0.7), 1.0)
+	walk.tween_property(_engineer, "modulate:a", 0.0, 0.3)
+	await walk.finished
+	_engineer.visible = false
+	Audio.play("door_unlock", -4.0)
+	Audio.play("boss_slam", -14.0, 0.1)
+	var start := _cage.position
+	var up := create_tween()
+	up.tween_property(_cage, "position", start + Vector2(0, -TILE * 6), 2.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	up.parallel().tween_property(_cage, "modulate:a", 0.0, 2.2)
+	await up.finished
+	Progress.set_npc_quest(Engineer.RIDE_FLAG, "done")
+	Progress.save_game()
+	await get_tree().create_timer(1.5).timeout
+	var down := create_tween()
+	down.tween_property(_cage, "position", start, 2.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	down.parallel().tween_property(_cage, "modulate:a", 1.0, 1.0)
+	_riding = false
 
 
 func _unhandled_input(event: InputEvent) -> void:
