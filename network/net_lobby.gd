@@ -36,20 +36,30 @@ var _beacon: PacketPeerUDP
 var _timer := 0.0
 var _taken_codes: Array = []
 var _wanted_code := ""
+## A SceneTree hálózati kezelője: a létrehozáskor kapja meg, így akkor is használható, ha a csomópont
+## még nincs a fában (a főmenü építése közben csak késleltetve lehet a gyökérhez adni).
+var _mp: MultiplayerAPI
+
+
+## Az egyetlen példány (már a fába kerülése előtt is, lásd get_or_create).
+static var _instance: NetLobby
 
 
 static func get_or_create(tree: SceneTree) -> NetLobby:
-	var existing := tree.root.get_node_or_null("NetLobby") as NetLobby
+	var existing := current(tree)
 	if existing != null:
 		return existing
 	var lobby := NetLobby.new()
 	lobby.name = "NetLobby"
-	tree.root.add_child(lobby)
+	lobby._connect_network(tree.get_multiplayer())
+	# Indításkor a gyökér épp a főmenüt építi: ilyenkor csak késleltetve lehet hozzáadni.
+	tree.root.add_child.call_deferred(lobby)
+	_instance = lobby
 	return lobby
 
 
-static func current(tree: SceneTree) -> NetLobby:
-	return tree.root.get_node_or_null("NetLobby") as NetLobby
+static func current(_tree: SceneTree) -> NetLobby:
+	return _instance if is_instance_valid(_instance) else null
 
 
 ## Fut-e közös játék (a táborban ilyenkor látszanak a többiek).
@@ -58,21 +68,22 @@ static func is_playing(tree: SceneTree) -> bool:
 	return lobby != null and lobby.state == "playing"
 
 
-func _ready() -> void:
+func _connect_network(api: MultiplayerAPI) -> void:
+	_mp = api
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	multiplayer.peer_connected.connect(_on_peer_connected)
-	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
-	multiplayer.connected_to_server.connect(_on_connected)
-	multiplayer.connection_failed.connect(func() -> void: _fail("Nem sikerült csatlakozni a váróhoz."))
-	multiplayer.server_disconnected.connect(func() -> void: _close("A gazda bezárta a várót."))
+	_mp.peer_connected.connect(_on_peer_connected)
+	_mp.peer_disconnected.connect(_on_peer_disconnected)
+	_mp.connected_to_server.connect(_on_connected)
+	_mp.connection_failed.connect(func() -> void: _fail("Nem sikerült csatlakozni a váróhoz."))
+	_mp.server_disconnected.connect(func() -> void: _close("A gazda bezárta a várót."))
 
 
 func is_host() -> bool:
-	return state != "idle" and multiplayer.multiplayer_peer != null and multiplayer.is_server()
+	return state != "idle" and _mp.multiplayer_peer != null and _mp.is_server()
 
 
 func my_id() -> int:
-	return multiplayer.get_unique_id()
+	return _mp.get_unique_id()
 
 
 # ---------------------------------------------------------------- váró készítése / csatlakozás
@@ -98,7 +109,7 @@ func _open_lobby() -> void:
 	if peer.create_server(NetSession.GAME_PORT, NetSession.MAX_PLAYERS - 1) != OK:
 		_fail("Nem sikerült elindítani a várót (fut már egy váró ezen a gépen?).")
 		return
-	multiplayer.multiplayer_peer = peer
+	_mp.multiplayer_peer = peer
 	players = {1: {"name": my_name, "character": Progress.character, "ready": true}}
 	state = "lobby"
 	_beacon = PacketPeerUDP.new()
@@ -127,7 +138,7 @@ func _connect_to(address: String, port: int) -> void:
 	if peer.create_client(address, port) != OK:
 		_fail("Nem sikerült csatlakozni a váróhoz.")
 		return
-	multiplayer.multiplayer_peer = peer
+	_mp.multiplayer_peer = peer
 	state = "connecting"
 	_timer = JOIN_TIMEOUT
 	lobby_changed.emit()
@@ -137,9 +148,9 @@ func _connect_to(address: String, port: int) -> void:
 func leave() -> void:
 	_stop_listening()
 	_beacon = null
-	if multiplayer.multiplayer_peer != null and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
-		multiplayer.multiplayer_peer.close()
-	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
+	if _mp.multiplayer_peer != null and not (_mp.multiplayer_peer is OfflineMultiplayerPeer):
+		_mp.multiplayer_peer.close()
+	_mp.multiplayer_peer = OfflineMultiplayerPeer.new()
 	state = "idle"
 	code = ""
 	players = {}
@@ -241,7 +252,7 @@ func _on_peer_disconnected(id: int) -> void:
 func _register(player_name: String, character: String) -> void:
 	if not is_host():
 		return
-	var id := multiplayer.get_remote_sender_id()
+	var id := _mp.get_remote_sender_id()
 	if state != "lobby" or players.size() >= NetSession.MAX_PLAYERS:
 		_rejected.rpc_id(id, "A váró megtelt, vagy már elindult a játék.")
 		return
@@ -270,7 +281,7 @@ func set_ready(value: bool) -> void:
 
 @rpc("any_peer", "call_remote", "reliable")
 func _set_ready(value: bool) -> void:
-	var id := multiplayer.get_remote_sender_id()
+	var id := _mp.get_remote_sender_id()
 	if is_host() and players.has(id):
 		players[id]["ready"] = value
 		_sync.rpc(players)
@@ -310,7 +321,7 @@ func send_pose(data: Dictionary) -> void:
 
 @rpc("any_peer", "call_remote", "unreliable_ordered")
 func _pose(data: Dictionary) -> void:
-	pose_received.emit(multiplayer.get_remote_sender_id(), data)
+	pose_received.emit(_mp.get_remote_sender_id(), data)
 
 
 func player_name(id: int) -> String:
