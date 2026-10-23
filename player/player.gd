@@ -51,6 +51,9 @@ const WEAPON_TYPES := {
 		"forward": 18.0},
 	"bow": {"style": "bow", "cooldown": 1.1, "knockback": 120.0, "length": 40.0, "width": 10.0},
 	"wand": {"style": "wand", "cooldown": 1.0, "knockback": 160.0, "length": 36.0, "width": 10.0},
+	# Vendel ásója: lassan, ívben csap, gyengén sebez, de nagyon messzire lök.
+	"shovel": {"style": "swing", "arc": 150.0, "cooldown": 1.7, "knockback": 680.0, "length": 58.0, "width": 30.0,
+		"forward": 18.0},
 	"crossbow": {"style": "bow", "cooldown": 1.45, "knockback": 220.0, "length": 40.0, "width": 10.0},
 }
 ## Az átlós ikonú fegyvereknél a markolat ennyied része a forgáspont mögött.
@@ -110,6 +113,7 @@ var _swing_side := 1.0
 var _weapon_type := "sword"
 var _step_distance := 0.0
 var _war_cry_left := 0.0
+var _summon_left := 0.0
 var _shadow_left := 0.0
 ## A varázsló második varázslatának (jobb egérgomb) hátralévő cooldownja.
 var _secondary_left := 0.0
@@ -207,6 +211,7 @@ func _apply_character_base(id: String) -> void:
 	_stats.base_move_speed = float(definition.get("move_speed", 100))
 	_stats.base_dodge = float(definition.get("dodge", 10))
 	_stats.base_crit_chance = float(definition.get("crit_chance", 2))
+	_stats.base_max_health = float(definition.get("max_health", 10))
 
 
 ## Másik karakterre váltás (a kocsmában): kinézet, tábori felszerelés, fejlesztések.
@@ -429,6 +434,9 @@ func _physics_process(delta: float) -> void:
 	if Input.is_physical_key_pressed(KEY_CTRL) and _can_war_cry():
 		_war_cry()
 	_shadow_left = maxf(_shadow_left - delta, 0.0)
+	_summon_left = maxf(_summon_left - delta, 0.0)
+	if Input.is_physical_key_pressed(KEY_CTRL) and _can_summon():
+		_summon()
 	_secondary_left = maxf(_secondary_left - delta, 0.0)
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and _secondary_left <= 0.0 and GameState.spells.size() > 1 \
 			and _weapon_type == "wand" and not get_tree().paused:
@@ -491,6 +499,44 @@ func _war_cry() -> void:
 
 func war_cry_cooldown_ratio() -> float:
 	return _war_cry_left / WAR_CRY_COOLDOWN
+
+
+## Csontváz-idézés (csak Vendel, Ctrl, a kazamatában): SUMMON_COUNT csontváz kel ki a földből
+## körülötte, és érte harcol (lásd SkeletonMinion); egyszerre legfeljebb MAX_MINIONS. A töltési idő
+## SUMMON_COOLDOWN mp, az ütési sebességgel arányosan rövidül.
+const SUMMON_COOLDOWN := 3.0
+const SUMMON_COUNT := 3
+const MAX_MINIONS := 6
+
+
+func _can_summon() -> bool:
+	return Characters.data(Progress.character).get("summon", false) and _summon_left <= 0.0 \
+		and not get_tree().paused and get_tree().current_scene.name == "Dungeon" \
+		and get_tree().get_nodes_in_group("minions").size() < MAX_MINIONS
+
+
+func summon_cooldown() -> float:
+	return SUMMON_COOLDOWN / maxf(_stats.attack_speed / 100.0, 0.1)
+
+
+func summon_cooldown_left() -> float:
+	return _summon_left
+
+
+func _summon() -> void:
+	_summon_left = summon_cooldown()
+	var free := MAX_MINIONS - get_tree().get_nodes_in_group("minions").size()
+	var count := mini(SUMMON_COUNT, free)
+	Audio.play("boss_slam", -10.0, 0.2)
+	Audio.play("magic", -6.0, 0.2)
+	FloatingText.spawn(get_parent(), global_position + Vector2(0, -60), "Keljetek fel!", Color(0.7, 1.0, 0.8), 20)
+	for i in count:
+		var minion := SkeletonMinion.new()
+		minion.owner_player = self
+		minion.damage = maxi(1, roundi(hit_damage() * SkeletonMinion.DAMAGE_SHARE))
+		var angle := TAU * i / count + randf_range(-0.3, 0.3)
+		get_parent().add_child(minion)
+		minion.global_position = global_position + Vector2.from_angle(angle) * 34.0
 
 
 ## Árnyéklépés (csak Bence, Ctrl): a kurzorhoz legközelebbi szörny háta mögé lép (SHADOW_STEP_RANGE-en

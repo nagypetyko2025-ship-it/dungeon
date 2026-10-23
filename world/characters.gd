@@ -19,6 +19,8 @@ class_name Characters
 ## dodge / crit_chance   a kikerülés / kritikus esély alapértéke (%, alapból 10 / 2)
 ## dagger_damage tőrrel ennyivel nagyobbat sebez (pl. 0.25 = +25%)
 ## gold_bonus    ennyivel több aranyat talál (pl. 0.2 = +20%)
+## summon        Vendel: Ctrl-re csontvázakat idéz (lásd Player._summon, SkeletonMinion)
+## max_health    az élet alapértéke (alapból 10)
 ## spells        varázsló: varázspálcával a választott varázslatokat szórja (lásd Spells)
 ## shadow_step   van-e Árnyéklépése (Ctrl: a kurzorhoz legközelebbi szörny mögé, biztos kritikus)
 ## health_regen  az élet-regeneráció alapértéke (élet / mp, alapból 0.2)
@@ -26,6 +28,8 @@ class_name Characters
 ## role / traits / story   a bemutatkozó panel szövegei (a kocsmában, a karakter mellett)
 
 const DEFAULT := "knight"
+## Saját, egyedi fegyverfajták: aki ilyet forgat, mást nem foghat, és más nem foghatja.
+const OWN_WEAPONS: Array[String] = ["wand", "shovel"]
 const ALL := {
 	"knight": {
 		"name": "Lovag", "rect": Rect2(128, 100, 16, 28),
@@ -98,15 +102,18 @@ const ALL := {
 	"gravedigger": {
 		"name": "Vendel", "sheet": "res://assets/characters/gravedigger.png", "frame_size": Vector2(24, 32),
 		"animations": {"idle": [0, 1, 2, 3], "run": [0, 1, 2, 3], "hit": [0]},
-		"start_weapon": "axe_wood", "seat": 1, "weapons": "melee", "unlock": "vendel_tavern", "accuracy": 80,
+		"start_weapon": "shovel_vendel", "seat": 1, "weapons": "shovel", "unlock": "vendel_tavern", "accuracy": 80,
+		"max_health": 9, "dodge": 20, "move_speed": 86, "card_bonus": {"attack_speed": 0.15}, "summon": true,
 		"description": "Csontváz sírásó: a halottak földjéről jött vissza, hogy hazahozza a többieket.",
 		"role": "Élőhalott sírásó",
 		"story": "Húsz évig temette a Mélység halottait a tábor szélén. Most, egy legendás talizmánnal a nyakában, " \
 			+ "újra lemegy: nem meghalni, hanem hazahozni, akit lehet.",
 		"traits": [
-			"Favágó fejszével indul; közelharci fegyvert forgathat, íjat nem",
-			"80% találati esély",
-			"(A különleges képességei hamarosan jönnek.)",
+			"A saját ásójával harcol, mást nem használhat: lassú és gyenge, de nagyon messzire lök",
+			"Csak 9 élettel indul (csontváz), 80% találati esély, 20% kikerülés",
+			"14%-kal lassabban mozog",
+			"Ütési sebesség kártya szintlépéskor: 15%-kal többet ad neki",
+			"Csontváz-idézés [Ctrl]: 3 csontváz kel ki a földből, és érte harcol (legfeljebb 6 egyszerre; 3 mp, az ütési sebességgel rövidül)",
 		],
 	},
 	# Bence, a volt tolvaj (Benedek zászlóvivő fia): a levél-küldetés után költözik a kocsmába.
@@ -174,9 +181,10 @@ static func can_use(item: Dictionary) -> bool:
 	if item.get("slot", "") != "weapon":
 		return true
 	var kind: String = data(Progress.character).get("weapons", "melee")
-	# A varázspálca csak a varázslóé, és ő mást nem foghat.
-	if kind == "wand" or item.get("weapon_type", "") == "wand":
-		return kind == "wand" and item.get("weapon_type", "") == "wand"
+	# A varázspálca csak a varázslóé, az ásó csak Vendelé, és ők mást nem foghatnak.
+	var weapon_type: String = item.get("weapon_type", "")
+	if kind in OWN_WEAPONS or weapon_type in OWN_WEAPONS:
+		return kind == weapon_type
 	var bow: bool = Items.is_ranged(item)
 	return bow if kind == "ranged" else not bow
 
@@ -187,6 +195,8 @@ static func weapon_restriction_text(item: Dictionary) -> String:
 		return ""
 	if item.get("weapon_type", "") == "wand":
 		return "Csak a varázsló használhatja."
+	if item.get("weapon_type", "") == "shovel":
+		return "Csak Vendel használhatja."
 	return "Csak íjász használhatja." if Items.is_ranged(item) else "Íjász és varázsló nem használhatja."
 
 

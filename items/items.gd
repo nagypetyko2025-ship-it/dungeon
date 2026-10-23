@@ -24,7 +24,7 @@ const SPEAR_NOTE_INK := Color(0.42, 0.28, 0.12)
 const SLOT_NOTE_INK := Color(0.3, 0.22, 0.14)
 const WEAPON_NOTE_INK := Color(0.45, 0.16, 0.1)
 const WEAPON_KIND_NAMES := {"sword": "Kard", "spear": "Lándzsa", "axe": "Balta", "dagger": "Tőr", "mace": "Buzogány", "bow": "Íj",
-	"crossbow": "Számszeríj", "wand": "Varázspálca"}
+	"crossbow": "Számszeríj", "wand": "Varázspálca", "shovel": "Ásó"}
 ## A fegyverfajták rövid leírása (a kard az alap, ahhoz nincs).
 const WEAPON_NOTES := {
 	"spear": "Lándzsa: messzebbre ér és szúr. Átütés: a szúrást nem lehet kikerülni, és erősen hátralök.",
@@ -33,6 +33,7 @@ const WEAPON_NOTES := {
 	"mace": "Buzogány: lassú, de nagyot üt és messzire löki az ellenséget.",
 	"bow": "Íj: nyilat lő a kurzor felé; a Távolsági sebzés erősíti, a Hatótáv a nyíl repülési távolsága.",
 	"wand": "Varázspálca: a választott varázslatokat szórja (bal és jobb egérgomb); az Elemi sebzés erősíti.",
+	"shovel": "Ásó: lassan és gyengén üt, de nagyon messzire löki az ellenséget.",
 	"crossbow": "Számszeríj: lassabban tölt, de nagyot üt; legfeljebb 3 vesszőt lő, szűk, egyenes sorban.",
 	"sword": "Kard: egyenesen előre döfi; a Hatótáv azt adja meg, milyen messzire.",
 }
@@ -125,6 +126,10 @@ const DEFINITIONS := {
 	"trinket_flamecore": {"name": "Lángszív", "slot": "trinket", "rarity": "legendary",
 		"stats": {"elemental_damage": [2, 3], "damage_percent": [5, 8], "attack_speed": [5, 8]}},
 	# Lőrinc fix varázspálcája (csak ő használhatja, és ő mást nem): a varázslatai ezzel szólnak.
+	# Vendel ásója: csak ő használhatja (és ő mást nem). Lassú és gyenge, de nagyot lök.
+	"shovel_vendel": {"name": "Vendel ásója", "slot": "weapon", "rarity": "rare", "weapon_type": "shovel",
+		"unique": true, "shop": false, "base": [2, 2], "scaling": 0.8, "crit": 1.5, "stats": {},
+		"description": "A nagyapja kovácsolta, háromszáz sírt ásott vele. Egy ghoul is megismerte már."},
 	"wand_lorinc": {"name": "Lőrinc pálcája", "slot": "weapon", "rarity": "epic", "weapon_type": "wand",
 		"unique": true, "shop": false, "region": Rect2(324, 129, 8, 30),
 		"base": [3, 3], "scaling": 1.0, "crit": 1.6, "stats": {},

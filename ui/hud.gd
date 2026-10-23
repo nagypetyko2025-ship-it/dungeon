@@ -61,6 +61,12 @@ func _process(_delta: float) -> void:
 		elif _dash_label != null:
 			_dash_label.visible = false
 		return
+	if player != null and Characters.data(Progress.character).get("summon", false):
+		if _dash_label == null:
+			_create_skill_label()
+		_dash_label.visible = true
+		_update_skill_label("Csontváz-idézés", player.call("summon_cooldown_left"))
+		return
 	if player != null and Characters.data(Progress.character).get("shadow_step", false):
 		_update_skill_label("Árnyéklépés", player.call("shadow_step_cooldown_ratio") * player.SHADOW_STEP_COOLDOWN)
 		return
