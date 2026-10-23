@@ -28,6 +28,10 @@ const INSCRIPTION := "[center][i]Itt nyugszik, aki lement, és nem jött vissza.
 	+ "Te még csak sejted.\n\n" \
 	+ "[color=#6b5a48]— A tábor népe —[/color][/center]"
 const READ_RANGE := 50.0
+## A sírásó (csontváz fejű, ásóval): a kapu ösvényén áll, az első sírsor alatt (ott nincs sír).
+## Egyelőre nem beszél. Kép: assets/characters/gravedigger.png (4 kocka, 24x32).
+const DIGGER_SHEET: Texture2D = preload("res://assets/characters/gravedigger.png")
+const DIGGER_TILE := Vector2i(69, 23)
 
 var _camp: Node2D
 var _entities: Node2D
@@ -67,6 +71,7 @@ func build() -> void:
 	_build_fence()
 	_build_tree()
 	_build_graves()
+	_build_digger()
 	_build_fog()
 	_build_ui()
 
@@ -151,6 +156,33 @@ func _build_graves() -> void:
 			stone.rotation = _rng.randf_range(-0.12, 0.12)
 			stone.modulate = Color(0.75, 0.75, 0.8)
 			_body(holder, Vector2(0, -4), Vector2(22, 8))
+
+
+## A sírásó: lassan "lélegzik" (álló kockák), az ásójára támaszkodva; szilárd.
+func _build_digger() -> void:
+	var holder := Node2D.new()
+	holder.position = _center(DIGGER_TILE) + Vector2(16, 14)
+	_entities.add_child(holder)
+	var frames := SpriteFrames.new()
+	frames.set_animation_speed("default", 2.0)
+	for i in 4:
+		var frame := AtlasTexture.new()
+		frame.atlas = DIGGER_SHEET
+		frame.region = Rect2(i * 24, 0, 24, 32)
+		frames.add_frame("default", frame)
+	var digger := AnimatedSprite2D.new()
+	digger.sprite_frames = frames
+	digger.scale = Vector2(2, 2)
+	digger.offset = Vector2(0, -16)
+	digger.play()
+	holder.add_child(digger)
+	_body(holder, Vector2(0, -6), Vector2(22, 12))
+	# Mellette egy frissen ásott gödör, földkupaccal.
+	var pit := Mound.new()
+	pit.position = _center(DIGGER_TILE + Vector2i(-1, 0)) + Vector2(0, 12)
+	pit.scale = Vector2(1.3, 1.6)
+	pit.z_index = -8
+	add_child(pit)
 
 
 ## Halvány, lassan hullámzó köd a sírok között.
