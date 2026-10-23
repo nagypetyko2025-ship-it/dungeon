@@ -70,7 +70,7 @@ const CAMP_RADIUS := Vector2(9.5, 6.0)
 ## Az út sorai (2 csempe széles), keletre a tábortól az erdő széléig.
 const ROAD_ROW := 17
 ## A világ keleti széle (a város mögötti erdő vége).
-const WORLD_END_X := 94 + FOREST_DEPTH
+const WORLD_END_X := Town.RECT.end.x + FOREST_DEPTH
 ## A nyugati tisztás (a várossal ellentétes irányban): ide vezet egy kis sáros ösvény a
 ## táborból; a végén a romos ház áll (lásd Ruin).
 const WEST_RECT := Rect2i(-30, 9, 20, 16)
@@ -819,6 +819,13 @@ func _build_trees() -> void:
 			var edge := mini(mini(x - town.position.x, town.end.x - 1 - x), mini(y - town.position.y, town.end.y - 1 - y))
 			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.3):
 				_tree(tile, randf() < 0.6, true)
+			elif x >= Town.OLD_END_X and edge >= 3:
+				# A bővítés (keleti) része: rét, itt-ott virággal, bokorral.
+				var roll := randf()
+				if roll < 0.05:
+					_rpg_sprite(FLOWERS.pick_random(), _tile_center(tile) + Vector2(randf_range(-8, 8), randf_range(-8, 8)), -9)
+				elif roll < 0.065:
+					_rpg_sprite(BUSHES.pick_random(), _tile_center(tile), 0)
 	# A vár tisztásának szélén is fasor (az út és a vár kimarad).
 	var castle := Castle.RECT
 	for x in range(castle.position.x, castle.end.x):

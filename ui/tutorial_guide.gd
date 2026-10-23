@@ -86,7 +86,7 @@ func _build_steps() -> void:
 			+ "egyszerűen sétálj neki az ajtajának, és bemész.",
 			"done": func() -> bool: return _seen.has("shop_in")},
 		{"title": "Vásárlás", "text": "A gyanús boltos árul: állj egy tárgy elé, és ha van elég aranyad, E-vel megveszed. "
-			+ "A pultnál E-vel el is adhatsz, [b]F[/b]-fel pedig HP bájitalt vehetsz tőle (125 arany, boltonként 2 db). "
+			+ "A pultnál E-vel el is adhatsz, [b]F[/b]-fel pedig HP bájitalt vehetsz tőle (60 arany, boltonként 2 db). "
 			+ "A szoba közepén lévő karral új árut kérhetsz. Ha körülnéztél, gyere ki a lenti ajtón.",
 			"done": func() -> bool: return _seen.has("shop_out")},
 		{"title": "HP bájital", "text": "Alul, az XP-csík fölött a [b]gyorstár[/b]: az első helyén vannak a HP bájitalaid "

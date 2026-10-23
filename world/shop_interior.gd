@@ -56,7 +56,7 @@ const RESTOCK_LEVER := Rect2(80, 208, 16, 16)
 const RESTOCK_BASE := 25
 const RESTOCK_STEP := 20
 ## HP bájital a boltostól: ára és hány darab van belőle boltonként.
-const POTION_PRICE := 125
+const POTION_PRICE := 60
 const POTIONS_PER_SHOP := 2
 const POTION_ICON: Texture2D = preload("res://assets/ui/potion_hp.png")
 

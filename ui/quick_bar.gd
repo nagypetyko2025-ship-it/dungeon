@@ -4,7 +4,7 @@ extends CanvasLayer
 ## képernyő alján). Minden helynek fix tartalma van; most csak az elsőn van valami:
 ## a HP bájital. Az [1] gombbal megiszod: az elvesztett életed felét tölti vissza.
 ## A bájitalok a futáshoz tartoznak (GameState.potions): a gyanús boltosnál veheted
-## (boltonként legfeljebb 2-t, 125 aranyért), és minden főellenség után kapsz egyet.
+## (boltonként legfeljebb 2-t, 60 aranyért), és minden főellenség után kapsz egyet.
 
 const SLOTS := 5
 const SLOT_SIZE := Vector2(48, 48)

@@ -47,7 +47,7 @@ const CHAPTERS := [
 		+ "A boltba (a térképen narancs) nekimész az ajtajának: E-vel vásárolsz, a pultnál eladhatsz. A szoba közepén "
 		+ "lévő karral aranyért új árut kérhetsz. Mellette a [b]tárgylift[/b]: emeletenként egy tárgyat felküldhetsz a tábori ládába.\n\n"
 		+ "[b]HP bájital[/b]: a gyorstár (alul, az XP-csík fölött) első helyén. Az [b]1[/b]-es gombbal iszod meg: az "
-		+ "elvesztett életed felét tölti vissza. A gyanús boltostól a pultnál F-fel veheted (125 arany, boltonként "
+		+ "elvesztett életed felét tölti vissza. A gyanús boltostól a pultnál F-fel veheted (60 arany, boltonként "
 		+ "legfeljebb 2), és minden főellenség után kapsz egyet."],
 	["Tábor és fejlődés",
 		"A [b]táborban[/b] kezdesz. A [b]kiképzősátorban[/b] tábori aranyból veszel fejlesztéseket, amelyek minden karakterre "

@@ -16,8 +16,10 @@ const INDOOR: Texture2D = preload("res://assets/shop/kenney_indoor.png")
 const CONTAINERS: Texture2D = preload("res://assets/shop/barrels_and_boxes.png")
 const TORCH := preload("res://rooms/decor/torch.tscn")
 
-## A város tisztása (csempékben); az út ROAD_ROW-ban jön be nyugatról.
-const RECT := Rect2i(60, 4, 34, 26)
+## A város tisztása (csempékben); az út ROAD_ROW-ban jön be nyugatról, és egyenesen átmegy rajta.
+## Keleten (OLD_END_X-től) a bővítés: egyelőre üres rét, ide jöhetnek az új házak.
+const RECT := Rect2i(60, 4, 68, 26)
+const OLD_END_X := 94
 ## A kocsma épülete (bal felső csempe, méret), az ajtó a legalsó sor közepén (2 széles).
 const TAVERN_TOP_LEFT := Vector2i(66, 10)
 const TAVERN_SIZE := Vector2i(9, 5)
