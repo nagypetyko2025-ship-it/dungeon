@@ -26,6 +26,8 @@ var _records: RecordsPanel
 var _new_game_button: Button
 var _records_button: Button
 var _settings_button: Button
+var _multiplayer: MultiplayerPanel
+var _multiplayer_button: Button
 var _confirm_new_game := false
 var _tutorial: TutorialPanel
 var _tutorial_button: Button
@@ -41,6 +43,9 @@ var _subtitle_parts: Array[Control] = []
 
 const RECORDS := "records"
 const SETTINGS := "settings"
+const MULTIPLAYER := "multiplayer"
+## A főgombok: a menüben kicsit alacsonyabbak és szorosabban állnak (6 gomb fér ki a cím alá).
+const MENU_BUTTON_SIZE := Vector2(340, 54)
 
 
 func _ready() -> void:
@@ -175,8 +180,8 @@ func _build_title() -> void:
 
 func _build_buttons() -> void:
 	_buttons = VBoxContainer.new()
-	_place(_buttons, Vector2(0.5, 0.5), Vector2(-MenuStyle.BUTTON_SIZE.x / 2.0, -110), Vector2(MenuStyle.BUTTON_SIZE.x, 0))
-	_buttons.add_theme_constant_override("separation", 14)
+	_place(_buttons, Vector2(0.5, 0.5), Vector2(-MenuStyle.BUTTON_SIZE.x / 2.0, -98), Vector2(MenuStyle.BUTTON_SIZE.x, 0))
+	_buttons.add_theme_constant_override("separation", 6)
 	add_child(_buttons)
 	# Ha van mentés: Folytatás (a táborba, a mentett haladással).
 	if Progress.has_save():
@@ -186,6 +191,21 @@ func _build_buttons() -> void:
 	_new_game_button = MenuStyle.button("Új játék")
 	_new_game_button.pressed.connect(_on_new_game)
 	_buttons.add_child(_new_game_button)
+	# Többjátékos mód: egyelőre "hamarosan" (a gomb jobb felső sarkán egy kis szalag).
+	_multiplayer_button = MenuStyle.button("Többjátékos")
+	_multiplayer_button.pressed.connect(_show_panel.bind(MULTIPLAYER))
+	_buttons.add_child(_multiplayer_button)
+	var badge := Label.new()
+	badge.text = "HAMAROSAN"
+	badge.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
+	badge.add_theme_font_size_override("font_size", 13)
+	badge.add_theme_color_override("font_color", Color(1, 0.62, 0.35))
+	badge.add_theme_color_override("font_outline_color", MenuStyle.SHADOW)
+	badge.add_theme_constant_override("outline_size", 4)
+	badge.rotation = 0.18
+	badge.position = Vector2(MENU_BUTTON_SIZE.x - 96, -4)
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_multiplayer_button.add_child(badge)
 	_records_button = MenuStyle.button("Eredmények")
 	_records_button.pressed.connect(_show_panel.bind(RECORDS))
 	_buttons.add_child(_records_button)
@@ -195,6 +215,8 @@ func _build_buttons() -> void:
 	var quit := MenuStyle.button("Kilépés")
 	quit.pressed.connect(func() -> void: get_tree().quit())
 	_buttons.add_child(quit)
+	for button in _buttons.get_children():
+		(button as Button).custom_minimum_size = MENU_BUTTON_SIZE
 
 
 func _build_settings() -> void:
@@ -208,6 +230,11 @@ func _build_settings() -> void:
 	_records.visible = false
 	_records.closed.connect(_show_panel.bind(""))
 	add_child(_records)
+	_multiplayer = MultiplayerPanel.new()
+	_place(_multiplayer, Vector2(0.5, 0.5), Vector2(-260, -185), Vector2(520, 0))
+	_multiplayer.visible = false
+	_multiplayer.closed.connect(_show_panel.bind(""))
+	add_child(_multiplayer)
 	_tutorial = TutorialPanel.new()
 	_place(_tutorial, Vector2(0.5, 0.5), Vector2(-470, -330), Vector2(940, 0))
 	_tutorial.visible = false
@@ -302,8 +329,9 @@ func _select_profile(profile: int) -> void:
 
 ## Egy panel (Eredmények / Beállítások) megnyitása a gombok helyén; "" = vissza a gombokhoz.
 func _show_panel(panel: String) -> void:
-	var previous := RECORDS if _records.visible else (TUTORIAL if _tutorial.visible else SETTINGS)
+	var previous := RECORDS if _records.visible else (TUTORIAL if _tutorial.visible 		else (MULTIPLAYER if _multiplayer.visible else SETTINGS))
 	_records.visible = panel == RECORDS
+	_multiplayer.visible = panel == MULTIPLAYER
 	_settings.visible = panel == SETTINGS
 	_tutorial.visible = panel == TUTORIAL
 	_buttons.visible = panel.is_empty()
@@ -314,7 +342,7 @@ func _show_panel(panel: String) -> void:
 	# A nagy Tutorial ablak a címig ér: ilyenkor a cím is eltűnik.
 	_title.get_parent().modulate.a = 0.0 if panel == TUTORIAL else 1.0
 	if panel.is_empty():
-		var focus_target: Button = _records_button if previous == RECORDS else (_tutorial_button if previous == TUTORIAL else _settings_button)
+		var focus_target: Button = _records_button if previous == RECORDS else (_tutorial_button if previous == TUTORIAL 			else (_multiplayer_button if previous == MULTIPLAYER else _settings_button))
 		focus_target.grab_focus()
 
 

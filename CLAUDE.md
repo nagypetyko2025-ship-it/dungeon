@@ -54,4 +54,6 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   halhatatlanság (`GameState.god_mode`), karakterváltás a táborban (zároltakra is; `cheat_select_character` a Camp-en →
   `Town.cheat_switch_to`), tárgylap (bármelyik tárgy bármelyik ritkaságban a táskába). Teszteléshez is hasznos.
 - Bejátszás az első visszatéréskor a kazamatából: `world/stretcher_scene.gd` (hordágyas katonák, `GameState.visited_dungeon`).
+- Többjátékos mód (előkészítve, a menüben "hamarosan"): hálózat `network/net_session.gd` (ENet, gazda–vendég,
+  a terv a fájl elején), menüablak `ui/multiplayer_panel.gd`; bekapcsolás: `NetSession.ENABLED`.
 - Gyakorló pálya: `ui/tutorial_guide.gd` (lépések), kézikönyv: `ui/tutorial_manual.gd` (az irányítás szövege a Beállítások fülön is).
