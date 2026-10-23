@@ -9,10 +9,12 @@ class_name Progress
 static func path() -> String:
 	return Profiles.save_path()
 
-## Tábori fejlesztések (minden alapstathoz egy). per_level: ennyit ad szintenként a
+## Tábori fejlesztések (minden stathoz egy; "icon_path": saját ikon, ha a szintlépés-kártyák között nincs). per_level: ennyit ad szintenként a
 ## `stat`-ra, minden futásra; costs: az egyes szintek ára tábori aranyban.
 ## 100 arany az első szint, és minden szint 100-zal drágább.
 const COSTS: Array[int] = [100, 200, 300, 400, 500]
+## A Többlövés nagyon erős (+1 nyíl): csak 2 szint, drágán.
+const MULTISHOT_COSTS: Array[int] = [600, 1200]
 const UPGRADES := {
 	"strength": {"name": "Erőedzés", "stat": "damage_percent", "per_level": 3, "costs": COSTS},
 	"weapon_mastery": {"name": "Fegyverforgatás", "stat": "damage", "per_level": 1, "costs": COSTS},
@@ -25,6 +27,19 @@ const UPGRADES := {
 	"fencing": {"name": "Vívógyakorlat", "stat": "attack_speed", "per_level": 4, "costs": COSTS},
 	"precision": {"name": "Célzógyakorlat", "stat": "crit_chance", "per_level": 1, "costs": COSTS},
 	"long_arms": {"name": "Nyújtózkodás", "stat": "attack_range", "per_level": 3, "costs": COSTS},
+	# Az újabb statok (eddig csak tárgyakon és szintlépéskor jöttek).
+	"arcana": {"name": "Rúnatanulás", "stat": "elemental_damage", "per_level": 1, "costs": COSTS},
+	"aiming": {"name": "Céllövölde", "stat": "accuracy", "per_level": 2, "costs": COSTS},
+	"volley": {"name": "Sortűz-gyakorlat", "stat": "multishot", "per_level": 1, "costs": MULTISHOT_COSTS,
+		"icon_path": "res://assets/ui/icon_multishot.png"},
+	"bloodletting": {"name": "Vérszívó ösztön", "stat": "lifesteal", "per_level": 2, "costs": COSTS,
+		"icon_path": "res://assets/ui/icon_lifesteal.png"},
+	"spiked_armor": {"name": "Tüskés vért", "stat": "thorns", "per_level": 1, "costs": COSTS,
+		"icon_path": "res://assets/ui/icon_thorns.png"},
+	"treasure_hunting": {"name": "Kincsvadászat", "stat": "gold_find", "per_level": 4, "costs": COSTS,
+		"icon_path": "res://assets/ui/icon_gold.png"},
+	"lore": {"name": "Mesterek könyvei", "stat": "xp_bonus", "per_level": 4, "costs": COSTS,
+		"icon_path": "res://assets/ui/icon_xp.png"},
 }
 
 ## A táborban váró arany (halálkor, kilépéskor, és a főellenség utáni visszatéréskor kerül ide).

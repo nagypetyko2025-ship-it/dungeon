@@ -46,17 +46,13 @@ func _build() -> void:
 	add_child(center)
 	var window := PanelContainer.new()
 	window.add_theme_stylebox_override("panel", UiStyle.decorated_panel())
-	window.custom_minimum_size = Vector2(1000, 0)
+	window.custom_minimum_size = Vector2(1180, 0)
 	center.add_child(window)
 	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 14)
+	root.add_theme_constant_override("separation", 8)
 	window.add_child(root)
 	root.add_child(UiStyle.title_bar("Kiképzősátor"))
-	var intro: Label = UiStyle.label("Itt edzhetsz a következő leszállásra. A fejlesztések minden futásra érvényesek. Az árukat a táborba\n"
-		+ "került aranyból fizeted (halálkor a pénzed 20%-a, a futás feladásakor 40%-a jut ide).",
-		15, UiStyle.INK_LIGHT)
-	root.add_child(intro)
-
+	# Egy sorban: a tábori kincs, és hogy mit mutat a kártya (szintenkénti érték, a következő szint ára).
 	var gold_row := HBoxContainer.new()
 	gold_row.add_theme_constant_override("separation", 8)
 	root.add_child(gold_row)
@@ -69,10 +65,10 @@ func _build() -> void:
 	gold_row.add_child(coin)
 	_gold_label = UiStyle.label("0", 20, Color(0.6, 0.38, 0.05))
 	gold_row.add_child(_gold_label)
-
-	root.add_child(UiStyle.label("Fejlesztések", 20, UiStyle.INK))
+	gold_row.add_child(UiStyle.label("   ·   Minden futásra érvényes. A kártyán: amit szintenként ad, és a következő szint ára (arany).",
+		14, UiStyle.INK_LIGHT))
 	_rows = GridContainer.new()
-	_rows.columns = 3
+	_rows.columns = 4
 	_rows.add_theme_constant_override("h_separation", 10)
 	_rows.add_theme_constant_override("v_separation", 8)
 	root.add_child(_rows)
@@ -98,14 +94,14 @@ func _make_row(id: String) -> PanelContainer:
 	var per_level: float = definition["per_level"]
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", UiStyle.plain_panel())
-	panel.custom_minimum_size = Vector2(360, 0)
+	panel.custom_minimum_size = Vector2(284, 0)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	panel.add_child(row)
 
 	var icon := TextureRect.new()
-	icon.texture = _icon_for(stat)
-	icon.custom_minimum_size = Vector2(44, 44)
+	icon.texture = load(definition["icon_path"]) if definition.has("icon_path") else _icon_for(stat)
+	icon.custom_minimum_size = Vector2(36, 36)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -117,8 +113,8 @@ func _make_row(id: String) -> PanelContainer:
 	row.add_child(info)
 	var level := Progress.level(id)
 	var max_level := Progress.max_level(id)
-	info.add_child(UiStyle.label("%s  (%d/%d)" % [definition["name"], level, max_level], 17, UiStyle.INK))
-	info.add_child(UiStyle.label("%s / szint" % _stat_text(stat, per_level), 13, UiStyle.INK_LIGHT))
+	info.add_child(_fitted(UiStyle.label(definition["name"], 15, UiStyle.INK)))
+	info.add_child(_fitted(UiStyle.label(_stat_text(stat, per_level) + " / szint", 12, UiStyle.INK_LIGHT)))
 	var pips := HBoxContainer.new()
 	pips.add_theme_constant_override("separation", 4)
 	for i in max_level:
@@ -127,13 +123,15 @@ func _make_row(id: String) -> PanelContainer:
 		pip.color = PIP_ON if i < level else PIP_OFF
 		pips.add_child(pip)
 	if level > 0:
-		pips.add_child(UiStyle.label(" %s" % _stat_text(stat, per_level * level), 13, Color(0.24, 0.5, 0.2)))
+		# Az összesen kapott érték (csak a szám: a stat neve a kártyán fölötte van).
+		pips.add_child(_fitted(UiStyle.label(" = %s" % _stat_text(stat, per_level * level).get_slice(" ", 0), 12, Color(0.24, 0.5, 0.2))))
 	info.add_child(pips)
 
 	var cost := Progress.next_cost(id)
-	var button := MenuStyle.button("Max" if cost < 0 else "%d arany" % cost)
-	button.custom_minimum_size = Vector2(104, 44)
-	button.add_theme_font_size_override("font_size", 16)
+	var button := MenuStyle.button("Max" if cost < 0 else str(cost))
+	button.tooltip_text = "" if cost < 0 else "%d tábori arany" % cost
+	button.custom_minimum_size = Vector2(62, 38)
+	button.add_theme_font_size_override("font_size", 14)
 	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	button.disabled = cost < 0 or Progress.camp_gold < cost
 	button.pressed.connect(_buy.bind(id))
@@ -149,10 +147,27 @@ func _icon_for(stat: String) -> Texture2D:
 	return null
 
 
+## Rövid felirat a kártyára (a tárgyleírások hosszabb szövegei nem férnének ki).
+const SHORT_LABELS := {"multishot": "nyíl", "lifesteal": "életlopás", "thorns": "tüskesebzés",
+	"gold_find": "több arany", "xp_bonus": "több tapasztalat"}
+
+
 func _stat_text(stat: String, value: float) -> String:
 	if stat == "health_regen":
 		return "+%s élet / mp" % str(snappedf(value, 0.01))
+	if SHORT_LABELS.has(stat):
+		var number := str(roundi(value)) + ("%" if stat in Items.PERCENT_STATS else "")
+		return "+%s %s" % [number, SHORT_LABELS[stat]]
 	return Items.format_stat(stat, value)
+
+
+## A címke nem szélesítheti a kártyát: ami nem fér ki, "..."-ra rövidül.
+func _fitted(label: Label) -> Label:
+	label.clip_text = true
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.custom_minimum_size.x = 1
+	return label
 
 
 func _buy(id: String) -> void:
