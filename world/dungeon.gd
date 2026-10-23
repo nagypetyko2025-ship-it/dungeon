@@ -363,7 +363,12 @@ func _enter_shop(return_position: Vector2) -> void:
 
 
 func _exit_shop() -> void:
-	_teleport(_shop_return, "")
+	# Biztonsági háló: ha a visszatérési pont mégis foglalt (oszlop, láda), a legközelebbi szabad helyre.
+	var target := _shop_return
+	for room in _rooms.get_children():
+		if room is Room and (room as Room).rect.has_point(Vector2i((target / Room.TILE).floor())):
+			target = (room as Room).safe_spawn_position(target)
+	_teleport(target, "")
 
 
 ## Elsötétül a kép, átteszi a játékost, majd kivilágosodik.

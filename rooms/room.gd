@@ -191,6 +191,10 @@ func _place_shop() -> void:
 	for dx in 2:
 		for dy in 2:
 			_used_tiles[left_tile + Vector2i(dx, dy)] = true
+	# A bolt előtti hely (ide jössz ki a boltból) is szabad marad: se oszlop, se csapda.
+	for dx in range(-1, 3):
+		for dy in range(2, 5):
+			_used_tiles[left_tile + Vector2i(dx, dy)] = true
 	_place_item_lift()
 
 

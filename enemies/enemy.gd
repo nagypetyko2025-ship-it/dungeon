@@ -63,6 +63,7 @@ var _ranged := false
 var _bow: Sprite2D
 var _shoot_left := 0.0
 var _aiming := false
+var _bow_scale := Vector2(2, 2)
 var _magic := false
 var _dash := false
 var _dash_state := DashState.READY
@@ -117,8 +118,11 @@ func _ready() -> void:
 		_magic = _type.get("projectile", "arrow") == "magic"
 		_bow = Sprite2D.new()
 		_bow.texture = SpriteSheet.region(_type.get("weapon_region", BOW_REGION))
-		_bow.scale = Vector2(2, 2)
-		_bow.position = Vector2(10, -24) * _size_scale
+		# A Visual a szörny méretével (size) már fel van nagyítva: a fegyver ezt kiegyenlíti, hogy a
+		# nagy szörnyeknél se legyen óriási; a kézmagasság a sprite magasságához igazodik.
+		_bow_scale = Vector2(2, 2) / _size_scale
+		_bow.scale = _bow_scale
+		_bow.position = Vector2(10, -_type["rect"].size.y * 0.85)
 		# Pl. a sárkány a szájából köp: nincs a kezében fegyver.
 		_bow.visible = not _type.get("no_weapon", false)
 		_visual.add_child(_bow)
@@ -230,11 +234,11 @@ func _aim_and_shoot() -> void:
 	if _magic:
 		tween.tween_property(_bow, "modulate", Color(3, 1.2, 3.5), AIM_TIME)
 	else:
-		tween.tween_property(_bow, "scale", Vector2(1.4, 2.4), AIM_TIME)
+		tween.tween_property(_bow, "scale", _bow_scale * Vector2(0.7, 1.2), AIM_TIME)
 	await tween.finished
 	_aiming = false
 	_shoot_left = stats["fire_interval"]
-	_bow.scale = Vector2(2, 2)
+	_bow.scale = _bow_scale
 	_bow.modulate = Color.WHITE
 	if not is_physics_processing() or not is_instance_valid(_player):
 		return
