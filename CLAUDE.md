@@ -34,12 +34,13 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   (város keletre: `world/town.gd`, kovács: `world/smithy.gd`, veterán + sáros ösvény nyugatra, a végén a romos ház:
   `world/ruin.gd`, benne a tolvaj rejtekszobája: `world/thief.gd`), `world/shop_interior.gd` bolt.
 - Állapot: `world/game_state.gd` (futás; `reset()`), `world/progress.gd` (mentett tábor: arany, láda, fejlesztések, küldetések).
+- Ellenségek útkeresése: `Dungeon.nav_path` (AStarGrid2D a padlón, oszlopok szilárdak), `Enemy._chase_direction`.
 - Ellenségek: `enemies/enemy_types.gd` (statok, 10. emeleti ugrás), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`;
   képességek: `enemies/enemy_abilities.gd` (méreg/fagy/fosztogatás a `Player.apply_poison/apply_slow/lose_gold`-on át).
 - Tárgyak: `items/items.gd` (DEFINITIONS); statok: `components/stats.gd`; szintlépés-kártyák: `components/upgrades.gd`.
 - UI: minden ablak CanvasLayer `open()/close()`-zal, a `ui/menus.gd` kezeli (KEYS: I, Tab, M, J). Stílus: `UiStyle`, `MenuStyle`.
 - Nyugati tisztás: romos ház + tolvaj (`world/ruin.gd`, `world/thief.gd`), kút + Lőrinc (`world/stranger.gd`), a kút alja: `world/well_cave.gd`.
-- Temető a kocsma alatt: `world/graveyard.gd`; mellette (keletre) a régi kápolna: `world/chapel.gd`. A sírásó (Vendel):
+- Temető a kocsma alatt: `world/graveyard.gd`; mellette (keletre) a régi kápolna: `world/chapel.gd` (létra a harangtoronyba, kötél: harang, `bell.wav`). A sírásó (Vendel):
   `world/gravedigger.gd` (küldetései: 50 csontváz, Szent kereszt; az elfogadás után átsétál a kápolnába, J könyv: "Csontváz sírásó" fül).
 - Város északi része: `world/castle.gd` (lakóház, út, királyi vár, őrök, trónterem; király: `world/king.gd`; a
   "Király" fül a J könyvben az első látogatás után; engedély: `deep_30` jelző, a 30. emelet után a táborban "done").

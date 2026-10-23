@@ -495,6 +495,73 @@ func _paint_tiles() -> void:
 			_wall_layer.set_cell(top, 0, WALL_TOP)
 
 
+# ---------------------------------------------------------------- útkeresés
+
+## Útkereső háló az ellenségeknek (lásd Enemy._chase_direction): a padló cellái, kivéve ahol valami
+## szilárd áll (oszlop, láda, bolt). Az első kéréskor épül fel, amikor már minden a helyén van.
+var _nav: AStarGrid2D
+
+
+## Út (világkoordináta-pontok) `from`-tól `to`-ig a falakat és az oszlopokat kerülve; üres, ha nincs.
+func nav_path(from: Vector2, to: Vector2) -> PackedVector2Array:
+	if _nav == null:
+		_build_nav()
+	var start := _nav_cell(from)
+	var goal := _nav_cell(to)
+	var result := PackedVector2Array()
+	if not _nav.is_in_boundsv(start) or not _nav.is_in_boundsv(goal) or _nav.is_point_solid(goal):
+		return result
+	# Ha az ellenség épp egy szilárd cella szélén áll (pl. oszlophoz nyomódott), a legközelebbi szabadból indul.
+	if _nav.is_point_solid(start):
+		start = _nearest_free(start)
+		if start == Vector2i(-99999, -99999):
+			return result
+	for cell: Vector2i in _nav.get_id_path(start, goal, true):
+		result.append(_wall_layer.to_global(_wall_layer.map_to_local(cell)))
+	return result
+
+
+func _nav_cell(at: Vector2) -> Vector2i:
+	return _wall_layer.local_to_map(_wall_layer.to_local(at))
+
+
+func _nearest_free(cell: Vector2i) -> Vector2i:
+	for offset: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1),
+			Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)]:
+		var next := cell + offset
+		if _nav.is_in_boundsv(next) and not _nav.is_point_solid(next):
+			return next
+	return Vector2i(-99999, -99999)
+
+
+func _build_nav() -> void:
+	_nav = AStarGrid2D.new()
+	var bounds := Rect2i()
+	var first := true
+	for cell: Vector2i in _floor:
+		if first:
+			bounds = Rect2i(cell, Vector2i.ONE)
+			first = false
+		else:
+			bounds = bounds.expand(cell).expand(cell + Vector2i.ONE)
+	_nav.region = bounds
+	_nav.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+	_nav.default_compute_heuristic = AStarGrid2D.HEURISTIC_OCTILE
+	_nav.default_estimate_heuristic = AStarGrid2D.HEURISTIC_OCTILE
+	_nav.update()
+	var space := get_world_2d().direct_space_state
+	var query := PhysicsPointQueryParameters2D.new()
+	query.collision_mask = 1
+	for x in range(bounds.position.x, bounds.end.x):
+		for y in range(bounds.position.y, bounds.end.y):
+			var cell := Vector2i(x, y)
+			var solid := not _floor.has(cell)
+			if not solid:
+				query.position = _wall_layer.to_global(_wall_layer.map_to_local(cell))
+				solid = not space.intersect_point(query, 1).is_empty()
+			_nav.set_point_solid(cell, solid)
+
+
 func _build_tile_set() -> TileSet:
 	var tile_set := TileSet.new()
 	tile_set.tile_size = Vector2i(16, 16)

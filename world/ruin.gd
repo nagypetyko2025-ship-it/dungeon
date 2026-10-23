@@ -75,6 +75,7 @@ var _ladder: Node2D
 var _lorinc: AnimatedSprite2D
 ## Épp a "Mutass egy varázslatot!" bemutató fut (közben a függő tűzgolyót nem lövi ki magától).
 var _showing := false
+var _well_mark: Label
 
 
 ## A tolvaj (Bence) a levél után a kocsmába költözött: a rejtekhely üres.
@@ -324,6 +325,16 @@ func _build_well() -> void:
 	well.scale = Vector2(2, 2)
 	well.position = Vector2(0, -WELL.get_height())
 	holder.add_child(well)
+	# Amíg Lőrinc lent van a kútban: sárga felkiáltójel lebeg a kút fölött (itt van valami).
+	_well_mark = MenuStyle.title_label("!", 40, MenuStyle.GOLD)
+	_well_mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_well_mark.custom_minimum_size = Vector2(40, 0)
+	_well_mark.position = Vector2(-20, -WELL.get_height() * 2 - 54)
+	_well_mark.z_index = 5
+	holder.add_child(_well_mark)
+	var bob := _well_mark.create_tween().set_loops()
+	bob.tween_property(_well_mark, "position:y", _well_mark.position.y - 8, 0.5).set_trans(Tween.TRANS_SINE)
+	bob.tween_property(_well_mark, "position:y", _well_mark.position.y, 0.5).set_trans(Tween.TRANS_SINE)
 	var body := StaticBody2D.new()
 	var shape := CollisionShape2D.new()
 	var box := RectangleShape2D.new()
@@ -462,6 +473,8 @@ func _process(delta: float) -> void:
 	if is_instance_valid(_ladder):
 		_ladder.visible = Progress.npc_quest_state(Stranger.LADDER_QUEST) == "active" \
 			and Progress.npc_quest_state(Stranger.LADDER_FOUND) != "done"
+	if is_instance_valid(_well_mark):
+		_well_mark.visible = not Stranger.is_rescued()
 	if is_instance_valid(_lorinc):
 		# A kocsmába költözése után (a beszélgetés bezárásakor) eltűnik a kút mellől.
 		if not get_tree().paused:

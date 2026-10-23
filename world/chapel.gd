@@ -4,7 +4,9 @@ extends Node2D
 ## harangtorony kereszttel, színes ablakok. Kopott és poros, de nem omlott össze. Bent padsorok,
 ## kifakult szőnyeg, oltár gyertyákkal, az ablakokon át fénysávok szállnak a porban. A sírásó
 ## (Gravedigger) a küldetése elfogadása után ide költözik; a Szent kereszt után a kereszt az
-## oltár fölött lóg. (A tábor építi fel: setup(camp) + build(), mint a Romos házat.)
+## oltár fölött lóg. Hátul egy létra vezet fel a harangtoronyba: kis poros padlásszoba, középen a
+## harang kötele (E: megszólal a harang), a sarokban a létra lefelé.
+## (A tábor építi fel: setup(camp) + build(), mint a Romos házat.)
 
 signal message(text: String)
 
@@ -12,6 +14,8 @@ const TILE := 32
 const RPG: Texture2D = preload("res://assets/shop/kenney_rpg.png")
 const DUNGEON: Texture2D = preload("res://assets/0x72_dungeon/0x72_DungeonTilesetII_v1.7.png")
 const COBWEB: Texture2D = preload("res://assets/decor/cobweb.png")
+const CONTAINERS: Texture2D = preload("res://assets/shop/barrels_and_boxes.png")
+const LADDER: Texture2D = preload("res://assets/props/ladder.png")
 ## A kápolna a temetőtől keletre (az ajtaja délre néz); a torony nem ér fel az útig.
 const TOP_LEFT := Vector2i(79, 22)
 const SIZE := Vector2i(6, 5)
@@ -28,6 +32,13 @@ const INTERIOR := Rect2i(420, 0, 12, 10)
 const INTERIOR_DOOR := Vector2i(425, 10)
 const ALTAR_TILE := Vector2i(425, 1)
 const VENDEL_TILE := Vector2i(423, 2)
+## A létra a kápolnában (a hátsó falnak támasztva, az oltártól jobbra) és a harangtorony szobája.
+const LADDER_TILE := Vector2i(428, 1)
+const BELFRY := Rect2i(470, 0, 8, 6)
+const BELFRY_LADDER := Vector2i(470, 5)
+const ROPE_TILE := Vector2i(474, 3)
+const BELFRY_LIGHT := Color(0.34, 0.3, 0.32)
+const BELL_COOLDOWN := 2.5
 ## Bent félhomály (gyertyák és az ablakok fénye).
 const INSIDE_LIGHT := Color(0.3, 0.27, 0.27)
 const LANTERN_INSIDE := 0.5
@@ -40,7 +51,10 @@ var _player: Node2D
 var _entities: Node2D
 var _prompt: Label
 var _dialogue: DialoguePanel
-var _inside := false
+## "outside" | "chapel" | "belfry"
+var _where := "outside"
+var _bell: BellRope
+var _bell_left := 0.0
 var _busy := false
 var _rng := RandomNumberGenerator.new()
 var _vendel: Node2D
@@ -74,6 +88,7 @@ func build() -> void:
 	_rng.seed = 4242
 	_build_exterior()
 	_build_interior()
+	_build_belfry()
 	_build_ui()
 
 
@@ -214,6 +229,14 @@ func _build_interior() -> void:
 	broom.position = Vector2(r.position.x + 0.5, r.position.y + 1.4) * TILE
 	broom.z_index = -7
 	add_child(broom)
+	# A létra a harangtoronyba: a hátsó falnak támasztva, fölötte nyílás a mennyezeten.
+	_rect(Rect2(Vector2(LADDER_TILE.x, r.position.y - 2) * TILE + Vector2(2, 0), Vector2(TILE - 4, 14)), -8, Color(0.06, 0.05, 0.05))
+	var ladder := Sprite2D.new()
+	ladder.texture = LADDER
+	ladder.scale = Vector2(2, 2)
+	ladder.position = _center(LADDER_TILE) + Vector2(0, -42)
+	ladder.z_index = -7
+	add_child(ladder)
 	# Porszemcsék lebegnek a fényben.
 	var motes := CPUParticles2D.new()
 	motes.position = Vector2(r.position.x + r.size.x / 2.0, r.position.y + r.size.y / 2.0) * TILE
@@ -259,18 +282,27 @@ func _focus() -> Array:
 	if not is_instance_valid(_player) or _busy:
 		return []
 	var at: Vector2 = _player.global_position
-	if not _inside:
-		if at.distance_to(door_position()) < INTERACT_RANGE:
-			return ["enter", "[E] Belépés: régi kápolna"]
-		return []
-	if at.distance_to(_center(INTERIOR_DOOR) + Vector2(TILE / 2.0, TILE / 2.0)) < INTERACT_RANGE:
-		return ["leave", "[E] Kilépés a szabadba"]
-	if _vendel.visible and at.distance_to(_vendel.position) < TALK_RANGE:
-		return ["talk", "[E] Beszélgetés: %s" % Gravedigger.SHORT_NAME]
+	match _where:
+		"outside":
+			if at.distance_to(door_position()) < INTERACT_RANGE:
+				return ["enter", "[E] Belépés: régi kápolna"]
+		"chapel":
+			if at.distance_to(_center(INTERIOR_DOOR) + Vector2(TILE / 2.0, TILE / 2.0)) < INTERACT_RANGE:
+				return ["leave", "[E] Kilépés a szabadba"]
+			if at.distance_to(_center(LADDER_TILE) + Vector2(0, 12)) < INTERACT_RANGE:
+				return ["up", "[E] Fel a harangtoronyba"]
+			if _vendel.visible and at.distance_to(_vendel.position) < TALK_RANGE:
+				return ["talk", "[E] Beszélgetés: %s" % Gravedigger.SHORT_NAME]
+		"belfry":
+			if at.distance_to(_center(BELFRY_LADDER)) < INTERACT_RANGE:
+				return ["down", "[E] Le a kápolnába"]
+			if at.distance_to(_center(ROPE_TILE)) < INTERACT_RANGE:
+				return ["bell", "[E] Meghúzod a harang kötelét"]
 	return []
 
 
 func _process(delta: float) -> void:
+	_bell_left = maxf(0.0, _bell_left - delta)
 	if not get_tree().paused:
 		_vendel.visible = Gravedigger.in_chapel()
 		_cross.visible = Progress.npc_quest_state(Gravedigger.CROSS_QUEST) == "done"
@@ -290,27 +322,155 @@ func _unhandled_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 	match focus[0]:
 		"enter":
-			_move(true, _center(INTERIOR_DOOR) + Vector2(TILE / 2.0, -TILE))
+			_move("chapel", _center(INTERIOR_DOOR) + Vector2(TILE / 2.0, -TILE))
 		"leave":
-			_move(false, door_position() + Vector2(0, 30))
+			_move("outside", door_position() + Vector2(0, 30))
+		"up":
+			_move("belfry", _center(BELFRY_LADDER + Vector2i(1, 0)))
+		"down":
+			_move("chapel", _center(LADDER_TILE) + Vector2(0, TILE))
+		"bell":
+			_ring()
 		"talk":
 			Audio.play("ui_open")
 			_dialogue.greeting = Gravedigger.greeting()
 			_camp.get_node("Menus").call("open_menu", _dialogue)
 
 
-func _move(inside: bool, at: Vector2) -> void:
+func _move(where: String, at: Vector2) -> void:
 	_busy = true
-	_inside = inside
-	Audio.play("door_unlock", -4.0)
-	var room := INTERIOR
+	var climbing := where == "belfry" or _where == "belfry"
+	_where = where
+	Audio.play("footstep" if climbing else "door_unlock", -2.0 if climbing else -4.0)
+	var inside := where != "outside"
+	var room := BELFRY if where == "belfry" else INTERIOR
 	var limits := Rect2(Vector2(room.position - Vector2i(3, 4)) * TILE, Vector2(room.size + Vector2i(6, 8)) * TILE) \
 		if inside else Rect2()
-	_camp.call("teleport_player", at, limits, INSIDE_LIGHT if inside else Color.BLACK)
+	var light := BELFRY_LIGHT if where == "belfry" else (INSIDE_LIGHT if inside else Color.BLACK)
+	_camp.call("teleport_player", at, limits, light)
 	await get_tree().create_timer(0.25).timeout
 	_player.get_node("PointLight2D").energy = LANTERN_INSIDE if inside else LANTERN_OUTSIDE
 	await get_tree().create_timer(0.35).timeout
 	_busy = false
+
+
+# ---------------------------------------------------------------- a harangtorony
+
+## Kis padlásszoba deszkapadlóval: hátul két boltíves nyílás az éjszakai égre, középen a harang
+## és a kötele, a bal alsó sarokban a nyílás a létrával lefelé; ládák, pókhálók, por.
+func _build_belfry() -> void:
+	var r := BELFRY
+	var planks := Planks.new()
+	planks.position = Vector2(r.position) * TILE
+	planks.size = Vector2(r.size) * TILE
+	planks.z_index = -10
+	add_child(planks)
+	for x in range(r.position.x, r.end.x):
+		_region_sprite(DUNGEON, WALL_TOP, _center(Vector2i(x, r.position.y - 2)), -9).modulate = STONE.darkened(0.1)
+		_region_sprite(DUNGEON, WALL_MID, _center(Vector2i(x, r.position.y - 1)), -9).modulate = STONE.darkened(0.1)
+		_region_sprite(DUNGEON, WALL_MID, _center(Vector2i(x, r.position.y)), -9).modulate = STONE.darkened(0.18)
+	var openings := BelfryWall.new()
+	openings.position = Vector2(r.position) * TILE
+	openings.width = r.size.x * TILE
+	openings.z_index = -8
+	add_child(openings)
+	var dark := Color(0.1, 0.08, 0.08)
+	for rect: Rect2 in [Rect2(Vector2(r.position.x - 1, r.position.y - 2) * TILE, Vector2(TILE, (r.size.y + 3) * TILE)),
+			Rect2(Vector2(r.end.x, r.position.y - 2) * TILE, Vector2(TILE, (r.size.y + 3) * TILE)),
+			Rect2(Vector2(r.position.x, r.end.y) * TILE, Vector2(r.size.x * TILE, TILE))]:
+		_rect(rect, -9, dark)
+		_solid(rect)
+	_solid(Rect2(Vector2(r.position.x, r.position.y - 2) * TILE, Vector2(r.size.x * TILE, TILE * 2.6)))
+	# A nyílás a padlóban és a kilógó létra (a sarokban).
+	_rect(Rect2(Vector2(BELFRY_LADDER) * TILE + Vector2(3, 3), Vector2(TILE - 6, TILE - 6)), -9, Color(0.04, 0.03, 0.03))
+	var ladder := Sprite2D.new()
+	ladder.texture = LADDER
+	ladder.region_enabled = true
+	ladder.region_rect = Rect2(0, 0, 12, 22)
+	ladder.scale = Vector2(2, 2)
+	ladder.position = _center(BELFRY_LADDER) + Vector2(0, -6)
+	ladder.z_index = -8
+	add_child(ladder)
+	# A harang és a kötele (középen).
+	_bell = BellRope.new()
+	_bell.position = _center(ROPE_TILE)
+	_entities.add_child(_bell)
+	_solid(Rect2(_center(ROPE_TILE) + Vector2(-8, -6), Vector2(16, 8)))
+	# Ládák a sarkokban, egy felborult vödör, pókhálók, porfoltok és lebegő por.
+	for spot: Array in [[Vector2i(r.end.x - 1, r.position.y + 1), Rect2(16, 0, 16, 16)],
+			[Vector2i(r.end.x - 2, r.position.y + 1), Rect2(32, 0, 16, 16)],
+			[Vector2i(r.end.x - 1, r.end.y - 1), Rect2(16, 0, 16, 16)],
+			[Vector2i(r.position.x, r.position.y + 1), Rect2(32, 0, 16, 16)]]:
+		_prop(CONTAINERS, spot[1], _center(spot[0]))
+	_cobweb(r.position, false, false, -7)
+	_cobweb(Vector2i(r.end.x - 1, r.position.y), true, false, -7)
+	_cobweb(Vector2i(r.end.x - 1, r.end.y - 1), true, true, -7)
+	_cobweb(Vector2i(r.position.x + 3, r.position.y), false, false, -7)
+	for i in 10:
+		var dust := ColorRect.new()
+		dust.color = Color(0.78, 0.72, 0.62, 0.14)
+		dust.size = Vector2(_rng.randf_range(16, 40), _rng.randf_range(8, 18))
+		dust.position = Vector2(r.position) * TILE + Vector2(_rng.randf_range(0, r.size.x * TILE - 40), _rng.randf_range(TILE, r.size.y * TILE - 18))
+		dust.z_index = -9
+		add_child(dust)
+	var motes := CPUParticles2D.new()
+	motes.position = Vector2(r.position.x + r.size.x / 2.0, r.position.y + r.size.y / 2.0) * TILE
+	motes.amount = 24
+	motes.lifetime = 6.0
+	motes.preprocess = 6.0
+	motes.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	motes.emission_rect_extents = Vector2(r.size) * TILE / 2.0
+	motes.gravity = Vector2(0, 3)
+	motes.spread = 180.0
+	motes.initial_velocity_min = 2.0
+	motes.initial_velocity_max = 5.0
+	motes.scale_amount_min = 1.0
+	motes.scale_amount_max = 2.0
+	motes.color = Color(1.0, 0.93, 0.8, 0.35)
+	motes.z_index = 3
+	add_child(motes)
+	_light(Vector2(r.position.x + r.size.x / 2.0, r.position.y + 0.5) * TILE, Color(0.55, 0.62, 0.85), 2.6, 0.5)
+
+
+## A harang meghúzása: megkondul, a harang kileng, a kötél rándul, és por hull a gerendákról.
+func _ring() -> void:
+	if _bell_left > 0.0:
+		return
+	_bell_left = BELL_COOLDOWN
+	Audio.play("bell", 2.0, 0.03)
+	_bell.ring()
+	var fall := CPUParticles2D.new()
+	fall.position = _center(ROPE_TILE) + Vector2(0, -3 * TILE)
+	fall.one_shot = true
+	fall.emitting = true
+	fall.amount = 30
+	fall.lifetime = 1.6
+	fall.explosiveness = 0.8
+	fall.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	fall.emission_rect_extents = Vector2(BELFRY.size.x * TILE / 2.0, 6)
+	fall.gravity = Vector2(0, 90)
+	fall.scale_amount_min = 1.0
+	fall.scale_amount_max = 2.5
+	fall.color = Color(0.8, 0.74, 0.62, 0.7)
+	fall.z_index = 4
+	add_child(fall)
+	get_tree().create_timer(2.5).timeout.connect(fall.queue_free)
+
+
+## Szilárd díszlet (láda) a y-szerint rendezett rétegben.
+func _prop(texture: Texture2D, region: Rect2, at: Vector2) -> void:
+	var holder := Node2D.new()
+	holder.position = at + Vector2(0, 16)
+	_entities.add_child(holder)
+	_region_sprite(texture, region, Vector2(0, -16), 0, holder).modulate = Color(0.75, 0.7, 0.66)
+	var body := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = Vector2(26, 12)
+	shape.shape = box
+	shape.position = Vector2(0, -6)
+	body.add_child(shape)
+	holder.add_child(body)
 
 
 # ---------------------------------------------------------------- segédek
@@ -571,3 +731,77 @@ class Broom:
 		draw_line(Vector2(0, 0), Vector2(10, -40), Color(0.45, 0.32, 0.2), 3.0)
 		draw_colored_polygon(PackedVector2Array([Vector2(-7, 8), Vector2(-2, -4), Vector2(4, -2), Vector2(5, 10)]),
 			Color(0.7, 0.58, 0.32))
+
+
+## Kopott deszkapadló (a harangtorony szobájában).
+class Planks:
+	extends Node2D
+	var size := Vector2.ZERO
+
+	func _draw() -> void:
+		var wood := Color(0.36, 0.26, 0.18)
+		draw_rect(Rect2(Vector2.ZERO, size), wood)
+		var row := 0
+		var y := 0.0
+		while y < size.y:
+			draw_line(Vector2(0, y), Vector2(size.x, y), wood.darkened(0.35), 1.0)
+			var x := 20.0 + (row % 3) * 22.0
+			while x < size.x:
+				draw_line(Vector2(x, y), Vector2(x, y + 12), wood.darkened(0.3), 1.0)
+				x += 64.0
+			y += 12.0
+			row += 1
+
+
+## A harangtorony hátsó fala: két boltíves nyílás, mögöttük az éjszakai ég csillagokkal.
+class BelfryWall:
+	extends Node2D
+	var width := 0.0
+
+	func _draw() -> void:
+		var t := float(TILE)
+		for x in [1.2 * t, width - 2.2 * t]:
+			var base := Vector2(x, 0.9 * t)
+			var arch := PackedVector2Array([base, base + Vector2(0, -1.4 * t), base + Vector2(0.5 * t, -1.9 * t),
+				base + Vector2(t, -1.4 * t), base + Vector2(t, 0)])
+			draw_colored_polygon(arch, Color(0.08, 0.1, 0.2))
+			for star: Vector2 in [Vector2(8, -30), Vector2(22, -46), Vector2(14, -14), Vector2(25, -22)]:
+				draw_rect(Rect2(base + star, Vector2(2, 2)), Color(0.9, 0.9, 0.75))
+			draw_polyline(arch, STONE.darkened(0.45), 2.0)
+
+
+## A harang (bronz, a szoba közepén lóg a gerendán) és a lelógó kötél; meghúzáskor kileng.
+class BellRope:
+	extends Node2D
+	var _swing := 0.0
+	var _time := 0.0
+
+	func ring() -> void:
+		_swing = 1.0
+		_time = 0.0
+
+	func _process(delta: float) -> void:
+		if _swing > 0.0:
+			_time += delta
+			_swing = maxf(0.0, _swing - delta * 0.35)
+			queue_redraw()
+
+	func _draw() -> void:
+		var angle := sin(_time * 7.0) * 0.32 * _swing
+		var hang := Vector2(0, -3.1 * TILE)
+		# A gerenda, amin a harang lóg.
+		draw_rect(Rect2(hang + Vector2(-60, -10), Vector2(120, 10)), Color(0.3, 0.2, 0.13))
+		var dir := Vector2(0, 1).rotated(angle)
+		var side := dir.orthogonal()
+		var top := hang + dir * 6.0
+		var mouth := hang + dir * 50.0
+		var bell := PackedVector2Array([top + side * 12.0, top - side * 12.0, mouth - side * 26.0 + dir * 4.0,
+			mouth + side * 26.0 + dir * 4.0])
+		draw_colored_polygon(bell, Color(0.62, 0.45, 0.2))
+		draw_polyline(bell + PackedVector2Array([bell[0]]), Color(0.32, 0.22, 0.1), 2.0)
+		draw_line(mouth - side * 26.0 + dir * 4.0, mouth + side * 26.0 + dir * 4.0, Color(0.8, 0.62, 0.3), 3.0)
+		draw_circle(mouth + dir * 8.0, 5.0, Color(0.3, 0.22, 0.14))
+		# A kötél a harang aljától le a padlóig (a vége kicsit leng).
+		var rope_end := Vector2(sin(_time * 7.0 + 0.6) * 6.0 * _swing, -6)
+		draw_line(mouth + dir * 10.0, rope_end, Color(0.62, 0.52, 0.34), 3.0)
+		draw_circle(rope_end, 4.0, Color(0.55, 0.45, 0.3))

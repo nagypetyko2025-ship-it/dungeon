@@ -28,7 +28,7 @@ const ALL: Array[Dictionary] = [
 		"icon_path": "res://assets/ui/icon_accuracy.png"},
 	{"stat": "elemental_damage", "title": "Elemi erő", "text": "+1 elemi sebzés (a varázslatokat erősíti)",
 		"amount": 1, "icon_path": "res://assets/ui/spell_bolt.png", "only": "wizard"},
-	{"stat": "attack_range", "title": "Hosszú karok", "text": "+12% hatótáv (messzebbre ér a kardod)", "amount": 12,
+	{"stat": "attack_range", "title": "Hosszú karok", "text": "+6% hatótáv (messzebbre ér a kardod)", "amount": 6,
 		"icon_path": "res://assets/ui/icon_range.png"},
 ]
 

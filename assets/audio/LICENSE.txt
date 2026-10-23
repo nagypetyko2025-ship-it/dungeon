@@ -12,3 +12,5 @@ anvil_1.wav, anvil_2.wav, anvil_3.wav: "Metal Impact Sounds" (clink1-3) by Brian
   https://opengameart.org/content/metal-impact-sounds
 
 level_up.ogg: "Music Jingles" (Kenney, CC0) jingles_NES03 - felfelé lépő, vidám dallam (korábban a lefelé lépő NES00 volt).
+
+bell.wav: templomi harang, ehhez a projekthez szintetizálva (a valódi harangok felhangjaiból), CC0.

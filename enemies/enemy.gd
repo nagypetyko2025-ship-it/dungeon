@@ -5,6 +5,8 @@ extends CharacterBody2D
 ## tartományaiból. Ha látja a játékost, felé megy, és érintéssel sebez.
 
 const KNOCKBACK_DECAY := 900.0
+## Ennyire megközelítve egy útpontot, a következőre indul.
+const PATH_REACHED := 12.0
 const HIT_STUN := 0.25
 const XP_ORB := preload("res://pickups/xp_orb.tscn")
 ## Ennél több gömb nem pattan ki; a maradék XP az utolsóba kerül.
@@ -62,6 +64,10 @@ var _stun_left := 0.0
 var _ranged := false
 var _bow: Sprite2D
 var _shoot_left := 0.0
+## Útkeresés (ha valami — oszlop, fal — áll közte és a játékos között): a kért út és a következő pontja.
+var _path := PackedVector2Array()
+var _path_index := 0
+var _repath_left := 0.0
 var _aiming := false
 var _bow_scale := Vector2(2, 2)
 var _magic := false
@@ -177,7 +183,7 @@ func _physics_process(delta: float) -> void:
 	_stun_left -= delta
 	if _stun_left <= 0.0 and is_instance_valid(_player) and not _abilities.is_busy() \
 			and global_position.distance_to(_player.global_position) < detect_range:
-		dir = _ranged_direction(delta) if _ranged else global_position.direction_to(_player.global_position)
+		dir = _ranged_direction(delta) if _ranged else _chase_direction(delta)
 		if _dash:
 			dir = _dash_direction(delta, dir)
 		dir = _abilities.steer(dir, delta)
@@ -212,11 +218,50 @@ func _ranged_direction(delta: float) -> Vector2:
 	if _aiming:
 		return Vector2.ZERO
 	var keep: float = stats["keep_distance"]
-	if not sees_player or distance > keep + DISTANCE_TOLERANCE:
+	if not sees_player:
+		return _chase_direction(delta)
+	if distance > keep + DISTANCE_TOLERANCE:
 		return to_player.normalized()
 	if distance < keep - DISTANCE_TOLERANCE:
 		return -to_player.normalized()
 	return Vector2.ZERO
+
+
+## Merre induljon a játékos felé: ha szabad az út (a teste szélességében sincs útban semmi),
+## egyenesen; különben az útkereső háló szerint (lásd Dungeon.nav_path), az oszlopokat megkerülve.
+func _chase_direction(delta: float) -> Vector2:
+	var target := _player.global_position
+	if _clear_to(target):
+		_path = PackedVector2Array()
+		return global_position.direction_to(target)
+	_repath_left -= delta
+	if _repath_left <= 0.0 or _path_index >= _path.size():
+		_repath_left = randf_range(0.4, 0.6)
+		var scene := get_tree().current_scene
+		_path = scene.call("nav_path", global_position, target) if scene.has_method("nav_path") else PackedVector2Array()
+		_path_index = 1 if _path.size() > 1 else 0
+	while _path_index < _path.size() and global_position.distance_to(_path[_path_index]) < PATH_REACHED:
+		_path_index += 1
+	if _path_index >= _path.size():
+		return global_position.direction_to(target)
+	return global_position.direction_to(_path[_path_index])
+
+
+## Szabad-e az egyenes út: két sugár a test két szélén (a falak és az oszlopok rétegén).
+func _clear_to(target: Vector2) -> bool:
+	var space := get_world_2d().direct_space_state
+	var side := global_position.direction_to(target).orthogonal() * _body_radius()
+	for offset: Vector2 in [side, -side]:
+		var query := PhysicsRayQueryParameters2D.create(global_position + offset, target + offset, 1)
+		query.exclude = [get_rid()]
+		if not space.intersect_ray(query).is_empty():
+			return false
+	return true
+
+
+func _body_radius() -> float:
+	var shape := $CollisionShape2D.shape as CircleShape2D
+	return shape.radius if shape != null else 8.0
 
 
 func _has_line_of_sight(from := Vector2.INF) -> bool:

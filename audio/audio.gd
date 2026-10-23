@@ -15,7 +15,7 @@ const VARIANTS := {
 	"arrow": 0, "magic": 0, "item_pickup": 0, "equip": 0, "buy": 0, "sell": 0, "stairs": 0,
 	"ui_click": 0, "ui_hover": 0, "ui_open": 0, "ui_close": 0, "ui_error": 0,
 	"boss_slam": 0, "boss_roar": 0, "level_up": 0, "boss_defeated": 0, "death": 0,
-	"anvil": 3,
+	"anvil": 3, "bell": 0,
 }
 ## Néhány effekt alap-hangereje (dB); a többi 0.
 const VOLUMES := {
