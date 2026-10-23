@@ -5,3 +5,4 @@ well.png: "16x16 Fence and Well" (williamthompsonj, CC0, https://opengameart.org
 ladder.png: a Kenney "Roguelike Indoors" (CC0) létra-csempéiből összerakva.
 
 bell.png: "Bell" (somebodylarr, CC0, https://opengameart.org/content/bell), a nagy harang kivágva.
+lift_gate.png: "Elevator Grate" (oo, CC0, https://opengameart.org/content/elevator-grate), a csukott ollórács kockája.

@@ -98,9 +98,15 @@ func _build() -> void:
 	_menu_box = VBoxContainer.new()
 	_menu_box.add_theme_constant_override("separation", 10)
 	root.add_child(_menu_box)
-	var teleport := MenuStyle.button("Teleport a %d. emeletre" % TELEPORT_DEPTH)
-	teleport.pressed.connect(_teleport)
-	_menu_box.add_child(teleport)
+	# Teleport a 10. emeletre (a liftszobához) vagy a 20.-ra (a Mélység Urához).
+	var teleports := GridContainer.new()
+	teleports.columns = 2
+	teleports.add_theme_constant_override("h_separation", 10)
+	_menu_box.add_child(teleports)
+	for depth: int in [10, TELEPORT_DEPTH]:
+		var teleport := _small_button("Teleport: %d. emelet" % depth, CHARACTER_BUTTON_SIZE, 20)
+		teleport.pressed.connect(_teleport.bind(depth))
+		teleports.add_child(teleport)
 	_god_button = MenuStyle.button("")
 	_god_button.pressed.connect(_toggle_god_mode)
 	_menu_box.add_child(_god_button)
@@ -279,9 +285,9 @@ func _build_badge() -> void:
 	_badge.add_child(label)
 
 
-func _teleport() -> void:
+func _teleport(depth := TELEPORT_DEPTH) -> void:
 	var scene := get_tree().current_scene
-	if not scene.has_method("cheat_teleport") or not scene.call("cheat_teleport", TELEPORT_DEPTH):
+	if not scene.has_method("cheat_teleport") or not scene.call("cheat_teleport", depth):
 		Audio.play("ui_error")
 		_status.text = "Itt most nem lehet teleportálni."
 		return

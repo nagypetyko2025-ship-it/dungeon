@@ -136,7 +136,8 @@ func _build_interior() -> void:
 		_tile(Town.DOUBLE_DOOR[i], Vector2i(INTERIOR_DOOR.x + i, r.end.y), -8)
 	# Két sor ágy a falak mentén; a legtöbbön sebesült fekszik.
 	var beds: Array[Vector2i] = []
-	for y in [1, 3, 5, 7]:
+	# Az ágysorok a fal alatt egy sor hellyel (a fal és a felső ágyak közé nem lehet beszorulni).
+	for y in [2, 4, 6, 8]:
 		beds.append(Vector2i(r.position.x + 1, r.position.y + y))
 		beds.append(Vector2i(r.end.x - 3, r.position.y + y))
 	var occupied := [true, true, false, true, true, true, false, true]
@@ -182,7 +183,8 @@ func _build_interior() -> void:
 	_light(Vector2(INTERIOR_DOOR.x + 0.5, r.position.y + 2) * TILE, Color(1.0, 0.78, 0.5), 1.6, 0.7)
 	_doctor_position = Vector2(INTERIOR_DOOR.x + 1.5, r.position.y + 2.8) * TILE
 	_npc(DOCTOR, _doctor_position)
-	_npc(NURSE, Vector2(r.position.x + 3.6, r.position.y + 3.0) * TILE).flip_h = true
+	# A nővér a középső folyosón áll (nem zár el semmilyen rést).
+	_npc(NURSE, Vector2(r.position.x + 5.2, r.position.y + 5.2) * TILE).flip_h = true
 	# Gyógyszeres polc a hátsó falon, ládák a sarokban, mosdótál, kosár véres kötéssel, paraván,
 	# száradó gyógyfüvek, a falnak támasztott hordágy, pókháló a sarokban.
 	var shelf := Shelf.new()

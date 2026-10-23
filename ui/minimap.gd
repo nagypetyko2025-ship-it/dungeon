@@ -7,6 +7,8 @@ extends Control
 const UNCLEARED_COLOR := Color(0.72, 0.2, 0.16)
 const CLEARED_COLOR := Color(0.27, 0.52, 0.24)
 const SHOP_COLOR := Color(0.88, 0.58, 0.12)
+## A 10. emelet liftszobája.
+const LIFT_COLOR := Color(0.25, 0.5, 0.9)
 const BOSS_COLOR := Color(0.46, 0.16, 0.52)
 ## A főellenség-terem jele: koponya a 0x72 lapról.
 const SKULL := Rect2(288, 432, 16, 16)
@@ -153,6 +155,8 @@ func _draw() -> void:
 func _room_color(room: Room) -> Color:
 	if room.has_shop:
 		return SHOP_COLOR
+	if room.has_lift_room:
+		return LIFT_COLOR
 	if room.has_boss and not room.is_cleared():
 		return BOSS_COLOR
 	return CLEARED_COLOR if room.is_cleared() else UNCLEARED_COLOR
@@ -182,7 +186,7 @@ func _draw_legend(rect: Rect2) -> void:
 	var font_size := 15
 	var entries := [
 		["Nincs kitakarítva", UNCLEARED_COLOR], ["Kitakarítva", CLEARED_COLOR],
-		["Bolt", SHOP_COLOR], ["Főellenség", BOSS_COLOR], ["Lépcső", STAIRS_COLOR], ["Ismeretlen", UNCLEARED_COLOR],
+		["Bolt", SHOP_COLOR], ["Lift", LIFT_COLOR], ["Főellenség", BOSS_COLOR], ["Lépcső", STAIRS_COLOR], ["Ismeretlen", UNCLEARED_COLOR],
 	]
 	var y := rect.position.y + rect.size.y / 2.0 + 4.0
 	var x := rect.position.x + 4.0

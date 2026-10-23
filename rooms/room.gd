@@ -61,6 +61,8 @@ var has_stairs := false
 var has_chest := false
 ## Bolt van a szoba északi falában (ilyenkor nincs harc a szobában).
 var has_shop := false
+## A 10. emelet liftszobája (Bertalan, a mérnök; lásd LiftRoom): nincs benne szörny, csapda, láda.
+var has_lift_room := false
 ## Járt-e már itt a játékos (a térképhez).
 var visited := false
 ## Főellenség-terem: a lépcső a fülkében van (lcove_dir irányban), rács mögött.
@@ -107,6 +109,8 @@ func _ready() -> void:
 			_stairs.call("set_locked", true)
 	if has_shop:
 		_place_shop()
+	if has_lift_room:
+		_place_lift_room()
 	if has_boss and not final_boss:
 		_create_alcove()
 	_create_doors()
@@ -196,6 +200,17 @@ func _place_shop() -> void:
 		for dy in range(2, 5):
 			_used_tiles[left_tile + Vector2i(dx, dy)] = true
 	_place_item_lift()
+
+
+## A liftszoba: a fülke a hátsó fal előtt, a szoba közepén; körülötte nem lesz oszlop.
+func _place_lift_room() -> void:
+	var top := Vector2i(anchor.x, rect.position.y + 1)
+	var lift_room := LiftRoom.new()
+	lift_room.position = tile_center(top) - position
+	add_child(lift_room)
+	for dx in range(-2, 4):
+		for dy in range(0, 4):
+			_used_tiles[top + Vector2i(dx, dy)] = true
 
 
 ## Tárgylift ugyanebben a falban, a középső folyosó bal oldalán (két csempe széles,

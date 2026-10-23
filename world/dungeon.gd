@@ -130,6 +130,14 @@ func _ready() -> void:
 	var distances := _distances_from_start(cells)
 	var stairs_cell := _farthest(distances)
 	var shop_cell := TUTORIAL_CELLS[2] if tutorial else NO_SHOP if final_floor else _pick_shop_cell(cells, stairs_cell)
+	# A 10. emeleten mindig van liftszoba (kék a térképen), a kezdőszobához legközelebbi szabad szobában.
+	var lift_cell := NO_SHOP
+	if depth == Engineer.DEPTH and not tutorial:
+		var best := 999999
+		for cell in cells:
+			if cell != Vector2i.ZERO and cell != stairs_cell and cell != shop_cell and int(distances[cell]) < best:
+				best = int(distances[cell])
+				lift_cell = cell
 	# Minden BOSS_EVERY. emeleten a lépcsős szoba helyett főellenség-terem van.
 	var boss_floor := depth % BOSS_EVERY == 0 and not tutorial and not final_floor
 	var alcove_dir := _free_direction(cells, stairs_cell) if boss_floor else Vector2i.ZERO
@@ -179,6 +187,8 @@ func _ready() -> void:
 				room.enemy_count = 1
 		elif cell == shop_cell:
 			room.has_shop = true
+		elif cell == lift_cell:
+			room.has_lift_room = true
 		elif boss_floor and cell == stairs_cell:
 			room.has_boss = true
 			room.alcove_dir = alcove_dir
