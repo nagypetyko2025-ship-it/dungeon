@@ -236,13 +236,11 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 			empty_text = "Gáspár, a veterán még nem kért tőled semmit.\n\n" \
 				+ "Beszélgess vele a táborban (a tábor nyugati részén ül, a sátra előtt)."
 		elif _tab == WELL_TAB and _ids.is_empty() and index == 0:
-			empty_text = "Még senki nem kért tőled semmit a kútnál.
-
-" 				+ "A nyugati tisztáson, a romos ház mellett áll egy öreg kút..."
+			empty_text = "Még senki nem kért tőled semmit a kútnál.\n\n" \
+				+ "A nyugati tisztáson, a romos ház mellett áll egy öreg kút..."
 		elif _tab == DIGGER_TAB and _ids.is_empty() and index == 0:
-			empty_text = "Vendel, a sírásó még nem kért tőled semmit.
-
-" 				+ "A kocsma alatti temetőben áll, a kapu mögött. Kérdezd meg, segíthetsz-e neki."
+			empty_text = "Vendel, a sírásó még nem kért tőled semmit.\n\n" \
+				+ "A kocsma alatti temetőben áll, a kapu mögött. Kérdezd meg, segíthetsz-e neki."
 		elif _tab == 2 and _ids.is_empty() and index == 0:
 			empty_text = "Még nem találkoztál a tolvajjal.\n\n" \
 				+ "Állítólag a sáros ösvény végén, egy romos házban rejtőzik valaki..."

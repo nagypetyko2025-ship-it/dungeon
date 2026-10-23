@@ -94,6 +94,21 @@ const ALL := {
 			"85% találati esély, 0.25 élet / mp regeneráció",
 		],
 	},
+	# Vendel, a csontváz sírásó: a legendás talizmán után költözik a kocsmába (a képességei még jönnek).
+	"gravedigger": {
+		"name": "Vendel", "sheet": "res://assets/characters/gravedigger.png", "frame_size": Vector2(24, 32),
+		"animations": {"idle": [0, 1, 2, 3], "run": [0, 1, 2, 3], "hit": [0]},
+		"start_weapon": "axe_wood", "seat": 1, "weapons": "melee", "unlock": "vendel_tavern", "accuracy": 80,
+		"description": "Csontváz sírásó: a halottak földjéről jött vissza, hogy hazahozza a többieket.",
+		"role": "Élőhalott sírásó",
+		"story": "Húsz évig temette a Mélység halottait a tábor szélén. Most, egy legendás talizmánnal a nyakában, " \
+			+ "újra lemegy: nem meghalni, hanem hazahozni, akit lehet.",
+		"traits": [
+			"Favágó fejszével indul; közelharci fegyvert forgathat, íjat nem",
+			"80% találati esély",
+			"(A különleges képességei hamarosan jönnek.)",
+		],
+	},
 	# Bence, a volt tolvaj (Benedek zászlóvivő fia): a levél-küldetés után költözik a kocsmába.
 	"thief": {
 		"name": "Bence", "sheet": "res://assets/characters/thief.png", "frame_size": Vector2(16, 28),
@@ -137,7 +152,8 @@ static func frames(id: String) -> SpriteFrames:
 		result.remove_animation("default")
 		var texture: Texture2D = load(definition["sheet"])
 		var size: Vector2 = definition["frame_size"]
-		var animations := {"idle": [0, 1, 2, 3], "run": [4, 5, 6, 7], "hit": [8]}
+		# Alapból 0-3 álló, 4-7 futás, 8 sebződés; a karakter "animations"-szel felülírhatja.
+		var animations: Dictionary = definition.get("animations", {"idle": [0, 1, 2, 3], "run": [4, 5, 6, 7], "hit": [8]})
 		for anim: String in animations:
 			result.add_animation(anim)
 			result.set_animation_speed(anim, SpriteSheet.ANIM_FPS)

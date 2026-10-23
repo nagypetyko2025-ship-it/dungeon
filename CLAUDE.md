@@ -6,6 +6,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Godot: `C:\Users\Peti\Desktop\Godot_v4.7.2-stable_win64.exe` (nincs a PATH-on)
 - Git: `C:\Program Files\Git\cmd\git.exe` (PowerShellben nincs a PATH-on; Bash-ben is ezt hívd)
 - Python + PIL elérhető (képek kivágása, átszínezése). ogg-kódoló nincs: hangot .wav-ban tegyél be (az Audio kezeli).
+- Pythonból GDScript-et szerkesztve a `
+` / `\` + sortörés könnyen valódi sortöréssé válik: szkriptfájlba írd (Write), ne heredocba.
 - Bash heredocban a `\` + sortörés és a hosszú, idézőjeles szövegek elromlanak: GDScript-et **Edit/Write** eszközzel szerkessz, ne Pythonnal a shellből.
 
 ## Szokások (a felhasználó kérései)
@@ -41,7 +43,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - UI: minden ablak CanvasLayer `open()/close()`-zal, a `ui/menus.gd` kezeli (KEYS: I, Tab, M, J). Stílus: `UiStyle`, `MenuStyle`.
 - Nyugati tisztás: romos ház + tolvaj (`world/ruin.gd`, `world/thief.gd`), kút + Lőrinc (`world/stranger.gd`), a kút alja: `world/well_cave.gd`.
 - Temető a kocsma alatt: `world/graveyard.gd`; mellette (keletre) a régi kápolna: `world/chapel.gd` (létra a harangtoronyba, kötél: harang, `bell.wav`). A sírásó (Vendel):
-  `world/gravedigger.gd` (küldetései: 50 csontváz, Szent kereszt; az elfogadás után átsétál a kápolnába, J könyv: "Csontváz sírásó" fül).
+  `world/gravedigger.gd` (küldetései: 50 csontváz → Szent kereszt → 20 zombi → legendás talizmán, köztük 2-2 történet; utána
+  a kocsmába költözik, játszható "gravedigger" karakter; J könyv: "Csontváz sírásó" fül).
 - Város északi része: `world/castle.gd` (lakóház, út, királyi vár, őrök, trónterem; király: `world/king.gd`; a
   "Király" fül a J könyvben az első látogatás után; engedély: `deep_30` jelző, a 30. emelet után a táborban "done").
 - Szörnyek könyve: állvány a táborban (`BESTIARY_TILE`), adatok: `world/bestiary.gd`, ablak: `ui/bestiary_book.gd`;

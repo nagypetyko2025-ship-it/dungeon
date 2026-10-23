@@ -375,7 +375,7 @@ func _focus() -> Array:
 func _process(delta: float) -> void:
 	# Bence (a volt tolvaj) a levél után, Lőrinc a királynak vitt levél után ideköltözik:
 	# leül a helyére, és onnantól játszható.
-	for id: String in ["thief", "wizard"]:
+	for id: String in ["thief", "wizard", "gravedigger"]:
 		if Characters.is_unlocked(id) and not _seated.has(id) and Progress.character != id:
 			_sit(id)
 	var focus := _focus()

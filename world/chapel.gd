@@ -55,6 +55,7 @@ var _dialogue: DialoguePanel
 var _where := "outside"
 var _bell: BellRope
 var _bell_left := 0.0
+var _vendel_walking := false
 var _busy := false
 var _rng := RandomNumberGenerator.new()
 var _vendel: Node2D
@@ -291,7 +292,7 @@ func _focus() -> Array:
 				return ["leave", "[E] Kilépés a szabadba"]
 			if at.distance_to(_center(LADDER_TILE) + Vector2(0, 12)) < INTERACT_RANGE:
 				return ["up", "[E] Fel a harangtoronyba"]
-			if _vendel.visible and at.distance_to(_vendel.position) < TALK_RANGE:
+			if _vendel.visible and not _vendel_walking and at.distance_to(_vendel.position) < TALK_RANGE:
 				return ["talk", "[E] Beszélgetés: %s" % Gravedigger.SHORT_NAME]
 		"belfry":
 			if at.distance_to(_center(BELFRY_LADDER)) < INTERACT_RANGE:
@@ -305,6 +306,9 @@ func _process(delta: float) -> void:
 	_bell_left = maxf(0.0, _bell_left - delta)
 	if not get_tree().paused:
 		_vendel.visible = Gravedigger.in_chapel()
+		# A legendás talizmán után (a beszélgetés bezárásakor) kisétál a kápolnából, a kocsmába.
+		if Gravedigger.leaving() and not _vendel_walking:
+			_vendel_leave()
 		_cross.visible = Progress.npc_quest_state(Gravedigger.CROSS_QUEST) == "done"
 	var focus := _focus()
 	if not focus.is_empty():
@@ -352,6 +356,28 @@ func _move(where: String, at: Vector2) -> void:
 	_player.get_node("PointLight2D").energy = LANTERN_INSIDE if inside else LANTERN_OUTSIDE
 	await get_tree().create_timer(0.35).timeout
 	_busy = false
+
+
+## Vendel a padsorok között az ajtóhoz sétál, és kimegy (onnantól a kocsmában ül, játszható).
+func _vendel_leave() -> void:
+	_vendel_walking = true
+	var door := _center(INTERIOR_DOOR) + Vector2(TILE / 2.0, TILE * 0.4)
+	var aisle := Vector2(door.x, _vendel.position.y + TILE)
+	var walk := create_tween()
+	walk.tween_interval(0.6)
+	var from := _vendel.position
+	for point: Vector2 in [aisle, door]:
+		walk.tween_property(_vendel, "position", point, from.distance_to(point) / 80.0)
+		from = point
+	walk.tween_property(_vendel, "modulate:a", 0.0, 0.4)
+	await walk.finished
+	Audio.play("door_unlock", -8.0)
+	Progress.set_npc_quest(Gravedigger.TAVERN_FLAG, "done")
+	Progress.save_game()
+	_vendel.visible = false
+	_vendel.modulate.a = 1.0
+	_vendel_walking = false
+	message.emit("Vendel a kocsmába költözött: mostantól játszható karakter.")
 
 
 # ---------------------------------------------------------------- a harangtorony
@@ -770,9 +796,11 @@ class BelfryWall:
 			draw_polyline(arch, STONE.darkened(0.45), 2.0)
 
 
-## A harang (bronz, a szoba közepén lóg a gerendán) és a lelógó kötél; meghúzáskor kileng.
+## A harang (assets/props/bell.png, a szoba közepén lóg a gerendán) és a lelógó kötél; meghúzáskor kileng.
 class BellRope:
 	extends Node2D
+	const BELL_TEXTURE: Texture2D = preload("res://assets/props/bell.png")
+	const BELL_SCALE := 1.1
 	var _swing := 0.0
 	var _time := 0.0
 
@@ -792,16 +820,12 @@ class BellRope:
 		# A gerenda, amin a harang lóg.
 		draw_rect(Rect2(hang + Vector2(-60, -10), Vector2(120, 10)), Color(0.3, 0.2, 0.13))
 		var dir := Vector2(0, 1).rotated(angle)
-		var side := dir.orthogonal()
-		var top := hang + dir * 6.0
-		var mouth := hang + dir * 50.0
-		var bell := PackedVector2Array([top + side * 12.0, top - side * 12.0, mouth - side * 26.0 + dir * 4.0,
-			mouth + side * 26.0 + dir * 4.0])
-		draw_colored_polygon(bell, Color(0.62, 0.45, 0.2))
-		draw_polyline(bell + PackedVector2Array([bell[0]]), Color(0.32, 0.22, 0.1), 2.0)
-		draw_line(mouth - side * 26.0 + dir * 4.0, mouth + side * 26.0 + dir * 4.0, Color(0.8, 0.62, 0.3), 3.0)
-		draw_circle(mouth + dir * 8.0, 5.0, Color(0.3, 0.22, 0.14))
+		var mouth := hang + dir * BELL_TEXTURE.get_height() * BELL_SCALE
+		# A letöltött harang a gerenda alatti pont körül leng.
+		draw_set_transform(hang, angle, Vector2(BELL_SCALE, BELL_SCALE))
+		draw_texture(BELL_TEXTURE, Vector2(-BELL_TEXTURE.get_width() / 2.0, -4))
+		draw_set_transform(Vector2.ZERO)
 		# A kötél a harang aljától le a padlóig (a vége kicsit leng).
 		var rope_end := Vector2(sin(_time * 7.0 + 0.6) * 6.0 * _swing, -6)
-		draw_line(mouth + dir * 10.0, rope_end, Color(0.62, 0.52, 0.34), 3.0)
+		draw_line(mouth - dir * 6.0, rope_end, Color(0.62, 0.52, 0.34), 3.0)
 		draw_circle(rope_end, 4.0, Color(0.55, 0.45, 0.3))

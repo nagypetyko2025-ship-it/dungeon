@@ -274,20 +274,17 @@ static func _show_magic() -> String:
 ## A varázslat-bemutató eleje (a beszélgetés utána magától bezárul, lásd Ruin).
 static func show_magic_intro() -> String:
 	Progress.mark_asked(ID, "magic")
-	return "[i]Lőrinc hátrébb lép, és a magasba emeli a talizmánt. A szemében apró lángok gyúlnak.[/i]
-
-" 		+ "Állj egy kicsit odébb, barátom... és figyelj!"
+	return "[i]Lőrinc hátrébb lép, és a magasba emeli a talizmánt. A szemében apró lángok gyúlnak.[/i]\n\n" \
+		+ "Állj egy kicsit odébb, barátom... és figyelj!"
 
 
 ## A bemutató után, amikor a beszélgetés újra megnyílik.
 static func show_magic_after(first: bool) -> String:
 	if first:
-		return "[i]Lőrinc elégedetten fújja meg a füstölgő tenyerét.[/i]
-
-" 			+ "Na? Évek óta nem sikerült ilyen tisztán. A talizmánod... él. Érzem, ahogy ég benne az erő."
-	return "[i]Lőrinc leporolja a köpenyét, a talizmán még halványan izzik a kezében.[/i]
-
-" 		+ "Ennyi elég is mára, mielőtt felgyújtom az egész tisztást. A romos ház már így is eleget szenvedett."
+		return "[i]Lőrinc elégedetten fújja meg a füstölgő tenyerét.[/i]\n\n" \
+			+ "Na? Évek óta nem sikerült ilyen tisztán. A talizmánod... él. Érzem, ahogy ég benne az erő."
+	return "[i]Lőrinc leporolja a köpenyét, a talizmán még halványan izzik a kezében.[/i]\n\n" \
+		+ "Ennyi elég is mára, mielőtt felgyújtom az egész tisztást. A romos ház már így is eleget szenvedett."
 
 
 static func _ask_name() -> String:

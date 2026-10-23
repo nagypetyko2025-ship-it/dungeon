@@ -3,3 +3,5 @@ lectern.png: olvasóállvány nyitott könyvvel, ehhez a projekthez rajzolva (pi
 throne.png: aranyozott trón vörös bársonnyal, ehhez a projekthez rajzolva (pixel art), szabadon használható (CC0).
 well.png: "16x16 Fence and Well" (williamthompsonj, CC0, https://opengameart.org/content/16x16-fence-and-well-tiny-16) kútja, 32x32-re kicsinyítve.
 ladder.png: a Kenney "Roguelike Indoors" (CC0) létra-csempéiből összerakva.
+
+bell.png: "Bell" (somebodylarr, CC0, https://opengameart.org/content/bell), a nagy harang kivágva.

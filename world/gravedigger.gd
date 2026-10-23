@@ -2,7 +2,9 @@ class_name Gravedigger
 ## Csontos Vendel, a csontváz fejű sírásó (lásd Graveyard és Chapel). Eleinte a temetőben áll,
 ## és csak mesél. A "Segíthetek valamiben?" kérdésre 50 csontváz elpusztítását kéri (a J könyv
 ## "Csontváz sírásó" fülén); utána átsétál a temető melletti régi kápolnába, és onnantól ott van.
-## Az 50 csontváz után elmeséli a történetét, és egy Szent kereszt amulettet kér.
+## Az 50 csontváz után elmeséli a történetét, és egy Szent kereszt amulettet kér. A kereszt után
+## (és két újabb történet után) 20 zombit kér, aztán (újabb két történet után) egy legendás talizmánt.
+## A talizmán után elsétál a kocsmába, és onnantól játszható karakter (Characters "gravedigger").
 
 const ID := "gravedigger"
 const NAME := "Csontos Vendel, a sírásó"
@@ -22,6 +24,15 @@ const CROSS_ID := "amulet_cross"
 const CROSS_GOLD := 250
 ## Belső jelző: Vendel már beköltözött a kápolnába ("done"; a séta után).
 const CHAPEL_FLAG := "digger_chapel"
+const ZOMBIE_QUEST := "digger_zombies"
+const ZOMBIE_BASE := "digger_zombies_base"
+const ZOMBIE_GOAL := 20
+const ZOMBIES: Array[String] = ["zombie", "tiny_zombie", "big_zombie", "ice_zombie"]
+const ZOMBIE_GOLD := 200
+const TALISMAN_QUEST := "digger_talisman"
+const TALISMAN_GOLD := 300
+## A talizmán után a kocsmába költözik: "walking" (a beszélgetés bezárása után kisétál), aztán "done".
+const TAVERN_FLAG := "vendel_tavern"
 
 const GREETING := "[i]Felnéz az ásójáról. Az arca helyén csupasz koponya, a szemgödreiben halvány fény pislákol.[/i]\n\n" \
 	+ "Ne ijedj meg, vándor. Ha bántani akarnálak, már egy gödörrel arrébb feküdnél.\n" \
@@ -42,6 +53,17 @@ const QUESTS := {
 			+ "újra megáldhassa vele a halottakat.",
 		"reward": "%d tábori arany (és Vendel áldása)" % CROSS_GOLD,
 		"doing": "vigyél Vendelnek egy Szent kereszt amulettet", "done": "a kereszt újra az oltáron"},
+	ZOMBIE_QUEST: {"name": "A rothadó testvérek",
+		"text": "Vendel szerint a zombik a Mélység legkegyetlenebb tréfája: a halottak, akiknek a testét "
+			+ "nem csak elvitte, hanem meg is tartotta. Pusztíts el [b]%d zombit[/b] a kazamatában " % ZOMBIE_GOAL
+			+ "(zombik, apró zombik, nagy zombik, jégzombik).",
+		"reward": "%d tábori arany (és Vendel újabb története)" % ZOMBIE_GOLD,
+		"doing": "pusztíts el zombikat", "done": "a zombik megpihentek"},
+	TALISMAN_QUEST: {"name": "Az utolsó kérés",
+		"text": "Vendel újra le akar menni a Mélységbe, de csontokkal és egy ásóval nem elég. Hozz neki egy "
+			+ "[b]legendás talizmánt[/b] (bármilyet, a táskádban legyen), hogy legyen mivel szembenéznie a sötéttel.",
+		"reward": "%d tábori arany (és Vendel csatlakozik hozzád)" % TALISMAN_GOLD,
+		"doing": "vigyél Vendelnek egy legendás talizmánt", "done": "Vendel a kocsmába költözött"},
 }
 
 const SMALL_TALK: Array[Dictionary] = [
@@ -67,23 +89,55 @@ const SMALL_TALK: Array[Dictionary] = [
 ## A története után (az 50 csontváz és a kereszt kérése után) ezekről is kérdezhetsz.
 const STORY_TALK: Array[Dictionary] = [
 	{"id": "ambrus", "text": "Milyen ember volt Ambrus atya?", "trust": 4,
-		"answer": "[i]Vendel szemgödreiben a fény megenyhül.[/i]
-
-" 			+ "Ambrus? Nagydarab, kopasz ember volt, a keze inkább kovácsé, mint paphoz illő. Minden reggel " 			+ "ő maga húzta meg a harangot, pedig ez az én dolgom lett volna. Azt mondta, a harang a hazavezető út: " 			+ "akit lent ér a hangja, az tudja, merre van fent.
-
-" 			+ "Amikor a kalandorok nem jöttek vissza, a nevüket felírta a kápolna falára. Ott vannak még most is, " 			+ "a por alatt. Néha letörlöm őket."},
+		"answer": "[i]Vendel szemgödreiben a fény megenyhül.[/i]\n\n" \
+			+ "Ambrus? Nagydarab, kopasz ember volt, a keze inkább kovácsé, mint paphoz illő. Minden reggel " \
+			+ "ő maga húzta meg a harangot, pedig ez az én dolgom lett volna. Azt mondta, a harang a hazavezető út: " \
+			+ "akit lent ér a hangja, az tudja, merre van fent.\n\n" \
+			+ "Amikor a kalandorok nem jöttek vissza, a nevüket felírta a kápolna falára. Ott vannak még most is, " \
+			+ "a por alatt. Néha letörlöm őket."},
 	{"id": "lich", "text": "Mi történt pontosan a tizenkettedik emeleten?", "trust": 5,
-		"answer": "[i]Sokáig hallgat. A csontujjai megszorítják az ásó nyelét.[/i]
-
-" 			+ "Hárman voltunk. Egy sötét terembe értünk, ahol a falakon jégvirágok nőttek, pedig odalent sosincs hideg. " 			+ "A lich a terem közepén ült, és várt. Nem támadott. Csak nézett.
-
-" 			+ "A két társam elfutott. Én maradtam, mert azt hittem, a kereszt megvéd. A lich felállt, lassan " 			+ "odajött, és leszakította a nyakamból, mintha csak egy pókhálót söpörne le. Aztán a homlokomra tette " 			+ "a kezét. Hideg volt. Azóta sem melegedtem fel."},
+		"answer": "[i]Sokáig hallgat. A csontujjai megszorítják az ásó nyelét.[/i]\n\n" \
+			+ "Hárman voltunk. Egy sötét terembe értünk, ahol a falakon jégvirágok nőttek, pedig odalent sosincs hideg. " \
+			+ "A lich a terem közepén ült, és várt. Nem támadott. Csak nézett.\n\n" \
+			+ "A két társam elfutott. Én maradtam, mert azt hittem, a kereszt megvéd. A lich felállt, lassan " \
+			+ "odajött, és leszakította a nyakamból, mintha csak egy pókhálót söpörne le. Aztán a homlokomra tette " \
+			+ "a kezét. Hideg volt. Azóta sem melegedtem fel."},
 	{"id": "return", "text": "Miért nem mentél le újra a keresztért?", "trust": 3,
-		"answer": "Lementem. Kétszer is.
+		"answer": "Lementem. Kétszer is.\n\n" \
+			+ "[i]Megkopogtatja a saját bordáit.[/i]\n\n" \
+			+ "De a Mélység nem szereti, ha a halottai visszamennek hozzá. Az első alkalommal a csontvázak " \
+			+ "letérdeltek előttem, mintha a vezérük lennék. A másodiknál már követni akartak, egészen fel, a táborig. " \
+			+ "Akkor értettem meg: ha még egyszer lemegyek, nem biztos, hogy én hozom fel őket... lehet, hogy ők " \
+			+ "visznek le engem. Ezért kértelek téged."},
+]
 
-" 			+ "[i]Megkopogtatja a saját bordáit.[/i]
 
-" 			+ "De a Mélység nem szereti, ha a halottai visszamennek hozzá. Az első alkalommal a csontvázak " 			+ "letérdeltek előttem, mintha a vezérük lennék. A másodiknál már követni akartak, egészen fel, a táborig. " 			+ "Akkor értettem meg: ha még egyszer lemegyek, nem biztos, hogy én hozom fel őket... lehet, hogy ők " 			+ "visznek le engem. Ezért kértelek téged."},
+## A kereszt után: két újabb történet (utánuk kéri a zombikat).
+const STORY_TALK_2: Array[Dictionary] = [
+	{"id": "names", "text": "Mi van a kápolna falára írt nevekkel?", "trust": 3,
+		"answer": "[i]Végighúzza a csontujját a falon, ahol a por alatt halványan betűk látszanak.[/i]\n\n" \
+			+ "Háromszáztizenkét név. Ambrus írta fel őket, egyenként, gyertyafénynél. Az utolsót én: az övét.\n\n" \
+			+ "Néha éjjel, amikor a harang magától megmozdul a szélben, úgy érzem, olvassák. A halottak szeretik, " \
+			+ "ha valaki emlékszik rájuk. Talán ezért nem mentek még el egészen."},
+	{"id": "zombies_story", "text": "Mi a különbség a csontvázak és a zombik között?", "trust": 4,
+		"answer": "A csontváz elfelejtette, ki volt. Csak megy, mert a Mélység hajtja.\n\n" \
+			+ "[i]Elhallgat, a szemgödreiben a fény elhalványul.[/i]\n\n" \
+			+ "A zombi viszont emlékszik. Ott a hús, ott az arc, ott minden, ami fáj. A Mélység meghagyta nekik, " \
+			+ "hogy tudják, mit veszítettek. Láttam egy zombit odalent, aki a lánya nevét suttogta, miközben rám támadt. " \
+			+ "Azt hiszem, nekik nagyobb szükségük van a nyugalomra, mint bárkinek."},
+]
+## A zombik után: két újabb történet (utánuk kéri a legendás talizmánt).
+const STORY_TALK_3: Array[Dictionary] = [
+	{"id": "daughter", "text": "Megtaláltad a zombit, aki a lánya nevét suttogta?", "trust": 4,
+		"answer": "[i]Bólint, lassan.[/i]\n\n" \
+			+ "Te találtad meg. Az egyik a húsz közül ő volt, érzem. Kerekes Pálnak hívták, molnár volt a faluban. " \
+			+ "A lánya, Zsófi, most a kovácsnál inas. Nem mondom el neki. Elég, ha tudja, hogy az apja végre alszik.\n\n" \
+			+ "Holnap faragok neki egy táblát. A kápolna falán még van hely."},
+	{"id": "go_down", "text": "Miért akarsz újra lemenni?", "trust": 5,
+		"answer": "Mert húsz évig csak temettem. Vártam, hogy a kalandorok hazahozzák, amit lehet, és eltemettem, " \
+			+ "amit hoztak.\n\n[i]Felemeli az ásót, és megforgatja a kezében, mint egy fegyvert.[/i]\n\n" \
+			+ "De most láttam, mire képes egy élő, aki nem fél. Ha egy halott is lemehet, és hazahozhat egy-két " \
+			+ "lelket... akkor az én helyem nem a kápolnában van. Hanem odalent. Veled."},
 ]
 
 
@@ -93,7 +147,12 @@ static func greeting() -> String:
 
 ## A küldetés elfogadása után a kápolnába költözik (a séta után ott marad).
 static func in_chapel() -> bool:
-	return Progress.npc_quest_state(CHAPEL_FLAG) == "done"
+	return Progress.npc_quest_state(CHAPEL_FLAG) == "done" and Progress.npc_quest_state(TAVERN_FLAG) != "done"
+
+
+## A talizmán után épp kisétál a kápolnából (a beszélgetés bezárásakor, lásd Chapel).
+static func leaving() -> bool:
+	return Progress.npc_quest_state(TAVERN_FLAG) == "walking"
 
 
 ## El kell-e indulnia a kápolnába (elfogadta a küldetést, de még a temetőben áll).
@@ -102,10 +161,23 @@ static func should_walk() -> bool:
 
 
 static func skeleton_kills() -> int:
+	return _kills(SKELETONS)
+
+
+static func zombie_kills() -> int:
+	return _kills(ZOMBIES)
+
+
+static func _kills(names: Array[String]) -> int:
 	var total := 0
-	for name in SKELETONS:
+	for name in names:
 		total += int(Progress.kills.get(name, 0))
 	return total
+
+
+static func zombie_progress() -> int:
+	var base := int(Progress.npc_quest_state(ZOMBIE_BASE))
+	return mini(zombie_kills() - base, ZOMBIE_GOAL)
 
 
 ## A küldetés elfogadása óta elpusztított csontvázak (legfeljebb a cél).
@@ -118,13 +190,16 @@ static func skeleton_progress() -> int:
 static func doing_text(id: String, fallback: String) -> String:
 	if id == SKELETON_QUEST:
 		return "%s: %d / %d" % [fallback, skeleton_progress(), SKELETON_GOAL]
+	if id == ZOMBIE_QUEST:
+		return "%s: %d / %d" % [fallback, zombie_progress(), ZOMBIE_GOAL]
 	return fallback
 
 
-## A beszélgetés opciói: elöl a küldetéshez tartozó, utána a kérdezgetés (legfeljebb 5 fér ki: a
-## története után a sztori-kérdések jönnek, a régi kérdésekből csak a még fel nem tettek).
+## A beszélgetés opciói: elöl a küldetéshez tartozó, utána a legújabb történetek, aztán a még fel nem
+## tett régi kérdések (legfeljebb 5 fér ki). A következő kérés csak a szakasz két történetje után jön.
 static func options(inventory: Inventory) -> Array[Dictionary]:
 	var list: Array[Dictionary] = []
+	var asked: Array = Progress.asked_topics(ID)
 	match Progress.npc_quest_state(SKELETON_QUEST):
 		"":
 			list.append({"id": "help", "text": "Segíthetek valamiben?",
@@ -135,28 +210,133 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 					"on_choose": func() -> String: return _finish_skeletons()})
 			else:
 				list.append({"id": "skeletons", "text": "Hogy állok a csontvázakkal?",
-					"on_choose": func() -> String: return "[i]Vendel az ujjain számol, a csontjai halkan " 						+ "kocognak.[/i]
-
-%d megpihent, még %d vár rád odalent. Ne siess: a halottak ráérnek." 						% [skeleton_progress(), SKELETON_GOAL - skeleton_progress()]})
-	match Progress.npc_quest_state(CROSS_QUEST):
+					"on_choose": func() -> String: return _count_answer(skeleton_progress(), SKELETON_GOAL)})
+	if Progress.npc_quest_state(CROSS_QUEST) == "active" and has_cross(inventory):
+		list.append({"id": "cross", "text": "Hoztam egy Szent kereszt amulettet.",
+			"on_choose": func() -> String: return _give_cross(inventory)})
+	match Progress.npc_quest_state(ZOMBIE_QUEST):
+		"":
+			if Progress.npc_quest_state(CROSS_QUEST) == "done" and _all_asked(STORY_TALK_2, asked):
+				list.append({"id": "more_help", "text": "Van még, amiben segíthetek?",
+					"on_choose": func() -> String: return _give_zombie_quest()})
 		"active":
-			if has_cross(inventory):
-				list.append({"id": "cross", "text": "Hoztam egy Szent kereszt amulettet.",
-					"on_choose": func() -> String: return _give_cross(inventory)})
-		"done":
-			list.append({"id": "blessing", "text": "Hogy vagy, Vendel?",
-				"on_choose": func() -> String: return "[i]Az oltár felé biccent, ahol a kereszt halványan " 					+ "csillog.[/i]
-
-Jobban, mint az elmúlt húsz évben bármikor. Éjjel már nem kaparnak a " 					+ "sírok. Ha egyszer te is odalent maradnál... ne félj. Megtalálom a neved, és helyet " 					+ "ások neki."})
+			if zombie_progress() >= ZOMBIE_GOAL:
+				list.append({"id": "zombies_done", "text": "Elpusztítottam húsz zombit.",
+					"on_choose": func() -> String: return _finish_zombies()})
+			else:
+				list.append({"id": "zombies", "text": "Hogy állok a zombikkal?",
+					"on_choose": func() -> String: return _count_answer(zombie_progress(), ZOMBIE_GOAL)})
+	match Progress.npc_quest_state(TALISMAN_QUEST):
+		"":
+			if Progress.npc_quest_state(ZOMBIE_QUEST) == "done" and _all_asked(STORY_TALK_3, asked):
+				list.append({"id": "last_wish", "text": "Mire van még szükséged?",
+					"on_choose": func() -> String: return _give_talisman_quest()})
+		"active":
+			if has_legendary_talisman(inventory):
+				list.append({"id": "talisman", "text": "Hoztam egy legendás talizmánt.",
+					"on_choose": func() -> String: return _give_talisman(inventory)})
+	# Történetek: a legújabb szakaszé elöl, a régebbiekből csak a fel nem tettek.
+	var stages: Array = []
+	if Progress.npc_quest_state(ZOMBIE_QUEST) == "done":
+		stages.append(STORY_TALK_3)
+	if Progress.npc_quest_state(CROSS_QUEST) == "done":
+		stages.append(STORY_TALK_2)
 	if Progress.npc_quest_state(SKELETON_QUEST) == "done":
-		list.append_array(STORY_TALK)
-		var asked: Array = Progress.asked_topics(ID)
-		for option in SMALL_TALK:
+		stages.append(STORY_TALK)
+	if stages.is_empty():
+		list.append_array(SMALL_TALK)
+		return list
+	list.append_array(stages[0])
+	for stage: Array in stages.slice(1) + [SMALL_TALK]:
+		for option: Dictionary in stage:
 			if not asked.has(option["id"]):
 				list.append(option)
-	else:
-		list.append_array(SMALL_TALK)
 	return list
+
+
+static func _all_asked(stage: Array[Dictionary], asked: Array) -> bool:
+	for option in stage:
+		if not asked.has(option["id"]):
+			return false
+	return true
+
+
+static func _count_answer(done: int, goal: int) -> String:
+	return "[i]Vendel az ujjain számol, a csontjai halkan kocognak.[/i]\n\n" \
+		+ "%d megpihent, még %d vár rád odalent. Ne siess: a halottak ráérnek." % [done, goal - done]
+
+
+static func _give_zombie_quest() -> String:
+	Progress.set_npc_quest(ZOMBIE_QUEST, "active")
+	Progress.set_npc_quest(ZOMBIE_BASE, str(zombie_kills()))
+	Progress.mark_asked(ID, "more_help")
+	Progress.save_game()
+	return "[i]Vendel az oltár előtt áll, a kereszt fénye megcsillan a koponyáján.[/i]\n\n" \
+		+ "Van. A zombik. Már beszéltem róluk: emlékeznek. Minden nap, minden órában emlékeznek.\n\n" \
+		+ "Pusztíts el közülük [b]húszat[/b]. Gyorsan, ha lehet, ne szenvedjenek. Én addig itt imádkozom értük, " \
+		+ "ahogy Ambrus tanította. Talán így könnyebben találnak haza.\n\n" \
+		+ "[color=#7a4a10](Új küldetés a J könyvben.)[/color]"
+
+
+static func _finish_zombies() -> String:
+	Progress.set_npc_quest(ZOMBIE_QUEST, "done")
+	Progress.add_camp_gold(ZOMBIE_GOLD)
+	Progress.change_trust(ID, 20)
+	Progress.save_game()
+	Audio.play("level_up")
+	return "[i]A gyertyák lángja megremeg, mintha valaki elsétálna mellettük. Vendel lehajtja a fejét.[/i]\n\n" \
+		+ "Húsz. Érzem mindet. Az egyik... ő volt az, akiről meséltem. Köszönöm. Ezt neked tettem félre. " \
+		+ "[color=#7a4a10](+%d tábori arany)[/color]\n\n" % ZOMBIE_GOLD \
+		+ "Ülj le egy kicsit, ha van időd. Van még mit mesélnem."
+
+
+static func _give_talisman_quest() -> String:
+	Progress.set_npc_quest(TALISMAN_QUEST, "active")
+	Progress.mark_asked(ID, "last_wish")
+	Progress.save_game()
+	return "[i]Vendel sokáig nézi az ásóját, aztán a kereszt felé fordul.[/i]\n\n" \
+		+ "Egy dologra. Ha lemegyek, nem mehetek csak csontokkal és egy ásóval. A lich egyszer már elvett " \
+		+ "tőlem mindent. Kell valami, ami erősebb nála.\n\n" \
+		+ "Hozz nekem egy [b]legendás talizmánt[/b]. Tudom, ritka kincs, és nagy kérés egy halottól. " \
+		+ "De ha meghozod, esküszöm a kápolna harangjára: melletted leszek odalent, amíg a csontjaim bírják.\n\n" \
+		+ "[color=#7a4a10](Új küldetés a J könyvben.)[/color]"
+
+
+static func is_legendary_talisman(item: Variant) -> bool:
+	return item is Dictionary and item.get("slot", "") == "trinket" and item.get("rarity", "") == "legendary"
+
+
+static func has_legendary_talisman(inventory: Inventory) -> bool:
+	for item: Variant in inventory.bag:
+		if is_legendary_talisman(item):
+			return true
+	return false
+
+
+## A talizmán után: megköszöni, mesél, és (a beszélgetés bezárásakor) elsétál a kocsmába.
+static func _give_talisman(inventory: Inventory) -> String:
+	for i in inventory.bag.size():
+		var item: Variant = inventory.bag[i]
+		if not is_legendary_talisman(item):
+			continue
+		inventory.take_from_bag(i)
+		Progress.set_npc_quest(TALISMAN_QUEST, "done")
+		Progress.set_npc_quest(TAVERN_FLAG, "walking")
+		Progress.add_camp_gold(TALISMAN_GOLD)
+		Progress.change_trust(ID, 30)
+		Progress.save_game()
+		Audio.play("level_up")
+		return "[i]Vendel két kézzel veszi át a(z) %s. A talizmán felizzik a csontujjai között, " % item["name"] \
+			+ "és a fény lassan végigkúszik a karján, egészen a szemgödreiig.[/i]\n\n" \
+			+ "Érzed? Meleg. Húsz éve nem éreztem meleget.\n\n" \
+			+ "Tudod, mit mondott Ambrus, amikor utoljára láttam? Hogy a halottaknak nem az a dolguk, hogy " \
+			+ "várjanak. Hanem hogy emlékeztessék az élőket, miért érdemes visszajönni. Azt hittem, ezt a sírokkal " \
+			+ "teszem. De most már tudom: azzal, ha lemegyek, és hazahozom, akit lehet.\n\n" \
+			+ "[i]Felveszi az ásót, a vállára veti, és az ajtó felé indul.[/i]\n\n" \
+			+ "A kocsmában várlak. Mondd meg a kocsmárosnak, hogy a csontváz nem iszik... de egy széket azért kérek.\n\n" \
+			+ "[color=#7a4a10](+%d tábori arany. Vendel a kocsmába költözik: mostantól játszható karakter.)[/color]" \
+			% TALISMAN_GOLD
+	return "Hm? Nem látok nálad legendás talizmánt."
 
 
 static func _give_skeleton_quest() -> String:
