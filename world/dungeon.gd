@@ -552,6 +552,11 @@ func _build_nav() -> void:
 	var space := get_world_2d().direct_space_state
 	var query := PhysicsPointQueryParameters2D.new()
 	query.collision_mask = 1
+	# A harc közbeni zárak (Door) nem számítanak: azok csak ideiglenesek.
+	var doors: Array[RID] = []
+	for door in get_tree().get_nodes_in_group("doors"):
+		doors.append((door as CollisionObject2D).get_rid())
+	query.exclude = doors
 	for x in range(bounds.position.x, bounds.end.x):
 		for y in range(bounds.position.y, bounds.end.y):
 			var cell := Vector2i(x, y)

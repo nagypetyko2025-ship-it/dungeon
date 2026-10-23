@@ -459,7 +459,13 @@ func _physics_process(delta: float) -> void:
 		_sprite.play("run" if input_dir != Vector2.ZERO else "idle")
 
 	_cooldown_left = maxf(_cooldown_left - delta, 0.0)
-	if Input.is_action_pressed("attack") and _cooldown_left <= 0.0:
+	# Vendel ásója magától üt, ha egy szörny túl közel ér (vele nem lehet kattintásra ütni).
+	if _weapon_type == "shovel":
+		if _cooldown_left <= 0.0 and not get_tree().paused:
+			var threat := _closest_threat()
+			if threat != null:
+				_swing((threat.global_position + Vector2(0, -12) - _weapon_pivot.global_position).angle())
+	elif Input.is_action_pressed("attack") and _cooldown_left <= 0.0:
 		_swing(aim.angle())
 	_cooldown_bar.set_ratio(1.0 - _cooldown_left / _primary_cooldown())
 
@@ -501,10 +507,33 @@ func war_cry_cooldown_ratio() -> float:
 	return _war_cry_left / WAR_CRY_COOLDOWN
 
 
+## A mozgási sebesség most (lassítás nélkül): Vendel csontvázai ezzel mennek (lásd SkeletonMinion).
+func move_speed_now() -> float:
+	return BASE_SPEED * _stats.move_speed / 100.0
+
+
+## Az ásó önműködő csapásához: a legközelebbi élő szörny, ha az ásó elér odáig (különben null).
+func _closest_threat() -> Node2D:
+	var reach := SHOVEL_AUTO_RANGE * _stats.attack_range / 100.0
+	var best: Node2D = null
+	for node in get_tree().get_nodes_in_group("enemies"):
+		var enemy := node as Node2D
+		var hurtbox := enemy.get_node_or_null("Hurtbox") as Area2D if enemy != null else null
+		if hurtbox == null or not hurtbox.monitoring:
+			continue
+		var distance := enemy.global_position.distance_to(global_position)
+		if distance < reach:
+			reach = distance
+			best = enemy
+	return best
+
+
 ## Csontváz-idézés (csak Vendel, Ctrl, a kazamatában): SUMMON_COUNT csontváz kel ki a földből
 ## körülötte, és érte harcol (lásd SkeletonMinion); egyszerre legfeljebb MAX_MINIONS. A töltési idő
 ## SUMMON_COOLDOWN mp, az ütési sebességgel arányosan rövidül.
 const SUMMON_COOLDOWN := 3.0
+## Ennyire közel érő szörnyre csap le magától az ásó (a Hatótávval nő).
+const SHOVEL_AUTO_RANGE := 74.0
 const SUMMON_COUNT := 3
 const MAX_MINIONS := 6
 

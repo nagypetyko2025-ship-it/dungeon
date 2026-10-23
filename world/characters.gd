@@ -109,11 +109,11 @@ const ALL := {
 		"story": "Húsz évig temette a Mélység halottait a tábor szélén. Most, egy legendás talizmánnal a nyakában, " \
 			+ "újra lemegy: nem meghalni, hanem hazahozni, akit lehet.",
 		"traits": [
-			"A saját ásójával harcol, mást nem használhat: lassú és gyenge, de nagyon messzire lök",
+			"A saját ásójával harcol, mást nem használhat: magától üt, ha egy szörny túl közel ér; lassú és gyenge, de nagyon messzire lök",
 			"Csak 9 élettel indul (csontváz), 80% találati esély, 20% kikerülés",
 			"14%-kal lassabban mozog",
 			"Ütési sebesség kártya szintlépéskor: 15%-kal többet ad neki",
-			"Csontváz-idézés [Ctrl]: 3 csontváz kel ki a földből, és érte harcol (legfeljebb 6 egyszerre; 3 mp, az ütési sebességgel rövidül)",
+			"Csontváz-idézés [Ctrl]: 3 csontváz kel ki a földből, és érte harcol (legfeljebb 6 egyszerre; 3 mp, az ütési sebességgel rövidül). Olyan gyorsak, mint ő, és átjutnak a harc közbeni zárakon",
 		],
 	},
 	# Bence, a volt tolvaj (Benedek zászlóvivő fia): a levél-küldetés után költözik a kocsmába.

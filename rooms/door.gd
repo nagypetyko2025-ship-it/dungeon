@@ -15,6 +15,8 @@ func _init() -> void:
 	collision_layer = 1
 	collision_mask = 0
 	z_index = -5
+	# Vendel csontvázai átmennek rajta (lásd SkeletonMinion), és az útkereső háló sem számolja falnak.
+	add_to_group("doors")
 
 
 func setup(tile_points: Array[Vector2], tile_size: int) -> void:

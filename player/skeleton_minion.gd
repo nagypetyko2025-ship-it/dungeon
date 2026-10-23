@@ -2,9 +2,12 @@ class_name SkeletonMinion
 extends CharacterBody2D
 ## Vendel megidézett csontváza (lásd Player._summon): kikel a földből, a legközelebbi szörnyre
 ## támad, ha nincs a közelben szörny, Vendel mellett marad. LIFETIME mp után (vagy ha a szörnyek
-## eleget ütik) szétesik. A falakon nem megy át, a szörnyeken és a játékoson igen.
+## eleget ütik) szétesik. Pontosan olyan gyors, mint Vendel (hogy lépést tartson vele). A falakon nem
+## megy át (megkerüli őket, lásd Dungeon.nav_path), a harc közbeni zárakon (Door) igen, hogy ne
+## ragadjon kint, ha Vendel már bent van; a szörnyeken és a játékoson is átmegy.
 
-const SPEED := 125.0
+## Ha nincs gazdája (nem kellene előfordulnia), ilyen gyors.
+const SPEED := 170.0
 const ATTACK_RANGE := 30.0
 const ATTACK_COOLDOWN := 0.9
 const SEEK_RANGE := 300.0
@@ -27,6 +30,9 @@ var _life_left := LIFETIME
 var _health := HEALTH
 var _hurt_left := 0.0
 var _rising := true
+var _path := PackedVector2Array()
+var _path_index := 0
+var _repath_left := 0.0
 
 
 func _ready() -> void:
@@ -38,6 +44,8 @@ func _ready() -> void:
 	circle.radius = 6.0
 	shape.shape = circle
 	add_child(shape)
+	for door in get_tree().get_nodes_in_group("doors"):
+		add_collision_exception_with(door)
 	_sprite = AnimatedSprite2D.new()
 	_sprite.sprite_frames = SpriteSheet.character_frames(FIGURE, true)
 	_sprite.scale = Vector2(2, 2)
@@ -67,7 +75,7 @@ func _physics_process(delta: float) -> void:
 	if target != null:
 		var to := target.global_position - global_position
 		if to.length() > ATTACK_RANGE:
-			dir = to.normalized()
+			dir = _direction_to(target.global_position, delta)
 		elif _attack_left <= 0.0:
 			_attack(target)
 		# A szörnyek teste sebzi (lassan esik szét).
@@ -77,12 +85,42 @@ func _physics_process(delta: float) -> void:
 			_sprite.modulate = Color(2, 2, 2)
 			create_tween().tween_property(_sprite, "modulate", TINT, 0.2)
 	elif is_instance_valid(owner_player) and global_position.distance_to(owner_player.global_position) > FOLLOW_DISTANCE:
-		dir = global_position.direction_to(owner_player.global_position)
-	velocity = dir * SPEED
+		dir = _direction_to(owner_player.global_position, delta)
+	velocity = dir * _speed()
 	move_and_slide()
 	if dir.x != 0.0:
 		_sprite.flip_h = dir.x < 0.0
 	_sprite.play("run" if dir != Vector2.ZERO else "idle")
+
+
+## Vendel mozgási sebessége (a lassítás nélkül): így mindig lépést tart vele.
+func _speed() -> float:
+	if not is_instance_valid(owner_player):
+		return SPEED
+	return float(owner_player.call("move_speed_now"))
+
+
+## Merre induljon: egyenesen, ha szabad az út (a zárakon át is), különben az útkereső háló szerint.
+func _direction_to(target: Vector2, delta: float) -> Vector2:
+	var query := PhysicsRayQueryParameters2D.create(global_position, target, 1)
+	var exclude: Array[RID] = [get_rid()]
+	for door in get_tree().get_nodes_in_group("doors"):
+		exclude.append((door as CollisionObject2D).get_rid())
+	query.exclude = exclude
+	if get_world_2d().direct_space_state.intersect_ray(query).is_empty():
+		_path = PackedVector2Array()
+		return global_position.direction_to(target)
+	_repath_left -= delta
+	if _repath_left <= 0.0 or _path_index >= _path.size():
+		_repath_left = 0.4
+		var scene := get_tree().current_scene
+		_path = scene.call("nav_path", global_position, target) if scene.has_method("nav_path") else PackedVector2Array()
+		_path_index = 1 if _path.size() > 1 else 0
+	while _path_index < _path.size() and global_position.distance_to(_path[_path_index]) < 12.0:
+		_path_index += 1
+	if _path_index >= _path.size():
+		return global_position.direction_to(target)
+	return global_position.direction_to(_path[_path_index])
 
 
 func _nearest_enemy() -> Node2D:
