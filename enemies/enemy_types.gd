@@ -324,6 +324,8 @@ const SURGE_DEPTHS: Array[int] = [10, 21]
 const SURGE_HEALTH := 1.6
 const SURGE_DAMAGE := 1.35
 const SURGE_DODGE := 5
+## Minden szörny kikerülési esélye ennyiszerese a táblázat (+ emelet) szerintinek.
+const DODGE_FACTOR := 0.25
 const SURGE_XP := 1.5
 
 ## Erősödés emeletenként (az 1. emelethez képest):
@@ -392,6 +394,8 @@ static func roll(type: Dictionary, depth: int) -> Dictionary:
 		stats["damage"] = roundi(stats["damage"] * SURGE_DAMAGE)
 		stats["dodge"] = mini(stats["dodge"] + SURGE_DODGE, 50)
 		stats["xp"] = roundi(stats["xp"] * SURGE_XP)
+	# A tesztelők szerint túl gyakran kerülték ki az ütéseket: a végső kikerülés negyede marad (-75%).
+	stats["dodge"] = roundi(stats["dodge"] * DODGE_FACTOR)
 	if type.get("ranged", false):
 		for key in ["fire_interval", "arrow_speed", "keep_distance"]:
 			stats[key] = randf_range(type[key][0], type[key][1])
