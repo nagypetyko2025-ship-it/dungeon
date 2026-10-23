@@ -201,6 +201,7 @@ func _ready() -> void:
 	add_child(lake)
 	lake.setup(self)
 	lake.build()
+	_entities.add_child(Fisherman.new())
 	# A temető mellett (keletre) a régi kápolna; a sírásó a küldetése után ide költözik.
 	var chapel := Chapel.new()
 	chapel.name = "Chapel"
