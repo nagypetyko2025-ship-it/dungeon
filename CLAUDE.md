@@ -6,8 +6,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Godot: `C:\Users\Peti\Desktop\Godot_v4.7.2-stable_win64.exe` (nincs a PATH-on)
 - Git: `C:\Program Files\Git\cmd\git.exe` (PowerShellben nincs a PATH-on; Bash-ben is ezt hívd)
 - Python + PIL elérhető (képek kivágása, átszínezése). ogg-kódoló nincs: hangot .wav-ban tegyél be (az Audio kezeli).
-- Pythonból GDScript-et szerkesztve a `
-` / `\` + sortörés könnyen valódi sortöréssé válik: szkriptfájlba írd (Write), ne heredocba.
+- Pythonból GDScript-et szerkesztve a `\n` és a `\` + sortörés heredocban könnyen valódi sortöréssé válik: a Python-szkriptet
+  fájlba írd (Write), és azt futtasd.
 - Bash heredocban a `\` + sortörés és a hosszú, idézőjeles szövegek elromlanak: GDScript-et **Edit/Write** eszközzel szerkessz, ne Pythonnal a shellből.
 
 ## Szokások (a felhasználó kérései)
