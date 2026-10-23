@@ -24,6 +24,8 @@ const INTERIOR := Rect2i(500, 0, 16, 10)
 const INTERIOR_DOOR := Vector2i(507, 10)
 const INSIDE_LIGHT := Color(0.5, 0.46, 0.42)
 const INTERACT_RANGE := 52.0
+## A gyertyák mérete a világban (a 16 px-es Kenney-kép nagyítása).
+const CANDLE_SIZE := 1.1
 const TALK_RANGE := 70.0
 ## 0x72 figurák (az első álló kocka): a doktor pestisdoktor-maszkban, a nővér, a betegek.
 const DOCTOR := Rect2(368, 345, 16, 23)
@@ -189,7 +191,7 @@ func _build_interior() -> void:
 			stand.position.y += 6
 			_sprite(DUNGEON, FLASKS[i % FLASKS.size()], Vector2(-4, -6), 1, stand).scale = Vector2(0.45, 0.45)
 			if i % 3 == 0:
-				_tile(Town.CANDLE, Vector2i.ZERO, 1, stand).position = Vector2(5, -8)
+				_small_candle(stand, Vector2(5, -6))
 				_light(Vector2(side_x, beds[i].y) * TILE + Vector2(TILE / 2.0, 0), Color(1.0, 0.76, 0.48), 1.1, 0.55)
 	# A doktor középen, az asztala mellett; a nővér a súlyos beteg ágyánál.
 	var desk := _tile(Town.TABLE, Vector2i(INTERIOR_DOOR.x, r.position.y + 2), 0, _entities)
@@ -197,7 +199,8 @@ func _build_interior() -> void:
 	_solid(Rect2(Vector2(INTERIOR_DOOR.x, r.position.y + 2) * TILE + Vector2(-8, 4), Vector2(TILE + 16, TILE * 0.8)))
 	for i in FLASKS.size():
 		_sprite(DUNGEON, FLASKS[i], Vector2(-6 + i * 5, -6), 1, desk).scale = Vector2(0.3, 0.3)
-	_tile(Town.CANDLE, Vector2i.ZERO, 1, desk).position = Vector2(8, -7)
+	# A gyertya az asztal bal végén (a doktor a jobb oldalán áll).
+	_small_candle(desk, Vector2(-9, -5))
 	_light(Vector2(INTERIOR_DOOR.x + 0.5, r.position.y + 2) * TILE, Color(1.0, 0.78, 0.5), 1.6, 0.7)
 	_doctor_position = Vector2(INTERIOR_DOOR.x + 1.5, r.position.y + 2.8) * TILE
 	_npc(DOCTOR, _doctor_position)
@@ -330,6 +333,13 @@ func _region_sprite(texture: Texture2D, region: Rect2, at: Vector2, z: int, pare
 	sprite.z_index = z
 	(parent if parent else self).add_child(sprite)
 	return sprite
+
+
+## Kicsi gyertya egy (felnagyított) asztal lapján: a világban mindig kb. eredeti (1x) méretű.
+func _small_candle(table: Sprite2D, at: Vector2) -> void:
+	var candle := _tile(Town.CANDLE, Vector2i.ZERO, 1, table)
+	candle.position = at
+	candle.scale = Vector2.ONE * CANDLE_SIZE / table.scale
 
 
 ## Álló figura (lassan "lélegzik": az első álló kocka, és a következő három).
