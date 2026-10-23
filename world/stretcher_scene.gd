@@ -47,9 +47,12 @@ func start(camp: Node2D, path: Array[Vector2]) -> void:
 	_camera.limit_bottom = player_camera.limit_bottom
 	_camera.position_smoothing_enabled = true
 	_camera.position_smoothing_speed = 4.0
-	_camera.global_position = player_camera.get_screen_center_position()
 	add_child(_camera)
+	# A játékos helyéből indul (a játékos kamerájának képernyőközepe a tábor betöltésekor még
+	# elavult, a pálya sarkára mutat), és rögtön ott is van, nem úszik be.
+	_camera.global_position = _player.global_position + player_camera.position
 	_camera.make_current()
+	_camera.reset_smoothing()
 	_following = true
 	_walk(path)
 
@@ -180,7 +183,7 @@ func _finish() -> void:
 	var player_camera: Camera2D = _player.get_node("Camera2D")
 	var back := create_tween()
 	_camera.position_smoothing_enabled = false
-	back.tween_property(_camera, "global_position", player_camera.get_screen_center_position(), 1.4) \
+	back.tween_property(_camera, "global_position", _player.global_position + player_camera.position, 1.4) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await back.finished
 	player_camera.make_current()
