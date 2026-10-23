@@ -10,3 +10,5 @@ deep_eye.png: "Gazer" (zwonky, CC0, https://opengameart.org/content/gazer), a fe
 giant_skeleton.png: "Skeletons Rework" (antumdeluge, CC0, https://opengameart.org/content/skeletons-rework), a vörös szemű változat jobbra néző kockáiból (24x32), 8 kockás sávba rendezve.
 orc_mage.png, club_goblin.png, archer_goblin.png, red_demon.png, gold_dragon.png: szintén a "MiniWorld Sprites" csomagból (CC0), az oldalnézeti kockákból (a balra nézőket tükrözve).
 fly.png: légy, ehhez a projekthez rajzolva (pixel art, 2 szárnycsapás-kocka), CC0.
+spider.png: "2D Spider Animated" (DungeonSpider.png, CC0, https://opengameart.org/content/2d-spider-animated), a 3 járó kockából.
+farmer_goblin.png, orc_raider.png: "MiniWorld Sprites" (CC0) FarmerGoblin és Orc; barbarian.png, fire_ninja.png, renegade_monk.png: ugyanonnan a Champions mappából (Börg, Kanji, Okomo), az oldalnézeti kockákból tükrözve.
