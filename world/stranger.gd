@@ -268,10 +268,26 @@ static func _give_talisman(inventory: Inventory) -> String:
 
 
 static func _show_magic() -> String:
+	return show_magic_intro()
+
+
+## A varázslat-bemutató eleje (a beszélgetés utána magától bezárul, lásd Ruin).
+static func show_magic_intro() -> String:
 	Progress.mark_asked(ID, "magic")
-	return "[i]Felemeli a talizmánt, és a tenyerében apró, kék fénygömb születik. Lassan felemelkedik, " \
-		+ "megkerüli a fejed, aztán a kút fölött szétpattan, mint egy szikra.[/i]\n\n" \
-		+ "Semmi különös. Csak egy kis fény. De odalent, a sötétben, néha egy kis fény mindent jelent."
+	return "[i]Lőrinc hátrébb lép, és a magasba emeli a talizmánt. A szemében apró lángok gyúlnak.[/i]
+
+" 		+ "Állj egy kicsit odébb, barátom... és figyelj!"
+
+
+## A bemutató után, amikor a beszélgetés újra megnyílik.
+static func show_magic_after(first: bool) -> String:
+	if first:
+		return "[i]Lőrinc elégedetten fújja meg a füstölgő tenyerét.[/i]
+
+" 			+ "Na? Évek óta nem sikerült ilyen tisztán. A talizmánod... él. Érzem, ahogy ég benne az erő."
+	return "[i]Lőrinc leporolja a köpenyét, a talizmán még halványan izzik a kezében.[/i]
+
+" 		+ "Ennyi elég is mára, mielőtt felgyújtom az egész tisztást. A romos ház már így is eleget szenvedett."
 
 
 static func _ask_name() -> String:

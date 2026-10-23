@@ -64,6 +64,29 @@ const SMALL_TALK: Array[Dictionary] = [
 ]
 
 
+## A története után (az 50 csontváz és a kereszt kérése után) ezekről is kérdezhetsz.
+const STORY_TALK: Array[Dictionary] = [
+	{"id": "ambrus", "text": "Milyen ember volt Ambrus atya?", "trust": 4,
+		"answer": "[i]Vendel szemgödreiben a fény megenyhül.[/i]
+
+" 			+ "Ambrus? Nagydarab, kopasz ember volt, a keze inkább kovácsé, mint paphoz illő. Minden reggel " 			+ "ő maga húzta meg a harangot, pedig ez az én dolgom lett volna. Azt mondta, a harang a hazavezető út: " 			+ "akit lent ér a hangja, az tudja, merre van fent.
+
+" 			+ "Amikor a kalandorok nem jöttek vissza, a nevüket felírta a kápolna falára. Ott vannak még most is, " 			+ "a por alatt. Néha letörlöm őket."},
+	{"id": "lich", "text": "Mi történt pontosan a tizenkettedik emeleten?", "trust": 5,
+		"answer": "[i]Sokáig hallgat. A csontujjai megszorítják az ásó nyelét.[/i]
+
+" 			+ "Hárman voltunk. Egy sötét terembe értünk, ahol a falakon jégvirágok nőttek, pedig odalent sosincs hideg. " 			+ "A lich a terem közepén ült, és várt. Nem támadott. Csak nézett.
+
+" 			+ "A két társam elfutott. Én maradtam, mert azt hittem, a kereszt megvéd. A lich felállt, lassan " 			+ "odajött, és leszakította a nyakamból, mintha csak egy pókhálót söpörne le. Aztán a homlokomra tette " 			+ "a kezét. Hideg volt. Azóta sem melegedtem fel."},
+	{"id": "return", "text": "Miért nem mentél le újra a keresztért?", "trust": 3,
+		"answer": "Lementem. Kétszer is.
+
+" 			+ "[i]Megkopogtatja a saját bordáit.[/i]
+
+" 			+ "De a Mélység nem szereti, ha a halottai visszamennek hozzá. Az első alkalommal a csontvázak " 			+ "letérdeltek előttem, mintha a vezérük lennék. A másodiknál már követni akartak, egészen fel, a táborig. " 			+ "Akkor értettem meg: ha még egyszer lemegyek, nem biztos, hogy én hozom fel őket... lehet, hogy ők " 			+ "visznek le engem. Ezért kértelek téged."},
+]
+
+
 static func greeting() -> String:
 	return CHAPEL_GREETING if in_chapel() else GREETING
 
@@ -98,8 +121,10 @@ static func doing_text(id: String, fallback: String) -> String:
 	return fallback
 
 
+## A beszélgetés opciói: elöl a küldetéshez tartozó, utána a kérdezgetés (legfeljebb 5 fér ki: a
+## története után a sztori-kérdések jönnek, a régi kérdésekből csak a még fel nem tettek).
 static func options(inventory: Inventory) -> Array[Dictionary]:
-	var list: Array[Dictionary] = SMALL_TALK.duplicate()
+	var list: Array[Dictionary] = []
 	match Progress.npc_quest_state(SKELETON_QUEST):
 		"":
 			list.append({"id": "help", "text": "Segíthetek valamiben?",
@@ -110,9 +135,9 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 					"on_choose": func() -> String: return _finish_skeletons()})
 			else:
 				list.append({"id": "skeletons", "text": "Hogy állok a csontvázakkal?",
-					"on_choose": func() -> String: return "[i]Vendel az ujjain számol, a csontjai halkan " \
-						+ "kocognak.[/i]\n\n%d megpihent, még %d vár rád odalent. Ne siess: a halottak ráérnek." \
-						% [skeleton_progress(), SKELETON_GOAL - skeleton_progress()]})
+					"on_choose": func() -> String: return "[i]Vendel az ujjain számol, a csontjai halkan " 						+ "kocognak.[/i]
+
+%d megpihent, még %d vár rád odalent. Ne siess: a halottak ráérnek." 						% [skeleton_progress(), SKELETON_GOAL - skeleton_progress()]})
 	match Progress.npc_quest_state(CROSS_QUEST):
 		"active":
 			if has_cross(inventory):
@@ -120,10 +145,17 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 					"on_choose": func() -> String: return _give_cross(inventory)})
 		"done":
 			list.append({"id": "blessing", "text": "Hogy vagy, Vendel?",
-				"on_choose": func() -> String: return "[i]Az oltár felé biccent, ahol a kereszt halványan " \
-					+ "csillog.[/i]\n\nJobban, mint az elmúlt húsz évben bármikor. Éjjel már nem kaparnak a " \
-					+ "sírok. Ha egyszer te is odalent maradnál... ne félj. Megtalálom a neved, és helyet " \
-					+ "ások neki."})
+				"on_choose": func() -> String: return "[i]Az oltár felé biccent, ahol a kereszt halványan " 					+ "csillog.[/i]
+
+Jobban, mint az elmúlt húsz évben bármikor. Éjjel már nem kaparnak a " 					+ "sírok. Ha egyszer te is odalent maradnál... ne félj. Megtalálom a neved, és helyet " 					+ "ások neki."})
+	if Progress.npc_quest_state(SKELETON_QUEST) == "done":
+		list.append_array(STORY_TALK)
+		var asked: Array = Progress.asked_topics(ID)
+		for option in SMALL_TALK:
+			if not asked.has(option["id"]):
+				list.append(option)
+	else:
+		list.append_array(SMALL_TALK)
 	return list
 
 

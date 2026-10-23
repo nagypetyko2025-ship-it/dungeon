@@ -48,6 +48,10 @@ static var potions := 0
 ## mentődik belőle (eredmény, tábori arany, tárgylift). A reset() nem törli, csak a kilépés.
 static var tutorial := false
 
+## Jártál-e lent a kazamatában (a gyakorló pályán kívül), mióta utoljára a táborba értél: a tábor
+## ebből tudja, hogy most jöttél vissza (pl. a hordágyas bejátszáshoz). A reset() nem törli.
+static var visited_dungeon := false
+
 ## Épp most győzted le a Vérfarkast (20. emelet): a tábor egyszer kiírja a győzelmet.
 ## (A reset() nem törli: a futás vége után állítjuk be.)
 static var dungeon_won := false

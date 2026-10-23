@@ -73,6 +73,8 @@ var _thief: AnimatedSprite2D
 var _well_dialogue: DialoguePanel
 var _ladder: Node2D
 var _lorinc: AnimatedSprite2D
+## Épp a "Mutass egy varázslatot!" bemutató fut (közben a függő tűzgolyót nem lövi ki magától).
+var _showing := false
 
 
 ## A tolvaj (Bence) a levél után a kocsmába költözött: a rejtekhely üres.
@@ -98,7 +100,14 @@ func setup(camp: Node2D) -> void:
 	_well_dialogue.npc_id = Stranger.ID
 	_well_dialogue.options_provider = func() -> Array[Dictionary]:
 		_refresh_stranger_panel()
-		return Stranger.options(_player.get_node("Inventory"))
+		var list := Stranger.options(_player.get_node("Inventory"))
+		# "Mutass egy varázslatot!": a beszélgetés magától bezárul, Lőrinc tűzgolyót lő, aztán újra megnyílik.
+		for option in list:
+			if option["id"] == "magic":
+				option["on_choose"] = func() -> String:
+					_magic_show.call_deferred()
+					return Stranger.show_magic_intro()
+		return list
 	camp.add_child.call_deferred(_well_dialogue)
 
 
@@ -364,6 +373,25 @@ func _fireball() -> void:
 		FloatingText.spawn(_entities, _player.global_position + Vector2(0, -70), "Hű... ez szép volt!", Color(1, 0.9, 0.6), 22)
 
 
+## A varázslat-bemutató: a válasz elolvasása után bezárul a beszélgetés, Lőrinc tűzgolyót lő a romos
+## ház felé, aztán a beszélgetés magától újra megnyílik.
+func _magic_show() -> void:
+	_showing = true
+	await get_tree().create_timer(2.2, true, false, true).timeout
+	var menus := _camp.get_node("Menus")
+	menus.call("close_current")
+	await get_tree().create_timer(0.4).timeout
+	var first := Progress.npc_quest_state(Stranger.FIREBALL_FLAG) != "done"
+	await _fireball()
+	await get_tree().create_timer(0.9).timeout
+	_showing = false
+	if not is_instance_valid(_player) or get_tree().paused:
+		return
+	_well_dialogue.greeting = Stranger.show_magic_after(first)
+	_refresh_stranger_panel()
+	menus.call("open_menu", _well_dialogue)
+
+
 ## Ide érkezel, ha a kútból felmászol (a kút elé).
 func well_exit_position() -> Vector2:
 	return _center(WELL_TILE + Vector2i(0, 2))
@@ -399,7 +427,7 @@ func _build_ui() -> void:
 
 ## Ami előtt a játékos áll: [művelet, felirat] vagy [].
 func _focus() -> Array:
-	if not is_instance_valid(_player) or _busy:
+	if not is_instance_valid(_player) or _busy or _showing:
 		return []
 	var at: Vector2 = _player.global_position
 	match _where:
@@ -439,7 +467,7 @@ func _process(delta: float) -> void:
 		if not get_tree().paused:
 			_lorinc.visible = Stranger.is_rescued() and not Stranger.moved_to_tavern()
 		# A talizmán után, amint bezárult a beszélgetés, tűzgolyót lő a romos ház felé.
-		if Progress.npc_quest_state(Stranger.FIREBALL_FLAG) == "pending" and not get_tree().paused:
+		if Progress.npc_quest_state(Stranger.FIREBALL_FLAG) == "pending" and not get_tree().paused and not _showing:
 			_fireball()
 	var focus := _focus()
 	if not focus.is_empty():
