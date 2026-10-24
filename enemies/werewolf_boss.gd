@@ -17,8 +17,9 @@ const WEREWOLF := {
 	"attacks": ["circles", "circles", "charge", "slam"], "minion": "",
 }
 const SHEET := "res://assets/enemies/werewolf.png"
-## A Mélység Ura szívósabb: a WEREWOLF életerejének ennyiszerese.
-const LORD_HEALTH := 2.5
+## A Mélység Ura szívósabb: a WEREWOLF életerejének ennyiszerese (25 600), hogy minden más
+## főellenségnél több élete legyen (a legszívósabb, a 33. emeleti Nyálkakirály: kb. 23 700).
+const LORD_HEALTH := 8.0
 ## Életlopás: a játékosnak okozott sebzés ennyiszeresét gyógyítja (de legalább a max élet ennyi részét).
 const LIFESTEAL_MULTIPLIER := 8.0
 const LIFESTEAL_MIN := 0.01
