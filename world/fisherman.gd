@@ -41,16 +41,18 @@ const STORIES: Array[Dictionary] = [
 			+ "aztán még eggyel. A gyanús boltos odalent is egyre jobb portékát tart, minél mélyebbre jutsz. " \
 			+ "A mélység megjutalmazza azt, aki kitart."},
 ]
-## A küldetése: hozz neki bármilyen átlagos tárgyat (nehezéknek a zsinórra).
+## A küldetése: hozz neki egy tárgyat (nehezéknek a zsinórra): a táskából a legkisebb ritkaságút
+## kapja; ha abból több is van, nem tud választani.
 const ITEM_QUEST := "fisherman_item"
 const ITEM_GOLD := 60
 ## A J könyv "Horgász" fülén.
 const QUESTS := {
 	ITEM_QUEST: {"name": "Nehezék a zsinórra",
 		"text": "Öreg Ábel nehezéke elfogyott: a tó nagy hala vitte el az utolsót is. Hozz neki a Mélységből "
-			+ "bármilyen [b]átlagos tárgyat[/b] (a táskádban legyen): a zsinór végére köti.",
+			+ "egy tárgyat (a táskádban legyen): a [b]leggyengébbet[/b] köti a zsinór végére. Ha a "
+			+ "leggyengébb fajtából több is van nálad, nem tud választani: vigyél kevesebb holmit.",
 		"reward": "%d tábori arany (és Ábel meséi)" % ITEM_GOLD,
-		"doing": "vigyél Ábelnek egy átlagos tárgyat a tóhoz", "done": "Ábel újra horgászik"},
+		"doing": "vigyél Ábelnek egy tárgyat a tóhoz", "done": "Ábel újra horgászik"},
 }
 ## A tárgy átadása után: még három történet (a régiek is maradnak; a beszélgetés lapozható).
 const MORE_STORIES: Array[Dictionary] = [
@@ -148,12 +150,13 @@ func _options() -> Array[Dictionary]:
 		"":
 			list.append({"id": "help", "text": "Segíthetek valamiben?", "on_choose": _give_quest})
 		"active":
-			if _common_item_index() >= 0:
-				list.append({"id": "bring", "text": "Hoztam egy átlagos tárgyat.", "on_choose": _take_item})
+			if _pick_item() != NO_ITEM:
+				list.append({"id": "bring", "text": "Hoztam neked egy tárgyat.", "on_choose": _take_item})
 			else:
 				list.append({"id": "what", "text": "Milyen tárgy kell pontosan?",
-					"on_choose": func() -> String: return "Bármilyen [b]átlagos[/b] holmi, ami a Mélységből jött: " \
-						+ "egy rozsdás kard, egy kopott sisak, egy csorba gyűrű. A táskádban hozd, ne a ládában."})
+					"on_choose": func() -> String: return "Bármilyen holmi, ami a Mélységből jött: egy rozsdás kard, " \
+						+ "egy kopott sisak, egy csorba gyűrű. A táskádban hozd, ne a ládában. Ha több is van " \
+						+ "nálad, a [b]leggyengébbet[/b] kérem; csak ne legyen belőle kettő egyforma."})
 	list.append_array(STORIES)
 	if Progress.npc_quest_state(ITEM_QUEST) == "done":
 		list.append_array(MORE_STORIES)
@@ -167,26 +170,45 @@ func _give_quest() -> String:
 	Audio.play("ui_open")
 	return "[i]Felhúzza a zsinórt. A végén csak egy csupasz horog lóg.[/i]\n\n" \
 		+ "Ha már kérdezed... elfogyott a nehezékem. A nagy hal elvitte az utolsót is.\n\n" \
-		+ "Hozz nekem valami vasat odalentről. Nem kell semmi különös: bármilyen [b]átlagos tárgy[/b] " \
-		+ "megteszi. A ritkát meg a csillogót tartsd meg magadnak, az nem hal, hanem kalandor csalinak való."
+		+ "Hozz nekem valami vasat odalentről. Nem kell semmi különös: a táskádból a [b]leggyengébb " \
+		+ "holmit[/b] kérem. A ritkát meg a csillogót tartsd meg magadnak, az nem hal, hanem kalandor csalinak való."
 
 
-## Az első átlagos tárgy a táskában (nem küldetés- és nem sztori tárgy); -1, ha nincs.
-func _common_item_index() -> int:
+## _pick_item eredményei: nincs tárgy / több egyforma szintű (nem tud választani).
+const NO_ITEM := -1
+const TIE := -2
+
+
+## Melyik tárgyat kapja: a táskában a legkisebb ritkaságú (küldetés- és sztori tárgyat nem);
+## NO_ITEM, ha nincs ilyen, TIE, ha a legkisebb ritkaságból több is van.
+func _pick_item() -> int:
 	if not is_instance_valid(_player):
-		return -1
+		return NO_ITEM
 	var inventory: Inventory = _player.get_node("Inventory")
+	var best := NO_ITEM
+	var best_rank := 99
+	var ties := 0
 	for i in inventory.bag.size():
 		var item: Variant = inventory.bag[i]
-		if item is Dictionary and item.get("rarity", "") == "common" and Items.can_sell(item):
-			return i
-	return -1
+		if not (item is Dictionary and Items.can_sell(item)):
+			continue
+		var rank := Items.RARITY_ORDER.find(str(item.get("rarity", "common")))
+		if rank < best_rank:
+			best_rank = rank
+			best = i
+			ties = 1
+		elif rank == best_rank:
+			ties += 1
+	return TIE if ties > 1 else best
 
 
 func _take_item() -> String:
-	var index := _common_item_index()
+	var index := _pick_item()
+	if index == TIE:
+		return "[i]Végignéz a táskádon, aztán tanácstalanul megvakarja a szakállát.[/i]\n\n" \
+			+ "Nem tudok választani, fiam. Egyformán gyenge mind. Hozz kevesebb dolgot."
 	if index < 0:
-		return "[i]Megnézi a táskádat, és megrázza a fejét.[/i]\n\nNem látok benne átlagos holmit."
+		return "[i]Megnézi a táskádat, és megrázza a fejét.[/i]\n\nNem látok benne semmi neki valót."
 	var inventory: Inventory = _player.get_node("Inventory")
 	var item: Dictionary = inventory.take_from_bag(index)
 	Progress.camp_inventory = inventory.save_data()
