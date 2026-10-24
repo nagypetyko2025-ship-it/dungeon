@@ -13,6 +13,10 @@ const PLAYER_CENTER := Vector2(0, -20)
 const RETRY_DELAY := 2.0
 
 var value := 1
+## Közös játék (lásd NetEnemies): a gazda adja ki az azonosítót; a vendégnél csak a gazdától jött
+## felvehető létezik (`net_spawned`), a saját helyben esett példányok eltűnnek.
+var net_id := 0
+var net_spawned := false
 
 var _player: Node2D
 var _velocity := Vector2.ZERO
@@ -25,8 +29,18 @@ var _retry_left := 0.0
 
 
 func _ready() -> void:
+	var net := NetEnemies.active(get_tree())
+	if net != null and net.is_client_mode() and not net_spawned:
+		queue_free()
+		return
+	if net_spawned:
+		# A gazdától jött: már a végső helyén van.
+		_ready_to_collect = true
+		return
 	# Kipattanás véletlen irányba.
 	var target := position + Vector2.from_angle(randf() * TAU) * randf_range(16, 44)
+	if net != null and net.is_host():
+		net.register_pickup(self, get_parent().to_global(target))
 	var tween := create_tween()
 	tween.tween_property(self, "position", target, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_callback(func() -> void: _ready_to_collect = true)
@@ -47,6 +61,9 @@ func _physics_process(delta: float) -> void:
 	var to_player := _player.global_position + PLAYER_CENTER - global_position
 	if to_player.length() < PICKUP_RANGE:
 		if _collect(_player):
+			var net := NetEnemies.active(get_tree())
+			if net != null and net_id != 0:
+				net.pickup_taken(self)
 			queue_free()
 		else:
 			# Nem fér el (pl. tele a táska): a földön marad, később újra próbálja.

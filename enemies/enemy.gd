@@ -236,11 +236,8 @@ func _puppet_process(delta: float) -> void:
 		_player = get_tree().get_first_node_in_group("player")
 	if _net_target != Vector2.INF:
 		position = _net_target if position.distance_to(_net_target) > 160.0 			else position.lerp(_net_target, minf(1.0, delta * 14.0))
+	# (A lövéseit a gazda szörnye adja le, és mindenkinél ugyanaz a lövés repül: NetEnemies "shot".)
 	if _ranged and is_instance_valid(_player) and not _dormant:
-		_shoot_left -= delta
-		var distance := global_position.distance_to(_player.global_position)
-		if _shoot_left <= 0.0 and not _aiming and distance < SHOOT_RANGE and _has_line_of_sight():
-			_aim_and_shoot()
 		_sprite.flip_h = _player.global_position.x < global_position.x
 		if not _magic:
 			_bow.rotation = _bow.global_position.direction_to(_player.global_position + PLAYER_CENTER).angle()
@@ -377,6 +374,12 @@ func _aim_and_shoot() -> void:
 	# Legyezőlövés ("shots" > 1): több lövedék egyszerre, szétterítve.
 	var shots: int = _type.get("shots", 1)
 	var spread := deg_to_rad(_type.get("spread", 14.0))
+	var net := NetEnemies.active(get_tree())
+	if net != null and net.is_host() and net_id != 0:
+		var directions: Array = []
+		for i in shots:
+			directions.append(aim.rotated((i - (shots - 1) / 2.0) * spread))
+		net.broadcast_shot(self, _magic, muzzle, directions, stats["arrow_speed"], stats["damage"])
 	for i in shots:
 		var projectile = (MAGIC_BOLT if _magic else ARROW).instantiate()
 		projectile.direction = aim.rotated((i - (shots - 1) / 2.0) * spread)

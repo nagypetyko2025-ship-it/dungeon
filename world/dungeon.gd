@@ -218,6 +218,10 @@ func _ready() -> void:
 		room.boss_fight_started.connect(_on_boss_fight_started)
 		room.boss_defeated.connect(_on_boss_defeated)
 
+	# Közös játékban innentől mindenkinek saját véletlen: a bolt áruja (és a szobák tartalma)
+	# játékosonként más; a terem, az oszlopok, csapdák és díszek fent már közösek.
+	if NetLobby.is_playing(get_tree()):
+		randomize()
 	if shop_cell != NO_SHOP:
 		var interior := ShopInterior.new()
 		_entities.add_child(interior)
@@ -226,6 +230,9 @@ func _ready() -> void:
 	_player.global_position = Room.tile_center(Vector2i.ZERO)
 	_player.get_node("Camera2D").reset_smoothing()
 	_player.connect("death_finished", Callable(_death_screen, "show_for").bind(_player))
+	# Közös játékban, ha már halott vagy, ezen az emeleten is nézőként követed a társaidat.
+	if GameState.net_dead and NetLobby.is_playing(get_tree()):
+		_player.call("become_spectator")
 	var rooms: Array[Room] = []
 	rooms.assign(_rooms.get_children())
 	_hud.call("setup_map", rooms, _player, _cell)
@@ -241,8 +248,6 @@ func _ready() -> void:
 		GameState.visited_dungeon = true
 	# Közös játékban a csapattársak is itt vannak (ugyanazon az emeleten; lásd NetAvatars).
 	if NetLobby.is_playing(get_tree()):
-		# A szobák tartalma (szörnyek, ládák) már a saját véletlenünkből jön.
-		randomize()
 		var avatars := NetAvatars.new()
 		avatars.name = "NetAvatars"
 		add_child(avatars)
@@ -430,9 +435,12 @@ func _go_deeper() -> void:
 	if GameState.tutorial:
 		get_node("TutorialGuide").call("finish")
 		return
-	# Közös játékban a gazda viszi le az egész csapatot (lásd NetLobby.request_floor).
-	if NetLobby.is_playing(get_tree()):
-		NetLobby.current(get_tree()).request_floor(GameState.depth + 1)
+	# Közös játékban a lépcsőn megvárod a társaidat: ha minden élő játékos ráállt, a gazda viszi
+	# tovább a csapatot (NetEnemies._watch_team). Ha a gazda nincs itt, egyedül mész tovább.
+	var net := NetEnemies.active(get_tree())
+	if net != null and not net.local_mode:
+		_player.call("start_waiting")
+		_hud.show_message("A lépcsőn vársz a társaidra...")
 		return
 	go_to_floor(GameState.depth + 1)
 

@@ -92,6 +92,9 @@ const CROSSBOW_GAP := 7.0
 const STEP_LENGTH := 46.0
 
 var gold := 0
+## Közös játék: meghaltál, és nézőként követed a társaidat (lásd NetEnemies); a lépcsőn vársz rájuk.
+var net_dead := false
+var net_waiting := false
 
 @onready var _visual: Node2D = $Visual
 @onready var _sprite: AnimatedSprite2D = $Visual/AnimatedSprite2D
@@ -333,6 +336,16 @@ func _update_sword_geometry() -> void:
 
 func add_gold(amount: int) -> void:
 	gold += amount
+	gold_changed.emit(gold)
+	# Közös játékban az arany közös: a változás a társaknál is megjelenik.
+	var net := NetEnemies.active(get_tree())
+	if net != null and amount != 0:
+		net.gold_changed(amount)
+
+
+## A közös arany egy társnál változott (lásd NetEnemies).
+func add_gold_from_net(amount: int) -> void:
+	gold = maxi(gold + amount, 0)
 	gold_changed.emit(gold)
 
 
@@ -884,5 +897,38 @@ func _on_died() -> void:
 	_hurtbox.set_deferred("monitoring", false)
 	_visual.visible = false
 	_weapon_pivot.visible = false
+	# Közös játékban nem a táborba kerülsz: nézőként követed a társaidat, amíg valaki él.
+	if NetEnemies.active(get_tree()) != null and not NetEnemies.active(get_tree()).local_mode:
+		become_spectator()
+		FloatingText.spawn(get_parent(), global_position + Vector2(0, -60), "Elestél — nézőként követed a társaidat",
+			Color(1, 0.5, 0.45), 20)
+		return
 	await get_tree().create_timer(DEATH_SCREEN_DELAY).timeout
 	death_finished.emit()
+
+
+## Néző: láthatatlan, nem sebezhető, a szörnyek és a felvehetők nem rá figyelnek.
+func become_spectator() -> void:
+	net_dead = true
+	net_waiting = false
+	GameState.net_dead = true
+	remove_from_group("player")
+	set_physics_process(false)
+	_hurtbox.set_deferred("monitoring", false)
+	_visual.visible = false
+	_weapon_pivot.visible = false
+	_twin_pivot.visible = false
+
+
+## Néző: már senki sem él — jön a halálképernyő (és a tábor).
+func finish_spectating() -> void:
+	death_finished.emit()
+
+
+## Lépcső közös játékban: itt állsz, amíg a társaid is ide nem érnek (nem sebezhető közben).
+func start_waiting() -> void:
+	net_waiting = true
+	velocity = Vector2.ZERO
+	set_physics_process(false)
+	_hurtbox.set_deferred("monitoring", false)
+	_sprite.play("idle")

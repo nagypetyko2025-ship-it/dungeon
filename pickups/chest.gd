@@ -26,6 +26,8 @@ var _opened := false
 
 
 func _ready() -> void:
+	# Közös játékban a helyéről ismerjük fel (mindenkinél ugyanott jelenik meg).
+	add_to_group("net_chest")
 	_empty = randf() < EMPTY_CHANCE
 	_sprite.sprite_frames = _make_frames()
 	_sprite.animation = "empty" if _empty else "full"
@@ -37,6 +39,32 @@ func _ready() -> void:
 
 
 func _open() -> void:
+	if _opened:
+		return
+	var net := NetEnemies.active(get_tree())
+	if net != null and not net.local_mode:
+		net.chest_opened(self)
+		# A vendégnél csak kinyílik: a tartalmát a gazda dobja ki (és mindenkinél ott lesz).
+		if net.is_client_mode():
+			open_from_net(false)
+			return
+	_open_now()
+
+
+## Közös játék: egy társ nyitotta ki (`spill`: a gazda dobja ki a tartalmát).
+func open_from_net(spill: bool) -> void:
+	if _opened:
+		return
+	if spill:
+		_open_now()
+		return
+	_opened = true
+	Audio.play("chest_open")
+	_sprite.animation = "full"
+	_sprite.play()
+
+
+func _open_now() -> void:
 	if _opened:
 		return
 	_opened = true

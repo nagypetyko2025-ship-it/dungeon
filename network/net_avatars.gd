@@ -42,7 +42,8 @@ func _process(delta: float) -> void:
 		_send_left = SEND_INTERVAL
 		var sprite := _player.get_node("Visual/AnimatedSprite2D") as AnimatedSprite2D
 		_lobby.send_pose({"p": _player.global_position, "f": sprite.flip_h, "a": str(sprite.animation),
-			"c": Progress.character, "w": _where()})
+			"c": Progress.character, "w": _where(), "d": bool(_player.get("net_dead")),
+			"r": bool(_player.get("net_waiting"))})
 	for id: int in _avatars.keys():
 		var avatar: Dictionary = _avatars[id]
 		avatar["age"] = float(avatar["age"]) + delta
@@ -76,6 +77,19 @@ func _on_pose(id: int, data: Dictionary) -> void:
 	var avatar: Dictionary = _avatars[id]
 	avatar["target"] = data.get("p", Vector2.ZERO)
 	avatar["age"] = 0.0
+	# Halott társ (néző): nem látszik, és a szörnyek sem üldözik; a lépcsőn várakozónál "(vár)".
+	var dead := bool(data.get("d", false))
+	var waiting := bool(data.get("r", false))
+	avatar["dead"] = dead
+	avatar["waiting"] = waiting
+	var node: Node2D = avatar["node"]
+	node.visible = not dead
+	if dead or waiting:
+		node.remove_from_group("net_avatar")
+	elif not node.is_in_group("net_avatar"):
+		node.add_to_group("net_avatar")
+	var label: Label = avatar["label"]
+	label.text = _lobby.player_name(id) + ("  (vár)" if waiting else "")
 	var sprite: AnimatedSprite2D = avatar["sprite"]
 	sprite.flip_h = bool(data.get("f", false))
 	var animation := str(data.get("a", "idle"))
@@ -103,7 +117,27 @@ func _create(id: int, character: String, at: Vector2) -> Dictionary:
 	label.position = Vector2(-label.get_combined_minimum_size().x / 2.0, -78)
 	if not _avatars.has(id):
 		message.emit("%s itt van veled." % _lobby.player_name(id))
-	return {"node": node, "sprite": sprite, "target": at, "age": 0.0, "character": character}
+	return {"node": node, "sprite": sprite, "label": label, "target": at, "age": 0.0, "character": character,
+		"dead": false, "waiting": false}
+
+
+## Az itt (ugyanezen a helyen) lévő élő társak: peer id -> figura.
+func living() -> Dictionary:
+	var result := {}
+	for id: int in _avatars:
+		var avatar: Dictionary = _avatars[id]
+		if not avatar["dead"]:
+			result[id] = avatar["node"]
+	return result
+
+
+## A lépcsőn várakozó (élő) társak azonosítói.
+func waiting_ids() -> Array:
+	var result: Array = []
+	for id: int in _avatars:
+		if _avatars[id]["waiting"] and not _avatars[id]["dead"]:
+			result.append(id)
+	return result
 
 
 func _remove(id: int) -> void:

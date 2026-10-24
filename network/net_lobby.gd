@@ -438,6 +438,27 @@ func _net_attack(room_key: String, id: int, kind: String) -> void:
 		_handler().on_attack(room_key, id, kind)
 
 
+## Általános közös esemény (felvétel, arany, láda, lövés, halál, lépcső...): mindenkinek
+## (vagy `to_host`: csak a gazdának); a NetEnemies.on_event dolgozza fel.
+func net_event(kind: String, args: Array, to_host := false) -> void:
+	if state != "playing":
+		return
+	if to_host:
+		if is_host():
+			if _handler() != null:
+				_handler().on_event(my_id(), kind, args)
+		else:
+			_net_event.rpc_id(1, kind, args)
+	else:
+		_net_event.rpc(kind, args)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _net_event(kind: String, args: Array) -> void:
+	if _handler() != null:
+		_handler().on_event(_mp.get_remote_sender_id(), kind, args)
+
+
 func net_request_room(room_key: String, room_index: int, at: Vector2) -> void:
 	_net_room.rpc_id(1, room_key, room_index, at)
 

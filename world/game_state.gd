@@ -70,10 +70,13 @@ static var display_initialized := false
 ## Közös játékban a gazda által sorsolt mag: ebből generál mindenki ugyanolyan kazamatát
 ## (az emelet száma is belekerül). 0 = egyjátékos, saját véletlen. A reset nem törli.
 static var net_seed := 0
+## Közös játékban meghaltál, és nézőként követed a társaidat (a következő emeletre is).
+static var net_dead := false
 
 
 static func reset() -> void:
 	depth = 1
+	net_dead = false
 	saved_stats = {}
 	saved_health = -1
 	saved_level = 1

@@ -69,7 +69,11 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   táborban lévők együtt mennek le (`request_descent`), a lépcső mindenkit visz (`request_floor`). Szörnyek:
   `network/net_enemies.gd` — a gazdánál élnek (a legközelebbi játékost üldözik, menü alatt is mennek), a vendégeknél
   bábok (`net_puppet` az enemy.gd-ben, `Room.add_puppet`); a vendég ütését a gazda vonja le; ha a gazda nincs az
-  emeleten, a vendég önálló lesz (local_mode). Teszt: két példány (_host.gd / _client.gd, közös _mp_common.gd). Közös játék alatt `Profiles.multiplayer`: külön mentés profilonként (user://save_mp_<profil>.cfg),
+  emeleten, a vendég önálló lesz (local_mode). Szintén a NetEnemies-ben (net_event): a felvehetőket a gazda dobja
+  (XP-t a felvételkor mindenki megkapja), közös arany (`Player.add_gold`), ládák (a helyükkel azonosítva), a szörnyek
+  lövései; halál után néző mód (`Player.become_spectator`, `GameState.net_dead`), amíg valaki él; a lépcsőn mindenki
+  bevárja a többieket (`start_waiting`, a pózban "r"). A terem és a tereptárgyak a közös magból, a bolt áruja saját.
+  Teszt: két példány (_host.gd / _client.gd, közös _mp_common.gd). Közös játék alatt `Profiles.multiplayer`: külön mentés profilonként (user://save_mp_<profil>.cfg),
   a gazda a váróban "új kezdés"-t is választhat.
   Menü: `ui/multiplayer_panel.gd`. Teszt: két példány (_host.gd / _client.gd) egyszerre fut.
 - Gyakorló pálya: `ui/tutorial_guide.gd` (lépések), kézikönyv: `ui/tutorial_manual.gd` (az irányítás szövege a Beállítások fülön is).
