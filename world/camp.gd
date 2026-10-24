@@ -201,6 +201,12 @@ func _ready() -> void:
 	add_child(lake)
 	lake.setup(self)
 	lake.build()
+	# A tábor jobb felső sarkából rejtett ösvény vezet egy erdei sírhoz (HiddenGrave).
+	var hidden_grave := HiddenGrave.new()
+	hidden_grave.name = "HiddenGrave"
+	add_child(hidden_grave)
+	hidden_grave.setup(self)
+	hidden_grave.build()
 	_entities.add_child(Fisherman.new())
 	# A temető mellett (keletre) a régi kápolna; a sírásó a küldetése után ide költözik.
 	var chapel := Chapel.new()
@@ -810,7 +816,7 @@ func _build_trees() -> void:
 	for x in range(0, SIZE.x):
 		for y in range(0, SIZE.y):
 			var tile := Vector2i(x, y)
-			if _blocked.has(tile):
+			if _blocked.has(tile) or HiddenGrave.keeps_clear(tile):
 				continue
 			var edge := mini(mini(x, SIZE.x - 1 - x), mini(y, SIZE.y - 1 - y))
 			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.35):
@@ -863,7 +869,7 @@ func _build_trees() -> void:
 	var free_area := Rect2i(Vector2i(3, 3), SIZE - Vector2i(6, 6))
 	for i in 110:
 		var tile := Vector2i(randi_range(free_area.position.x, free_area.end.x), randi_range(free_area.position.y, free_area.end.y))
-		if _near_blocked(tile, 2):
+		if _near_blocked(tile, 2) or HiddenGrave.keeps_clear(tile):
 			continue
 		var roll := randf()
 		if roll < 0.15:
@@ -886,7 +892,7 @@ func _build_forest() -> void:
 			if y < -FOREST_DEPTH and not castle_forest.has_point(tile):
 				continue
 			if Rect2i(Vector2i.ZERO, SIZE).has_point(tile) or Town.RECT.has_point(tile) or WEST_RECT.has_point(tile) \
-					or Castle.RECT.has_point(tile) or _is_path(tile):
+					or Castle.RECT.has_point(tile) or _is_path(tile) 					or HiddenGrave.keeps_clear(tile):
 				continue
 			if _is_path(tile + Vector2i.UP) or _is_path(tile + Vector2i.DOWN):
 				if randf() < 0.6:
@@ -974,7 +980,11 @@ func _tree(tile: Vector2i, tall: bool, solid: bool) -> Node2D:
 func _build_bounds() -> void:
 	var area := Rect2(Vector2.ZERO, Vector2(SIZE) * TILE)
 	var thickness := 64.0
-	_solid(Rect2(area.position - Vector2(thickness, thickness), Vector2(area.size.x + thickness * 2, thickness)))
+	# Felül nyílás a rejtett ösvénynél (az ösvény és a tisztás falait a HiddenGrave rakja le).
+	var trail_left := HiddenGrave.PATH_LEFT * TILE
+	var trail_right := HiddenGrave.PATH_RIGHT * TILE
+	_solid(Rect2(area.position - Vector2(thickness, thickness), Vector2(trail_left - area.position.x + thickness, thickness)))
+	_solid(Rect2(Vector2(trail_right, area.position.y - thickness), Vector2(area.end.x + thickness - trail_right, thickness)))
 	_solid(Rect2(Vector2(area.position.x - thickness, area.end.y), Vector2(area.size.x + thickness * 2, thickness)))
 	# Jobb és bal oldal: nyílás az út / a nyugati ösvény sorainál.
 	var gap_top := ROAD_ROW * TILE

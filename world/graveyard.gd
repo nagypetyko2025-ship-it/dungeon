@@ -333,6 +333,7 @@ func _unhandled_input(event: InputEvent) -> void:
 class InscriptionPanel:
 	extends CanvasLayer
 	var _title: Label
+	var _stone: PanelContainer
 	var _text: RichTextLabel
 
 	func _ready() -> void:
@@ -347,6 +348,7 @@ class InscriptionPanel:
 		center.set_anchors_preset(Control.PRESET_FULL_RECT)
 		add_child(center)
 		var stone := PanelContainer.new()
+		_stone = stone
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color(0.55, 0.56, 0.6)
 		style.border_color = Color(0.3, 0.31, 0.35)
@@ -381,6 +383,20 @@ class InscriptionPanel:
 		var hint := UiStyle.label("[E] / [Esc] bezárás", 14, Color(0.25, 0.25, 0.3))
 		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		box.add_child(hint)
+
+	## Kő helyett sárgás, elázott papír (pl. a fára szögezett levél, lásd HiddenGrave).
+	func use_paper() -> void:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.87, 0.8, 0.6)
+		style.border_color = Color(0.55, 0.42, 0.25)
+		style.set_border_width_all(3)
+		style.set_corner_radius_all(3)
+		style.set_content_margin_all(36)
+		style.shadow_color = Color(0, 0, 0, 0.5)
+		style.shadow_size = 14
+		_stone.add_theme_stylebox_override("panel", style)
+		_title.add_theme_color_override("font_color", Color(0.3, 0.2, 0.1))
+		_text.add_theme_color_override("default_color", Color(0.25, 0.17, 0.08))
 
 	## Melyik sír feliratát mutassa (megnyitás előtt).
 	func show_text(title: String, text: String) -> void:

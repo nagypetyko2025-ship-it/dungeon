@@ -9,3 +9,4 @@ lift_gate.png: "Elevator Grate" (oo, CC0, https://opengameart.org/content/elevat
 lift_cage.png: "Misc Dark Fantasy Scenery Sprites" (ETTiNGRiNDER, CC0, https://opengameart.org/content/misc-dark-fantasy-scenery-sprites), a láncon lógó vasketrec.
 pier.png: "Wooden Bridge" (bleutailfly, CC0, https://opengameart.org/content/wooden-bridge-1) a függőleges fahíd, a füves háttér nélkül, a résekben sötét fával.
 lake_tiles.png: a Kenney RPG csomag (CC0, https://kenney.nl) víz- és partcsempéi, a világoszöld fű átlátszóvá téve (a játék saját füve látszik alatta).
+dead_tree.png: "Dead Tree" (bonzille, CC0, https://opengameart.org/content/dead-tree-2), az eredeti pixelrácsra kicsinyítve (48x50), szürkésbarnára (kiszáradt fa) színezve.
