@@ -232,9 +232,9 @@ func _sell_from_bag(index: int) -> void:
 	var item = _inventory.bag[index]
 	if item == null:
 		return
-	if item.get("quest", false):
+	if not Items.can_sell(item):
 		Audio.play("ui_error")
-		_show_info(item, "Küldetéstárgy: nem adhatod el.")
+		_show_info(item, "Küldetéstárgy: nem adhatod el." if item.get("quest", false) else "Sztori tárgy: nem adhatod el.")
 		return
 	var price := Items.sell_price(item)
 	_player.call("add_gold", price)
@@ -257,7 +257,8 @@ func _on_slot_hovered(item: Variant, slot: InventorySlot) -> void:
 	if item != null and sell_mode:
 		if slot.kind == "bag":
 			_show_info(item, "Küldetéstárgy: nem adható el" if item.get("quest", false)
-				else "Eladási ár: %d arany • húzd az eladás mezőre vagy jobb klikk" % Items.sell_price(item))
+				else ("Sztori tárgy: nem adható el" if not Items.can_sell(item)
+				else "Eladási ár: %d arany • húzd az eladás mezőre vagy jobb klikk" % Items.sell_price(item)))
 		else:
 			_show_info(item, "Előbb vedd le (húzd a táskába), hogy eladhasd.")
 	elif item != null:

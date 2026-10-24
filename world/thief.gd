@@ -177,7 +177,7 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 static func _thanks_for_silence(inventory: Inventory) -> String:
 	Progress.mark_asked(ID, "king_secret")
 	Progress.change_trust(ID, 30)
-	var blade := Items.create("dagger_shadow")
+	var blade := Items.mark_story(Items.create("dagger_shadow"))
 	var where := "a táskádba"
 	if inventory.is_bag_full():
 		Progress.add_to_stash(blade)
@@ -219,7 +219,7 @@ static func _pay() -> String:
 		return "[i]Megrázza az erszényedet, aztán visszadobja.[/i]\n\nEz nem %d arany. " % GOLD_AMOUNT \
 			+ "Nekem is tudok számolni, barátom. (Tábori aranyad: %d)" % Progress.camp_gold
 	Progress.camp_gold -= GOLD_AMOUNT
-	var item := Items.random_item("epic", "epic")
+	var item := Items.mark_story(Items.random_item("epic", "epic"))
 	Progress.add_to_stash(item)
 	Progress.set_npc_quest(GOLD_QUEST, "done")
 	Progress.set_npc_quest(DAGGER_QUEST, "active")

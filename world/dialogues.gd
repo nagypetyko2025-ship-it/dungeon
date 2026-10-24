@@ -107,7 +107,7 @@ static func _report_depth_30() -> String:
 
 ## A vérfarkas legyőzésének híre: köszönet, Gáspár királyi kardja, és az új küldetés (30. emelet).
 static func _report_lord(inventory: Inventory) -> String:
-	var sword := Items.create(ROYAL_SWORD)
+	var sword := Items.mark_story(Items.create(ROYAL_SWORD))
 	var where := "a táskádba"
 	if inventory.is_bag_full():
 		Progress.add_to_stash(sword)

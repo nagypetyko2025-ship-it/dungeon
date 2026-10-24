@@ -148,7 +148,7 @@ static func _report_seven() -> String:
 		Audio.play("ui_error")
 		return "[i]A király felvonja a szemöldökét.[/i]\n\nA hírnökeim mást mondanak. Még élnek: [b]%s[/b]. " \
 			% ", ".join(missing) + "Gyere vissza, ha mind a hét elesett."
-	var item := Items.random_item("legendary", "legendary")
+	var item := Items.mark_story(Items.random_item("legendary", "legendary"))
 	Progress.add_to_stash(item)
 	Progress.set_npc_quest(SEVEN_QUEST, "done")
 	Progress.mark_asked(ID, "seven")

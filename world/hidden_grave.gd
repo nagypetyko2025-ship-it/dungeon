@@ -294,7 +294,7 @@ func _open_chest() -> void:
 	var inventory: Inventory = _player.get_node("Inventory")
 	var to_stash := false
 	for id in CHEST_ITEMS:
-		var item := Items.create(id)
+		var item := Items.mark_story(Items.create(id))
 		if not inventory.add_item(item):
 			Progress.stash.append(item)
 			to_stash = true

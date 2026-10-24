@@ -692,6 +692,18 @@ static func format_stat(stat: String, value: float) -> String:
 	return "%s%s %s" % [prefix, number, STAT_LABELS[stat]]
 
 
+## Sztori tárgy: egy szereplőtől vagy a történetből kapott jutalom (pl. Gáspár királyi kardja,
+## a tolvaj Árnyékpengéje, a rejtett sír ládája) — használható, de nem adható el.
+static func mark_story(item: Dictionary) -> Dictionary:
+	item["story"] = true
+	return item
+
+
+## Eladható-e a boltosnak (a küldetéstárgyak és a sztori tárgyak nem).
+static func can_sell(item: Dictionary) -> bool:
+	return not item.get("quest", false) and not item.get("story", false)
+
+
 ## BBCode leírás a tooltipekhez: ritkaság, statok (zöld = előny, piros = hátrány).
 static func describe_bbcode(item: Dictionary) -> String:
 	var lines: Array[String] = []
@@ -700,6 +712,8 @@ static func describe_bbcode(item: Dictionary) -> String:
 		return "[color=#%s]Küldetéstárgy[/color]\n%s" % [SLOT_NOTE_INK.to_html(false), item.get("description", "")]
 	if item.has("rarity"):
 		lines.append("[color=#%s]%s[/color]" % [rarity_ink(item).to_html(false), rarity_name(item)])
+	if item.get("story", false):
+		lines.append("[color=#%s]Sztori tárgy: nem adható el[/color]" % SLOT_NOTE_INK.to_html(false))
 	if item.get("depth", 1) > 1:
 		lines.append("[color=#%s]Mélységi áru (%d. emelet): +%d%% stat[/color]" % [SLOT_NOTE_INK.to_html(false),
 			item["depth"], roundi(STAT_PER_FLOOR * (item["depth"] - 1) * 100.0)])
