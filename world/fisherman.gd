@@ -41,6 +41,28 @@ const STORIES: Array[Dictionary] = [
 			+ "aztán még eggyel. A gyanús boltos odalent is egyre jobb portékát tart, minél mélyebbre jutsz. " \
 			+ "A mélység megjutalmazza azt, aki kitart."},
 ]
+## A küldetése: hozz neki bármilyen átlagos tárgyat (nehezéknek a zsinórra).
+const ITEM_QUEST := "fisherman_item"
+const ITEM_GOLD := 60
+## A tárgy átadása után: még három történet (a régiek is maradnak; a beszélgetés lapozható).
+const MORE_STORIES: Array[Dictionary] = [
+	{"id": "iron", "text": "Mire kellett neked az a vacak?", "trust": 3,
+		"answer": "[i]A zsinór végére köti, és elégedetten lóbálja.[/i]\n\n" \
+			+ "Nehezéknek. De nem akármilyen: a Mélységből hozott vas kell. A vak halak csak arra kapnak, " \
+			+ "ami odalentről jött. Érzik rajta a sötétet, fiam.\n\n" \
+			+ "Ma este talán kifogom azt a nagyot, amelyik már háromszor elvitte a horgomat."},
+	{"id": "before", "text": "Ki voltál, mielőtt horgász lettél?", "trust": 5,
+		"answer": "[i]Sokáig hallgat.[/i]\n\n" \
+			+ "Felderítő. Az első csapattal mentem le, amikor a kaput feltörték. Heten voltunk. Én voltam " \
+			+ "a leggyávább, ezért én maradtam hátul a lámpával.\n\n" \
+			+ "Ezért élek. A többiek... a tó ott tört fel, ahol ők odalent maradtak. Néha azt hiszem, nem " \
+			+ "halakat fogok, hanem őket várom, hogy feljöjjenek."},
+	{"id": "bottom", "text": "Mi van a tó fenekén?", "trust": 4,
+		"answer": "[i]Lehalkítja a hangját, és a víz közepe felé bök a botjával.[/i]\n\n" \
+			+ "Éjjelente fények. Kékek, lassúak, mintha valaki lámpással járkálna odalent. A sziget alatt " \
+			+ "a legerősebbek.\n\nEmlékszel a kulcsra, amit a hal gyomrában találtam? Szerintem egy ajtót " \
+			+ "nyit odalent. De én már túl öreg vagyok a búvárkodáshoz. Te viszont..."},
+]
 
 var _sprite: Sprite2D
 var _rod: Sprite2D
@@ -96,7 +118,7 @@ func _build_dialogue() -> void:
 	face.atlas = SHEET
 	face.region = Rect2(0, 0, FRAME.x, FRAME.y)
 	_dialogue.portrait = face
-	_dialogue.options = STORIES.duplicate()
+	_dialogue.options_provider = _options
 	camp.add_child(_dialogue)
 	var layer := CanvasLayer.new()
 	layer.layer = 5
@@ -109,6 +131,70 @@ func _build_dialogue() -> void:
 	_prompt.offset_right = 500
 	_prompt.modulate.a = 0.0
 	layer.add_child(_prompt)
+
+
+## A beszélgetés: a küldetés (kérés / átadás), a három régi történet, és az átadás után még három.
+func _options() -> Array[Dictionary]:
+	var list: Array[Dictionary] = []
+	match Progress.npc_quest_state(ITEM_QUEST):
+		"":
+			list.append({"id": "help", "text": "Segíthetek valamiben?", "on_choose": _give_quest})
+		"active":
+			if _common_item_index() >= 0:
+				list.append({"id": "bring", "text": "Hoztam egy átlagos tárgyat.", "on_choose": _take_item})
+			else:
+				list.append({"id": "what", "text": "Milyen tárgy kell pontosan?",
+					"on_choose": func() -> String: return "Bármilyen [b]átlagos[/b] holmi, ami a Mélységből jött: " \
+						+ "egy rozsdás kard, egy kopott sisak, egy csorba gyűrű. A táskádban hozd, ne a ládában."})
+	list.append_array(STORIES)
+	if Progress.npc_quest_state(ITEM_QUEST) == "done":
+		list.append_array(MORE_STORIES)
+	return list
+
+
+func _give_quest() -> String:
+	Progress.set_npc_quest(ITEM_QUEST, "active")
+	Progress.mark_asked(ID, "help")
+	Progress.save_game()
+	Audio.play("ui_open")
+	return "[i]Felhúzza a zsinórt. A végén csak egy csupasz horog lóg.[/i]\n\n" \
+		+ "Ha már kérdezed... elfogyott a nehezékem. A nagy hal elvitte az utolsót is.\n\n" \
+		+ "Hozz nekem valami vasat odalentről. Nem kell semmi különös: bármilyen [b]átlagos tárgy[/b] " \
+		+ "megteszi. A ritkát meg a csillogót tartsd meg magadnak, az nem hal, hanem kalandor csalinak való."
+
+
+## Az első átlagos tárgy a táskában (nem küldetés- és nem sztori tárgy); -1, ha nincs.
+func _common_item_index() -> int:
+	if not is_instance_valid(_player):
+		return -1
+	var inventory: Inventory = _player.get_node("Inventory")
+	for i in inventory.bag.size():
+		var item: Variant = inventory.bag[i]
+		if item is Dictionary and item.get("rarity", "") == "common" and Items.can_sell(item):
+			return i
+	return -1
+
+
+func _take_item() -> String:
+	var index := _common_item_index()
+	if index < 0:
+		return "[i]Megnézi a táskádat, és megrázza a fejét.[/i]\n\nNem látok benne átlagos holmit."
+	var inventory: Inventory = _player.get_node("Inventory")
+	var item: Dictionary = inventory.take_from_bag(index)
+	Progress.camp_inventory = inventory.save_data()
+	Progress.set_npc_quest(ITEM_QUEST, "done")
+	Progress.mark_asked(ID, "bring")
+	Progress.change_trust(ID, 15)
+	Progress.camp_gold += ITEM_GOLD
+	Progress.save_game()
+	var camp := get_tree().current_scene
+	if camp.has_method("_update_gold"):
+		camp.call("_update_gold")
+	Audio.play("level_up")
+	return "[i]Átveszi a(z) %s darabot, megforgatja a kezében, és elmosolyodik.[/i]\n\n" % item["name"] \
+		+ "Ez az. Érzem rajta a Mélység hidegét.\n\n[i]A zsinór végére köti, és bedobja.[/i]\n\n" \
+		+ "Köszönöm, fiam. Fogadd el ezt. És ha ráérsz, ülj le mellém egy kicsit: van még mit mesélnem.\n\n" \
+		+ "[color=#7a4a10](+%d tábori arany)[/color]" % ITEM_GOLD
 
 
 func _near_player() -> bool:
