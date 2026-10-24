@@ -11,7 +11,7 @@ const PAGE_SIZE := Vector2(400, 420)
 ## 2 = a tolvaj küldetései (Thief), 3 = a király küldetései (Castle; csak a vár kapujánál
 ## tett első látogatás után látszik).
 const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király", "Kutas idegen", "Csontváz sírásó", "Doktor",
-	"Mérnök"]
+	"Mérnök", "Horgász"]
 const KING_TAB := 3
 ## 4 = a kútba esett idegen küldetései (Stranger).
 const WELL_TAB := 4
@@ -21,6 +21,8 @@ const DIGGER_TAB := 5
 const DOCTOR_TAB := 6
 ## 7 = Bertalan, a mérnök küldetése (Engineer).
 const ENGINEER_TAB := 7
+## 8 = Öreg Ábel, a horgász küldetése (Fisherman).
+const FISHER_TAB := 8
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 
 var _ids: Array = []
@@ -62,6 +64,7 @@ func _npc_quests() -> Dictionary:
 		DIGGER_TAB: return Gravedigger.QUESTS
 		DOCTOR_TAB: return Doctor.QUESTS
 		ENGINEER_TAB: return Engineer.QUESTS
+		FISHER_TAB: return Fisherman.QUESTS
 	return Dialogues.VETERAN_QUESTS
 
 
@@ -73,6 +76,7 @@ func _npc_name() -> String:
 		DIGGER_TAB: return Gravedigger.NAME
 		DOCTOR_TAB: return Doctor.NAME
 		ENGINEER_TAB: return Engineer.NAME
+		FISHER_TAB: return Fisherman.NAME
 	return Dialogues.VETERAN_NAME
 
 
@@ -153,12 +157,12 @@ func _build() -> void:
 	# Fülek: általános / veterán.
 	var tabs := HBoxContainer.new()
 	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
-	tabs.add_theme_constant_override("separation", 8)
+	tabs.add_theme_constant_override("separation", 6)
 	root.add_child(tabs)
 	for i in TAB_NAMES.size():
 		var tab := MenuStyle.button(TAB_NAMES[i])
-		tab.custom_minimum_size = Vector2(142, 44)
-		tab.add_theme_font_size_override("font_size", 15)
+		tab.custom_minimum_size = Vector2(128, 44)
+		tab.add_theme_font_size_override("font_size", 14)
 		tab.focus_mode = Control.FOCUS_NONE
 		tab.modulate = Color.WHITE if i == 0 else Color(0.6, 0.55, 0.5)
 		tab.pressed.connect(_set_tab.bind(i))
@@ -256,6 +260,9 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 		elif _tab == DIGGER_TAB and _ids.is_empty() and index == 0:
 			empty_text = "Vendel, a sírásó még nem kért tőled semmit.\n\n" \
 				+ "A kocsma alatti temetőben áll, a kapu mögött. Kérdezd meg, segíthetsz-e neki."
+		elif _tab == FISHER_TAB and _ids.is_empty() and index == 0:
+			empty_text = "Öreg Ábel még nem kért tőled semmit.\n\n" \
+				+ "A város keleti rétjén, a tó partján horgászik. Kérdezd meg, segíthetsz-e neki."
 		elif _tab == 2 and _ids.is_empty() and index == 0:
 			empty_text = "Még nem találkoztál a tolvajjal.\n\n" \
 				+ "Állítólag a sáros ösvény végén, egy romos házban rejtőzik valaki..."

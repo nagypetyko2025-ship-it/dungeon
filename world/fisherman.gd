@@ -44,6 +44,14 @@ const STORIES: Array[Dictionary] = [
 ## A küldetése: hozz neki bármilyen átlagos tárgyat (nehezéknek a zsinórra).
 const ITEM_QUEST := "fisherman_item"
 const ITEM_GOLD := 60
+## A J könyv "Horgász" fülén.
+const QUESTS := {
+	ITEM_QUEST: {"name": "Nehezék a zsinórra",
+		"text": "Öreg Ábel nehezéke elfogyott: a tó nagy hala vitte el az utolsót is. Hozz neki a Mélységből "
+			+ "bármilyen [b]átlagos tárgyat[/b] (a táskádban legyen): a zsinór végére köti.",
+		"reward": "%d tábori arany (és Ábel meséi)" % ITEM_GOLD,
+		"doing": "vigyél Ábelnek egy átlagos tárgyat a tóhoz", "done": "Ábel újra horgászik"},
+}
 ## A tárgy átadása után: még három történet (a régiek is maradnak; a beszélgetés lapozható).
 const MORE_STORIES: Array[Dictionary] = [
 	{"id": "iron", "text": "Mire kellett neked az a vacak?", "trust": 3,
