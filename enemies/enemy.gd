@@ -10,6 +10,9 @@ const PATH_REACHED := 12.0
 const HIT_STUN := 0.25
 ## Báb: a helyben látott lökés ilyen gyorsan (px/mp) enged el, amíg a gazdától visszajön a valódi.
 const PUPPET_PUSH_FADE := 160.0
+## Báb: a helyben látott lökés legfeljebb ekkora (a valódi lökés a gazdától jön), és ennyivel a fal előtt megáll.
+const PUPPET_PUSH_MAX := 40.0
+const PUPPET_WALL_MARGIN := 12.0
 ## Báb: a saját találatunk után ennyi ideig nem hiszünk a gazda (még régi, magasabb) életerejének.
 const PUPPET_HP_HOLD := 0.35
 const XP_ORB := preload("res://pickups/xp_orb.tscn")
@@ -247,7 +250,7 @@ func _puppet_process(delta: float) -> void:
 	_stun_left -= delta
 	# A mi ütésünk lökése azonnal látszik; amíg a gazdánál is meglökött helyzet visszajön, lassan elenged.
 	if _knockback != Vector2.ZERO:
-		_net_push += _knockback * delta
+		_net_push = (_net_push + _knockback * delta).limit_length(PUPPET_PUSH_MAX)
 		_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
 	elif _stun_left <= 0.0:
 		_net_push = _net_push.move_toward(Vector2.ZERO, PUPPET_PUSH_FADE * delta)
@@ -255,6 +258,7 @@ func _puppet_process(delta: float) -> void:
 		if _net_shown == Vector2.INF:
 			_net_shown = position
 		_net_shown = _net_smooth.step(_net_shown, delta, _stun_left > 0.0)
+		_net_push = _push_until_wall(_net_shown, _net_push)
 		position = _net_shown + _net_push
 	# (A lövéseit a gazda szörnye adja le, és mindenkinél ugyanaz a lövés repül: NetEnemies "shot".)
 	if _ranged and is_instance_valid(_player) and not _dormant:
@@ -262,6 +266,19 @@ func _puppet_process(delta: float) -> void:
 		if not _magic:
 			_bow.rotation = _bow.global_position.direction_to(_player.global_position + PLAYER_CENTER).angle()
 		_bow.position.x = absf(_bow.position.x) * (-1.0 if _sprite.flip_h else 1.0)
+
+
+## Báb: a helyben látott lökés nem viheti át a falon (az igazi szörny a gazdánál is megáll a falnál).
+func _push_until_wall(base: Vector2, push: Vector2) -> Vector2:
+	if push.length() < 1.0:
+		return push
+	var from: Vector2 = (get_parent() as Node2D).to_global(base)
+	var query := PhysicsRayQueryParameters2D.create(from, from + push, 1)
+	var hit := get_world_2d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return push
+	var reach := maxf(from.distance_to(hit["position"]) - PUPPET_WALL_MARGIN, 0.0)
+	return push.limit_length(reach)
 
 
 ## Báb: a gazdától jött állapot (hely, sebesség, tükrözés, animáció — "" ha nem változik —, életerő).

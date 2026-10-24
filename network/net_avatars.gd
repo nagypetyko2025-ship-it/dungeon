@@ -21,6 +21,8 @@ const PLAYER_ARROW := preload("res://player/player_arrow.gd")
 const ENEMY_BODY_LAYER := 4
 ## Élesztés: ilyen közel kell állni az elesett társhoz, és ennyi ideig nyomva tartani az E-t.
 const REVIVE_RANGE := 56.0
+## Egy csontváz a pózban: azonosító, x, y, sebesség x, y, tükrözés + fut-e.
+const MINION_STRIDE := 6
 const REVIVE_TIME := 3.0
 
 var _player: Node2D
@@ -31,6 +33,8 @@ var _look_left := 0
 var _sent_look := {}
 ## Peer id -> a fegyvere kinézete (ha a figurája újra létrejön, pl. karakterváltáskor, ezt kapja).
 var _looks := {}
+## A saját csontvázaink sorszáma (hogy a társaknál mindegyik a sajátját kövesse).
+var _minion_uid := 0
 ## Peer id -> {"node": Node2D, "sprite": AnimatedSprite2D, "smooth": NetSmooth, "age": float, "character": String, ...}
 var _avatars := {}
 ## Peer id -> hol járt legutóbb ("camp", vagy "d<emelet>:<mag>"; lásd _where).
@@ -74,6 +78,9 @@ func _process(delta: float) -> void:
 			_look_left = LOOK_EVERY
 			_sent_look = look
 			pose["l"] = look
+		var minions := _minion_data()
+		if not minions.is_empty():
+			pose["m"] = minions
 		_lobby.send_pose(pose)
 	for id: int in _avatars.keys():
 		var avatar: Dictionary = _avatars[id]
@@ -85,6 +92,10 @@ func _process(delta: float) -> void:
 		var smooth: NetSmooth = avatar["smooth"]
 		# Messzi ugrásnál (pl. belépett egy házba) azonnal ott van, különben simán követi.
 		node.position = smooth.step(node.position, delta)
+		for uid: int in avatar["minions"]:
+			var minion: Dictionary = avatar["minions"][uid]
+			var body: Node2D = minion["node"]
+			body.position = (minion["smooth"] as NetSmooth).step(body.position, delta)
 	_update_revive(delta)
 
 
@@ -118,6 +129,7 @@ func _on_pose(id: int, data: Dictionary) -> void:
 	var node: Node2D = avatar["node"]
 	node.visible = not dead
 	_update_grave(id, avatar, dead, data.get("g", node.position))
+	_update_minions(avatar, data.get("m", PackedFloat32Array()))
 	if dead or waiting:
 		node.remove_from_group("net_avatar")
 	elif not node.is_in_group("net_avatar"):
@@ -165,7 +177,7 @@ func _create(id: int, character: String, at: Vector2) -> Dictionary:
 	smooth.receive(at, Vector2.ZERO)
 	var avatar := {"node": node, "sprite": sprite, "label": label, "smooth": smooth, "age": 0.0, "character": character,
 		"dead": false, "waiting": false, "pivot": pivot, "twin": twin, "tween": null, "grave": null, "revive": 0.0,
-		"revive_wait": 0.0}
+		"revive_wait": 0.0, "minions": {}}
 	if _looks.get(id) is Dictionary:
 		_apply_look(avatar, _looks[id])
 	return avatar
@@ -322,7 +334,78 @@ func _remove(id: int) -> void:
 	var grave: Variant = _avatars[id]["grave"]
 	if is_instance_valid(grave):
 		(grave as Node).queue_free()
+	for uid: int in _avatars[id]["minions"]:
+		((_avatars[id]["minions"][uid] as Dictionary)["node"] as Node).queue_free()
 	_avatars.erase(id)
+
+
+# ---------------------------------------------------------------- idézett csontvázak (Vendel)
+
+## A saját (Vendel által idézett) csontvázaink: azonosító, hely, sebesség, tükrözés + fut-e.
+func _minion_data() -> PackedFloat32Array:
+	var data := PackedFloat32Array()
+	for node in get_tree().get_nodes_in_group("minions"):
+		var minion := node as CharacterBody2D
+		if minion == null or minion.get("owner_player") != _player:
+			continue
+		if not minion.has_meta("net_uid"):
+			_minion_uid += 1
+			minion.set_meta("net_uid", _minion_uid)
+		var sprite := minion.get("_sprite") as AnimatedSprite2D
+		var flags := (1 if sprite != null and sprite.flip_h else 0) + (2 if sprite != null and sprite.animation == "run" else 0)
+		data.append_array(PackedFloat32Array([int(minion.get_meta("net_uid")), minion.global_position.x,
+			minion.global_position.y, minion.velocity.x, minion.velocity.y, flags]))
+	return data
+
+
+## A társ csontvázai nálunk (csak látszat: a szörnyeket a társ gépén ütik, a sebzés onnan jön).
+func _update_minions(avatar: Dictionary, data: PackedFloat32Array) -> void:
+	var shown: Dictionary = avatar["minions"]
+	var seen := {}
+	for i in range(0, data.size() - MINION_STRIDE + 1, MINION_STRIDE):
+		var uid := int(data[i])
+		var at := Vector2(data[i + 1], data[i + 2])
+		seen[uid] = true
+		if not shown.has(uid):
+			shown[uid] = _create_minion(at)
+		var minion: Dictionary = shown[uid]
+		(minion["smooth"] as NetSmooth).receive(at, Vector2(data[i + 3], data[i + 4]))
+		var sprite: AnimatedSprite2D = minion["sprite"]
+		var flags := int(data[i + 5])
+		sprite.flip_h = (flags & 1) == 1
+		sprite.play("run" if (flags & 2) == 2 else "idle")
+	for uid: int in shown.keys():
+		if not seen.has(uid):
+			_crumble_minion(shown[uid])
+			shown.erase(uid)
+
+
+func _create_minion(at: Vector2) -> Dictionary:
+	var body := Node2D.new()
+	body.position = at
+	_entities.add_child(body)
+	var sprite := AnimatedSprite2D.new()
+	sprite.sprite_frames = SpriteSheet.character_frames(SkeletonMinion.FIGURE, true)
+	sprite.offset = Vector2(0, -8)
+	sprite.modulate = SkeletonMinion.TINT
+	sprite.play("idle")
+	body.add_child(sprite)
+	# Kikel a földből (mint a társ gépén).
+	sprite.scale = Vector2(2, 0.1)
+	sprite.create_tween().tween_property(sprite, "scale", Vector2(2, 2), 0.35) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var smooth := NetSmooth.new()
+	smooth.receive(at, Vector2.ZERO)
+	return {"node": body, "sprite": sprite, "smooth": smooth}
+
+
+## Szétesik (a társ gépén lejárt vagy szétverték).
+func _crumble_minion(minion: Dictionary) -> void:
+	var sprite: AnimatedSprite2D = minion["sprite"]
+	var fall := sprite.create_tween()
+	fall.tween_property(sprite, "scale", Vector2(2.4, 0.2), 0.25)
+	fall.parallel().tween_property(sprite, "modulate:a", 0.0, 0.3)
+	fall.tween_callback((minion["node"] as Node).queue_free)
 
 
 # ---------------------------------------------------------------- élesztés

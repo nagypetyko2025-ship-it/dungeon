@@ -51,8 +51,8 @@ const WEAPON_TYPES := {
 		"forward": 18.0},
 	"bow": {"style": "bow", "cooldown": 1.1, "knockback": 120.0, "length": 40.0, "width": 10.0},
 	"wand": {"style": "wand", "cooldown": 1.0, "knockback": 160.0, "length": 36.0, "width": 10.0},
-	# Vendel ásója: lassan, ívben csap, gyengén sebez, de nagyon messzire lök.
-	"shovel": {"style": "swing", "arc": 150.0, "cooldown": 1.7, "knockback": 680.0, "length": 58.0, "width": 30.0,
+	# Vendel ásója: lassan, ívben csap, gyengén sebez, és messzire lök (de nem a terem túlsó végébe).
+	"shovel": {"style": "swing", "arc": 150.0, "cooldown": 1.7, "knockback": 360.0, "length": 58.0, "width": 30.0,
 		"forward": 18.0},
 	"crossbow": {"style": "bow", "cooldown": 1.45, "knockback": 220.0, "length": 40.0, "width": 10.0},
 }
