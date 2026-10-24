@@ -3,6 +3,7 @@ class_name Doctor
 ## lehet, és küldetéseket ad (a J könyv "Doktor" fülén).
 ## 1. Vérgömb: egy legendás talizmán, a vérmágiájával a hordágyon hozott sebesültet menti meg.
 ## 2. A tudós szeme: epikus talizmán, amivel a betegek bőre alá lát (a méreg és a rejtett sebek).
+## 3. Fűrészpenge (fegyver): műtétekhez és önvédelemhez; utána három új történet (SAW_STORIES).
 
 const ID := "doctor"
 const NAME := "Kálmán doktor"
@@ -13,6 +14,30 @@ const ORB_GOLD := 350
 const EYE_QUEST := "doctor_eye"
 const EYE_ID := "trinket_eye"
 const EYE_GOLD := 220
+const SAW_QUEST := "doctor_saw"
+const SAW_ID := "sword_saw"
+const SAW_GOLD := 160
+## A Fűrészpenge után: három új történet (a régiek is maradnak; a beszélgetés lapozható).
+const SAW_STORIES: Array[Dictionary] = [
+	{"id": "surgery", "text": "Mire kellett neked a fűrészpenge?", "trust": 4,
+		"answer": "[i]Végighúzza az ujját a fogazott élen, elégedetten.[/i]\n\n" \
+			+ "Tegnap egy kalandor lábát csont ette. Úgy értem, szó szerint: egy csontváz harapott bele, és " \
+			+ "a fogai bent maradtak. Két órán át szedegettem ki őket csipesszel, mire rájöttem, hogy a csontot " \
+			+ "kell megnyitni.\n\nA régi fűrészem kicsorbult. Ezzel tíz perc volt. A fiú jövő héten újra lemegy. " \
+			+ "Bolond, de legalább két lábon."},
+	{"id": "selfdefense", "text": "Önvédelem? Kitől félsz?", "trust": 4,
+		"answer": "[i]A maszk csőre a kórház ajtaja felé fordul.[/i]\n\n" \
+			+ "Nem mindenki jön fel élve a Mélységből, aki élőnek látszik. Múlt hónapban behoztak egy fiút, aki " \
+			+ "éjjel felült az ágyában, és Rozi nyakát kereste. Már nem ő volt odabent.\n\n" \
+			+ "Egy szikével nem lehet egy ilyet megállítani. Ezzel igen. Nem szeretem, de megtanultam: a doktor " \
+			+ "dolga, hogy a betegek túléljék. Néha a betegeit is túl kell élnie."},
+	{"id": "mask", "text": "Miért nem veszed le soha a maszkot?", "trust": 5,
+		"answer": "[i]Sokáig hallgat. A maszk üveglencséi mögött nem látszik a szeme.[/i]\n\n" \
+			+ "Egyszer levettem. Egy pestises faluban, egy kislány ágyánál, mert sírt, és félt a csőrös " \
+			+ "embertől. Meggyógyult. Én három hétig haldokoltam utána.\n\n" \
+			+ "Rozi szerint az arcomon még látszanak a nyomok. Azt mondom neki, hogy egy doktornak nem kell " \
+			+ "arc. Csak kéz, ami nem remeg. Meg egy jó fűrész."},
+]
 
 const GREETING := "[i]A pestisdoktor-maszk mögül tompa, fáradt hang szól.[/i]\n\n" \
 	+ "Csak óvatosan, ne lépj a vödörbe. Ha nem vérzel, ülj le valahova. Ha vérzel... akkor is ülj le, és várj."
@@ -30,6 +55,12 @@ const QUESTS := {
 			+ "a betegei bőre alá is belát.",
 		"reward": "%d tábori arany" % EYE_GOLD,
 		"doing": "vigyél a doktornak egy A tudós szeme talizmánt", "done": "a doktor mindent lát"},
+	SAW_QUEST: {"name": "A Fűrészpenge",
+		"text": "Kálmán doktor régi csontfűrésze kicsorbult, és a Mélységből néha olyan betegek jönnek fel, "
+			+ "akik ellen a szike kevés. Hozz neki egy [b]Fűrészpengét[/b] (fegyver, bármilyen ritkaságú, a "
+			+ "táskádban legyen): műtétekhez és önvédelemhez is jó lesz.",
+		"reward": "%d tábori arany" % SAW_GOLD,
+		"doing": "vigyél a doktornak egy Fűrészpengét", "done": "a doktornak van fűrésze"},
 }
 
 const SMALL_TALK: Array[Dictionary] = [
@@ -54,7 +85,7 @@ const SMALL_TALK: Array[Dictionary] = [
 
 
 ## A beszélgetés opciói: elöl a küldetések (kérés / átadás / köszönet), utána a kérdések; a
-## Vérgömb után a hordágyas fiúról szóló kérdés helyett a "Hogy van a sebesült?" jön (5 fér ki).
+## Vérgömb után a hordágyas fiúról szóló kérdés helyett a "Hogy van a sebesült?" jön (oldalanként 5).
 static func options(inventory: Inventory) -> Array[Dictionary]:
 	var list: Array[Dictionary] = []
 	if Progress.npc_quest_state(ORB_QUEST) == "done":
@@ -67,6 +98,17 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 					list.append({"id": "eye", "text": "Hoztam egy A tudós szeme talizmánt.",
 						"on_choose": func() -> String: return _give_eye(inventory)})
 			"done":
+				# A szem után: a Fűrészpenge kérése / átadása, a végén a három új történet.
+				match Progress.npc_quest_state(SAW_QUEST):
+					"":
+						list.append({"id": "more_saw", "text": "Segíthetek még valamiben?",
+							"on_choose": func() -> String: return _give_saw_quest()})
+					"active":
+						if _has(inventory, SAW_ID):
+							list.append({"id": "saw", "text": "Hoztam egy Fűrészpengét.",
+								"on_choose": func() -> String: return _give_saw(inventory)})
+					"done":
+						list.append_array(SAW_STORIES)
 				list.append({"id": "seeing", "text": "Mit látsz a szemmel?",
 					"on_choose": func() -> String: return "[i]A doktor a maszkja elé emeli a szemet, és " \
 						+ "végignéz a betegeken.[/i]\n\n" \
@@ -130,6 +172,38 @@ static func _give_eye(inventory: Inventory) -> String:
 			+ "[i]Feléd fordul.[/i]\n\nEzzel a szemmel több életet mentek meg, mint az elmúlt tíz évben " \
 			+ "összesen. Fogadd el ezt. [color=#7a4a10](+%d tábori arany)[/color]" % EYE_GOLD
 	return "Hm? Nem látom nálad a szemet."
+
+
+static func _give_saw_quest() -> String:
+	Progress.set_npc_quest(SAW_QUEST, "active")
+	Progress.mark_asked(ID, "more_saw")
+	Progress.save_game()
+	Audio.play("ui_open")
+	return "[i]A doktor egy kicsorbult, rozsdás csontfűrészt emel fel a tálcáról, és undorral nézi.[/i]\n\n" \
+		+ "Ha már kérdezed... ezzel nem lehet dolgozni. Inkább tépi a csontot, mint vágja. És van más is: " \
+		+ "néha olyan betegeket hoznak fel, akik ellen a szike kevés. Nem részletezem.\n\n" \
+		+ "Odalent a kalandorok néha találnak egy [b]Fűrészpengét[/b]. Fegyvernek szánták, de nekem kétszer " \
+		+ "annyit ér: műtétekhez és önvédelemhez. Hozz egyet, és megfizetem.\n\n" \
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Doktor fülön.)[/color]"
+
+
+static func _give_saw(inventory: Inventory) -> String:
+	for i in inventory.bag.size():
+		var item: Variant = inventory.bag[i]
+		if not (item is Dictionary and item.get("id", "") == SAW_ID):
+			continue
+		inventory.take_from_bag(i)
+		Progress.set_npc_quest(SAW_QUEST, "done")
+		Progress.add_camp_gold(SAW_GOLD)
+		Progress.change_trust(ID, 15)
+		Progress.save_game()
+		Audio.play("level_up")
+		return "[i]A doktor a fény felé tartja a pengét, végigfuttatja a hüvelykujját a fogakon, és " \
+			+ "elégedetten bólint.[/i]\n\n" \
+			+ "Éles. Kiegyensúlyozott. A kovács, aki ezt csinálta, értett a csonthoz, akár akarta, akár nem.\n\n" \
+			+ "[i]Az övébe tűzi, a szike mellé.[/i]\n\nKöszönöm. Ha legközelebb erre jársz, mesélek, mire " \
+			+ "kellett. [color=#7a4a10](+%d tábori arany)[/color]" % SAW_GOLD
+	return "Hm? Nem látom nálad a fűrészpengét."
 
 
 static func _give_orb_quest() -> String:

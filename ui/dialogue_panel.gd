@@ -1,8 +1,8 @@
 class_name DialoguePanel
 extends CanvasLayer
 ## Beszélgetés egy NPC-vel: felül a bizalom-sáv (-100..+100, alapból 0, NPC-nként mentve),
-## középen az NPC képe, neve és a mondandója, alul legfeljebb MAX_OPTIONS választható
-## opció (egérrel vagy az 1-5 gombokkal). Egy opció: {id, text, answer, trust}; a "trust"
+## középen az NPC képe, neve és a mondandója, alul oldalanként MAX_OPTIONS választható
+## opció (egérrel vagy az 1-5 gombokkal); ha több van, lapozni lehet (nyilak / ◀ ▶ gombok). Egy opció: {id, text, answer, trust}; a "trust"
 ## csak az első kérdezéskor számít. A már feltett kérdések pipát kapnak (újra kérdezhetők).
 ## Ha van `options_provider`, minden választás után újra lekéri az opciókat (pl. küldetés
 ## után új opció jelenik meg); egy opció "on_choose" Callable-je adja a választ (pl. átadás).
@@ -32,6 +32,12 @@ var _text: RichTextLabel
 var _options_box: VBoxContainer
 var _typing: Tween
 var _current: Array = []
+## Az opciók aktuális oldala (oldalanként MAX_OPTIONS).
+var _page := 0
+var _page_row: HBoxContainer
+var _page_label: Label
+var _prev_button: Button
+var _next_button: Button
 
 
 func _ready() -> void:
@@ -45,6 +51,7 @@ func open() -> void:
 	_name_label.text = npc_name
 	_portrait_rect.texture = portrait
 	_say(greeting)
+	_page = 0
 	_refresh_options()
 	_update_trust(false)
 	visible = true
@@ -64,10 +71,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:
 		return
-	var index := key.physical_keycode - KEY_1
-	if index >= 0 and index < mini(_current.size(), MAX_OPTIONS):
+	if key.physical_keycode in [KEY_LEFT, KEY_RIGHT]:
 		get_viewport().set_input_as_handled()
-		_choose(index)
+		_turn_page(-1 if key.physical_keycode == KEY_LEFT else 1)
+		return
+	var index := key.physical_keycode - KEY_1
+	if index >= 0 and index < _page_count_on_page():
+		get_viewport().set_input_as_handled()
+		_choose(_page * MAX_OPTIONS + index)
 
 
 func _build() -> void:
@@ -129,7 +140,9 @@ func _build() -> void:
 	window.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	window.offset_left = -520
 	window.offset_right = 520
-	window.offset_top = -470
+	window.offset_top = -530
+	# Ha a tartalom mégis nagyobb, fölfelé nőjön (ne lógjon ki a képernyő aljából).
+	window.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	window.offset_bottom = -24
 	window.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(window)
@@ -165,6 +178,18 @@ func _build() -> void:
 	_options_box = VBoxContainer.new()
 	_options_box.add_theme_constant_override("separation", 4)
 	left.add_child(_options_box)
+	_page_row = HBoxContainer.new()
+	_page_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_page_row.add_theme_constant_override("separation", 16)
+	left.add_child(_page_row)
+	_prev_button = _page_button("◀  Előző")
+	_prev_button.pressed.connect(_turn_page.bind(-1))
+	_page_row.add_child(_prev_button)
+	_page_label = UiStyle.label("1 / 1", 16, UiStyle.INK_LIGHT)
+	_page_row.add_child(_page_label)
+	_next_button = _page_button("Következő  ▶")
+	_next_button.pressed.connect(_turn_page.bind(1))
+	_page_row.add_child(_next_button)
 	var divider := ColorRect.new()
 	divider.color = Color(0.42, 0.28, 0.16, 0.5)
 	divider.custom_minimum_size.x = 2
@@ -179,7 +204,7 @@ func _build() -> void:
 	_text.add_theme_font_size_override("normal_font_size", 17)
 	_text.add_theme_font_size_override("italics_font_size", 17)
 	top.add_child(_text)
-	var hint := UiStyle.label("1-5 / kattintás: választás   ·   [E] / [Esc] búcsú", 14, UiStyle.INK_LIGHT)
+	var hint := UiStyle.label("1-5 / kattintás: választás   ·   ← → lapozás   ·   [E] / [Esc] búcsú", 14, UiStyle.INK_LIGHT)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	root.add_child(hint)
 
@@ -191,12 +216,19 @@ func _refresh_options() -> void:
 		_current = options_provider.call()
 	else:
 		_current = options
+	var pages := _page_total()
+	_page = clampi(_page, 0, pages - 1)
+	_page_row.visible = pages > 1
+	_page_label.text = "%d / %d" % [_page + 1, pages]
+	_prev_button.disabled = _page == 0
+	_next_button.disabled = _page == pages - 1
 	var asked: Array = Progress.asked_topics(npc_id)
-	for i in mini(_current.size(), MAX_OPTIONS):
+	for slot in _page_count_on_page():
+		var i := _page * MAX_OPTIONS + slot
 		var option: Dictionary = _current[i]
 		var was_asked := asked.has(option["id"])
 		var button := Button.new()
-		button.text = "%d.  %s%s" % [i + 1, option["text"], "   ✔" if was_asked else ""]
+		button.text = "%d.  %s%s" % [slot + 1, option["text"], "   ✔" if was_asked else ""]
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.custom_minimum_size.x = OPTIONS_WIDTH
@@ -211,6 +243,39 @@ func _refresh_options() -> void:
 		button.add_theme_stylebox_override("pressed", _option_style(Color(0.42, 0.28, 0.16, 0.35)))
 		button.pressed.connect(_choose.bind(i))
 		_options_box.add_child(button)
+
+
+func _page_total() -> int:
+	return maxi(1, ceili(_current.size() / float(MAX_OPTIONS)))
+
+
+## Hány opció van az aktuális oldalon.
+func _page_count_on_page() -> int:
+	return clampi(_current.size() - _page * MAX_OPTIONS, 0, MAX_OPTIONS)
+
+
+func _turn_page(step: int) -> void:
+	var target := clampi(_page + step, 0, _page_total() - 1)
+	if target == _page:
+		return
+	_page = target
+	Audio.play("ui_click")
+	_refresh_options()
+
+
+func _page_button(text: String) -> Button:
+	var button := Button.new()
+	button.text = text
+	button.focus_mode = Control.FOCUS_NONE
+	button.add_theme_font_size_override("font_size", 15)
+	button.add_theme_color_override("font_color", UiStyle.INK)
+	button.add_theme_color_override("font_hover_color", Color(0.6, 0.3, 0.05))
+	button.add_theme_color_override("font_disabled_color", Color(UiStyle.INK_LIGHT, 0.4))
+	button.add_theme_stylebox_override("normal", _option_style(Color(0.42, 0.28, 0.16, 0.1)))
+	button.add_theme_stylebox_override("hover", _option_style(Color(0.42, 0.28, 0.16, 0.25)))
+	button.add_theme_stylebox_override("pressed", _option_style(Color(0.42, 0.28, 0.16, 0.35)))
+	button.add_theme_stylebox_override("disabled", _option_style(Color(0.42, 0.28, 0.16, 0.04)))
+	return button
 
 
 func _option_style(color: Color) -> StyleBoxFlat:

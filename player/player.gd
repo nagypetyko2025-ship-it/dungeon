@@ -109,6 +109,12 @@ var gold := 0
 var _knockback := Vector2.ZERO
 var _cooldown_left := 0.0
 var _swing_side := 1.0
+## Tőrből mindig kettő van a kezében: felváltva döf az egyikkel, aztán a másikkal; a kettő között
+## DAGGER_GAP rés van. A másik tőr (_twin_pivot) addig a helyén marad, a célzás felé fordítva.
+const DAGGER_GAP := 8.0
+var _dagger_hand := 1.0
+var _twin_pivot: Node2D
+var _twin_sprite: Sprite2D
 ## A felszerelt fegyver fajtája: "sword" vagy "spear".
 var _weapon_type := "sword"
 var _step_distance := 0.0
@@ -137,6 +143,12 @@ func _ready() -> void:
 	_sprite.play("idle")
 	_weapon_pivot.visible = false
 	_sword_shape.disabled = true
+	_twin_pivot = Node2D.new()
+	_twin_pivot.name = "TwinDaggerPivot"
+	_twin_pivot.visible = false
+	add_child(_twin_pivot)
+	_twin_sprite = Sprite2D.new()
+	_twin_pivot.add_child(_twin_sprite)
 	_hurtbox.hurt.connect(_on_hurt)
 	_health.died.connect(_on_died)
 	_health.dodged.connect(_on_dodged)
@@ -312,6 +324,11 @@ func _update_sword_geometry() -> void:
 		shape.size = Vector2(blade + SWORD_HITBOX_EXTRA, SWORD_HITBOX_WIDTH)
 		_sword_shape.position.x = blade / 2.0 + SWORD_HILT_OFFSET + SWORD_HITBOX_EXTRA / 2.0
 	_sword_shape.shape = shape
+	# A második tőr ugyanúgy néz ki, mint az első.
+	if _twin_sprite != null:
+		_twin_sprite.texture = _sword_sprite.texture
+		_twin_sprite.transform = _sword_sprite.transform
+		_twin_sprite.z_index = _sword_sprite.z_index
 
 
 func add_gold(amount: int) -> void:
@@ -727,21 +744,32 @@ func _thrust(aim_angle: float) -> void:
 	Audio.play("thrust" if _weapon_type == "spear" else "swing")
 	var direction := Vector2.from_angle(aim_angle)
 	var distance: float = WEAPON_TYPES[_weapon_type]["throw"] * _stats.attack_range / 100.0
+	# Két tőr: most a másik kéz döf, a tőrök között kis rés (a célzásra merőlegesen).
+	var start := WEAPON_PIVOT_POSITION
+	var dual := _weapon_type == "dagger"
+	if dual:
+		_dagger_hand = -_dagger_hand
+		var side := Vector2.from_angle(aim_angle + PI / 2.0) * DAGGER_GAP / 2.0
+		start += side * _dagger_hand
+		_twin_pivot.position = WEAPON_PIVOT_POSITION - side * _dagger_hand
+		_twin_pivot.rotation = aim_angle
+		_twin_pivot.visible = true
 	_weapon_pivot.visible = true
 	_weapon_pivot.rotation = aim_angle
-	_weapon_pivot.position = WEAPON_PIVOT_POSITION + direction * THRUST_BACK
+	_weapon_pivot.position = start + direction * THRUST_BACK
 	_sword_shape.set_deferred("disabled", false)
 	# Messzebbre dobva kicsit tovább tart, de mindig belefér a cooldownba.
 	var thrust_time := minf(THROW_TIME * sqrt(distance / 64.0), _cooldown_left * 0.8)
 	var tween := create_tween()
-	tween.tween_property(_weapon_pivot, "position", WEAPON_PIVOT_POSITION + direction * distance,
+	tween.tween_property(_weapon_pivot, "position", start + direction * distance,
 		thrust_time * 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	# Csak kifelé menet sebez (visszafelé nem, hogy egy dobás ne találjon kétszer).
 	tween.tween_callback(func() -> void: _sword_shape.set_deferred("disabled", true))
-	tween.tween_property(_weapon_pivot, "position", WEAPON_PIVOT_POSITION, thrust_time * 0.5) \
+	tween.tween_property(_weapon_pivot, "position", start, thrust_time * 0.5) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	await tween.finished
 	_weapon_pivot.visible = false
+	_twin_pivot.visible = false
 	_weapon_pivot.position = WEAPON_PIVOT_POSITION
 
 
