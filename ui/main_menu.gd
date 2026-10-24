@@ -190,6 +190,10 @@ func _build_buttons() -> void:
 	# Ha van mentés: Folytatás (a táborba, a mentett haladással).
 	if Progress.has_save():
 		var resume := MenuStyle.button("Folytatás")
+		# Félbehagyott futás (a főellenség utáni pihenőnél léptél ki): onnan folytatódik.
+		if RunSave.exists():
+			resume.text = "Folytatás (futás)"
+			resume.tooltip_text = "A félbehagyott futás: %s" % RunSave.summary()
 		resume.pressed.connect(_on_continue)
 		_buttons.add_child(resume)
 	_new_game_button = MenuStyle.button("Új játék")
@@ -372,6 +376,9 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_continue() -> void:
 	Progress.load_game(true)
 	GameState.reset()
+	# Ha a főellenség utáni pihenőnél léptél ki, a futás onnan folytatódik (minden tárgyaddal).
+	if RunSave.exists():
+		RunSave.restore()
 	get_tree().change_scene_to_file(GAME_SCENE)
 
 
@@ -382,6 +389,7 @@ func _on_new_game() -> void:
 		_new_game_button.text = "Biztos? Mentés törlése"
 		return
 	Progress.reset_game()
+	RunSave.clear()
 	GameState.reset()
 	# Előbb a bevezető történet (Space hosszan: kihagyás), utána a tábor.
 	get_tree().change_scene_to_file(INTRO_SCENE)

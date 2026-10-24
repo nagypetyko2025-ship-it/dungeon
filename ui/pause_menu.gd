@@ -44,8 +44,17 @@ func _ready() -> void:
 	_settings_button = _add_button("Beállítások", _show_settings.bind(true))
 	_add_button("Főmenü", _to_main_menu)
 	_add_button("Kilépés", func() -> void:
-		_record_run()
+		# Pihenő közben (egyjátékos) a futás elmentődik, és a főmenüből folytatható.
+		if GameState.on_break and get_parent().name != "Dungeon" and not Profiles.multiplayer:
+			RunSave.save(get_tree().get_first_node_in_group("player"))
+		else:
+			_record_run()
 		get_tree().quit())
+	if GameState.on_break and get_parent().name != "Dungeon" and not Profiles.multiplayer:
+		var saved := UiStyle.label("Pihenő közben a futás elmentődik: a Folytatással innen folytathatod.", 16,
+			MenuStyle.PARCHMENT)
+		saved.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_buttons.add_child(saved)
 
 	_settings = SettingsPanel.new()
 	_settings.visible = false
@@ -107,13 +116,20 @@ func _record_run() -> void:
 
 func _to_camp() -> void:
 	_record_run()
+	RunSave.clear()
 	GameState.reset()
 	get_tree().paused = false
 	get_tree().change_scene_to_file(CAMP)
 
 
+## Pihenő közben (egyjátékos) a főmenübe lépve a futás elmentődik, és később folytatható (RunSave);
+## egyébként a futás itt ér véget.
 func _to_main_menu() -> void:
-	_record_run()
+	if GameState.on_break and get_parent().name != "Dungeon" and not Profiles.multiplayer:
+		RunSave.save(get_tree().get_first_node_in_group("player"))
+	else:
+		_record_run()
+		RunSave.clear()
 	GameState.reset()
 	get_tree().paused = false
 	get_tree().change_scene_to_file(MAIN_MENU)

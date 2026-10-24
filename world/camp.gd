@@ -325,6 +325,8 @@ func _setup_break() -> void:
 	add_child(portal)
 	_player.global_position = portal.position + Vector2(0, 50)
 	_block_town_road()
+	# A futás állapota mentődik: ha most kilépsz, innen folytathatod (RunSave).
+	RunSave.save.call_deferred(_player)
 
 
 ## Pihenő közben a városba vezető út el van torlaszolva (fatörzsek és ládák a tisztás szélén).
@@ -339,9 +341,14 @@ func _block_town_road() -> void:
 	_solid(Rect2(Vector2(x * TILE, (ROAD_ROW - 1) * TILE), Vector2(TILE, 4 * TILE)))
 	_road_block_position = _tile_center(Vector2i(x - 1, ROAD_ROW)) + Vector2(0, TILE / 2.0)
 
-## Ha pihenő közben bezárod a játékot, az a futás feladása: a pénzed 40%-a a táborba kerül.
+## Ha pihenő közben bezárod a játékot, a futás elmentődik (RunSave), és a főmenü "Folytatás"
+## gombjával innen folytathatod. (Közös játékban nincs ilyen mentés: ott ez a futás feladása,
+## a pénzed 40%-a a táborba kerül.)
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST and GameState.on_break and is_instance_valid(_player):
+		if not Profiles.multiplayer:
+			RunSave.save(_player)
+			return
 		Records.submit_run(_player)
 		Progress.rescue_gold(int(_player.get("gold")) + GameState.break_gold_left, 0.4)
 
@@ -354,6 +361,8 @@ func _return_to_dungeon() -> void:
 	_leaving = true
 	Audio.play("stairs")
 	_player.call("save_state")
+	# A futás folytatódik a kazamatában: a pihenőnél készült mentés már nem kell.
+	RunSave.clear()
 	GameState.saved_gold += GameState.break_gold_left
 	GameState.break_gold_left = 0
 	GameState.on_break = false

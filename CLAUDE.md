@@ -35,6 +35,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - `world/dungeon.gd` emelet-generálás (boss minden 3. emeleten, 20. emelet: Vérfarkas + győzelem), `world/camp.gd` tábor
   (város keletre: `world/town.gd`, 68 csempe széles, a keleti fele (OLD_END_X-től) üres rét, kovács: `world/smithy.gd`, veterán + sáros ösvény nyugatra, a végén a romos ház:
   `world/ruin.gd`, benne a tolvaj rejtekszobája: `world/thief.gd`), `world/shop_interior.gd` bolt.
+- Félbehagyott futás: `world/run_save.gd` (a főellenség utáni pihenőnél kilépve a futás profilonként user://run*.cfg-be mentődik; a főmenü Folytatás gombja onnan indít; a kazamatába visszatéréskor / feladáskor / új játéknál törlődik; multiban nincs).
 - Állapot: `world/game_state.gd` (futás; `reset()`), `world/progress.gd` (mentett tábor: arany, láda, fejlesztések, küldetések; `deepest` = a valaha elért legmélyebb emelet, az emeletes küldetések ezt is nézik).
 - Ellenségek útkeresése: `Dungeon.nav_path` (AStarGrid2D a padlón, oszlopok szilárdak), `Enemy._chase_direction`.
 - Ellenségek: `enemies/enemy_types.gd` (statok, 10. emeleti ugrás; a kikerülés a végén ×0.25, `DODGE_FACTOR`), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`;
