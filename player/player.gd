@@ -343,9 +343,11 @@ func add_gold(amount: int) -> void:
 		net.gold_changed(amount)
 
 
-## A közös arany egy társnál változott (lásd NetEnemies).
-func add_gold_from_net(amount: int) -> void:
-	gold = maxi(gold + amount, 0)
+## A közös arany a gazdától jött összege (lásd NetLobby: közös arany).
+func set_gold_from_net(total: int) -> void:
+	if gold == total:
+		return
+	gold = total
 	gold_changed.emit(gold)
 
 
@@ -743,6 +745,7 @@ func _swing(aim_angle: float) -> void:
 	_weapon_pivot.rotation = aim_angle - _swing_side * arc / 2.0
 	# Nagyon gyors ütésnél a suhintás is gyorsabb, hogy beleférjen a cooldownba.
 	var swing_time := minf(MAX_SWING_TIME * arc / SWING_ARC, _cooldown_left * 0.6)
+	share_effect("swing", [aim_angle, arc, _swing_side, swing_time])
 	var tween := create_tween()
 	tween.tween_property(_weapon_pivot, "rotation", aim_angle + _swing_side * arc / 2.0, swing_time)
 	await tween.finished
@@ -773,6 +776,8 @@ func _thrust(aim_angle: float) -> void:
 	_sword_shape.set_deferred("disabled", false)
 	# Messzebbre dobva kicsit tovább tart, de mindig belefér a cooldownba.
 	var thrust_time := minf(THROW_TIME * sqrt(distance / 64.0), _cooldown_left * 0.8)
+	share_effect("thrust", [aim_angle, _weapon_pivot.position, start + direction * distance, start, thrust_time,
+		_twin_pivot.position if dual else Vector2.INF])
 	var tween := create_tween()
 	tween.tween_property(_weapon_pivot, "position", start + direction * distance,
 		thrust_time * 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
@@ -802,6 +807,7 @@ func _cast(slot: int, aim_angle: float) -> void:
 	_weapon_pivot.visible = true
 	_weapon_pivot.rotation = aim_angle
 	_weapon_pivot.position = WEAPON_PIVOT_POSITION
+	share_effect("hold", [aim_angle, 0.18])
 	Spells.cast(self, spell, Vector2.from_angle(aim_angle))
 	await get_tree().create_timer(0.18, false).timeout
 	if _weapon_pivot.rotation == aim_angle:
@@ -828,6 +834,7 @@ func _shoot(aim_angle: float) -> void:
 	_weapon_pivot.visible = true
 	_weapon_pivot.rotation = aim_angle
 	_weapon_pivot.position = WEAPON_PIVOT_POSITION
+	share_effect("hold", [aim_angle, 0.15])
 	# Többlövés: ennyi nyíl egyszerre, egymás mellett, kicsit szétterülve (nem egymásban).
 	var count := _stats.multishot
 	var crossbow := _weapon_type == "crossbow"
@@ -852,9 +859,37 @@ func _shoot(aim_angle: float) -> void:
 		get_parent().add_child(arrow)
 		arrow.global_position = _weapon_pivot.global_position + direction * 18.0 + side * gap * k
 		arrow.origin = global_position + Vector2(0, -6) + side * gap * k * 0.5
+		share_shot(arrow)
 	await get_tree().create_timer(0.15, false).timeout
 	if _weapon_pivot.rotation == aim_angle:
 		_weapon_pivot.visible = false
+
+
+## Közös játék: a támadásunk látszata a társaknál is lejátszódik (lásd NetAvatars.share).
+func share_effect(kind: String, args: Array) -> void:
+	var scene := get_tree().current_scene
+	var avatars := scene.get_node_or_null("NetAvatars") as NetAvatars if scene != null else null
+	if avatars != null:
+		avatars.share(kind, args)
+
+
+## Egy kilőtt nyíl / varázslövedék a társaknál is repül (ott nem sebez).
+func share_shot(shot: Area2D) -> void:
+	share_effect("shot", [str(shot.get("look")), shot.global_position, shot.get("origin"), shot.get("direction"),
+		float(shot.get("speed")), float(shot.get("max_distance"))])
+
+
+## A fegyver kinézete a társak figuráján: ikon, és a kép helyzete a forgásponthoz (lásd NetAvatars).
+func net_weapon_look() -> Dictionary:
+	var look := {"t": _sword_sprite.transform, "z": _sword_sprite.z_index}
+	var weapon: Variant = _inventory.equipment.get("weapon") if _inventory.equipment else null
+	if weapon is Dictionary:
+		var item: Dictionary = weapon
+		if item.has("icon_path"):
+			look["i"] = item["icon_path"]
+		elif item.has("region"):
+			look["r"] = item["region"]
+	return look
 
 
 func _on_hurt(hitbox: Hitbox) -> void:
@@ -881,7 +916,11 @@ func _thorns(hitbox: Hitbox) -> void:
 	var attacker := hitbox.owner
 	if thorns <= 0 or attacker == null or not attacker.is_in_group("enemies") or attacker.get_node_or_null("Health") == null:
 		return
-	attacker.get_node("Health").damage(thorns, false)
+	# (A bábnál a sebzést a gazda vonja le, lásd Enemy.take_direct_damage.)
+	if attacker.has_method("take_direct_damage"):
+		attacker.call("take_direct_damage", thorns)
+	else:
+		attacker.get_node("Health").damage(thorns, false)
 	FloatingText.spawn(get_parent(), attacker.global_position + Vector2(0, -40), str(thorns), Color(0.75, 0.9, 0.4))
 
 

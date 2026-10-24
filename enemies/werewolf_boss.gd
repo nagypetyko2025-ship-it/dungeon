@@ -122,12 +122,31 @@ func _spawn_circles() -> void:
 
 ## Az első "halál": a földre rogy, aztán feltámad. A második már igazi.
 func _on_died() -> void:
-	if _revived:
+	# A báb halála mindig igazi (az első "halált" a gazda külön üzeni: net_fall).
+	if _revived or net_puppet:
 		final_died.emit()
 		super._on_died()
 		return
 	_revived = true
+	var net := NetEnemies.active(get_tree())
+	if net != null and net.is_host():
+		net.broadcast_attack(self, "fall")
 	_fall_and_revive()
+
+
+## Báb: a gazdánál a földre rogyott (és majd feltámad).
+func net_fall() -> void:
+	if _revived:
+		return
+	_revived = true
+	_fall_and_revive()
+
+
+## Gazda: amíg a földön fekszik, egy vendég ütése sem sebzi (különben feltámadás előtt igazán meghalna).
+func net_take_damage(amount: int, push: Vector2, direct := false) -> void:
+	if not _hitbox.monitorable:
+		return
+	super.net_take_damage(amount, push, direct)
 
 
 func _fall_and_revive() -> void:

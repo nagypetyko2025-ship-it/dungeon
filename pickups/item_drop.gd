@@ -17,6 +17,14 @@ func _ready() -> void:
 	glow.energy = GLOW_ENERGY
 
 
+func can_collect(player: Node2D) -> bool:
+	var inventory: Inventory = player.get_node("Inventory")
+	if inventory.bag.has(null):
+		return true
+	FloatingText.spawn(get_parent(), global_position + Vector2(0, -20), "Tele a táskád!", Color(1, 0.5, 0.4))
+	return false
+
+
 func _collect(player: Node2D) -> bool:
 	var inventory: Inventory = player.get_node("Inventory")
 	if not inventory.add_item(item):

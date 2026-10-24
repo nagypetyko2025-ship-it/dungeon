@@ -238,7 +238,12 @@ func on_hit_player(player: Node2D) -> void:
 	if has("plunder"):
 		var taken: int = player.call("lose_gold", PLUNDER_GOLD + int(enemy.get("_depth")) / 2)
 		if taken > 0:
-			_stolen += taken
+			# Báb: a zsákmányt a gazda igazi szörnye viszi (ő ejti el a halálakor, mindenkinél).
+			var net := NetEnemies.active(enemy.get_tree())
+			if bool(enemy.get("net_puppet")) and net != null:
+				net.report_plunder(enemy, taken)
+			else:
+				_stolen += taken
 			Audio.play("coin", -6.0, 0.3)
 			FloatingText.spawn(enemy.get_parent(), _head(), "-%d arany!" % taken, Color(1, 0.8, 0.2))
 
@@ -299,6 +304,11 @@ func _blast(at: Vector2) -> void:
 	enemy.get_parent().add_child(fire)
 	fire.global_position = at
 	get_tree().create_timer(1.2, false).timeout.connect(fire.queue_free)
+
+
+## Közös játék, gazda: egy vendég bábja lopott (lásd NetEnemies.report_plunder).
+func add_stolen(amount: int) -> void:
+	_stolen += amount
 
 
 ## Halálkor hívja az ellenség.

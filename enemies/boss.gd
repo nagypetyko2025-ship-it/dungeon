@@ -267,7 +267,9 @@ func _blink() -> void:
 	var fade := create_tween()
 	fade.tween_property(_visual, "modulate:a", 0.0, 0.12)
 	await fade.finished
-	global_position = target
+	# A báb nem ugrik el magától: a gazda szörnyének új helye úgyis megjön (különben visszarántódna).
+	if not net_puppet:
+		global_position = target
 	create_tween().tween_property(_visual, "modulate:a", 1.0, 0.18)
 
 

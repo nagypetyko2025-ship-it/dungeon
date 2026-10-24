@@ -8,6 +8,10 @@ const KNOCKBACK_DECAY := 900.0
 ## Ennyire megközelítve egy útpontot, a következőre indul.
 const PATH_REACHED := 12.0
 const HIT_STUN := 0.25
+## Báb: a helyben látott lökés ilyen gyorsan (px/mp) enged el, amíg a gazdától visszajön a valódi.
+const PUPPET_PUSH_FADE := 160.0
+## Báb: a saját találatunk után ennyi ideig nem hiszünk a gazda (még régi, magasabb) életerejének.
+const PUPPET_HP_HOLD := 0.35
 const XP_ORB := preload("res://pickups/xp_orb.tscn")
 ## Ennél több gömb nem pattan ki; a maradék XP az utolsóba kerül.
 const MAX_ORBS := 6
@@ -82,8 +86,13 @@ var _dormant := false
 ## Közös játék (lásd NetEnemies): azonosító, és hogy ez csak báb-e (a gazda szörnyét követi).
 var net_id := 0
 var net_puppet := false
-var _net_target := Vector2.INF
 var _retarget_left := 0.0
+## Báb: a gazdától jött helyzet sima követése, a megjelenített hely (lökés nélkül), a helyben látott
+## lökés eltolása, és meddig ne higgyünk a gazda (még a találatunk előtti) magasabb életerejének.
+var _net_smooth := NetSmooth.new()
+var _net_shown := Vector2.INF
+var _net_push := Vector2.ZERO
+var _net_hp_hold := 0.0
 
 @onready var _visual: Node2D = $Visual
 @onready var _sprite: AnimatedSprite2D = $Visual/AnimatedSprite2D
@@ -234,8 +243,19 @@ func _pick_target(delta: float) -> void:
 func _puppet_process(delta: float) -> void:
 	if not is_instance_valid(_player):
 		_player = get_tree().get_first_node_in_group("player")
-	if _net_target != Vector2.INF:
-		position = _net_target if position.distance_to(_net_target) > 160.0 			else position.lerp(_net_target, minf(1.0, delta * 14.0))
+	_net_hp_hold -= delta
+	_stun_left -= delta
+	# A mi ütésünk lökése azonnal látszik; amíg a gazdánál is meglökött helyzet visszajön, lassan elenged.
+	if _knockback != Vector2.ZERO:
+		_net_push += _knockback * delta
+		_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
+	elif _stun_left <= 0.0:
+		_net_push = _net_push.move_toward(Vector2.ZERO, PUPPET_PUSH_FADE * delta)
+	if _net_smooth.has_sample():
+		if _net_shown == Vector2.INF:
+			_net_shown = position
+		_net_shown = _net_smooth.step(_net_shown, delta, _stun_left > 0.0)
+		position = _net_shown + _net_push
 	# (A lövéseit a gazda szörnye adja le, és mindenkinél ugyanaz a lövés repül: NetEnemies "shot".)
 	if _ranged and is_instance_valid(_player) and not _dormant:
 		_sprite.flip_h = _player.global_position.x < global_position.x
@@ -244,24 +264,29 @@ func _puppet_process(delta: float) -> void:
 		_bow.position.x = absf(_bow.position.x) * (-1.0 if _sprite.flip_h else 1.0)
 
 
-## Báb: a gazdától jött állapot [hely, tükrözés, animáció, életerő].
-func net_apply(state: Array) -> void:
-	_net_target = state[0]
+## Báb: a gazdától jött állapot (hely, sebesség, tükrözés, animáció — "" ha nem változik —, életerő).
+func net_apply(at: Vector2, moving: Vector2, flip: bool, animation: String, hp: int) -> void:
+	_net_smooth.receive(at, moving)
+	# Még nincs a fában (késleltetve kerül be): a helyét megjegyeztük, a többi a következő mintával jön.
+	if not is_node_ready():
+		return
 	if not _ranged:
-		_sprite.flip_h = bool(state[1])
-	var animation := str(state[2])
-	if _dormant and animation != "dormant":
+		_sprite.flip_h = flip
+	if _dormant and animation != "" and animation != "dormant":
 		_wake()
-	if _sprite.sprite_frames.has_animation(animation) and _sprite.animation != animation:
+	if animation != "" and _sprite.sprite_frames.has_animation(animation) and _sprite.animation != animation:
 		_sprite.play(animation)
-	var hp := int(state[3])
-	if hp > 0 and hp != _health.current and not _health.is_dead():
+	# A saját találatunk után egy darabig csak a kisebb életerőt hisszük el (a gazda még nem vonta le).
+	if hp > 0 and hp != _health.current and not _health.is_dead() and (hp < _health.current or _net_hp_hold <= 0.0):
 		_health.current = hp
 		_health.changed.emit(_health.current, _health.max_health)
 
 
-## Báb: a gazdánál meghalt (vagy eltűnt) — itt is meghal (XP, szobatisztítás).
+## Báb: a gazdánál meghalt (vagy eltűnt) — itt is meghal (szobatisztítás; a zsákmány a gazdától jön).
 func net_kill() -> void:
+	if not is_node_ready():
+		ready.connect(net_kill, CONNECT_ONE_SHOT)
+		return
 	if not _health.is_dead():
 		_health.damage(_health.current, false)
 
@@ -272,8 +297,12 @@ func net_go_local() -> void:
 	_abilities.set_physics_process(true)
 
 
-## Gazda: egy vendég ütése (a találatot és a kikerülést a vendég már eldöntötte).
-func net_take_damage(amount: int, push: Vector2) -> void:
+## Gazda: egy vendég ütése (a találatot és a kikerülést a vendég már eldöntötte). `direct`: égés vagy
+## tüske — ettől nem torpan meg.
+func net_take_damage(amount: int, push: Vector2, direct := false) -> void:
+	if direct:
+		_health.damage(amount, false)
+		return
 	_wake()
 	if _abilities.is_shielded():
 		return
@@ -478,6 +507,7 @@ func _on_hurt(hitbox: Hitbox) -> void:
 			return
 		_health.current = maxi(_health.current - int(hit["damage"]), 1)
 		_health.changed.emit(_health.current, _health.max_health)
+		_net_hp_hold = PUPPET_HP_HOLD
 	elif not _health.damage(hit["damage"], not hit["pierce"]):
 		return
 	# A játékos fegyvere talált: életlopás stb. (lásd Player.on_hit_enemy).
@@ -528,6 +558,22 @@ func _on_missed() -> void:
 	FloatingText.spawn(get_parent(), _head_position(), "Mellé!", Color(0.75, 0.75, 0.75))
 
 
+## Közvetlen sebzés (égés, tüskék): a bábon csak a látszat (legfeljebb 1 HP-ig), a sebzést a gazda
+## vonja le; különben a vendégnél "meghalhatna" egy báb, ami a gazdánál él.
+func take_direct_damage(amount: int) -> bool:
+	if not net_puppet:
+		return _health.damage(amount, false)
+	if _health.is_dead():
+		return false
+	_health.current = maxi(_health.current - amount, 1)
+	_health.changed.emit(_health.current, _health.max_health)
+	_net_hp_hold = PUPPET_HP_HOLD
+	var net := NetEnemies.active(get_tree())
+	if net != null:
+		net.report_damage(self, amount, Vector2.ZERO, true)
+	return true
+
+
 func _on_dodged() -> void:
 	Audio.play("dodge", -4.0)
 	FloatingText.spawn(get_parent(), _head_position(), "Kikerülte!", Color(0.7, 0.75, 0.85))
@@ -538,12 +584,14 @@ func _on_died() -> void:
 	set_physics_process(false)
 	_hitbox.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitoring", false)
-	_drop_xp.call_deferred(stats["xp"])
+	# A báb zsákmánya a gazdától jön (ő dobja ki a sajátját, és mindenkinél ugyanott jelenik meg).
+	if not net_puppet:
+		_drop_xp.call_deferred(stats["xp"])
+		if _type.has("gold"):
+			_drop_gold.call_deferred()
+		if randf() < ITEM_DROP_CHANCE:
+			_drop_item.call_deferred()
 	_abilities.on_died()
-	if _type.has("gold"):
-		_drop_gold.call_deferred()
-	if randf() < ITEM_DROP_CHANCE:
-		_drop_item.call_deferred()
 	var tween := create_tween()
 	tween.tween_property(_visual, "scale", Vector2.ZERO, 0.2)
 	tween.tween_callback(queue_free)
@@ -622,7 +670,7 @@ class Burn:
 		var health: Health = enemy.get_node("Health")
 		if _tick <= 0.0 and not health.is_dead():
 			_tick = TICK
-			if health.damage(damage, false):
+			if enemy.call("take_direct_damage", damage):
 				FloatingText.spawn(enemy.get_parent(), enemy.global_position + position + Vector2(0, -16), str(damage),
 					Color(1, 0.55, 0.15), 16)
 		enemy.get_node("Visual").modulate = Color(1.4, 0.85, 0.6) if fmod(time_left, 0.3) < 0.15 else Color.WHITE

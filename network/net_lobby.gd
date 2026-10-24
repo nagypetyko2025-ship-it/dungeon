@@ -15,6 +15,7 @@ signal failed(reason: String)
 ## A kapcsolat véget ért (a gazda kilépett vagy kidobott).
 signal closed(reason: String)
 signal pose_received(id: int, data: Dictionary)
+signal effect_received(id: int, kind: String, args: Array)
 signal player_left(id: int)
 
 const BEACON_TAG := "DUNGEON1"
@@ -164,6 +165,9 @@ func leave() -> void:
 	state = "idle"
 	code = ""
 	players = {}
+	_pending.clear()
+	_gold_pending.clear()
+	_gold_acked.clear()
 	lobby_changed.emit()
 
 
@@ -244,11 +248,25 @@ func _read_beacons() -> void:
 # ---------------------------------------------------------------- játékosok
 
 func _on_connected() -> void:
+	_no_throttle(1)
 	_register.rpc_id(1, my_name, Progress.character)
 
 
-func _on_peer_connected(_id: int) -> void:
-	pass
+func _on_peer_connected(id: int) -> void:
+	if is_host():
+		_no_throttle(id)
+
+
+## Az ENet alapból "fojt": ha egy pillanatra megnő a késés (pl. egy lassabb képkocka), a megbízhatatlan
+## csomagok (helyzet, szörny-pillanatkép) egy részét el sem küldi — ettől akadozott a vendégnél minden.
+## A helyi hálózaton erre nincs szükség: kikapcsoljuk (lassítás = 0).
+func _no_throttle(id: int) -> void:
+	var peer := _mp.multiplayer_peer as ENetMultiplayerPeer
+	if peer == null:
+		return
+	var packet_peer := peer.get_peer(id)
+	if packet_peer != null:
+		packet_peer.throttle_configure(5000, 32, 0)
 
 
 func _on_peer_disconnected(id: int) -> void:
@@ -387,66 +405,45 @@ func _host_floor(depth: int) -> void:
 
 # ---------------------------------------------------------------- közös szörnyek (lásd NetEnemies)
 
+## Ennyi ideig őrizzük meg az épp nem kézbesíthető üzeneteket: emeletváltáskor a másik gép már (vagy
+## még) másik emeleten jár, vagy épp töltődik nála a jelenet — ilyenkor régen elvesztek a szörnyek,
+## gömbök és ládanyitások. Amint az új emelet szinkronizálója jelentkezik, megkapja őket.
+const PENDING_KEEP_MS := 5000
+const PENDING_MAX := 400
+## Ezek elavulnak, nem érdemes őket megőrizni.
+const PENDING_SKIP := ["shot", "attack"]
+
 ## A kazamata szinkronizálója (NetEnemies); az RPC-k ide futnak be, mert a NetLobby útvonala
 ## mindenkinél ugyanaz.
 var enemies_handler: Node
+## [idő (ms), küldő, fajta, argumentumok] — a még nem kézbesített üzenetek.
+var _pending: Array = []
 
 
 func _handler() -> NetEnemies:
 	return enemies_handler as NetEnemies if is_instance_valid(enemies_handler) else null
 
 
-func net_broadcast_spawn(room_key: String, room_index: int, id: int, type_name: String, at: Vector2,
-		stats: Dictionary, boss_kind: String) -> void:
-	_net_spawn.rpc(room_key, room_index, id, type_name, at, stats, boss_kind)
+## Az új emelet szinkronizálója jelentkezik: megkapja a neki szóló, korábban érkezett üzeneteket.
+func attach_handler(handler: NetEnemies) -> void:
+	enemies_handler = handler
+	var now := Time.get_ticks_msec()
+	var waiting := _pending
+	_pending = []
+	for entry: Array in waiting:
+		if now - int(entry[0]) <= PENDING_KEEP_MS:
+			_deliver(int(entry[1]), str(entry[2]), entry[3])
+	_show_gold()
 
 
-@rpc("authority", "call_remote", "reliable")
-func _net_spawn(room_key: String, room_index: int, id: int, type_name: String, at: Vector2, stats: Dictionary,
-		boss_kind: String) -> void:
-	if _handler() != null:
-		_handler().on_spawn(room_key, room_index, id, type_name, at, stats, boss_kind)
-
-
-func net_broadcast_snapshot(room_key: String, data: Dictionary) -> void:
-	_net_snapshot.rpc(room_key, data)
-
-
-@rpc("authority", "call_remote", "unreliable_ordered")
-func _net_snapshot(room_key: String, data: Dictionary) -> void:
-	if _handler() != null:
-		_handler().on_snapshot(room_key, data)
-
-
-func net_broadcast_gone(room_key: String, id: int) -> void:
-	_net_gone.rpc(room_key, id)
-
-
-@rpc("authority", "call_remote", "reliable")
-func _net_gone(room_key: String, id: int) -> void:
-	if _handler() != null:
-		_handler().on_gone(room_key, id)
-
-
-func net_broadcast_attack(room_key: String, id: int, kind: String) -> void:
-	_net_attack.rpc(room_key, id, kind)
-
-
-@rpc("authority", "call_remote", "reliable")
-func _net_attack(room_key: String, id: int, kind: String) -> void:
-	if _handler() != null:
-		_handler().on_attack(room_key, id, kind)
-
-
-## Általános közös esemény (felvétel, arany, láda, lövés, halál, lépcső...): mindenkinek
-## (vagy `to_host`: csak a gazdának); a NetEnemies.on_event dolgozza fel.
+## Közös esemény (szörny megjelenése/halála, felvehető, felvétel, láda, lövés...): mindenkinek, vagy
+## `to_host`: csak a gazdának. Az args[0] mindig az emelet kulcsa (NetEnemies.key).
 func net_event(kind: String, args: Array, to_host := false) -> void:
 	if state != "playing":
 		return
 	if to_host:
 		if is_host():
-			if _handler() != null:
-				_handler().on_event(my_id(), kind, args)
+			_deliver(my_id(), kind, args)
 		else:
 			_net_event.rpc_id(1, kind, args)
 	else:
@@ -455,28 +452,106 @@ func net_event(kind: String, args: Array, to_host := false) -> void:
 
 @rpc("any_peer", "call_remote", "reliable")
 func _net_event(kind: String, args: Array) -> void:
+	_deliver(_mp.get_remote_sender_id(), kind, args)
+
+
+## Kézbesítés a mostani emelet szinkronizálójának; ha most nem ide szól, megőrizzük.
+func _deliver(sender: int, kind: String, args: Array) -> void:
+	var handler := _handler()
+	if handler != null and not args.is_empty() and str(args[0]) == handler.key():
+		handler.on_event(sender, kind, args)
+		return
+	if PENDING_SKIP.has(kind):
+		return
+	_pending.append([Time.get_ticks_msec(), sender, kind, args])
+	if _pending.size() > PENDING_MAX:
+		_pending.pop_front()
+
+
+## A szörnyek helyzete (gyakran, megbízhatatlanul, külön csatornán, hogy a pózok ne nyomják el).
+func net_broadcast_snapshot(room_key: String, data: PackedFloat32Array) -> void:
+	_net_snapshot.rpc(room_key, data)
+
+
+@rpc("authority", "call_remote", "unreliable_ordered", 2)
+func _net_snapshot(room_key: String, data: PackedFloat32Array) -> void:
 	if _handler() != null:
-		_handler().on_event(_mp.get_remote_sender_id(), kind, args)
+		_handler().on_snapshot(room_key, data)
 
 
-func net_request_room(room_key: String, room_index: int, at: Vector2) -> void:
-	_net_room.rpc_id(1, room_key, room_index, at)
+# ---------------------------------------------------------------- közös arany
+
+## A kazamatában az arany közös. A hiteles összeg a gazdánál van: mindenki csak a változást küldi
+## neki (sorszámmal), ő mindenkinek visszaküldi az új összeget és azt, hogy kinek melyik változásáig
+## jutott el. A vendég a még vissza nem igazolt saját változásait hozzászámolja, így nem villog,
+## és a gépek összege nem tud elcsúszni egymástól (régen csak a változások mentek körbe).
+var team_gold := 0
+var _gold_key := ""
+var _gold_seq := 0
+## Vendég: sorszám -> még vissza nem igazolt változás.
+var _gold_pending := {}
+## Gazda: peer id -> az utolsó beszámított sorszáma.
+var _gold_acked := {}
+
+
+## Gazda, az emelet elején: a saját aranya a közös összeg (mindenki ehhez igazodik).
+func start_team_gold(room_key: String, gold: int) -> void:
+	if not is_host():
+		return
+	team_gold = maxi(gold, 0)
+	_gold_key = room_key
+	_gold_total.rpc(_gold_key, team_gold, _gold_acked)
+
+
+## Nálunk változott az arany (felvétel, vásárlás, fosztogatás).
+func gold_delta(delta: int) -> void:
+	if state != "playing" or delta == 0:
+		return
+	if is_host():
+		_apply_gold(my_id(), 0, delta)
+		return
+	_gold_seq += 1
+	_gold_pending[_gold_seq] = delta
+	_gold_add.rpc_id(1, _gold_seq, delta)
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func _net_room(room_key: String, room_index: int, at: Vector2) -> void:
-	if is_host() and _handler() != null:
-		_handler().on_remote_room(room_key, room_index, at)
+func _gold_add(seq: int, delta: int) -> void:
+	if is_host():
+		_apply_gold(_mp.get_remote_sender_id(), seq, delta)
 
 
-func net_report_damage(room_key: String, id: int, amount: int, push: Vector2) -> void:
-	_net_damage.rpc_id(1, room_key, id, amount, push)
+func _apply_gold(sender: int, seq: int, delta: int) -> void:
+	team_gold = maxi(team_gold + delta, 0)
+	if sender != my_id():
+		_gold_acked[sender] = seq
+	_gold_total.rpc(_gold_key, team_gold, _gold_acked)
+	_show_gold()
 
 
-@rpc("any_peer", "call_remote", "reliable")
-func _net_damage(room_key: String, id: int, amount: int, push: Vector2) -> void:
-	if is_host() and _handler() != null:
-		_handler().on_remote_damage(room_key, id, amount, push)
+@rpc("authority", "call_remote", "reliable")
+func _gold_total(room_key: String, total: int, acked: Dictionary) -> void:
+	team_gold = total
+	_gold_key = room_key
+	var done := int(acked.get(my_id(), 0))
+	for seq: int in _gold_pending.keys():
+		if seq <= done:
+			_gold_pending.erase(seq)
+	_show_gold()
+
+
+## A közös összeg és a még úton lévő saját változásaink.
+func shown_gold() -> int:
+	var total := team_gold
+	for seq: int in _gold_pending:
+		total += int(_gold_pending[seq])
+	return maxi(total, 0)
+
+
+func _show_gold() -> void:
+	var handler := _handler()
+	if handler != null and handler.key() == _gold_key:
+		handler.set_team_gold(shown_gold())
 
 
 @rpc("authority", "call_local", "reliable")
@@ -488,15 +563,27 @@ func _floor(depth: int) -> void:
 
 # ---------------------------------------------------------------- a táborban
 
-## A saját helyzet elküldése a többieknek (gyakran, megbízhatatlan csatornán).
+## A saját helyzet elküldése a többieknek (gyakran, megbízhatatlanul, a saját csatornáján: régen a
+## szörny-pillanatképekkel közös sorban egymást dobták el, ha felcserélődtek).
 func send_pose(data: Dictionary) -> void:
 	if state == "playing":
 		_pose.rpc(data)
 
 
-@rpc("any_peer", "call_remote", "unreliable_ordered")
+@rpc("any_peer", "call_remote", "unreliable_ordered", 1)
 func _pose(data: Dictionary) -> void:
 	pose_received.emit(_mp.get_remote_sender_id(), data)
+
+
+## A saját támadásunk látszata a többieknek (fegyver, lövedék; lásd NetAvatars.share).
+func send_effect(kind: String, args: Array) -> void:
+	if state == "playing":
+		_effect.rpc(kind, args)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _effect(kind: String, args: Array) -> void:
+	effect_received.emit(_mp.get_remote_sender_id(), kind, args)
 
 
 func player_name(id: int) -> String:

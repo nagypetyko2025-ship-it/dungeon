@@ -36,6 +36,10 @@ func _ready() -> void:
 	# Megjelenési animáció.
 	_sprite.scale = Vector2.ZERO
 	create_tween().tween_property(_sprite, "scale", Vector2(2, 2), 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# Közös játék: egy társ már kinyitotta, mielőtt nálunk megjelent volna (nálunk később tisztult a szoba).
+	var net := NetEnemies.active(get_tree())
+	if net != null and net.take_opened_chest(self):
+		open_from_net.call_deferred(net.is_host())
 
 
 func _open() -> void:

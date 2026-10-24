@@ -111,8 +111,7 @@ static func cast(player: Node2D, spell: String, aim: Vector2) -> void:
 				_projectile(player, direction.rotated(deg_to_rad(10.0) * k), hit, stats, "orb")
 		"fire":
 			Audio.play("magic", -2.0, 0.05)
-			var ball := _projectile(player, direction, hit, stats, "fire")
-			ball.speed = 420.0
+			var ball := _projectile(player, direction, hit, stats, "fire", 420.0)
 			# Égés: másodpercenként ennyit sebez, ennyi ideig.
 			ball.set_meta("burn_time", burn_time(spell))
 			ball.set_meta("burn_damage", burn_damage(spell, hit))
@@ -122,11 +121,12 @@ static func cast(player: Node2D, spell: String, aim: Vector2) -> void:
 			_chain(player, direction, hit, chain_jumps(spell), stats)
 
 
-static func _projectile(player: Node2D, direction: Vector2, hit: int, stats: Stats, look: String) -> Area2D:
+static func _projectile(player: Node2D, direction: Vector2, hit: int, stats: Stats, look: String,
+		speed := 480.0) -> Area2D:
 	var shot: Area2D = PLAYER_ARROW.new()
 	shot.look = look
 	shot.direction = direction
-	shot.speed = 480.0
+	shot.speed = speed
 	shot.max_distance = 440.0 * stats.attack_range / 100.0
 	shot.damage = hit
 	shot.crit_chance = stats.crit_chance / 100.0
@@ -136,6 +136,9 @@ static func _projectile(player: Node2D, direction: Vector2, hit: int, stats: Sta
 	player.get_parent().add_child(shot)
 	shot.global_position = player.global_position + Vector2(0, -20) + direction * 18.0
 	shot.origin = player.global_position + Vector2(0, -6)
+	# Közös játékban a társaknál is repül (ott nem sebez).
+	if player.has_method("share_shot"):
+		player.call("share_shot", shot)
 	return shot
 
 
@@ -157,6 +160,8 @@ static func _spikes(player: Node2D, direction: Vector2, hit: int, count: int) ->
 		spike.set_meta("source", player)
 		parent.add_child(spike)
 		spike.global_position = at
+		if player.has_method("share_effect"):
+			player.call("share_effect", "spike", [at])
 		await player.get_tree().create_timer(0.07, false).timeout
 		if not is_instance_valid(player):
 			return
@@ -176,13 +181,13 @@ static func _chain(player: Node2D, direction: Vector2, hit: int, jumps: int, sta
 	var target := _chain_first(player, from, direction, reach)
 	if target == null:
 		var end := _ray_end(player, from, from + direction * reach)
-		_arc(parent, from, end)
+		_arc(parent, from, end, player)
 		return
 	var struck: Array[Node2D] = []
 	var damage := hit
 	for i in jumps + 1:
 		var to := _enemy_center(target)
-		_arc(parent, from, to)
+		_arc(parent, from, to, player)
 		_strike(player, target, from, damage, stats)
 		struck.append(target)
 		if i == jumps:
@@ -279,11 +284,14 @@ static func _strike(player: Node2D, enemy: Node2D, from: Vector2, damage: int, s
 	bolt.queue_free()
 
 
-static func _arc(parent: Node, from: Vector2, to: Vector2) -> void:
+## `player`: ha megvan, a villám a társaknál is látszik (közös játék).
+static func _arc(parent: Node, from: Vector2, to: Vector2, player: Node2D = null) -> void:
 	var arc := LightningArc.new()
 	arc.from = from
 	arc.to = to
 	parent.add_child(arc)
+	if player != null and player.has_method("share_effect"):
+		player.call("share_effect", "arc", [from, to])
 
 
 ## A varázslat-választás kártyái (minden 5. szinten): a meglévők fejlesztése, és ha még van
