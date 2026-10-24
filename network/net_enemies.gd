@@ -321,7 +321,8 @@ func _on_attack(id: int, kind: String) -> void:
 	if local_mode:
 		return
 	var enemy := _puppet(id)
-	if enemy == null:
+	# (A még pályára sem került bábbal nem játszatjuk el: a tween és a célzás a fát kéri.)
+	if enemy == null or not enemy.is_inside_tree():
 		return
 	# A Vérfarkas első "halála" (földre rogy, aztán feltámad).
 	if kind == "fall":
@@ -482,7 +483,10 @@ func _on_shot(id: int, magic: bool, muzzle: Vector2, directions: Array, speed: f
 	if not is_client_mode():
 		return
 	var enemy := _puppet(id)
-	var parent: Node = enemy.get_parent() if enemy != null else get_parent().get_node("Entities")
+	# A báb még nincs a pályán (késleltetve kerül be), vagy már kikerült: a lövés akkor is repül.
+	var parent: Node = enemy.get_parent() if enemy != null and enemy.is_inside_tree() else null
+	if parent == null:
+		parent = get_parent().get_node("Entities")
 	for direction: Vector2 in directions:
 		var projectile = (MAGIC_BOLT if magic else ARROW).instantiate()
 		projectile.direction = direction
