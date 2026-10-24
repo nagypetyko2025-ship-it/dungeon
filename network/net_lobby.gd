@@ -16,6 +16,8 @@ signal failed(reason: String)
 signal closed(reason: String)
 signal pose_received(id: int, data: Dictionary)
 signal effect_received(id: int, kind: String, args: Array)
+## Egy társ (`by_id`) felélesztett minket.
+signal revive_requested(by_id: int)
 signal player_left(id: int)
 
 const BEACON_TAG := "DUNGEON1"
@@ -584,6 +586,17 @@ func send_effect(kind: String, args: Array) -> void:
 @rpc("any_peer", "call_remote", "reliable")
 func _effect(kind: String, args: Array) -> void:
 	effect_received.emit(_mp.get_remote_sender_id(), kind, args)
+
+
+## Felélesztjük az elesett társat (`id`): az ő gépén áll fel (lásd NetAvatars).
+func send_revive(id: int) -> void:
+	if state == "playing":
+		_revive.rpc_id(id)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _revive() -> void:
+	revive_requested.emit(_mp.get_remote_sender_id())
 
 
 func player_name(id: int) -> String:

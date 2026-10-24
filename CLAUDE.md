@@ -78,7 +78,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Felvehető: a vendég a gazdától kéri ("claim"), a gazda dönti el, ki kapja ("taken") — kettős felvétel nincs. A közös arany
   összegét a gazda vezeti (NetLobby "közös arany", sorszámozott változások). A más emeletre szóló üzeneteket a NetLobby
   megőrzi (`_pending`), amíg az emelet be nem töltődik. A támadások látszata (fegyver, lövedék) a társaknál is lejátszódik
-  (`Player.share_effect` → `NetAvatars._on_effect`; ott nem sebez).
+  (`Player.share_effect` → `NetAvatars._on_effect`; ott nem sebez). Közös játékban a szobák ajtajai nem záródnak be
+  (`Room._set_doors_locked`). Élesztés: az elesett társ a halála helyén fekszik (pózban "g" = `Player.net_death_at`);
+  mellette 3 mp-ig nyomva tartott E → `NetLobby.send_revive` → az ő gépén `Player.revive_from_net` (fél HP).
   Teszt: két példány (_host.gd / _client.gd, közös _mp_common.gd). Közös játék alatt `Profiles.multiplayer`: külön mentés profilonként (user://save_mp_<profil>.cfg),
   a gazda a váróban "új kezdés"-t is választhat.
   Menü: `ui/multiplayer_panel.gd`. Teszt: két példány (_host.gd / _client.gd) egyszerre fut.

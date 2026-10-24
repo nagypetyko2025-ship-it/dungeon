@@ -19,6 +19,9 @@ const WEAPON_PIVOT_POSITION := Vector2(0, -18)
 const PLAYER_ARROW := preload("res://player/player_arrow.gd")
 ## A társ lövedéke akkor tűnik el, ha szörnybe csapódik (a szörnyek teste a 3. rétegen van).
 const ENEMY_BODY_LAYER := 4
+## Élesztés: ilyen közel kell állni az elesett társhoz, és ennyi ideig nyomva tartani az E-t.
+const REVIVE_RANGE := 56.0
+const REVIVE_TIME := 3.0
 
 var _player: Node2D
 var _entities: Node2D
@@ -41,6 +44,7 @@ func setup(scene: Node2D) -> void:
 	_lobby = NetLobby.current(scene.get_tree())
 	_lobby.pose_received.connect(_on_pose)
 	_lobby.effect_received.connect(_on_effect)
+	_lobby.revive_requested.connect(_on_revive_requested)
 	_lobby.player_left.connect(_remove)
 	_lobby.closed.connect(func(reason: String) -> void:
 		for id: int in _avatars.keys():
@@ -61,6 +65,9 @@ func _process(delta: float) -> void:
 		var pose := {"p": _player.global_position, "v": moving, "f": sprite.flip_h, "a": str(sprite.animation),
 			"c": Progress.character, "w": _where(), "d": bool(_player.get("net_dead")),
 			"r": bool(_player.get("net_waiting"))}
+		# Elesve: a társak a halálunk helyén látnak (ott élesztenek fel).
+		if bool(_player.get("net_dead")):
+			pose["g"] = _player.get("net_death_at")
 		var look: Dictionary = _player.call("net_weapon_look") if _player.has_method("net_weapon_look") else {}
 		_look_left -= 1
 		if look != _sent_look or _look_left <= 0:
@@ -78,6 +85,7 @@ func _process(delta: float) -> void:
 		var smooth: NetSmooth = avatar["smooth"]
 		# Messzi ugrásnál (pl. belépett egy házba) azonnal ott van, különben simán követi.
 		node.position = smooth.step(node.position, delta)
+	_update_revive(delta)
 
 
 ## Hol vagyunk: "camp", vagy a kazamata emelete a közös maggal (csak az azonos helyűek látják egymást).
@@ -109,6 +117,7 @@ func _on_pose(id: int, data: Dictionary) -> void:
 	avatar["waiting"] = waiting
 	var node: Node2D = avatar["node"]
 	node.visible = not dead
+	_update_grave(id, avatar, dead, data.get("g", node.position))
 	if dead or waiting:
 		node.remove_from_group("net_avatar")
 	elif not node.is_in_group("net_avatar"):
@@ -155,7 +164,8 @@ func _create(id: int, character: String, at: Vector2) -> Dictionary:
 	var smooth := NetSmooth.new()
 	smooth.receive(at, Vector2.ZERO)
 	var avatar := {"node": node, "sprite": sprite, "label": label, "smooth": smooth, "age": 0.0, "character": character,
-		"dead": false, "waiting": false, "pivot": pivot, "twin": twin, "tween": null}
+		"dead": false, "waiting": false, "pivot": pivot, "twin": twin, "tween": null, "grave": null, "revive": 0.0,
+		"revive_wait": 0.0}
 	if _looks.get(id) is Dictionary:
 		_apply_look(avatar, _looks[id])
 	return avatar
@@ -309,4 +319,85 @@ func _remove(id: int) -> void:
 	var node: Node2D = _avatars[id]["node"]
 	if is_instance_valid(node):
 		node.queue_free()
+	var grave: Variant = _avatars[id]["grave"]
+	if is_instance_valid(grave):
+		(grave as Node).queue_free()
 	_avatars.erase(id)
+
+
+# ---------------------------------------------------------------- élesztés
+
+## Az elesett társ a halála helyén fekszik (halványan, a nevével); ha feléledt, eltűnik.
+func _update_grave(id: int, avatar: Dictionary, dead: bool, at: Vector2) -> void:
+	var existing: Variant = avatar["grave"]
+	if not dead:
+		if is_instance_valid(existing):
+			(existing as Node).queue_free()
+		avatar["grave"] = null
+		avatar["revive"] = 0.0
+		return
+	if is_instance_valid(existing):
+		(existing as Node2D).position = at
+		return
+	var grave := Node2D.new()
+	grave.position = at
+	_entities.add_child(grave)
+	var body := AnimatedSprite2D.new()
+	body.sprite_frames = Characters.frames(str(avatar["character"]))
+	body.animation = "idle"
+	body.scale = Vector2(2, 2)
+	body.offset = Vector2(0, -12)
+	body.rotation = PI / 2.0
+	body.position = Vector2(-10, -8)
+	body.modulate = Color(0.65, 0.65, 0.8, 0.7)
+	grave.add_child(body)
+	var label := UiStyle.label(_lobby.player_name(id), 14, Color(1, 0.6, 0.55))
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 5)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.custom_minimum_size.x = 260.0
+	label.position = Vector2(-130.0, -64)
+	grave.add_child(label)
+	grave.set_meta("label", label)
+	avatar["grave"] = grave
+
+
+## Élesztés: ha élünk, és egy elesett társ mellett nyomva tartjuk az E-t, REVIVE_TIME alatt feláll.
+func _update_revive(delta: float) -> void:
+	var alive := _player.is_in_group("player") and not bool(_player.get("net_dead")) \
+		and not get_tree().paused
+	var holding := alive and Input.is_action_pressed("interact")
+	for id: int in _avatars:
+		var avatar: Dictionary = _avatars[id]
+		var grave: Variant = avatar["grave"]
+		if not is_instance_valid(grave):
+			continue
+		var marker := grave as Node2D
+		var label: Label = marker.get_meta("label")
+		var who := _lobby.player_name(id)
+		avatar["revive_wait"] = maxf(float(avatar["revive_wait"]) - delta, 0.0)
+		var near := alive and _player.global_position.distance_to(marker.global_position) < REVIVE_RANGE
+		if not near or float(avatar["revive_wait"]) > 0.0:
+			avatar["revive"] = 0.0
+			label.text = who + ("  (élesztés...)" if float(avatar["revive_wait"]) > 0.0 else "  (elesett)")
+			continue
+		if not holding:
+			avatar["revive"] = 0.0
+			label.text = who + "\nÉlesztés: tartsd nyomva az E-t"
+			continue
+		avatar["revive"] = float(avatar["revive"]) + delta
+		label.text = who + "\nÉlesztés... %d%%" % mini(roundi(float(avatar["revive"]) / REVIVE_TIME * 100.0), 100)
+		if float(avatar["revive"]) >= REVIVE_TIME:
+			avatar["revive"] = 0.0
+			# Amíg az ő gépéről vissza nem jön, hogy feláll, nem küldjük újra.
+			avatar["revive_wait"] = 2.0
+			_lobby.send_revive(id)
+			message.emit("Felélesztetted: %s" % who)
+
+
+## Egy társ felélesztett minket.
+func _on_revive_requested(by_id: int) -> void:
+	if not is_instance_valid(_player) or not bool(_player.get("net_dead")):
+		return
+	_player.call("revive_from_net")
+	message.emit("%s felélesztett!" % _lobby.player_name(by_id))

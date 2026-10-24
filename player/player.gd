@@ -94,6 +94,11 @@ const STEP_LENGTH := 46.0
 var gold := 0
 ## Közös játék: meghaltál, és nézőként követed a társaidat (lásd NetEnemies); a lépcsőn vársz rájuk.
 var net_dead := false
+## Közös játék: hol estél el (itt élesztenek fel a társaid).
+var net_death_at := Vector2.ZERO
+## Feléledéskor a max HP ekkora része, és ennyi ideig nem sebezhető (mp).
+const REVIVE_HEALTH := 0.5
+const REVIVE_INVINCIBILITY := 2.0
 var net_waiting := false
 
 @onready var _visual: Node2D = $Visual
@@ -947,9 +952,11 @@ func _on_died() -> void:
 
 
 ## Néző: láthatatlan, nem sebezhető, a szörnyek és a felvehetők nem rá figyelnek.
+## A halála helyén a társak látják (NetAvatars), és ott fel is éleszthetik.
 func become_spectator() -> void:
 	net_dead = true
 	net_waiting = false
+	net_death_at = global_position
 	GameState.net_dead = true
 	remove_from_group("player")
 	set_physics_process(false)
@@ -962,6 +969,30 @@ func become_spectator() -> void:
 ## Néző: már senki sem él — jön a halálképernyő (és a tábor).
 func finish_spectating() -> void:
 	death_finished.emit()
+
+
+## Közös játék: egy társ felélesztett (lásd NetAvatars) — a halála helyén áll fel, félig gyógyulva,
+## és egy rövid ideig nem sebezhető.
+func revive_from_net() -> void:
+	if not net_dead:
+		return
+	net_dead = false
+	GameState.net_dead = false
+	add_to_group("player")
+	global_position = net_death_at
+	velocity = Vector2.ZERO
+	_knockback = Vector2.ZERO
+	$Camera2D.reset_smoothing()
+	_health.current = maxi(1, roundi(_health.max_health * REVIVE_HEALTH))
+	_health.changed.emit(_health.current, _health.max_health)
+	_hurtbox.grant_invincibility(REVIVE_INVINCIBILITY)
+	_hurtbox.set_deferred("monitoring", true)
+	_visual.visible = true
+	_sprite.play("idle")
+	set_physics_process(true)
+	Audio.music("dungeon")
+	Audio.play("level_up")
+	FloatingText.spawn(get_parent(), global_position + Vector2(0, -60), "Feléledtél!", Color(0.6, 1, 0.6), 22)
 
 
 ## Lépcső közös játékban: itt állsz, amíg a társaid is ide nem érnek (nem sebezhető közben).

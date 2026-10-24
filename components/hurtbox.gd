@@ -32,3 +32,8 @@ func _physics_process(delta: float) -> void:
 
 func is_invincible() -> bool:
 	return _invincible_left > 0.0
+
+
+## Egy ideig nem sebezhető (pl. feléledés után).
+func grant_invincibility(seconds: float) -> void:
+	_invincible_left = maxf(_invincible_left, seconds)

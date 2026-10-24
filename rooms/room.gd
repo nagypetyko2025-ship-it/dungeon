@@ -625,6 +625,10 @@ func _spawn_chest() -> void:
 
 
 func _set_doors_locked(locked: bool) -> void:
+	# Közös játékban a szobák nem záródnak be: a társ bármikor utánad jöhet (és ki is futhatsz).
+	# A szörnyek ilyenkor is a szobájukban maradnak (lásd _physics_process).
+	if NetLobby.is_playing(get_tree()):
+		return
 	if not _doors.is_empty():
 		Audio.play("door_lock" if locked else "door_unlock")
 	for door in _doors:
