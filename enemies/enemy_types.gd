@@ -271,6 +271,21 @@ const TYPES: Array[Dictionary] = [
 		"sheet": "res://assets/enemies/fly.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 0.9,
 		"health": [2, 3], "damage": [1, 1], "speed": [135, 155], "dodge": [20, 30],
 		"knockback": [120, 150], "resist": [0.0, 0.0], "xp": [1, 2], "min_depth": 2, "weight": 3},
+	# Barlangi denevér: kicsi, gyors, cikázva csap le (MoikMellah "bat 32x32", CC0).
+	{"name": "cave_bat", "abilities": ["zigzag"], "sheet": "res://assets/enemies/cave_bat.png",
+		"rect": Rect2(0, 0, 26, 30), "run": true, "size": 0.85,
+		"health": [3, 5], "damage": [1, 2], "speed": [140, 160], "dodge": [25, 35],
+		"knockback": [140, 170], "resist": [0.0, 0.0], "xp": [2, 3], "min_depth": 2, "weight": 3},
+	# Mérges gombaszörny: lassú, szívós, mérgez, és halálakor spórafelhővé robban (ScratchIO, CC0).
+	{"name": "toadstool", "abilities": ["poison", "death_burst"], "sheet": "res://assets/enemies/toadstool.png",
+		"rect": Rect2(0, 0, 22, 24), "run": true, "size": 1.25,
+		"health": [16, 22], "damage": [3, 4], "speed": [55, 70], "dodge": [0, 5],
+		"knockback": [200, 240], "resist": [0.4, 0.5], "xp": [7, 9], "min_depth": 5, "weight": 2},
+	# Vérszellem: átsuhan a falakon túlra (teleport), és jéghideg érintése lelassít ("Ghost monster", CC0).
+	{"name": "blood_wraith", "abilities": ["teleport", "frost"], "sheet": "res://assets/enemies/blood_wraith.png",
+		"rect": Rect2(0, 0, 23, 32), "run": true, "size": 1.1,
+		"health": [20, 26], "damage": [4, 6], "speed": [85, 100], "dodge": [20, 30],
+		"knockback": [240, 280], "resist": [0.3, 0.4], "xp": [12, 15], "min_depth": 9, "weight": 2},
 	# --- Még több szörny (MiniWorld Sprites, CC0) ---
 	{"name": "club_goblin", "abilities": ["berserk"], "dash": true,
 		"sheet": "res://assets/enemies/club_goblin.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.3,

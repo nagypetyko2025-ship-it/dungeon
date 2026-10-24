@@ -15,7 +15,7 @@ const DEEP_BOSSES := ["Kalózkirály", "Lánggólem", "A Mélység Szeme", "Nyá
 ## Kategóriák sorrendben: [cím, szörnyek].
 const CATEGORIES := [
 	["Élőholtak", ["tiny_zombie", "zombie", "ice_zombie", "big_zombie", "skelet", "skeleton_legionary",
-		"giant_skeleton", "necromancer", "lich"]],
+		"giant_skeleton", "necromancer", "lich", "blood_wraith"]],
 	["Zöldbőrűek", ["goblin", "farmer_goblin", "club_goblin", "archer_goblin", "spear_goblin", "kamikaze_goblin", "orc_warrior",
 		"masked_orc", "orc_raider", "orc_shaman", "orc_mage", "ogre"]],
 	["Démonok", ["imp", "wogol", "chort", "big_demon", "armored_demon", "red_demon", "purple_demon"]],
@@ -23,11 +23,11 @@ const CATEGORIES := [
 	["Népek", ["archer", "huntress", "dark_mage", "fire_witch", "fallen_knight", "dwarf", "dwarf_berserker",
 		"plague_doctor", "lizard", "lizard_scout", "barbarian", "fire_ninja", "renegade_monk"]],
 	["Kalózok", ["pirate_grunt", "pirate_gunner", "pirate_captain"]],
-	["Fenevadak", ["rat", "minotaur", "yeti", "wendigo", "mammoth", "giant_crab"]],
+	["Fenevadak", ["rat", "cave_bat", "minotaur", "yeti", "wendigo", "mammoth", "giant_crab"]],
 	["Sárkányok", ["fire_dragon", "frost_dragon", "gold_dragon", "shadow_dragon"]],
 	["Bogarak", ["fly", "spider"]],
 	["Káosz", ["chaos_spawn"]],
-	["Különös lények", ["mimic", "pumpkin_dude", "angel"]],
+	["Különös lények", ["mimic", "pumpkin_dude", "angel", "toadstool"]],
 	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES],
 ]
 ## A képességek neve a könyvben (EnemyAbilities, és a típus "dash" / "ranged" jelzője).
@@ -51,6 +51,9 @@ const ENTRIES := {
 	"red_demon": ["Vörös démon", "Lángoló bőrű démon: a semmiből terem melletted, és halálakor szétrobban."],
 	"gold_dragon": ["Aranysárkány", "Kincseken alszik; ha eltalál, a te aranyadat is a halmára gyűjti."],
 	"chaos_spawn": ["Káoszivadék", "Fekete-lila, folyton alakot váltó csápgomolyag egyetlen vörös szemmel. A Mélység legaljáról tör fel, ahol a világ szabályai már nem érvényesek: eltűnik, cikázik, és ha elpusztul, szétrobban."],
+	"cave_bat": ["Barlangi denevér", "Barna szárnyú denevér a kazamata mennyezetéről. Gyenge, de gyors, és ide-oda cikázva csap le: nehéz eltalálni."],
+	"toadstool": ["Mérges gombaszörny", "Vöröskalapú, lábra kelt gomba a nyirkos termekből. Lassú és szívós, a csípése mérgez, és ha elpusztul, mérges spórafelhővé robban szét."],
+	"blood_wraith": ["Vérszellem", "Vörös leplű szellem a Mélység középső szintjeiről. Hirtelen eltűnik és máshol bukkan fel, az érintése pedig jéghideg: lelassít."],
 	"rat": ["Patkány", "Szürke kazamatapatkány hosszú, csupasz farokkal. Kicsi és gyenge, de villámgyors, szinte lehetetlen eltalálni, és a harapása mérgez."],
 	"spider": ["Kazamatapók", "Fekete, vörös szemű pók a sötét sarkokból. Gyorsan cikázik, és a csípése mérgez: ne hagyd, hogy sokáig rajtad lógjon."],
 	"farmer_goblin": ["Gyűjtögető goblin", "Kosárral a hátán járja a kazamatát, és mindent összeszed, ami csillog. A te aranyadat is, ha közel engeded."],

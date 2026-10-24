@@ -189,6 +189,12 @@ func _ready() -> void:
 	add_child(hospital)
 	hospital.setup(self)
 	hospital.build()
+	# A kórháztól jobbra a régi, poros raktár (Warehouse).
+	var warehouse := Warehouse.new()
+	warehouse.name = "Warehouse"
+	add_child(warehouse)
+	warehouse.setup(self)
+	warehouse.build()
 	# Temető a kocsma alatt.
 	var graveyard := Graveyard.new()
 	graveyard.name = "Graveyard"
@@ -827,6 +833,7 @@ func _build_trees() -> void:
 		for y in range(town.position.y, town.end.y):
 			var tile := Vector2i(x, y)
 			if _blocked.has(tile) or Town.blocked_rect().has_point(tile) or _castle_blocked(tile) \
+					or Warehouse.blocked_rect().has_point(tile) \
 					or Graveyard.blocked_rect().has_point(tile) or Chapel.blocked_rect().has_point(tile) \
 					or Lake.blocked_rect().has_point(tile) or _near_path(tile):
 				continue

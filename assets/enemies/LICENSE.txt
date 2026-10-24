@@ -14,3 +14,6 @@ spider.png: "2D Spider Animated" (DungeonSpider.png, CC0, https://opengameart.or
 farmer_goblin.png, orc_raider.png: "MiniWorld Sprites" (CC0) FarmerGoblin és Orc; barbarian.png, fire_ninja.png, renegade_monk.png: ugyanonnan a Champions mappából (Börg, Kanji, Okomo), az oldalnézeti kockákból tükrözve.
 chaos_spawn.png: "Top-down Tentacle Creature" (Sean Noonan, CC0, https://opengameart.org/content/top-down-tentacle-creature), a húsos szem 8 kockája kicsinyítve, a lila test fekete-lilára sötétítve.
 rat.png: "Animal sprites" (marionline, CC0, https://opengameart.org/content/animal-sprites) rat_grey, a jobbra néző kockák, átlátszó háttérrel, kicsit világosítva.
+cave_bat.png: "bat 32x32" (MoikMellah, CC0, https://opengameart.org/content/bat-32x32), a barna változat repülő kockái, átlátszó háttérrel, 8 kockás sávba rendezve.
+toadstool.png: "Animated Mushroom Monster (Pixel-Art)" (ScratchIO, CC0, https://opengameart.org/content/animated-mushroom-monster-pixel-art), a járás kockáiból.
+blood_wraith.png: "Ghost monster" (ImogiaGames, Balmer szellemének remixe, CC0, https://opengameart.org/content/ghost-monster), a vörös színváltozat 6 kockájából.
