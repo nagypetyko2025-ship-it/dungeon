@@ -63,6 +63,27 @@ const POTION_ICON: Texture2D = preload("res://assets/ui/potion_hp.png")
 var _greeting_left := 0.0
 var _greeting_index := 0
 var _shopkeeper: AnimatedSprite2D
+var _dialogue: DialoguePanel
+## A 10. emeleti boltos történetei (a tolvaj levelének átadása után bármikor megkérdezhetők).
+const SHOPKEEPER_STORIES: Array[Dictionary] = [
+	{"id": "how_here", "text": "Hogy kerültél ide le, a tizedik emeletre?", "trust": 3,
+		"answer": "[i]Megsimogatja a pultot, mintha egy hű kutya volna.[/i]\n\n" \
+			+ "Lejöttem, ahogy mindenki: karddal, bátorsággal, és egy egész csapat barommal. Ők a harmadik " \
+			+ "emeleten maradtak, én meg rájöttem, hogy a halottaknak nincs szükségük a felszerelésükre.\n\n" \
+			+ "Azóta itt vagyok. A szörnyek nem bántják a boltost. Szerintem tudják, hogy nélkülem a " \
+			+ "kalandorok fele már az ötödiken elhullana. És akkor kit ennének? Hehe."},
+	{"id": "bence", "text": "Honnan ismered Bencét?", "trust": 4,
+		"answer": "[i]Elmosolyodik, ezúttal szinte kedvesen.[/i]\n\n" \
+			+ "Tizenkét éves volt, amikor először lejött ide, egyedül, egy konyhakéssel. Ellopott tőlem egy " \
+			+ "kenyeret, én meg elkaptam. Ahelyett, hogy kidobtam volna, munkát adtam neki: ő hozta, amit " \
+			+ "odalent talált, én eladtam.\n\nAztán egyszer túl sokat hozott fel... a király kincstárából. " \
+			+ "Azóta bujkál. De ha bajba kerül, tudja, hol vagyok."},
+	{"id": "goods", "text": "Honnan szerzed ezt a sok árut?", "trust": 2,
+		"answer": "[i]Gyanakodva körülnéz, aztán lehalkítja a hangját.[/i]\n\n" \
+			+ "Ami odalent elhullik, az előbb-utóbb ide kerül. Kalandorok, szörnyek, néha egy-egy ostoba " \
+			+ "kereskedő. Én csak... összeszedem és rendbe teszem.\n\nMinél mélyebbre jutsz, annál jobb holmi " \
+			+ "kerül a pultomra. A mélység drága, de nagyvonalú. Kérdés nincs, garancia sincs. Hehe."},
+]
 ## Az árus pult helyei: {item, tile, nodes} vagy null, ha már elkelt.
 var _stock: Array = []
 ## Melyik áru előtt áll a játékos (-1 = egyik előtt sem).
@@ -101,6 +122,7 @@ func _ready() -> void:
 	_add_light(Vector2i(0, 302), 0.55, 2.0)
 	_add_light(Vector2i(5, 305), 0.3, 1.5)
 	_add_light(Vector2i(-5, 305), 0.3, 1.5)
+	_build_dialogue()
 
 
 func _process(delta: float) -> void:
@@ -115,6 +137,8 @@ func _process(delta: float) -> void:
 		# A tolvaj levele (a 10. emeleten, ha nálad van): G-vel adod át.
 		if _letter_here():
 			_sell_prompt.text += "   ·   [G] Levél átadása"
+		elif _can_talk():
+			_sell_prompt.text += "   ·   [G] Beszélgetés"
 
 
 ## Polcok a hátsó fal előtt: két csempe magasak, tele áruval.
@@ -290,8 +314,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		_buy_potion()
 		get_viewport().set_input_as_handled()
 		return
-	if _at_counter and key != null and key.pressed and not key.echo and key.physical_keycode == KEY_G:
-		_give_letter()
+	if _at_counter and key != null and key.pressed and not key.echo and key.physical_keycode == KEY_G and _can_talk():
+		Audio.play("ui_open")
+		get_tree().current_scene.get_node("Menus").call("open_menu", _dialogue)
 		get_viewport().set_input_as_handled()
 		return
 	if not event.is_action_pressed("interact"):
@@ -337,24 +362,50 @@ func _letter_here() -> bool:
 	return player != null and Thief.has_letter(player.get_node("Inventory"))
 
 
-## A tolvaj levele a boltosnak (G a pultnál, csak a 10. emeleten): arany a jutalom.
-func _give_letter() -> void:
+## A boltos beszélgetőablaka (a tolvaj levelénél: a pultnál G-vel), hogy a válasza végig olvasható legyen.
+func _build_dialogue() -> void:
+	_dialogue = DialoguePanel.new()
+	_dialogue.name = "ShopkeeperDialogue"
+	_dialogue.npc_id = "shopkeeper"
+	_dialogue.npc_name = "A gyanús boltos"
+	_dialogue.greeting = "[i]A boltos áthajol a pulton, és gyanakodva méreget.[/i]\n\nNa? Vásárolni jöttél, " \
+		+ "vagy csak bámészkodni? Hehe."
+	_dialogue.portrait = SpriteSheet.region(SHOPKEEPER)
+	_dialogue.options_provider = _dialogue_options
+	get_tree().current_scene.add_child.call_deferred(_dialogue)
+
+
+func _dialogue_options() -> Array[Dictionary]:
+	var list: Array[Dictionary] = []
+	if _letter_here():
+		list.append({"id": "letter", "text": "Hoztam neked egy levelet Bencétől.", "on_choose": _give_letter})
+	elif Progress.npc_quest_state(Thief.LETTER_QUEST) in ["delivered", "done"]:
+		list.append({"id": "letter_news", "text": "Mit írt Bence?", "trust": 2,
+			"answer": Thief.SHOPKEEPER_NEWS})
+	# A levél után a 10. emeleti boltos bármikor mesél (három történet).
+	if Progress.npc_quest_state(Thief.LETTER_QUEST) in ["delivered", "done"]:
+		list.append_array(SHOPKEEPER_STORIES)
+	return list
+
+
+## Csak a 10. emeleti boltossal lehet beszélgetni (a tolvaj levelével, és utána bármikor).
+func _can_talk() -> bool:
+	if GameState.depth != Thief.LETTER_FLOOR:
+		return false
+	return _letter_here() or Progress.npc_quest_state(Thief.LETTER_QUEST) in ["delivered", "done"]
+
+
+## A tolvaj levele a boltosnak (G a pultnál, csak a 10. emeleten): arany a jutalom (a beszélgetőablakban).
+func _give_letter() -> String:
 	var player := get_tree().get_first_node_in_group("player")
-	var say_at := _shopkeeper.global_position + Vector2(0, -36)
 	var answer := Thief.deliver_to_shopkeeper(player) if player else ""
 	if answer.is_empty():
 		Audio.play("ui_error")
-		var line := "Levél? Milyen levél?" if Progress.npc_quest_state(Thief.LETTER_QUEST) != "active" \
-			else "Ha levelet hoztál, a táskádban legyen... és a tizedik emeleten keress."
-		FloatingText.spawn(self, say_at, line, Color(0.85, 0.75, 1))
-		return
+		return "Levél? Milyen levél? Ha levelet hoztál, a táskádban legyen... és a tizedik emeleten keress."
 	Audio.play("coin")
-	FloatingText.spawn(self, say_at, "Bencétől? Végre!", Color(1, 0.9, 0.6), 18)
-	var hud := get_tree().current_scene.get_node_or_null("HUD")
-	if hud and hud.has_method("show_message"):
-		hud.call("show_message", "Boltos: „%s”" % answer)
 	FloatingText.spawn(self, player.global_position + Vector2(0, -60), "+%d arany" % Thief.LETTER_GOLD,
 		Color(1, 0.85, 0.3), 20)
+	return answer
 
 
 func _buy_potion() -> void:

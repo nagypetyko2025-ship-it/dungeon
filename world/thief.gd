@@ -360,9 +360,20 @@ static func deliver_to_shopkeeper(player: Node) -> String:
 			player.call("add_gold", LETTER_GOLD)
 			Progress.set_npc_quest(LETTER_QUEST, "delivered")
 			Progress.save_game()
-			return "Bencétől? Végre! Azt hittem, már a farkas gyomrában van... Tessék, %d arany a fáradságodért." \
-				% LETTER_GOLD
+			return "[i]A boltos felismeri a vörös viaszpecsétet, és elkerekedik a szeme. Kikapja a kezedből, " \
+				+ "feltöri, és mohón olvasni kezd. A végén hosszan kifújja a levegőt.[/i]\n\n" \
+				+ "Bencétől? Végre! Azt hittem, már a farkas gyomrában van... Él a kölyök. És még mindig " \
+				+ "ugyanolyan pocsékul ír.\n\n[i]Összehajtja a levelet, és a pult alá dugja.[/i]\n\n" \
+				+ "Mondd meg neki, hogy megkaptam. És hogy a régi alku áll: amit felhoz, azt én eladom. " \
+				+ "Tessék, ez a tiéd a fáradságodért.\n\n[color=#7a4a10](+%d arany)[/color]" % LETTER_GOLD
 	return ""
+
+
+## A boltos a levél átadása után (ha megkérdezed, mit írt Bence).
+const SHOPKEEPER_NEWS := "[i]Körülnéz, nem hallgatózik-e valaki, aztán lehalkítja a hangját.[/i]\n\n" \
+	+ "Azt írja, a tábor mellett húzta meg magát, egy romos házban. Hogy összeszedett egy kis zsákmányt, " \
+	+ "és ha lecsitul körülötte a dolog, lehoz nekem valamit. Meg hogy ne bízzak senkiben, aki túl " \
+	+ "kedvesen kérdez.\n\n[i]Gyanakodva rád néz.[/i]\n\nTe nem kérdezel túl kedvesen, ugye? Hehe."
 
 
 static func _loot_story() -> String:
