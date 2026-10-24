@@ -81,6 +81,11 @@ var alcove_dir := Vector2i.ZERO
 var _fought := false
 var _cleared := false
 var _alive_enemies: Array[Node2D] = []
+## A még pályára nem került (megjelenésre váró) szörnyek: képkockánként csak SPAWNS_PER_FRAME jön be,
+## mert a mély emeleteken egyszerre 14-20 szörny (a vendégnél a bábjaik) egy pillanatra megakasztotta
+## a játékot. A harc szempontjából már élnek (benne vannak az _alive_enemies-ben).
+var _spawn_queue: Array[Node2D] = []
+const SPAWNS_PER_FRAME := 3
 var _player: Node2D
 var _check_left := 0.0
 ## Foglalt csempék (oszlop, csapda, lépcső), hogy ne kerüljön semmi egymásra.
@@ -370,10 +375,12 @@ func add_puppet(type_name: String, at: Vector2, stats: Dictionary, id: int, boss
 		enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
 	enemy.position = at
 	_alive_enemies.append(enemy)
-	_enemies.add_child.call_deferred(enemy)
 	if boss_kind != "":
+		_enemies.add_child.call_deferred(enemy)
 		Audio.play("boss_roar")
 		boss_fight_started.emit(enemy)
+	else:
+		_queue_spawn(enemy)
 	return enemy
 
 
@@ -519,11 +526,38 @@ func _add_enemy(type: Dictionary, world_position: Vector2, taken := {}) -> void:
 	enemy.position = safe_spawn_position(world_position, taken) - position
 	enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
 	_alive_enemies.append(enemy)
-	_enemies.add_child.call_deferred(enemy)
+	_queue_spawn(enemy)
 	if net != null:
 		# A statok már most dőlnek el, hogy a vendégek bábja ugyanilyen legyen.
 		enemy.stats = EnemyTypes.roll(type, depth)
 		net.register(enemy, self)
+
+
+## A szörny a következő képkockák egyikén kerül pályára (lásd _spawn_queue).
+func _queue_spawn(enemy: Node2D) -> void:
+	_spawn_queue.append(enemy)
+	if _spawn_queue.size() == 1:
+		_drain_spawn_queue.call_deferred()
+
+
+func _drain_spawn_queue() -> void:
+	while not _spawn_queue.is_empty():
+		for i in mini(SPAWNS_PER_FRAME, _spawn_queue.size()):
+			var enemy: Node2D = _spawn_queue.pop_front()
+			if is_instance_valid(enemy):
+				_enemies.add_child(enemy)
+		if _spawn_queue.is_empty():
+			return
+		# (A process_frame megállított játék alatt is jön: közös játékban a gazda szörnyei menü alatt is élnek.)
+		await get_tree().process_frame
+
+
+func _exit_tree() -> void:
+	# Emeletváltáskor a még várakozók nincsenek a fában, maguktól nem szabadulnának fel.
+	for enemy in _spawn_queue:
+		if is_instance_valid(enemy):
+			enemy.free()
+	_spawn_queue.clear()
 
 
 ## Osztódó ellenség (pl. csiga) halálakor a kisebbek a helyén jelennek meg.

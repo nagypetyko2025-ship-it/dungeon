@@ -236,6 +236,7 @@ func _ready() -> void:
 	var rooms: Array[Room] = []
 	rooms.assign(_rooms.get_children())
 	_hud.call("setup_map", rooms, _player, _cell)
+	_prebuild_nav.call_deferred()
 	# Küldetés: elért emelet (a gyakorló pályán nem számít).
 	Quests.notify("floor", depth)
 	add_child(QuestTracker.new())
@@ -428,6 +429,7 @@ func cheat_teleport(target_depth: int) -> bool:
 		return false
 	_player.save_state()
 	GameState.depth = target_depth
+	get_tree().paused = false
 	get_tree().reload_current_scene.call_deferred()
 	return true
 
@@ -449,6 +451,12 @@ func _go_deeper() -> void:
 
 ## Átlépés a megadott emeletre (közös játékban a NetLobby hívja mindenkinél).
 func go_to_floor(target_depth: int) -> void:
+	# Közös játékban nyitott ablak (táska, könyv, szintlépés) mellett is jöhet: az ablak bezárul, és a
+	# játék sem marad megállítva (régen az új emeleten minden állt, és semmi nem nyílt meg).
+	var menus := get_node_or_null("Menus")
+	if menus != null:
+		menus.call("close_current")
+	get_tree().paused = false
 	_player.save_state()
 	GameState.depth = target_depth
 	get_tree().reload_current_scene.call_deferred()
@@ -545,6 +553,15 @@ func _paint_tiles() -> void:
 ## Útkereső háló az ellenségeknek (lásd Enemy._chase_direction): a padló cellái, kivéve ahol valami
 ## szilárd áll (oszlop, láda, bolt). Az első kéréskor épül fel, amikor már minden a helyén van.
 var _nav: AStarGrid2D
+
+
+## A háló már a betöltés után felépül (az első harc első útkérésekor a nagy emeleteken egy pillanatra
+## megakasztotta a szobába lépést). Az oszlopoknak, ládáknak ehhez már a fizikai térben kell lenniük.
+func _prebuild_nav() -> void:
+	for i in 2:
+		await get_tree().physics_frame
+	if _nav == null and is_inside_tree():
+		_build_nav()
 
 
 ## Út (világkoordináta-pontok) `from`-tól `to`-ig a falakat és az oszlopokat kerülve; üres, ha nincs.

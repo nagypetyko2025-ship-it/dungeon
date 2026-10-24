@@ -83,6 +83,10 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   mellette 3 mp-ig nyomva tartott E → `NetLobby.send_revive` → az ő gépén `Player.revive_from_net` (fél HP).
   Közös játékban a szintlépés nem nyílik fel magától: alul gomb / L (`ui/level_up.gd`, `GameState.pending_level_ups`);
   a szörnyek kijöhetnek a szobájukból (a főellenség nem); a láda üres-e: a közös magból és a helyéből (mindenkinél ugyanaz).
+  Emeletváltáskor (`Dungeon.go_to_floor`) a nyitott ablak bezárul és a szünet feloldódik (menü alatt is jöhet a lépcső).
+  Akadás ellen: a szoba szörnyei képkockánként 3-asával kerülnek pályára (`Room._spawn_queue`, a vendég bábjai is), az
+  útkereső háló betöltés után épül (`_prebuild_nav`), elfogyott útnál 0,15 mp-enként tervez újra (`Enemy.PATH_RETRY`),
+  a pillanatkép 32 szörnyenként külön csomag (`SNAPSHOT_MAX_ENEMIES`, a darabolt csomag wifin könnyen elveszik).
   Teszt: két példány (_host.gd / _client.gd, közös _mp_common.gd). Közös játék alatt `Profiles.multiplayer`: külön mentés profilonként (user://save_mp_<profil>.cfg),
   a gazda a váróban "új kezdés"-t is választhat.
   Menü: `ui/multiplayer_panel.gd`. Teszt: két példány (_host.gd / _client.gd) egyszerre fut.

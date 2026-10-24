@@ -7,6 +7,9 @@ extends CharacterBody2D
 const KNOCKBACK_DECAY := 900.0
 ## Ennyire megközelítve egy útpontot, a következőre indul.
 const PATH_REACHED := 12.0
+## Ha elfogyott (vagy nincs) az út, ennyi idő múlva tervez újat (régen minden képkockában: sok szörnynél
+## ez egy pillanatra megakasztotta a játékot). Az első tervezés is ezen belül, szórva jön.
+const PATH_RETRY := 0.15
 const HIT_STUN := 0.25
 ## Báb: a helyben látott lökés ilyen gyorsan (px/mp) enged el, amíg a gazdától visszajön a valódi.
 const PUPPET_PUSH_FADE := 160.0
@@ -96,6 +99,9 @@ var _net_smooth := NetSmooth.new()
 var _net_shown := Vector2.INF
 var _net_push := Vector2.ZERO
 var _net_hp_hold := 0.0
+## A saját sprite-lapos típusok képkockái (lap, méret, mimik -> SpriteFrames): régen minden megjelenéskor
+## újra épültek, és az emelet első ilyen szörnyénél a kép is a lemezről töltődött be.
+static var _sheet_frames := {}
 
 @onready var _visual: Node2D = $Visual
 @onready var _sprite: AnimatedSprite2D = $Visual/AnimatedSprite2D
@@ -115,7 +121,7 @@ func _ready() -> void:
 	_size_scale = _compute_size_scale()
 
 	if _type.has("sheet"):
-		_sprite.sprite_frames = _own_frames(load(_type["sheet"]), _type["rect"].size)
+		_sprite.sprite_frames = _own_frames(str(_type["sheet"]), _type["rect"].size)
 	else:
 		_sprite.sprite_frames = SpriteSheet.character_frames(_type["rect"], _type["run"])
 	_sprite.offset.y = -_type["rect"].size.y / 2.0
@@ -152,6 +158,7 @@ func _ready() -> void:
 
 	_dash = _type.get("dash", false)
 	_dash_cooldown = randf_range(1.0, 2.5)
+	_repath_left = randf_range(0.0, PATH_RETRY)
 
 	_abilities = EnemyAbilities.new()
 	_abilities.name = "Abilities"
@@ -367,7 +374,9 @@ func _chase_direction(delta: float) -> Vector2:
 		_path = PackedVector2Array()
 		return global_position.direction_to(target)
 	_repath_left -= delta
-	if _repath_left <= 0.0 or _path_index >= _path.size():
+	if _path_index >= _path.size():
+		_repath_left = minf(_repath_left, PATH_RETRY)
+	if _repath_left <= 0.0:
 		_repath_left = randf_range(0.4, 0.6)
 		var scene := get_tree().current_scene
 		_path = scene.call("nav_path", global_position, target) if scene.has_method("nav_path") else PackedVector2Array()
@@ -471,12 +480,18 @@ func _dash_direction(delta: float, chase: Vector2) -> Vector2:
 
 
 ## Saját sprite-lap (pl. a mimiké): 0 = alvó, 1 = ébredő, 2-5 = futás.
-func _own_frames(texture: Texture2D, frame_size: Vector2) -> SpriteFrames:
+func _own_frames(sheet: String, frame_size: Vector2) -> SpriteFrames:
+	var mimic: bool = _type.get("mimic", false)
+	var key := [sheet, frame_size, mimic]
+	if _sheet_frames.has(key):
+		return _sheet_frames[key]
+	var texture: Texture2D = load(sheet)
 	var frames := SpriteFrames.new()
 	frames.remove_animation("default")
+	_sheet_frames[key] = frames
 	# Mimik: 0 alvó, 1 ébredő, 2-5 futás; minden más saját lap: 0-3 álló, 4-7 futás.
 	var animations := {"dormant": [0], "wake": [1], "idle": [2, 3, 4, 5], "run": [2, 3, 4, 5]} \
-		if _type.get("mimic", false) else {"idle": [0, 1, 2, 3], "run": [4, 5, 6, 7]}
+		if mimic else {"idle": [0, 1, 2, 3], "run": [4, 5, 6, 7]}
 	for anim: String in animations:
 		frames.add_animation(anim)
 		frames.set_animation_speed(anim, 10.0)

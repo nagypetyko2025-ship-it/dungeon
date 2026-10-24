@@ -22,6 +22,9 @@ extends Node
 const SNAPSHOT_INTERVAL := 0.05
 ## Egy szörny a pillanatképben: azonosító, x, y, sebesség x, y, (animáció + 1) * 2 + tükrözés, életerő.
 const SNAPSHOT_STRIDE := 8
+## Egy csomagba legfeljebb ennyi szörny kerül (~1 KB): a nagyobbat az ENet darabolja, és ha egy darabja
+## elveszik (wifin gyakori), az egész pillanatkép elvész. Sok szörnynél így több csomagban megy.
+const SNAPSHOT_MAX_ENEMIES := 32
 ## Az animációk a pillanatképben sorszámmal mennek (ami nincs a listán, az nem változik).
 const ANIMATIONS := ["idle", "run", "wake", "dormant"]
 ## Ennyi ideig nem hallunk a gazdától ezen az emeleten: a vendég önállóan folytatja (az első hír előtt
@@ -210,6 +213,7 @@ func broadcast_attack(enemy: Node2D, kind: String) -> void:
 
 func _send_snapshot() -> void:
 	var data := PackedFloat32Array()
+	var sent := false
 	for id: int in _by_id.keys():
 		var node: Variant = _by_id[id]
 		if not is_instance_valid(node):
@@ -226,8 +230,13 @@ func _send_snapshot() -> void:
 		var shield := int(abilities.get("shield_points")) if abilities != null else 0
 		data.append_array(PackedFloat32Array([id, enemy.position.x, enemy.position.y, moving.x, moving.y, code,
 			health.current, shield]))
+		if data.size() >= SNAPSHOT_MAX_ENEMIES * SNAPSHOT_STRIDE:
+			_lobby.net_broadcast_snapshot(key(), data)
+			data = PackedFloat32Array()
+			sent = true
 	# Üres is megy: ebből tudja a vendég, hogy a gazda ugyanezen az emeleten van.
-	_lobby.net_broadcast_snapshot(key(), data)
+	if not data.is_empty() or not sent:
+		_lobby.net_broadcast_snapshot(key(), data)
 
 
 ## Egy vendég belépett egy szobába: a gazda indítja ott a harcot.
@@ -244,6 +253,9 @@ func _host_enemy(id: int) -> Node2D:
 	var node: Variant = _by_id.get(id)
 	if not is_instance_valid(node):
 		_by_id.erase(id)
+		return null
+	# A még pályára sem került (megjelenésre váró, lásd Room._spawn_queue) szörnyhöz nem nyúlunk.
+	if not (node as Node).is_node_ready():
 		return null
 	return node as Node2D
 
