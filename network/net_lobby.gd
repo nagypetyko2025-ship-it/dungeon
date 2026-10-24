@@ -385,6 +385,79 @@ func _host_floor(depth: int) -> void:
 	_floor.rpc(depth)
 
 
+# ---------------------------------------------------------------- közös szörnyek (lásd NetEnemies)
+
+## A kazamata szinkronizálója (NetEnemies); az RPC-k ide futnak be, mert a NetLobby útvonala
+## mindenkinél ugyanaz.
+var enemies_handler: Node
+
+
+func _handler() -> NetEnemies:
+	return enemies_handler as NetEnemies if is_instance_valid(enemies_handler) else null
+
+
+func net_broadcast_spawn(room_key: String, room_index: int, id: int, type_name: String, at: Vector2,
+		stats: Dictionary, boss_kind: String) -> void:
+	_net_spawn.rpc(room_key, room_index, id, type_name, at, stats, boss_kind)
+
+
+@rpc("authority", "call_remote", "reliable")
+func _net_spawn(room_key: String, room_index: int, id: int, type_name: String, at: Vector2, stats: Dictionary,
+		boss_kind: String) -> void:
+	if _handler() != null:
+		_handler().on_spawn(room_key, room_index, id, type_name, at, stats, boss_kind)
+
+
+func net_broadcast_snapshot(room_key: String, data: Dictionary) -> void:
+	_net_snapshot.rpc(room_key, data)
+
+
+@rpc("authority", "call_remote", "unreliable_ordered")
+func _net_snapshot(room_key: String, data: Dictionary) -> void:
+	if _handler() != null:
+		_handler().on_snapshot(room_key, data)
+
+
+func net_broadcast_gone(room_key: String, id: int) -> void:
+	_net_gone.rpc(room_key, id)
+
+
+@rpc("authority", "call_remote", "reliable")
+func _net_gone(room_key: String, id: int) -> void:
+	if _handler() != null:
+		_handler().on_gone(room_key, id)
+
+
+func net_broadcast_attack(room_key: String, id: int, kind: String) -> void:
+	_net_attack.rpc(room_key, id, kind)
+
+
+@rpc("authority", "call_remote", "reliable")
+func _net_attack(room_key: String, id: int, kind: String) -> void:
+	if _handler() != null:
+		_handler().on_attack(room_key, id, kind)
+
+
+func net_request_room(room_key: String, room_index: int, at: Vector2) -> void:
+	_net_room.rpc_id(1, room_key, room_index, at)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _net_room(room_key: String, room_index: int, at: Vector2) -> void:
+	if is_host() and _handler() != null:
+		_handler().on_remote_room(room_key, room_index, at)
+
+
+func net_report_damage(room_key: String, id: int, amount: int, push: Vector2) -> void:
+	_net_damage.rpc_id(1, room_key, id, amount, push)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _net_damage(room_key: String, id: int, amount: int, push: Vector2) -> void:
+	if is_host() and _handler() != null:
+		_handler().on_remote_damage(room_key, id, amount, push)
+
+
 @rpc("authority", "call_local", "reliable")
 func _floor(depth: int) -> void:
 	var scene := get_tree().current_scene

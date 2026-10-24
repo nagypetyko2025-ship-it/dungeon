@@ -77,6 +77,9 @@ func _attack(kind: String) -> void:
 		if _raging:
 			_attack_left *= RAGE_INTERVAL
 		return
+	var net := NetEnemies.active(get_tree())
+	if net != null and net.is_host():
+		net.broadcast_attack(self, kind)
 	_busy = true
 	var flash := create_tween()
 	flash.tween_property(_visual, "modulate", Color(2.4, 0.6, 0.6), 0.5)

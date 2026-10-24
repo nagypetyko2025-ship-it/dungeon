@@ -170,8 +170,10 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if not is_instance_valid(_player):
-		_player = get_tree().get_first_node_in_group("player")
+	if net_puppet:
+		_puppet_process(delta)
+		return
+	_pick_target(delta)
 	if not is_instance_valid(_player):
 		return
 	var dir := Vector2.ZERO
@@ -193,6 +195,10 @@ func _physics_process(delta: float) -> void:
 
 ## Felvillanás (ilyenkor áll), aztán a támadás.
 func _attack(kind: String) -> void:
+	# Közös játékban a gazda szól: a vendégeknél a báb is eljátssza (a saját figurájukra).
+	var net := NetEnemies.active(get_tree())
+	if net != null and net.is_host():
+		net.broadcast_attack(self, kind)
 	_busy = true
 	var windup: float = MINI_CHARGE_WINDUP if mini_boss and kind == "charge" else WINDUP[kind]
 	var flash := create_tween()

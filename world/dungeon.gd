@@ -248,6 +248,10 @@ func _ready() -> void:
 		add_child(avatars)
 		avatars.setup(self)
 		avatars.message.connect(_hud.show_message)
+		var net_enemies := NetEnemies.new()
+		net_enemies.name = "NetEnemies"
+		add_child(net_enemies)
+		net_enemies.setup(self)
 	# A varázsló a futás elején kiválasztja az első varázslatát.
 	if Characters.data(Progress.character).get("spells", false) and GameState.spells.is_empty():
 		add_child(preload("res://ui/spell_picker.gd").new())

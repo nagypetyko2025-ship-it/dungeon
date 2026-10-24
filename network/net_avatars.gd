@@ -86,6 +86,8 @@ func _on_pose(id: int, data: Dictionary) -> void:
 func _create(id: int, character: String, at: Vector2) -> Dictionary:
 	var node := Node2D.new()
 	node.position = at
+	# A gazda szörnyei őt is üldözhetik (NetEnemies.nearest_target).
+	node.add_to_group("net_avatar")
 	_entities.add_child(node)
 	var sprite := AnimatedSprite2D.new()
 	sprite.sprite_frames = Characters.frames(character)

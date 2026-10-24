@@ -79,6 +79,11 @@ var _dash_dir := Vector2.ZERO
 var _abilities: EnemyAbilities
 ## A mimik még alszik (csukott ládának látszik, nem mozdul, nem sebez).
 var _dormant := false
+## Közös játék (lásd NetEnemies): azonosító, és hogy ez csak báb-e (a gazda szörnyét követi).
+var net_id := 0
+var net_puppet := false
+var _net_target := Vector2.INF
+var _retarget_left := 0.0
 
 @onready var _visual: Node2D = $Visual
 @onready var _sprite: AnimatedSprite2D = $Visual/AnimatedSprite2D
@@ -140,6 +145,9 @@ func _ready() -> void:
 	_abilities.name = "Abilities"
 	add_child(_abilities)
 	_abilities.setup(self, _type.get("abilities", []))
+	# A báb képességeit a gazda szörnye használja (a helyzete úgyis onnan jön).
+	if net_puppet:
+		_abilities.set_physics_process(false)
 
 	_hurtbox.hurt.connect(_on_hurt)
 	_health.died.connect(_on_died)
@@ -171,8 +179,10 @@ func _fit_shapes(size: Vector2) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if not is_instance_valid(_player):
-		_player = get_tree().get_first_node_in_group("player")
+	if net_puppet:
+		_puppet_process(delta)
+		return
+	_pick_target(delta)
 
 	if _dormant:
 		if is_instance_valid(_player) and global_position.distance_to(_player.global_position) < MIMIC_WAKE_RANGE:
@@ -204,6 +214,80 @@ func _physics_process(delta: float) -> void:
 	if _sprite.animation == "wake" and _stun_left > 0.0:
 		return
 	_sprite.play("run" if dir != Vector2.ZERO else "idle")
+
+
+## Kit üldöz: egyedül a játékost; közös játékban a gazdánál a legközelebbi játékost (társat is).
+func _pick_target(delta: float) -> void:
+	_retarget_left -= delta
+	if is_instance_valid(_player) and _retarget_left > 0.0:
+		return
+	_retarget_left = NetEnemies.RETARGET_INTERVAL
+	var net := NetEnemies.active(get_tree())
+	if net != null and net.is_host():
+		_player = NetEnemies.nearest_target(get_tree(), global_position)
+	else:
+		_player = get_tree().get_first_node_in_group("player")
+
+
+## Báb (közös játék, vendég): a gazda szörnyének helyét és animációját követi; a lövés és az
+## érintés a saját figuránkat sebzi (lásd NetEnemies).
+func _puppet_process(delta: float) -> void:
+	if not is_instance_valid(_player):
+		_player = get_tree().get_first_node_in_group("player")
+	if _net_target != Vector2.INF:
+		position = _net_target if position.distance_to(_net_target) > 160.0 			else position.lerp(_net_target, minf(1.0, delta * 14.0))
+	if _ranged and is_instance_valid(_player) and not _dormant:
+		_shoot_left -= delta
+		var distance := global_position.distance_to(_player.global_position)
+		if _shoot_left <= 0.0 and not _aiming and distance < SHOOT_RANGE and _has_line_of_sight():
+			_aim_and_shoot()
+		_sprite.flip_h = _player.global_position.x < global_position.x
+		if not _magic:
+			_bow.rotation = _bow.global_position.direction_to(_player.global_position + PLAYER_CENTER).angle()
+		_bow.position.x = absf(_bow.position.x) * (-1.0 if _sprite.flip_h else 1.0)
+
+
+## Báb: a gazdától jött állapot [hely, tükrözés, animáció, életerő].
+func net_apply(state: Array) -> void:
+	_net_target = state[0]
+	if not _ranged:
+		_sprite.flip_h = bool(state[1])
+	var animation := str(state[2])
+	if _dormant and animation != "dormant":
+		_wake()
+	if _sprite.sprite_frames.has_animation(animation) and _sprite.animation != animation:
+		_sprite.play(animation)
+	var hp := int(state[3])
+	if hp > 0 and hp != _health.current and not _health.is_dead():
+		_health.current = hp
+		_health.changed.emit(_health.current, _health.max_health)
+
+
+## Báb: a gazdánál meghalt (vagy eltűnt) — itt is meghal (XP, szobatisztítás).
+func net_kill() -> void:
+	if not _health.is_dead():
+		_health.damage(_health.current, false)
+
+
+## Báb: a gazda elment, innen önálló szörny.
+func net_go_local() -> void:
+	net_puppet = false
+	_abilities.set_physics_process(true)
+
+
+## Gazda: egy vendég ütése (a találatot és a kikerülést a vendég már eldöntötte).
+func net_take_damage(amount: int, push: Vector2) -> void:
+	_wake()
+	if _abilities.is_shielded():
+		return
+	if not _health.damage(amount, false):
+		return
+	FloatingText.spawn(get_parent(), _head_position(), str(amount), Color(0.75, 0.9, 1.0))
+	var resist: float = stats["resist"]
+	_knockback = push * (1.0 - resist)
+	_stun_left = HIT_STUN * (1.0 - resist)
+	_visual.modulate = Color(4, 4, 4)
+	create_tween().tween_property(_visual, "modulate", Color.WHITE, 0.15)
 
 
 ## Távolsági ellenség: tartja a távolságot (közelít, ha messze van vagy nem lát,
@@ -384,7 +468,14 @@ func _on_hurt(hitbox: Hitbox) -> void:
 		FloatingText.spawn(get_parent(), _head_position(), "Pajzs!", EnemyAbilities.SHIELD_COLOR)
 		return
 	var hit := hitbox.roll_hit()
-	if not _health.damage(hit["damage"], not hit["pierce"]):
+	if net_puppet:
+		# Báb: itt csak a kikerülés dől el és a látszat; meghalni csak a gazda szavára hal meg.
+		if not hit["pierce"] and randf() < _health.dodge_chance:
+			_health.dodged.emit()
+			return
+		_health.current = maxi(_health.current - int(hit["damage"]), 1)
+		_health.changed.emit(_health.current, _health.max_health)
+	elif not _health.damage(hit["damage"], not hit["pierce"]):
 		return
 	# A játékos fegyvere talált: életlopás stb. (lásd Player.on_hit_enemy).
 	if is_instance_valid(source) and source.has_method("on_hit_enemy"):
@@ -399,6 +490,11 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	else:
 		FloatingText.spawn(get_parent(), _head_position(), str(hit["damage"]), Color(1, 0.9, 0.5))
 	var resist: float = stats["resist"]
+	# Báb: a sebzést és a lökést a gazda szörnye kapja meg (az életerő onnan jön vissza).
+	if net_puppet:
+		var net := NetEnemies.active(get_tree())
+		if net != null:
+			net.report_damage(self, hit["damage"], hitbox.global_position.direction_to(global_position) * hitbox.knockback)
 	var push := hitbox.knockback * (1.0 - resist)
 	_knockback = hitbox.global_position.direction_to(global_position) * push
 	_stun_left = HIT_STUN * (1.0 - resist)
@@ -408,7 +504,8 @@ func _on_hurt(hitbox: Hitbox) -> void:
 
 ## A játékos hívja, ha ez az ellenség (vagy a lövedéke) megsebezte: a képességek hatása.
 func on_hit_player(_amount: int) -> void:
-	_abilities.on_hit_player(_player)
+	# (Közös játékban a _player egy társ figurája is lehet: a hatás a megsebzett saját figuránkra megy.)
+	_abilities.on_hit_player(get_tree().get_first_node_in_group("player"))
 
 
 ## Égés: `seconds` mp-ig félmásodpercenként `damage` sebzés, lángokkal a szörnyön.

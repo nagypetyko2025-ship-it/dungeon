@@ -319,6 +319,22 @@ func _on_trigger_body_entered(body: Node2D) -> void:
 	visited = true
 	if _fought or enemy_count <= 0:
 		return
+	# Közös játékban (vendégként) a gazda indítja a harcot, a szörnyek tőle jönnek (NetEnemies).
+	var net := NetEnemies.active(get_tree())
+	if net != null and net.request_room(self, body.global_position):
+		return
+	_begin_fight(body.global_position, body)
+
+
+## Közös játék, gazda: egy vendég lépett be ebbe a szobába (nálunk is itt kezdődik a harc).
+func remote_enter(at: Vector2) -> void:
+	visited = true
+	if _fought or enemy_count <= 0:
+		return
+	_begin_fight(at, null)
+
+
+func _begin_fight(at: Vector2, body: Node2D) -> void:
 	_fought = true
 	_player = body
 	_set_doors_locked(true)
@@ -327,11 +343,45 @@ func _on_trigger_body_entered(body: Node2D) -> void:
 		return
 	var taken := {}
 	for i in enemy_count:
-		_spawn_enemy(body.global_position, taken)
+		_spawn_enemy(at, taken)
+
+
+## Közös játék, vendég: a gazda egy szörnye itt jelent meg (báb; lásd NetEnemies).
+func add_puppet(type_name: String, at: Vector2, stats: Dictionary, id: int, boss_kind: String) -> Node2D:
+	if not _fought:
+		_fought = true
+		visited = true
+		_set_doors_locked(true)
+	var enemy: Node2D = boss_scene.instantiate() if boss_kind != "" else enemy_scene.instantiate()
+	enemy.set("net_id", id)
+	enemy.set("net_puppet", true)
+	if boss_kind == "werewolf":
+		enemy.set_script(WEREWOLF)
+		enemy.set("net_id", id)
+		enemy.set("net_puppet", true)
+		enemy.call("setup_werewolf", depth)
+		enemy.connect("final_died", _on_enemy_died.bind(enemy))
+	elif boss_kind != "":
+		enemy.call("setup_boss", depth)
+		enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
+	else:
+		enemy.call("setup", EnemyTypes.by_name(type_name), depth)
+		enemy.set("stats", stats)
+		enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
+	enemy.position = at
+	_alive_enemies.append(enemy)
+	_enemies.add_child.call_deferred(enemy)
+	if boss_kind != "":
+		Audio.play("boss_roar")
+		boss_fight_started.emit(enemy)
+	return enemy
 
 
 ## A főellenség a terem fülke felőli felén jelenik meg (a lépcső "mögötte" van).
 func _spawn_boss() -> void:
+	var net := NetEnemies.active(get_tree())
+	if net != null and net.is_client_mode():
+		return
 	var boss = boss_scene.instantiate()
 	if final_boss:
 		# A Vérfarkas a terem túlsó (keleti) felén vár; csak az igazi halála számít.
@@ -346,6 +396,8 @@ func _spawn_boss() -> void:
 		boss.get_node("Health").died.connect(_on_enemy_died.bind(boss))
 	_alive_enemies.append(boss)
 	_enemies.add_child.call_deferred(boss)
+	if net != null:
+		net.register(boss, self, "werewolf" if final_boss else "boss")
 	Audio.play("boss_roar")
 	boss_fight_started.emit(boss)
 
@@ -458,12 +510,20 @@ func _spawn_enemy(player_pos: Vector2, taken: Dictionary) -> void:
 ## Minden új ellenség (spawn, osztódás, idézés) biztonságos helyre kerül, hogy ne
 ## jelenhessen meg falban, oszlopban vagy egy másik ellenségen.
 func _add_enemy(type: Dictionary, world_position: Vector2, taken := {}) -> void:
+	# Közös játékban a vendég nem spawnol: a gazda szörnyei bábként jönnek (add_puppet).
+	var net := NetEnemies.active(get_tree())
+	if net != null and net.is_client_mode():
+		return
 	var enemy = enemy_scene.instantiate()
 	enemy.setup(type, depth)
 	enemy.position = safe_spawn_position(world_position, taken) - position
 	enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
 	_alive_enemies.append(enemy)
 	_enemies.add_child.call_deferred(enemy)
+	if net != null:
+		# A statok már most dőlnek el, hogy a vendégek bábja ugyanilyen legyen.
+		enemy.stats = EnemyTypes.roll(type, depth)
+		net.register(enemy, self)
 
 
 ## Osztódó ellenség (pl. csiga) halálakor a kisebbek a helyén jelennek meg.
@@ -522,7 +582,8 @@ func _physics_process(delta: float) -> void:
 	_alive_enemies = _alive_enemies.filter(func(enemy: Node2D) -> bool:
 		return is_instance_valid(enemy) and (not enemy.is_inside_tree() or not enemy.get_node("Health").is_dead()))
 	for enemy in _alive_enemies:
-		if not enemy.is_inside_tree():
+		# (A báb helyét a gazda adja, azt nem igazítjuk.)
+		if not enemy.is_inside_tree() or enemy.get("net_puppet"):
 			continue
 		if not bounds.has_point(enemy.global_position):
 			enemy.global_position = safe_spawn_position(
