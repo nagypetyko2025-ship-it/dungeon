@@ -19,8 +19,9 @@ const PUPPET_WALL_MARGIN := 12.0
 ## Báb: a saját találatunk után ennyi ideig nem hiszünk a gazda (még régi, magasabb) életerejének.
 const PUPPET_HP_HOLD := 0.35
 const XP_ORB := preload("res://pickups/xp_orb.tscn")
+const XP_ORB_SCRIPT := preload("res://pickups/xp_orb.gd")
 ## Ennél több gömb nem pattan ki; a maradék XP az utolsóba kerül.
-const MAX_ORBS := 6
+const MAX_ORBS := 12
 const ITEM_DROP := preload("res://pickups/item_drop.tscn")
 ## Tárgy-dobás esélye: minden szörnynél ugyanannyi.
 const ITEM_DROP_CHANCE := 0.01
@@ -662,10 +663,10 @@ func _drop_gold() -> void:
 
 
 func _drop_xp(total: int) -> void:
-	var count := mini(total, MAX_ORBS)
-	for i in count:
+	# A legnagyobb gömbökkel (10, 8, 5, 3, 1 XP), lásd xp_orb.gd.
+	for amount: int in XP_ORB_SCRIPT.split(total, MAX_ORBS):
 		var orb = XP_ORB.instantiate()
-		orb.value = total - (count - 1) if i == count - 1 else 1
+		orb.value = amount
 		orb.position = position + Vector2(0, -8)
 		get_parent().add_child(orb)
 
