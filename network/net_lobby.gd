@@ -223,9 +223,25 @@ func _announce() -> void:
 	if _beacon == null:
 		return
 	var message := "%s|%s|%d|%d|%d" % [BEACON_TAG, code, NetSession.GAME_PORT, players.size(), NetSession.MAX_PLAYERS]
-	for address in ["255.255.255.255", "127.0.0.1"]:
+	for address in _beacon_targets():
 		_beacon.set_dest_address(address, NetSession.BEACON_PORT)
 		_beacon.put_packet(message.to_utf8_buffer())
+
+
+## Hová megy a bejelentés: az általános üzenetszórás, a saját gép, és minden helyi hálózat saját
+## üzenetszórási címe (pl. 192.168.1.255). Az általánosat a Windows csak EGY hálózati kártyán küldi ki
+## (a legkisebb metrikájún): ha a gépen van virtuális kártya (VirtualBox, VPN), oda megy, és a wifin
+## lévő társak sosem látják a várót — ezért nem lehetett egyes gépeken hostolni.
+static func _beacon_targets() -> Array[String]:
+	var targets: Array[String] = ["255.255.255.255", "127.0.0.1"]
+	for address in IP.get_local_addresses():
+		var parts := address.split(".")
+		if parts.size() != 4 or address.begins_with("127.") or address.begins_with("169.254."):
+			continue
+		var directed := "%s.%s.%s.255" % [parts[0], parts[1], parts[2]]
+		if not targets.has(directed):
+			targets.append(directed)
+	return targets
 
 
 func _read_beacons() -> void:

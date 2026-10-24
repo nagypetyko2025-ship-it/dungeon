@@ -11,7 +11,9 @@ signal message(text: String)
 
 ## 20 helyzet másodpercenként (a fogadó a sebességgel előre számol közöttük, lásd NetSmooth).
 const SEND_INTERVAL := 0.05
-const STALE_AFTER := 2.0
+## Ennyi csend után tűnik el a társ figurája (wifin egy-két másodperces kiesés előfordul; aki tényleg
+## elment, az a pózában máshol jár, vagy a kapcsolata szakad meg — akkor rögtön eltűnik).
+const STALE_AFTER := 6.0
 ## A fegyver kinézete minden ennyiedik pózzal is megy (és ha változott), hogy az újonnan jöttek is lássák.
 const LOOK_EVERY := 20
 ## A fegyver forgáspontja a figurán (mint a Player WeaponPivot-ja).

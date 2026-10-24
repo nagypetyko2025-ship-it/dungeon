@@ -5,8 +5,9 @@ extends RefCounted
 ## MAX_AHEAD ideig), a megjelenített hely ugyanígy halad, és a maradék hibát fokozatosan dolgozza le.
 ## Így nincs a régi "célpont felé lassuló, aztán ugró" rángatás, és a késés is kisebb.
 
-## Ennél tovább nem jósolunk előre (ha elmaradnak a minták, megáll).
-const MAX_AHEAD := 0.12
+## Ennél tovább nem jósolunk előre (ha elmaradnak a minták, megáll). Wifin gyakori egy-egy rövid
+## (pár tized mp-es) kiesés: ennyi ideig még tovább halad, hogy ne fagyjon meg rögtön.
+const MAX_AHEAD := 0.25
 ## A hibát másodpercenként ilyen arányban dolgozza le.
 const CORRECTION := 12.0
 ## Ekkora eltérésnél azonnal ugrik (teleport, ajtó, árnyéklépés).

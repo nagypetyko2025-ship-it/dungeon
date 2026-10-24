@@ -25,9 +25,10 @@ const SNAPSHOT_STRIDE := 7
 ## Az animációk a pillanatképben sorszámmal mennek (ami nincs a listán, az nem változik).
 const ANIMATIONS := ["idle", "run", "wake", "dormant"]
 ## Ennyi ideig nem hallunk a gazdától ezen az emeleten: a vendég önállóan folytatja (az első hír előtt
-## hosszabb, mert a gazdánál lassabban is töltődhet be az emelet).
-const HOST_TIMEOUT := 5.0
-const HOST_FIRST_TIMEOUT := 12.0
+## hosszabb, mert a gazdánál lassabban is töltődhet be az emelet). Bőven hagyunk időt: wifin pár
+## másodperces kiesés is előfordul, és az önálló mód végleges (onnan külön folyik a játék).
+const HOST_TIMEOUT := 12.0
+const HOST_FIRST_TIMEOUT := 20.0
 ## A gazda már a táborban van (a pózából tudjuk): ennyi idő után önállóan folytatjuk.
 const HOST_AWAY_TIMEOUT := 1.5
 const RETARGET_INTERVAL := 0.5
