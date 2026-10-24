@@ -406,6 +406,9 @@ static func _give_ladder(inventory: Inventory) -> String:
 		+ "[i]Feltápászkodik, és megszorítja a kezed.[/i]\n\n" \
 		+ "Köszönöm. Nincs sok mindenem, de ezt fogadd el. És ha egyszer lejutsz oda, ahová én sosem " \
 		+ "mertem, gondolj rám: a kút alatti járat is a Mélységbe vezet. Egyszer kiássuk.\n\n" \
+		+ "[i]Visszanéz a kút sötét szájára.[/i]\n\n" \
+		+ "Most, hogy itt a létra, menj le, és nézz körül odalent. Hátha találsz valami izgalmasat. " \
+		+ "Én húsz évig csak a falakat bámultam.\n\n" \
 		+ "[color=#7a4a10](+%d tábori arany)[/color]" % REWARD_GOLD
 
 

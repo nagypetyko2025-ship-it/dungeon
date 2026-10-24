@@ -257,7 +257,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_move(false, ruin.call("well_exit_position"))
 		"collapse":
 			Audio.play("door_lock", -6.0)
-			message.emit("A járat be van omolva. Mögüle hideg szél fúj... a Mélység felől.")
+			message.emit("A járat be van omolva. Mögüle hideg szél fúj... a Mélység felől. "
+				+ "Egy dinamit beomlaszthatná az egészet.")
 
 
 # ---------------------------------------------------------------- segédek
