@@ -124,6 +124,22 @@ func _build_interior() -> void:
 	_stack(Vector2i(r.position.x, r.position.y + 3), [BARREL, BARREL, BARREL], CONTAINERS)
 	_stack(Vector2i(r.position.x, r.position.y + 6), [CARGO_A, CARGO_B], STORAGE)
 	_stack(Vector2i(r.position.x + 1, r.position.y + 7), [SMALL_CRATE], CONTAINERS)
+	# Az ablak alatt egy asztal két székkel (a harmadik eldőlve hever előtte), rajta poros üvegek.
+	var table_tile := Vector2i(window, r.position.y + 2)
+	var table := _tile_in(Town.TABLE, table_tile, _entities)
+	table.modulate = Color(0.8, 0.76, 0.7)
+	_solid(Rect2(Vector2(table_tile) * TILE + Vector2(4, 8), Vector2(TILE - 8, TILE - 12)))
+	for i in 3:
+		var bottle := _sprite(RPG, Rect2(Vector2(Town.DRINKS[i % Town.DRINKS.size()]) * 17.0, Vector2(16, 16)),
+			Vector2(-5 + i * 5, -6 - (i % 2)), 1, table)
+		bottle.scale = Vector2(0.65, 0.65)
+		bottle.modulate = Color(0.85, 0.82, 0.76)
+	_tile_in(Town.CHAIR_FACING_RIGHT, table_tile + Vector2i.LEFT, _entities).position.y -= 2
+	_tile_in(Town.CHAIR_FACING_LEFT, table_tile + Vector2i.RIGHT, _entities).position.y -= 2
+	var fallen := _tile_in(Town.CHAIR_FACING_LEFT, table_tile + Vector2i(1, 1), _entities)
+	fallen.rotation = deg_to_rad(-90)
+	fallen.position += Vector2(-6, 6)
+	fallen.modulate = Color(0.85, 0.8, 0.75)
 	# Hátsó fal: két polc cserépedényekkel, köztük a fénysáv.
 	for start in [r.position.x + 5, r.position.x + 9]:
 		var shelf := Shelf.new()
@@ -282,6 +298,11 @@ func _center(tile: Vector2i) -> Vector2:
 
 func _tile(coords: Vector2i, tile: Vector2i, z: int) -> Sprite2D:
 	return _sprite(RPG, Rect2(Vector2(coords) * 17.0, Vector2(16, 16)), _center(tile), z)
+
+
+## Kenney RPG csempe egy adott szülőbe (pl. az y-szerint rendezett rétegbe, hogy elé-mögé lehessen menni).
+func _tile_in(coords: Vector2i, tile: Vector2i, parent: Node) -> Sprite2D:
+	return _sprite(RPG, Rect2(Vector2(coords) * 17.0, Vector2(16, 16)), _center(tile), 0, parent)
 
 
 func _sprite(texture: Texture2D, region: Rect2, at: Vector2, z: int, parent: Node = null) -> Sprite2D:
