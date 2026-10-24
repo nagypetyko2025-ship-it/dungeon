@@ -61,6 +61,8 @@ func _show(step: String) -> void:
 	for child in _box.get_children():
 		child.visible = false
 		child.queue_free()
+	# A váróban sok minden van (4 sor, 3 gomb): ott tömörebb, hogy a képernyőn elférjen.
+	_box.add_theme_constant_override("separation", 8 if step == "lobby" else 12)
 	_title("Többjátékos")
 	match step:
 		"choose":
@@ -117,8 +119,12 @@ func _build_lobby() -> void:
 	ids.sort()
 	for i in NetSession.MAX_PLAYERS:
 		var row := PanelContainer.new()
-		row.add_theme_stylebox_override("panel", UiStyle.plain_panel())
-		row.custom_minimum_size = Vector2(440, 38)
+		# Vékonyabb belső margó: így a 4 sor és a gombok is elférnek a képernyőn.
+		var style := UiStyle.plain_panel()
+		style.content_margin_top = 5
+		style.content_margin_bottom = 5
+		row.add_theme_stylebox_override("panel", style)
+		row.custom_minimum_size = Vector2(440, 32)
 		list.add_child(row)
 		var line := HBoxContainer.new()
 		line.add_theme_constant_override("separation", 10)
@@ -137,28 +143,34 @@ func _build_lobby() -> void:
 		mark.custom_minimum_size.x = 60
 		mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		line.add_child(mark)
+	var leave := func() -> void:
+		_lobby.leave()
+		_show("choose")
 	if host:
-		# A profil többjátékos mentése: folytatható, vagy indításkor új közös játék kezdődik.
-		var has_save := FileAccess.file_exists("user://save_mp_%d.cfg" % Profiles.current())
-		if not has_save:
-			_lobby.fresh_save = false
-			_text("Új közös játék (a %d. profil többjátékos mentése még üres)." % Profiles.current(), 15)
-		else:
-			var label := "Közös mentés: ÚJ KEZDÉS" if _lobby.fresh_save else "Közös mentés: folytatás"
-			_button(label, func() -> void:
-				_lobby.fresh_save = not _lobby.fresh_save
-				_show("lobby"))
 		var start := _button("Indítás", _lobby.start)
 		start.disabled = not _lobby.everyone_ready()
 		if start.disabled:
 			_text("Indítás, ha mindenki készen áll.", 15)
+		# A profil többjátékos mentése: folytatható, vagy indításkor új közös játék kezdődik.
+		# (A mentés és a kilépés egy sorban, hogy a váró elférjen a képernyőn.)
+		var has_save := FileAccess.file_exists("user://save_mp_%d.cfg" % Profiles.current())
+		if not has_save:
+			_lobby.fresh_save = false
+			_text("Új közös játék (a %d. profil többjátékos mentése még üres)." % Profiles.current(), 15)
+			_button("Kilépés a váróból", leave)
+		else:
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 8)
+			_box.add_child(row)
+			_half_button("Mentés: ÚJ KEZDÉS" if _lobby.fresh_save else "Mentés: folytatás", func() -> void:
+				_lobby.fresh_save = not _lobby.fresh_save
+				_show("lobby"), row)
+			_half_button("Kilépés", leave, row)
 	else:
 		var me: Dictionary = _lobby.players.get(_lobby.my_id(), {})
 		var ready := bool(me.get("ready", false))
 		_button("Mégsem állok készen" if ready else "Készen állok", func() -> void: _lobby.set_ready(not ready))
-	_button("Kilépés a váróból", func() -> void:
-		_lobby.leave()
-		_show("choose"))
+		_button("Kilépés a váróból", leave)
 
 
 func _begin(intent: String) -> void:
@@ -227,9 +239,20 @@ func _add_error() -> void:
 
 func _button(text: String, action: Callable) -> Button:
 	var button := MenuStyle.button(text)
-	button.custom_minimum_size = Vector2(440, 54)
+	button.custom_minimum_size = Vector2(440, 44 if _step == "lobby" else 54)
 	button.pressed.connect(action)
 	_box.add_child(button)
+	return button
+
+
+## Fél szélességű gomb egy sorba (a váróban).
+func _half_button(text: String, action: Callable, row: HBoxContainer) -> Button:
+	var button := MenuStyle.button(text)
+	button.custom_minimum_size = Vector2(216, 44)
+	button.add_theme_font_size_override("font_size", 20)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.pressed.connect(action)
+	row.add_child(button)
 	return button
 
 
