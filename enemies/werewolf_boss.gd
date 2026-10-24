@@ -17,6 +17,8 @@ const WEREWOLF := {
 	"attacks": ["circles", "circles", "charge", "slam"], "minion": "",
 }
 const SHEET := "res://assets/enemies/werewolf.png"
+## A Mélység Ura szívósabb: a WEREWOLF életerejének ennyiszerese.
+const LORD_HEALTH := 2.5
 ## Életlopás: a játékosnak okozott sebzés ennyiszeresét gyógyítja (de legalább a max élet ennyi részét).
 const LIFESTEAL_MULTIPLIER := 8.0
 const LIFESTEAL_MIN := 0.01
@@ -47,7 +49,7 @@ func setup_werewolf(depth: int) -> void:
 	_depth = depth
 	_type = {"name": "werewolf", "rect": WEREWOLF["rect"], "sheet": SHEET, "run": true}
 	stats = {
-		"health": WEREWOLF["health"],
+		"health": roundi(WEREWOLF["health"] * LORD_HEALTH),
 		"damage": WEREWOLF["damage"],
 		"speed": WEREWOLF["speed"],
 		"dodge": 0,

@@ -59,6 +59,10 @@ const TOUGHNESS := 3.0
 const TOUGHNESS_DAMAGE := 1.3
 const TOUGHNESS_XP := 1.5
 const MAX_LORD_SHARE := 0.7
+## Az első ennyi főellenség (a 3., 6. és 9. emeleten) a mostani erősségű; az utánuk jövők életereje
+## LATER_BOSS_HEALTH-szoros.
+const EASY_BOSSES := 3
+const LATER_BOSS_HEALTH := 4.0
 const BOSS_SCALE := 1.8
 const ATTACK_INTERVAL := Vector2(2.2, 3.2)
 const ENRAGE_SPEED := 1.2
@@ -145,6 +149,9 @@ func setup_boss(depth: int) -> void:
 	var lord: Dictionary = preload("res://enemies/werewolf_boss.gd").WEREWOLF
 	var health_cap := roundi(float(lord["health"]) * MAX_LORD_SHARE)
 	stats["health"] = maxi(stats["health"], mini(roundi(stats["health"] * TOUGHNESS), health_cap))
+	# Az első EASY_BOSSES főellenség (3., 6., 9. emelet) ilyen marad; az utánuk jövők sokkal szívósabbak.
+	if depth > EASY_BOSSES * 3:
+		stats["health"] = roundi(stats["health"] * LATER_BOSS_HEALTH)
 	stats["damage"] = maxi(stats["damage"], mini(roundi(stats["damage"] * TOUGHNESS_DAMAGE), int(lord["damage"]) - 3))
 	stats["xp"] = roundi(stats["xp"] * TOUGHNESS_XP)
 
