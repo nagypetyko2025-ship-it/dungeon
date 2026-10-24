@@ -15,7 +15,9 @@ extends Node
 ##   poison       a találata megmérgez: pár mp-ig másodpercenként sebződsz (zöld)
 ##   frost        a találata megfagyaszt: pár mp-ig lassabban mozogsz (kékes)
 ##   plunder      a találata aranyat lop tőled; ha megölöd, visszakapod (és még egy kicsit)
-##   shield       időnként pajzsot von maga köré: amíg tart, semmi nem sebzi
+##   shield       időnként SHIELD_POINTS pontos pajzsot von maga köré: amíg van pajzspontja, az ütések
+##                csak azt fogyasztják (a sebzés SHIELD_DAMAGE_SHARE részével), az életereje nem fogy;
+##                ha elfogy, a pajzs lejön
 ##   explode      ha a közeledbe ér, felvillan és felrobban (a robbanás téged is megsebez)
 
 const MAGIC_BOLT := preload("res://enemies/magic_bolt.tscn")
@@ -53,7 +55,9 @@ const POISON_TIME := 3.0
 const FROST_TIME := 2.0
 ## Ennyi aranyat lop egy találattal (+ emeletenként egy kicsit), legfeljebb amennyi nálad van.
 const PLUNDER_GOLD := 4
-const SHIELD_TIME := 2.0
+const SHIELD_POINTS := 30
+## A pajzsot a sebzés ennyied része fogyasztja.
+const SHIELD_DAMAGE_SHARE := 0.8
 const SHIELD_COLOR := Color(0.55, 0.85, 1.0)
 const EXPLODE_TRIGGER := 70.0
 const EXPLODE_RADIUS := 95.0
@@ -69,7 +73,8 @@ var _zigzag_time := 0.0
 var _haste_left := 0.0
 var _berserk := false
 var _summoned := 0
-var _shield_left := 0.0
+## A pajzs hátralévő pontjai (0 = nincs pajzs).
+var shield_points := 0
 var _shield: Node2D
 var _exploding := false
 ## A fosztogató által ellopott arany (halálakor visszaesik).
@@ -124,15 +129,41 @@ func haste(seconds: float) -> void:
 
 ## Pajzs alatt semmi nem sebzi.
 func is_shielded() -> bool:
-	return _shield_left > 0.0
+	return shield_points > 0
+
+
+## Egy találat a pajzsot éri: a sebzés SHIELD_DAMAGE_SHARE része (legalább 1) fogy a pajzsból;
+## visszaadja, mennyi fogyott. Ha elfogy, a pajzs lejön.
+func absorb(damage: int) -> int:
+	var amount := maxi(1, roundi(damage * SHIELD_DAMAGE_SHARE))
+	amount = mini(amount, shield_points)
+	set_shield_points(shield_points - amount)
+	if shield_points <= 0:
+		Audio.play("door_unlock", -6.0, 0.3)
+		FloatingText.spawn(enemy.get_parent(), _head(), "Pajzs széttört!", SHIELD_COLOR, 20)
+	return amount
+
+
+## A pajzspontok beállítása (közös játékban a báb így követi a gazda szörnyét): a buborék
+## megjelenik / eltűnik, és halványul, ahogy fogy.
+func set_shield_points(points: int) -> void:
+	shield_points = maxi(points, 0)
+	if shield_points <= 0:
+		if is_instance_valid(_shield):
+			_shield.queue_free()
+		_shield = null
+		return
+	if not is_instance_valid(_shield):
+		_shield = ShieldBubble.new()
+		var size: Vector2 = enemy.get("_type")["rect"].size * 2.0 * float(enemy.get("_size_scale"))
+		_shield.set("radius", maxf(size.x, size.y) * 0.6)
+		_shield.position = Vector2(0, -size.y / 2.0)
+		enemy.add_child(_shield)
+	_shield.set("strength", float(shield_points) / SHIELD_POINTS)
 
 
 func _physics_process(delta: float) -> void:
 	_haste_left -= delta
-	if _shield_left > 0.0:
-		_shield_left -= delta
-		if _shield_left <= 0.0 and is_instance_valid(_shield):
-			_shield.queue_free()
 	if _busy or not enemy.is_physics_processing():
 		return
 	var player := get_tree().get_first_node_in_group("player") as Node2D
@@ -157,6 +188,7 @@ func _worth_using(ability: String) -> bool:
 		"summon": return _summoned < SUMMON_LIMIT
 		"heal": return not _hurt_allies().is_empty()
 		"war_cry": return _allies_within(WAR_CRY_RADIUS).size() > 0
+		"shield": return not is_shielded()
 	return true
 
 
@@ -250,14 +282,7 @@ func on_hit_player(player: Node2D) -> void:
 
 func _raise_shield() -> void:
 	Audio.play("magic", -8.0, 0.2)
-	_shield_left = SHIELD_TIME
-	if is_instance_valid(_shield):
-		_shield.queue_free()
-	_shield = ShieldBubble.new()
-	var size: Vector2 = enemy.get("_type")["rect"].size * 2.0 * float(enemy.get("_size_scale"))
-	_shield.set("radius", maxf(size.x, size.y) * 0.6)
-	_shield.position = Vector2(0, -size.y / 2.0)
-	enemy.add_child(_shield)
+	set_shield_points(SHIELD_POINTS)
 
 
 ## Kamikaze: megáll, vörösen felvillan, aztán felrobban (ő maga is meghal).
@@ -383,6 +408,8 @@ func _puff(at: Vector2) -> void:
 class ShieldBubble:
 	extends Node2D
 	var radius := 24.0
+	## 0..1: mennyi pajzspont maradt (fogyáskor halványabb).
+	var strength := 1.0
 	var _time := 0.0
 
 	func _process(delta: float) -> void:
@@ -391,5 +418,6 @@ class ShieldBubble:
 
 	func _draw() -> void:
 		var pulse := 0.85 + 0.15 * sin(_time * 8.0)
-		draw_circle(Vector2.ZERO, radius * pulse, Color(SHIELD_COLOR, 0.22))
-		draw_arc(Vector2.ZERO, radius * pulse, 0.0, TAU, 32, Color(SHIELD_COLOR, 0.8), 2.0)
+		var alpha := 0.35 + 0.65 * strength
+		draw_circle(Vector2.ZERO, radius * pulse, Color(SHIELD_COLOR, 0.22 * alpha))
+		draw_arc(Vector2.ZERO, radius * pulse, 0.0, TAU, 32, Color(SHIELD_COLOR, 0.8 * alpha), 2.0)

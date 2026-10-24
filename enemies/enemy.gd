@@ -282,11 +282,14 @@ func _push_until_wall(base: Vector2, push: Vector2) -> Vector2:
 
 
 ## Báb: a gazdától jött állapot (hely, sebesség, tükrözés, animáció — "" ha nem változik —, életerő).
-func net_apply(at: Vector2, moving: Vector2, flip: bool, animation: String, hp: int) -> void:
+func net_apply(at: Vector2, moving: Vector2, flip: bool, animation: String, hp: int, shield := 0) -> void:
 	_net_smooth.receive(at, moving)
 	# Még nincs a fában (késleltetve kerül be): a helyét megjegyeztük, a többi a következő mintával jön.
 	if not is_node_ready():
 		return
+	# A gazda szörnyének pajzsa (buborék, pontok).
+	if shield != _abilities.shield_points:
+		_abilities.set_shield_points(shield)
 	if not _ranged:
 		_sprite.flip_h = flip
 	if _dormant and animation != "" and animation != "dormant":
@@ -322,6 +325,8 @@ func net_take_damage(amount: int, push: Vector2, direct := false) -> void:
 		return
 	_wake()
 	if _abilities.is_shielded():
+		var absorbed := _abilities.absorb(amount)
+		FloatingText.spawn(get_parent(), _head_position(), "-%d pajzs" % absorbed, EnemyAbilities.SHIELD_COLOR)
 		return
 	if not _health.damage(amount, false):
 		return
@@ -511,12 +516,21 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	if is_instance_valid(source) and source.has_method("hit_chance") and randf() >= float(source.call("hit_chance")):
 		_on_missed()
 		return
-	# Pajzs alatt (pajzs képesség) semmi nem sebzi.
+	var hit := hitbox.roll_hit()
+	# Pajzs alatt (pajzs képesség) csak a pajzspontok fogynak (a sebzés 80%-ával), az élete nem.
+	# Báb: a gazda szörnyének pajzsa fogy (a pontok a pillanatképpel jönnek vissza).
 	if _abilities.is_shielded():
 		Audio.play("door_lock", -10.0, 0.3)
-		FloatingText.spawn(get_parent(), _head_position(), "Pajzs!", EnemyAbilities.SHIELD_COLOR)
+		if net_puppet:
+			var net := NetEnemies.active(get_tree())
+			if net != null:
+				net.report_damage(self, hit["damage"], Vector2.ZERO)
+			var shown := mini(maxi(1, roundi(hit["damage"] * EnemyAbilities.SHIELD_DAMAGE_SHARE)), _abilities.shield_points)
+			FloatingText.spawn(get_parent(), _head_position(), "-%d pajzs" % shown, EnemyAbilities.SHIELD_COLOR)
+		else:
+			var absorbed := _abilities.absorb(hit["damage"])
+			FloatingText.spawn(get_parent(), _head_position(), "-%d pajzs" % absorbed, EnemyAbilities.SHIELD_COLOR)
 		return
-	var hit := hitbox.roll_hit()
 	if net_puppet:
 		# Báb: itt csak a kikerülés dől el és a látszat; meghalni csak a gazda szavára hal meg.
 		if not hit["pierce"] and randf() < _health.dodge_chance:

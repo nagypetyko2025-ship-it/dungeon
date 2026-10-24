@@ -21,7 +21,7 @@ extends Node
 
 const SNAPSHOT_INTERVAL := 0.05
 ## Egy szörny a pillanatképben: azonosító, x, y, sebesség x, y, (animáció + 1) * 2 + tükrözés, életerő.
-const SNAPSHOT_STRIDE := 7
+const SNAPSHOT_STRIDE := 8
 ## Az animációk a pillanatképben sorszámmal mennek (ami nincs a listán, az nem változik).
 const ANIMATIONS := ["idle", "run", "wake", "dormant"]
 ## Ennyi ideig nem hallunk a gazdától ezen az emeleten: a vendég önállóan folytatja (az első hír előtt
@@ -222,8 +222,10 @@ func _send_snapshot() -> void:
 		var health := enemy.get_node("Health") as Health
 		var moving := enemy.velocity if enemy.is_physics_processing() else Vector2.ZERO
 		var code := (ANIMATIONS.find(str(sprite.animation)) + 1) * 2 + (1 if sprite.flip_h else 0)
+		var abilities := enemy.get_node_or_null("Abilities")
+		var shield := int(abilities.get("shield_points")) if abilities != null else 0
 		data.append_array(PackedFloat32Array([id, enemy.position.x, enemy.position.y, moving.x, moving.y, code,
-			health.current]))
+			health.current, shield]))
 	# Üres is megy: ebből tudja a vendég, hogy a gazda ugyanezen az emeleten van.
 	_lobby.net_broadcast_snapshot(key(), data)
 
@@ -306,7 +308,7 @@ func on_snapshot(room_key: String, data: PackedFloat32Array) -> void:
 		var animation_index := code / 2 - 1
 		var animation: String = ANIMATIONS[animation_index] if animation_index >= 0 and animation_index < ANIMATIONS.size() else ""
 		enemy.call("net_apply", Vector2(data[i + 1], data[i + 2]), Vector2(data[i + 3], data[i + 4]),
-			code % 2 == 1, animation, int(data[i + 6]))
+			code % 2 == 1, animation, int(data[i + 6]), int(data[i + 7]))
 
 
 func _on_gone(id: int) -> void:
