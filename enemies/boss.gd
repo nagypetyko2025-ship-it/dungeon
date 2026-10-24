@@ -74,6 +74,8 @@ const WINDUP_COLORS := {
 }
 ## A felbukkanás távolsága a játékostól.
 const BLINK_DISTANCE := 150.0
+## Elhalványuláskor ennyire áttetsző (nem teljesen láthatatlan).
+const BLINK_ALPHA := 0.35
 const BARRAGE_VOLLEYS := 3
 const BARRAGE_SHOTS := 5
 const BARRAGE_SPREAD := 0.22
@@ -257,7 +259,8 @@ func _nova() -> void:
 		bolt.global_position = global_position + Vector2(0, -40)
 
 
-## Eltűnik, és a játékos egyik oldalán bukkan fel (szabad helyen).
+## Elhalványul (áttetsző lesz, de nem tűnik el teljesen, hogy mindig látni és ütni lehessen), és a
+## játékos egyik oldalán bukkan fel (szabad helyen).
 func _blink() -> void:
 	Audio.play("magic")
 	var target := _player.global_position + Vector2.from_angle(randf() * TAU) * BLINK_DISTANCE
@@ -265,7 +268,7 @@ func _blink() -> void:
 	if room.has_method("safe_spawn_position"):
 		target = room.call("safe_spawn_position", target)
 	var fade := create_tween()
-	fade.tween_property(_visual, "modulate:a", 0.0, 0.12)
+	fade.tween_property(_visual, "modulate:a", BLINK_ALPHA, 0.12)
 	await fade.finished
 	# A báb nem ugrik el magától: a gazda szörnyének új helye úgyis megjön (különben visszarántódna).
 	if not net_puppet:
