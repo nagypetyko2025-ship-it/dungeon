@@ -48,7 +48,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Temető a kocsma alatt: `world/graveyard.gd`; mellette (keletre) a régi kápolna: `world/chapel.gd` (létra a harangtoronyba, kötél: harang, `bell.wav`). A sírásó (Vendel):
   `world/gravedigger.gd` (küldetései: 50 csontváz → Szent kereszt → 20 zombi → legendás talizmán, köztük 2-2 történet; utána
   a kocsmába költözik, játszható "gravedigger" karakter; J könyv: "Csontváz sírásó" fül).
-- A kórháztól jobbra a poros raktár: `world/warehouse.gd` (belül ládák, hordók, polcok, por; `assets/props/storage.png`).
+- A kórháztól jobbra a poros raktár: `world/warehouse.gd` (belül ládák, hordók, polcok, por, asztal székekkel; a széken alszik Kormos Gyula, a bányász: közel érve felriad, felveszi a csákányát, 3 történet).
 - A kocsmától jobbra a kalandorok kórháza: `world/hospital.gd` (betegágyak, Kálmán doktor, Rozi nővér; a régi lakóház helyén).
   A doktor kérdései és küldetései: `world/doctor.gd` (J könyv "Doktor" fül; 1.: Vérgömb, 2.: A tudós szeme, 3.: Fűrészpenge, utána 3 történet).
 - Város északi része: `world/castle.gd` ( út, királyi vár, őrök, trónterem; király: `world/king.gd`; a

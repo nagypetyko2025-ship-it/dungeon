@@ -40,6 +40,41 @@ var _prompt: Label
 var _inside := false
 var _busy := false
 var _rng := RandomNumberGenerator.new()
+## A bányász (Kormos Gyula): alszik a széken, a közelében felriad, feláll, és felveszi a csákányát.
+var _miner: Sprite2D
+var _miner_body: StaticBody2D
+var _pickaxe: Sprite2D
+var _zzz: Node2D
+var _miner_awake := false
+var _miner_stand := Vector2.ZERO
+var _dialogue: DialoguePanel
+var _time := 0.0
+
+const MINER_SHEET: Texture2D = preload("res://assets/characters/miner.png")
+const PICKAXE: Texture2D = preload("res://assets/props/pickaxe.png")
+const MINER_ID := "miner"
+const MINER_NAME := "Kormos Gyula, a bányász"
+const WAKE_RANGE := 80.0
+const TALK_RANGE := 60.0
+const MINER_STORIES: Array[Dictionary] = [
+	{"id": "why_here", "text": "Mit keresel itt a raktárban?", "trust": 3,
+		"answer": "[i]Körülnéz, mintha most látná először a ládákat.[/i]\n\n" \
+			+ "Jó kérdés. Ez a bányatársaság raktára... volt. Mióta a régi ezüstbánya beomlott, senki sem " \
+			+ "jár ide, csak a por meg én. Itt legalább nem esik a fejemre a kő.\n\n" \
+			+ "Meg hát az ágyamat is valahol a tegnap este közepén hagytam el."},
+	{"id": "mine", "text": "Hol dolgozol?", "trust": 4,
+		"answer": "[i]Megveregeti a csákánya nyelét.[/i]\n\n" \
+			+ "Bárhol, ahol van mit kibontani. Régen a hegyi ezüstbányában, húsz évig. Aztán jött a kazamata, " \
+			+ "és a kövek elkezdtek suttogni. Egy nap az egész tárna összeroskadt, mintha valami alulról " \
+			+ "rántotta volna le.\n\nAzóta a kalandoroknak kotrom ki a beomlott járatokat. Dinamittal megy a " \
+			+ "leggyorsabban, de abból mostanában kevés akad. A robbantómester a kocsmában issza el a fizetését."},
+	{"id": "party", "text": "Milyen buli volt tegnap?", "trust": 3,
+		"answer": "[i]Megvakarja a kormos tarkóját, és óvatosan elvigyorodik.[/i]\n\n" \
+			+ "Hát... Gáspár asztalra állt, és elénekelte a régi zsoldosnótát. Mind a tizenkét versszakot. " \
+			+ "Vendel, a sírásó táncolt, ami ijesztőbb, mint amilyennek hangzik. Bertalan meg bebizonyította, " \
+			+ "hogy egy fogaskerékből is lehet sört inni.\n\n" \
+			+ "Hogy én hogy kerültem ide? Arra már nem emlékszem. De a fejem szerint nagyon jól éreztem magam."},
+]
 
 
 func setup(camp: Node2D) -> void:
@@ -140,6 +175,11 @@ func _build_interior() -> void:
 	fallen.rotation = deg_to_rad(-90)
 	fallen.position += Vector2(-6, 6)
 	fallen.modulate = Color(0.85, 0.8, 0.75)
+	# A székek is útban vannak (az eldőlt is).
+	for chair in [table_tile + Vector2i.LEFT, table_tile + Vector2i.RIGHT]:
+		_solid(Rect2(Vector2(chair) * TILE + Vector2(7, 10), Vector2(TILE - 14, TILE - 14)))
+	_solid(Rect2(fallen.position + Vector2(-16, -6), Vector2(26, 14)))
+	_build_miner(table_tile + Vector2i.LEFT)
 	# Hátsó fal: két polc cserépedényekkel, köztük a fénysáv.
 	for start in [r.position.x + 5, r.position.x + 9]:
 		var shelf := Shelf.new()
@@ -183,6 +223,77 @@ func _build_interior() -> void:
 	dust.color = Color(0.9, 0.85, 0.7, 0.35)
 	dust.z_index = 3
 	add_child(dust)
+
+
+## Kormos Gyula a széken alszik (lógó fejjel, fölötte száll a "z z z"), a csákánya a földön hever.
+func _build_miner(chair: Vector2i) -> void:
+	_miner = Sprite2D.new()
+	var atlas := AtlasTexture.new()
+	atlas.atlas = MINER_SHEET
+	atlas.region = Rect2(0, 0, 16, 16)
+	_miner.texture = atlas
+	_miner.scale = Vector2(2, 2)
+	_miner.offset = Vector2(0, -8)
+	_miner.position = _center(chair) + Vector2(2, 6)
+	_miner.rotation = deg_to_rad(12)
+	_entities.add_child(_miner)
+	_miner_stand = _center(chair + Vector2i.DOWN) + Vector2(-4, 12)
+	_pickaxe = Sprite2D.new()
+	_pickaxe.texture = PICKAXE
+	_pickaxe.scale = Vector2(0.6, 0.6)
+	_pickaxe.rotation = deg_to_rad(-80)
+	_pickaxe.position = _center(chair + Vector2i.DOWN) + Vector2(-20, 8)
+	_pickaxe.z_index = -8
+	add_child(_pickaxe)
+	_zzz = Zzz.new()
+	_zzz.position = _miner.position + Vector2(10, -34)
+	_zzz.z_index = 4
+	add_child(_zzz)
+	_dialogue = DialoguePanel.new()
+	_dialogue.name = "MinerDialogue"
+	_dialogue.npc_id = MINER_ID
+	_dialogue.npc_name = MINER_NAME
+	_dialogue.greeting = "[i]A bányász a halántékát masszírozza, a szeme alatt korom és karikák.[/i]\n\n" \
+		+ "Csak halkan, barátom... a fejemben még mindig szól a kocsmazene."
+	var face := AtlasTexture.new()
+	face.atlas = MINER_SHEET
+	face.region = Rect2(0, 0, 16, 16)
+	_dialogue.portrait = face
+	_dialogue.options = MINER_STORIES.duplicate()
+	_camp.add_child.call_deferred(_dialogue)
+
+
+## Felriad: feláll a szék mellé, és a kezébe veszi a csákányt.
+func _wake_miner() -> void:
+	_miner_awake = true
+	_zzz.queue_free()
+	Audio.play("ui_open", -6.0, 0.3)
+	_miner.rotation = 0.0
+	var jump := create_tween()
+	jump.tween_property(_miner, "position", _miner_stand + Vector2(0, -10), 0.15).set_ease(Tween.EASE_OUT)
+	jump.tween_property(_miner, "position", _miner_stand, 0.15).set_ease(Tween.EASE_IN)
+	FloatingText.spawn(_entities, _miner_stand + Vector2(0, -52), "Hol vagyok?", Color(0.95, 0.9, 0.8), 18)
+	await get_tree().create_timer(1.1).timeout
+	FloatingText.spawn(_entities, _miner_stand + Vector2(0, -52), "Ja, emlékszem... tegnap buli volt.",
+		Color(0.95, 0.9, 0.8), 18)
+	# A csákány a földről a kezébe.
+	_pickaxe.z_index = 1
+	var grab := create_tween().set_parallel(true)
+	grab.tween_property(_pickaxe, "position", _miner_stand + Vector2(12, -18), 0.35)
+	grab.tween_property(_pickaxe, "rotation", deg_to_rad(20), 0.35)
+	_miner_body = StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = Vector2(20, 10)
+	shape.shape = box
+	shape.position = _miner_stand + Vector2(0, -4)
+	_miner_body.add_child(shape)
+	add_child(_miner_body)
+
+
+func _near_miner(range_px: float) -> bool:
+	return _inside and is_instance_valid(_player) and is_instance_valid(_miner) \
+		and _player.global_position.distance_to(_miner.position) < range_px
 
 
 ## Egymásra rakott tárgyak egy csempén (alul az első), a legalsó ütközik.
@@ -253,6 +364,8 @@ func _focus() -> Array:
 		return []
 	if at.distance_to(_center(INTERIOR_DOOR) + Vector2(TILE / 2.0, TILE / 2.0)) < INTERACT_RANGE:
 		return ["leave", "[E] Kilépés a szabadba"]
+	if _miner_awake and _near_miner(TALK_RANGE):
+		return ["talk", "[E] Beszélgetés: %s" % MINER_NAME]
 	return []
 
 
@@ -262,6 +375,12 @@ func _process(delta: float) -> void:
 		_prompt.text = focus[1]
 	var target := 1.0 if not focus.is_empty() and not get_tree().paused else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
+	# Gyula: alvás közben lassan szuszog; ha a közelébe mész, felriad.
+	_time += delta
+	if is_instance_valid(_miner) and not _miner_awake:
+		_miner.scale = Vector2(2.0, 2.0 + sin(_time * 2.0) * 0.06)
+		if _near_miner(WAKE_RANGE) and not get_tree().paused and not _busy:
+			_wake_miner()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -276,6 +395,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_move(true, _center(INTERIOR_DOOR) + Vector2(TILE / 2.0, -TILE))
 		"leave":
 			_move(false, door_position() + Vector2(0, 26))
+		"talk":
+			Audio.play("ui_open")
+			_camp.get_node("Menus").call("open_menu", _dialogue)
 
 
 func _move(inside: bool, at: Vector2) -> void:
@@ -356,6 +478,26 @@ func _cobweb(tile: Vector2i, flip_h: bool) -> void:
 	web.z_index = -7
 	web.modulate = Color(1, 1, 1, 0.7)
 	add_child(web)
+
+
+## "z z z" az alvó fölött: három betű száll fölfelé, egyre nagyobb, és elhalványul.
+class Zzz:
+	extends Node2D
+	var _time := 0.0
+
+	func _process(delta: float) -> void:
+		_time += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		var font := ThemeDB.fallback_font
+		for i in 3:
+			var phase := fmod(_time * 0.45 + i / 3.0, 1.0)
+			var size := int(10 + phase * 14)
+			var at := Vector2(phase * 14.0, -phase * 34.0)
+			var color := Color(0.92, 0.95, 1.0, 1.0 - phase)
+			draw_string_outline(font, at, "z", HORIZONTAL_ALIGNMENT_LEFT, -1, size, 3, Color(0.1, 0.1, 0.15, 1.0 - phase))
+			draw_string(font, at, "z", HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
 
 
 ## Fali polc (két poros deszka).
