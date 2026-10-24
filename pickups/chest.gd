@@ -29,6 +29,11 @@ func _ready() -> void:
 	# Közös játékban a helyéről ismerjük fel (mindenkinél ugyanott jelenik meg).
 	add_to_group("net_chest")
 	_empty = randf() < EMPTY_CHANCE
+	# Közös játékban mindenkinél ugyanaz (a közös magból és a helyéből): régen gépenként külön dőlt el,
+	# így a vendégnél teli ládából nem jött semmi, mert a gazdánál — aki a tartalmát adja — üres volt.
+	if NetLobby.is_playing(get_tree()):
+		var roll := hash([GameState.net_seed, GameState.depth, Vector2i(global_position.round())])
+		_empty = posmod(roll, 1000) < roundi(EMPTY_CHANCE * 1000.0)
 	_sprite.sprite_frames = _make_frames()
 	_sprite.animation = "empty" if _empty else "full"
 	_sprite.frame = 0
@@ -60,12 +65,16 @@ func open_from_net(spill: bool) -> void:
 	if _opened:
 		return
 	if spill:
+		# (Akkor is szórjon, ha a gazdánál épp nyitva van egy menü, és áll a játék.)
+		process_mode = Node.PROCESS_MODE_ALWAYS
 		_open_now()
 		return
 	_opened = true
 	Audio.play("chest_open")
-	_sprite.animation = "full"
 	_sprite.play()
+	if _empty:
+		await _sprite.animation_finished
+		FloatingText.spawn(get_parent(), global_position + Vector2(0, -16), "Üres...", Color(0.75, 0.7, 0.65))
 
 
 func _open_now() -> void:

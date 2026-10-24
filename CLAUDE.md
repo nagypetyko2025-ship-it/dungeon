@@ -81,6 +81,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   (`Player.share_effect` → `NetAvatars._on_effect`; ott nem sebez). Közös játékban a szobák ajtajai nem záródnak be
   (`Room._set_doors_locked`). Élesztés: az elesett társ a halála helyén fekszik (pózban "g" = `Player.net_death_at`);
   mellette 3 mp-ig nyomva tartott E → `NetLobby.send_revive` → az ő gépén `Player.revive_from_net` (fél HP).
+  Közös játékban a szintlépés nem nyílik fel magától: alul gomb / L (`ui/level_up.gd`, `GameState.pending_level_ups`);
+  a szörnyek kijöhetnek a szobájukból (a főellenség nem); a láda üres-e: a közös magból és a helyéből (mindenkinél ugyanaz).
   Teszt: két példány (_host.gd / _client.gd, közös _mp_common.gd). Közös játék alatt `Profiles.multiplayer`: külön mentés profilonként (user://save_mp_<profil>.cfg),
   a gazda a váróban "új kezdés"-t is választhat.
   Menü: `ui/multiplayer_panel.gd`. Teszt: két példány (_host.gd / _client.gd) egyszerre fut.

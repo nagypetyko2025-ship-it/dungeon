@@ -72,11 +72,14 @@ static var display_initialized := false
 static var net_seed := 0
 ## Közös játékban meghaltál, és nézőként követed a társaidat (a következő emeletre is).
 static var net_dead := false
+## Közös játékban a még ki nem választott szintlépések (alul a gombbal választasz; emeletváltáskor is megmaradnak).
+static var pending_level_ups: Array[int] = []
 
 
 static func reset() -> void:
 	depth = 1
 	net_dead = false
+	pending_level_ups = []
 	saved_stats = {}
 	saved_health = -1
 	saved_level = 1

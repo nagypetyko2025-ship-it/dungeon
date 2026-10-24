@@ -2,6 +2,8 @@ extends CanvasLayer
 ## Szintlépéskor megállítja a játékot, és 3 fejlesztés közül lehet választani
 ## (egérrel vagy az 1/2/3 gombokkal). Ha egyszerre több szint jött,
 ## egymás után többször is választhatsz.
+## Közös játékban nem ugrik fel magától (harc közben nagyon zavaró): alul egy gomb jelenik meg,
+## és akkor választasz, amikor neked jó (a gombra kattintva vagy az L-lel).
 
 const CARD_COUNT := 3
 const CARD_SIZE := Vector2(210, 250)
@@ -16,6 +18,9 @@ var _options: Array[Dictionary] = []
 var _accepting_input := false
 var _stats: Stats
 var _reroll_button: Button
+## Közös játék: a "választhatsz" gomb alul (külön rétegen, mert ez a réteg rejtve van).
+var _pending_layer: CanvasLayer
+var _pending_button: Button
 
 const LEGENDARY_COLOR := Color(1, 0.6, 0.15)
 const REROLL_BASE := 5.0
@@ -45,6 +50,52 @@ func _ready() -> void:
 	_reroll_button.focus_mode = Control.FOCUS_NONE
 	_reroll_button.pressed.connect(_reroll)
 	_cards.get_parent().add_child(_reroll_button)
+	# Közös játék: az előző emeleten ki nem választott szintlépések.
+	if _shared_game() and not GameState.pending_level_ups.is_empty():
+		_level_queue.assign(GameState.pending_level_ups)
+		_show_pending.call_deferred()
+
+
+func _shared_game() -> bool:
+	return NetLobby.is_playing(get_tree()) and not GameState.tutorial
+
+
+## Közös játék: alul egy gomb, hogy van még kiválasztatlan szintlépés.
+func _show_pending() -> void:
+	GameState.pending_level_ups.assign(_level_queue)
+	if _pending_layer == null:
+		_pending_layer = CanvasLayer.new()
+		_pending_layer.layer = layer
+		_pending_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_sibling(_pending_layer)
+		_pending_button = MenuStyle.button("")
+		_pending_button.focus_mode = Control.FOCUS_NONE
+		_pending_button.custom_minimum_size = Vector2(440, 54)
+		_pending_button.add_theme_font_size_override("font_size", 22)
+		_pending_button.anchor_left = 0.5
+		_pending_button.anchor_right = 0.5
+		_pending_button.anchor_top = 1.0
+		_pending_button.anchor_bottom = 1.0
+		_pending_button.offset_left = -220.0
+		_pending_button.offset_right = 220.0
+		_pending_button.offset_top = -160.0
+		_pending_button.offset_bottom = -106.0
+		_pending_button.pressed.connect(_open_pending)
+		_pending_layer.add_child(_pending_button)
+		# Finoman lüktet, hogy észrevedd.
+		var pulse := _pending_button.create_tween().set_loops()
+		pulse.tween_property(_pending_button, "self_modulate", Color(1.3, 1.2, 0.8), 0.7).set_trans(Tween.TRANS_SINE)
+		pulse.tween_property(_pending_button, "self_modulate", Color.WHITE, 0.7).set_trans(Tween.TRANS_SINE)
+	var count := _level_queue.size()
+	_pending_button.text = "▲ Szintlépés! Válassz fejlesztést [L]" + ("  (%d)" % count if count > 1 else "")
+	_pending_layer.visible = not visible and count > 0
+
+
+func _open_pending() -> void:
+	if visible or _level_queue.is_empty() or get_tree().paused:
+		return
+	_pending_layer.visible = false
+	_open()
 
 
 ## Az újradobás ára: REROLL_BASE, majd minden újradobás után REROLL_GROWTH-szor több (futásonként).
@@ -95,7 +146,11 @@ func _growth_text() -> String:
 
 func _on_leveled_up(level: int) -> void:
 	_level_queue.append(level)
-	if not visible:
+	if visible:
+		return
+	if _shared_game():
+		_show_pending()
+	else:
 		_open()
 
 
@@ -139,6 +194,8 @@ func _choose(index: int) -> void:
 	else:
 		Upgrades.apply(_stats, _options[index])
 	_level_queue.pop_front()
+	if _shared_game():
+		GameState.pending_level_ups.assign(_level_queue)
 	if _level_queue.is_empty():
 		visible = false
 		get_tree().paused = false
@@ -148,7 +205,14 @@ func _choose(index: int) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
-	if not visible or key == null or not key.pressed or key.echo:
+	if key == null or not key.pressed or key.echo:
+		return
+	# Közös játék: L-lel nyílik a választás (ha van kiválasztatlan szintlépés).
+	if not visible and key.physical_keycode == KEY_L and _shared_game() and not _level_queue.is_empty():
+		_open_pending()
+		get_viewport().set_input_as_handled()
+		return
+	if not visible:
 		return
 	match key.physical_keycode:
 		KEY_1: _choose(0)

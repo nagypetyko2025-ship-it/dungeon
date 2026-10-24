@@ -581,11 +581,14 @@ func _physics_process(delta: float) -> void:
 	# A még fába sem került (épp megjelenő) ellenség életereje 0, de ő még nem halott.
 	_alive_enemies = _alive_enemies.filter(func(enemy: Node2D) -> bool:
 		return is_instance_valid(enemy) and (not enemy.is_inside_tree() or not enemy.get_node("Health").is_dead()))
+	# Közös játékban az ajtók nyitva vannak: a szörnyek kijöhetnek a szobából utánad (a főellenség
+	# nem, ő a termében marad).
+	var roaming := NetLobby.is_playing(get_tree())
 	for enemy in _alive_enemies:
 		# (A báb helyét a gazda adja, azt nem igazítjuk.)
 		if not enemy.is_inside_tree() or enemy.get("net_puppet"):
 			continue
-		if not bounds.has_point(enemy.global_position):
+		if not bounds.has_point(enemy.global_position) and not (roaming and not enemy.is_in_group("boss")):
 			enemy.global_position = safe_spawn_position(
 				_random_spawn_point(_player.global_position if is_instance_valid(_player) else position))
 		elif not _point_free(enemy.global_position):
