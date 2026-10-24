@@ -161,9 +161,8 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 					list.append({"id": "more_work_letter", "text": "Van még munkád számomra?",
 						"on_choose": func() -> String: return _ask_letter(inventory, "[i]Elgondolkodik.[/i]")})
 				"active":
-					if not has_letter(inventory):
-						list.append({"id": "lost_letter", "text": "Elvesztettem a levelet...",
-							"on_choose": func() -> String: return _lost_letter(inventory)})
+					list.append({"id": "lost_letter", "text": "Elvesztettem a levelet...",
+						"on_choose": func() -> String: return _lost_letter(inventory)})
 				"delivered":
 					list.append({"id": "delivered", "text": "Átadtam a levelet a boltosnak.",
 						"on_choose": func() -> String: return _letter_delivered()})
@@ -313,7 +312,27 @@ static func _hand_letter(inventory: Inventory) -> String:
 	return "[color=#7a4a10](A lepecsételt levél %s került.)[/color]" % where
 
 
+## Hol a levél: "bag" (táska), "stash" (tábori láda) vagy "" (sehol).
+static func letter_place(inventory: Inventory) -> String:
+	for item: Variant in inventory.bag:
+		if is_letter(item):
+			return "bag"
+	for item: Variant in Progress.stash:
+		if is_letter(item):
+			return "stash"
+	return ""
+
+
+## "Elvesztettem a levelet": ha megvan (táska / tábori láda), megmondja, hol; ha nincs, újat ír.
 static func _lost_letter(inventory: Inventory) -> String:
+	match letter_place(inventory):
+		"bag":
+			return "[i]Összehúzza a szemét, és a táskádra bök.[/i]\n\n" \
+				+ "Elvesztetted? Akkor mi az a vörös pecsét, ami kilóg a [b]táskádból[/b]? Vigyázz rá jobban."
+		"stash":
+			return "[i]Unottan legyint.[/i]\n\n" \
+				+ "A [b]tábori ládádban[/b] van, ott hagytad. Vedd ki, mielőtt leszállsz, mert a boltos " \
+				+ "üres kézre nem fizet."
 	return "[i]Mélyet sóhajt, aztán új lapot vesz elő, és gyorsan újraírja.[/i]\n\n" \
 		+ "Ezt most ne veszítsd el. A tizedik emelet, a boltos. [G] a pultnál.\n\n" + _hand_letter(inventory)
 

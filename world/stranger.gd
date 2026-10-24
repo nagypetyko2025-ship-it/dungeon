@@ -99,10 +99,8 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 					"on_choose": func() -> String: return _give_phoenix(inventory)})
 	match Progress.npc_quest_state(ROYAL_LETTER_QUEST):
 		"active":
-			if not has_royal_letter(inventory):
-				list.append({"id": "lost_royal_letter", "text": "Elvesztettem a levelet...",
-					"on_choose": func() -> String: return "[i]Felsóhajt, és új lapot vesz elő.[/i]\n\n" \
-						+ "Szerencse, hogy fejből tudom.\n\n" + _hand_royal_letter(inventory)})
+			list.append({"id": "lost_royal_letter", "text": "Elvesztettem a levelet...",
+				"on_choose": func() -> String: return _lost_royal_letter(inventory)})
 		"delivered":
 			list.append({"id": "royal_delivered", "text": "Átadtam a levelet a királynak.",
 				"on_choose": func() -> String: return _royal_letter_delivered()})
@@ -164,6 +162,31 @@ static func has_royal_letter(inventory: Inventory) -> bool:
 		if is_royal_letter(item):
 			return true
 	return false
+
+
+## Hol a levél: "bag" (táska), "stash" (tábori láda) vagy "" (sehol).
+static func royal_letter_place(inventory: Inventory) -> String:
+	for item: Variant in inventory.bag:
+		if is_royal_letter(item):
+			return "bag"
+	for item: Variant in Progress.stash:
+		if is_royal_letter(item):
+			return "stash"
+	return ""
+
+
+## "Elvesztettem a levelet": ha megvan (táska / tábori láda), megmondja, hol; ha nincs, újat ír.
+static func _lost_royal_letter(inventory: Inventory) -> String:
+	match royal_letter_place(inventory):
+		"bag":
+			return "[i]Felvonja a szemöldökét, és a táskád felé biccent.[/i]\n\n" \
+				+ "Elvesztetted? Ott lapul a [b]táskádban[/b], barátom, a többi holmid között. Az aranypecsét " \
+				+ "messziről csillog."
+		"stash":
+			return "[i]Elneveti magát.[/i]\n\n" \
+				+ "Nem vesztetted el, csak eltetted. A [b]tábori ládádban[/b] van. Vedd ki, mielőtt a " \
+				+ "királyhoz indulsz."
+	return "[i]Felsóhajt, és új lapot vesz elő.[/i]\n\nSzerencse, hogy fejből tudom.\n\n" + _hand_royal_letter(inventory)
 
 
 static func _ask_royal_letter(inventory: Inventory) -> String:
