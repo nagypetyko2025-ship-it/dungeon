@@ -41,6 +41,16 @@ const STORIES: Array[Dictionary] = [
 			+ "aztán még eggyel. A gyanús boltos odalent is egyre jobb portékát tart, minél mélyebbre jutsz. " \
 			+ "A mélység megjutalmazza azt, aki kitart."},
 ]
+## A szigeten lévő lezárt lépcső (Lake.ISLAND_STAIRS): mindig rákérdezhetsz.
+const STAIRS_STORY := {"id": "island_stairs", "text": "Mi az a rácsos lépcső a szigeten?", "trust": 4,
+	"answer": "[i]Leengedi a botját, és sokáig nézi a szigetet.[/i]\n\n" \
+		+ "Az előbb volt ott, mint a tó. Amikor a víz feltört, a sziget megmaradt, és rajta az a lépcső, " \
+		+ "vasráccsal lezárva. Senki sem tudja, ki zárta le. Vagy mit zárt be.\n\n" \
+		+ "Egyszer átúsztam. Fiatalabb voltam, és bolondabb. A rács mögül hideg szél fújt, és odalent víz " \
+		+ "csobogott... meg valami más is. Mintha lélegzett volna.\n\n" \
+		+ "[i]Megtapogatja a zsebét, ahol a rozsdás kulcsot tartja.[/i]\n\n" \
+		+ "A halból kifogott kulcs nem illik a zárba. Kipróbáltam. De a rácson van egy másik, kisebb zár " \
+		+ "is. Arra még nem találtam kulcsot. Talán jobb is így."}
 ## A küldetése: hozz neki egy tárgyat (nehezéknek a zsinórra): a táskából a legkisebb ritkaságút
 ## kapja; ha abból több is van, nem tud választani.
 const ITEM_QUEST := "fisherman_item"
@@ -158,6 +168,7 @@ func _options() -> Array[Dictionary]:
 						+ "egy kopott sisak, egy csorba gyűrű. A táskádban hozd, ne a ládában. Ha több is van " \
 						+ "nálad, a [b]leggyengébbet[/b] kérem; csak ne legyen belőle kettő egyforma."})
 	list.append_array(STORIES)
+	list.append(STAIRS_STORY)
 	if Progress.npc_quest_state(ITEM_QUEST) == "done":
 		list.append_array(MORE_STORIES)
 	return list

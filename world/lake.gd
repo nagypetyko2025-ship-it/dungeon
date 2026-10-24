@@ -8,6 +8,9 @@ extends Node2D
 const TILE := 32
 const TILES: Texture2D = preload("res://assets/props/lake_tiles.png")
 const PIER: Texture2D = preload("res://assets/props/pier.png")
+const STAIRS_SCENE := preload("res://rooms/obstacles/stairs.tscn")
+## A sziget lezárt lépcsője (a fától jobbra).
+const ISLAND_STAIRS := Vector2i(118, 9)
 ## A tó közepe és sugarai (csempében); a sziget ugyanott, kisebb sugarakkal.
 const CENTER := Vector2(117.5, 10.0)
 const RADIUS := Vector2(9.0, 4.6)
@@ -143,3 +146,21 @@ func _build_island() -> void:
 	_camp.call("_tree", center, true, true)
 	_camp.call("_rpg_sprite", Vector2i(19, 9), (Vector2(center) + Vector2(-0.6, 0.9)) * TILE, 0)
 	_camp.call("_rpg_sprite", Vector2i(28, 9), (Vector2(center) + Vector2(1.4, 0.7)) * TILE, -9)
+	_build_island_stairs()
+
+
+## A szigeten egy régi, rácsos lépcső vezet le (lezárva; Öreg Ábel tud róla valamit).
+func _build_island_stairs() -> void:
+	var at := (Vector2(ISLAND_STAIRS) + Vector2(0.5, 0.5)) * TILE
+	var floor := Sprite2D.new()
+	floor.texture = SpriteSheet.region(Rect2(16, 64, 16, 16))
+	floor.scale = Vector2(2.4, 2.4)
+	floor.position = at
+	floor.z_index = -8
+	floor.modulate = Color(0.85, 0.9, 0.85)
+	add_child(floor)
+	var stairs: Area2D = STAIRS_SCENE.instantiate()
+	stairs.position = at
+	stairs.monitoring = false
+	add_child(stairs)
+	stairs.call("set_locked", true)
