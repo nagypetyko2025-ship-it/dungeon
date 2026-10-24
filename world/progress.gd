@@ -60,6 +60,9 @@ static var asked := {}
 static var npc_quests := {}
 ## Szörnyek könyve (Bestiary): szörny -> hányat öltél meg belőle (minden futásból összesen).
 static var kills := {}
+## A legmélyebb emelet, ahova valaha lejutottál (csalás és gyakorló pálya nélkül). Ha egy küldetés egy
+## emeletre küld, és már jártál ott, azonnal mondhatod, hogy megvolt (lásd reached_depth).
+static var deepest := 0
 ## Az aktív karakter tábori felszerelése (Inventory.save_data); üres = kezdő felszerelés.
 ## Leszálláskor magaddal viszed (és innen törlődik). Minden karakternek külön.
 static var camp_inventory := {}
@@ -88,6 +91,7 @@ static func load_game(force := false) -> void:
 	asked = {}
 	npc_quests = {}
 	kills = {}
+	deepest = 0
 	var config := ConfigFile.new()
 	if config.load(path()) == OK:
 		camp_gold = int(config.get_value("camp", "gold", 0))
@@ -128,6 +132,12 @@ static func load_game(force := false) -> void:
 		var saved_kills: Variant = config.get_value("camp", "kills", {})
 		if saved_kills is Dictionary:
 			kills = saved_kills
+		deepest = int(config.get_value("camp", "deepest", -1))
+	# Régebbi mentés: az eredménytábla legjobb futásából.
+	if deepest < 0:
+		deepest = 0
+		for run: Dictionary in Records.top():
+			deepest = maxi(deepest, int(run.get("depth", 0)))
 	_activate(character)
 
 
@@ -145,6 +155,7 @@ static func save_game() -> void:
 	config.set_value("camp", "asked", asked)
 	config.set_value("camp", "npc_quests", npc_quests)
 	config.set_value("camp", "kills", kills)
+	config.set_value("camp", "deepest", deepest)
 	config.save(path())
 
 
@@ -193,6 +204,7 @@ static func reset_game() -> void:
 	asked = {}
 	npc_quests = {}
 	kills = {}
+	deepest = 0
 	_activate(Characters.DEFAULT)
 	save_game()
 
@@ -302,3 +314,10 @@ static func permanent_bonuses() -> Dictionary:
 		var stat: String = definition["stat"]
 		bonuses[stat] = bonuses.get(stat, 0.0) + level(id) * float(definition["per_level"])
 	return bonuses
+
+
+## Elérted ezt az emeletet (a kazamata hívja): ha mélyebb, mint eddig bármikor, megjegyezzük.
+static func reached_depth(depth: int) -> void:
+	if depth > deepest:
+		deepest = depth
+		save_game()

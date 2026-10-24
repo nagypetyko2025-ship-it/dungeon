@@ -103,7 +103,8 @@ static func blocked_rects() -> Array[Rect2i]:
 
 ## Megjártad a 30. emeletet, és visszajöttél (a Gáspár-küldetés teljesítése is számít).
 static func permit_earned() -> bool:
-	return Progress.npc_quest_state(DEEP_FLAG) == "done" or Progress.npc_quest_state("depth_30") == "done"
+	return Progress.npc_quest_state(DEEP_FLAG) == "done" or Progress.npc_quest_state("depth_30") == "done" \
+		or Progress.deepest >= 30
 
 
 ## A táborba visszaérve: ha a futásban elérted a 30. emeletet, most már "vissza is jöttél".
@@ -274,6 +275,12 @@ func _process(delta: float) -> void:
 		Progress.save_game()
 		Audio.play("ui_open")
 		message.emit("Új fül a küldetések könyvében: Király  [J]")
+		focus = _focus()
+	elif not focus.is_empty() and not _inside and Progress.npc_quest_state(PERMIT_QUEST) == "active" and permit_earned():
+		# Már jártál a 30. emeleten (akár a figyelmeztetés előtt): az őr azonnal beenged.
+		Progress.set_npc_quest(PERMIT_QUEST, "done")
+		Progress.save_game()
+		message.emit("Az őr bólint: „Hallottuk, hogy jártál a harmincadik emeleten. Mehetsz.”")
 		focus = _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]

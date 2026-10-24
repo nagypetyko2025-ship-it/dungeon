@@ -206,7 +206,11 @@ static func notify(kind: String, value: Variant = 1) -> void:
 static func progress(id: String) -> int:
 	if Progress.quests_done.has(id):
 		return int(ALL[id]["goal"])
-	return int(Progress.quest_progress.get(id, 0))
+	var amount := int(Progress.quest_progress.get(id, 0))
+	# Emeletes küldetés: ha már jártál ilyen mélyen (akár a küldetés előtt is), az is számít.
+	if ALL[id]["kind"] == "floor":
+		amount = mini(maxi(amount, Progress.deepest), int(ALL[id]["goal"]))
+	return amount
 
 
 ## Kész, de a jutalom még nincs átvéve?

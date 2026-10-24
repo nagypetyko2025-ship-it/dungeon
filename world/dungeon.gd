@@ -239,6 +239,8 @@ func _ready() -> void:
 	_prebuild_nav.call_deferred()
 	# Küldetés: elért emelet (a gyakorló pályán nem számít).
 	Quests.notify("floor", depth)
+	if not tutorial and not GameState.cheated:
+		Progress.reached_depth(depth)
 	add_child(QuestTracker.new())
 	add_child(QuickBar.new())
 	_add_quest_book()

@@ -81,7 +81,13 @@ static func veteran_options(inventory: Inventory) -> Array[Dictionary]:
 	if Progress.npc_quest_state("slay_lord") == "done" and not Progress.asked_topics(VETERAN_ID).has("report_lord"):
 		list.append({"id": "report_lord", "text": "Legyőztem a Mélység Urát.",
 			"on_choose": func() -> String: return _report_lord(inventory)})
-	if Progress.npc_quest_state("depth_30") == "done" and not Progress.asked_topics(VETERAN_ID).has("report_30"):
+	# Ha a küldetés előtt már jártál a 30. emeleten, azonnal elmondhatod neki.
+	if Progress.npc_quest_state("depth_30") == "active" and Progress.deepest >= 30:
+		list.append({"id": "report_30", "text": "Jártam már a 30. emeleten.",
+			"on_choose": func() -> String:
+				Progress.set_npc_quest("depth_30", "done")
+				return _report_depth_30()})
+	elif Progress.npc_quest_state("depth_30") == "done" and not Progress.asked_topics(VETERAN_ID).has("report_30"):
 		list.append({"id": "report_30", "text": "Lejutottam a 30. emeletre.",
 			"on_choose": func() -> String: return _report_depth_30()})
 	return list
