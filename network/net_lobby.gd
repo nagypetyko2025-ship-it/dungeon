@@ -36,6 +36,10 @@ var _beacon: PacketPeerUDP
 var _timer := 0.0
 var _taken_codes: Array = []
 var _wanted_code := ""
+## Gazda: új közös játék (a többjátékos mentések törlődnek indításkor) vagy a régi folytatása.
+var fresh_save := false
+## Gazda: a mostani futásban már kihirdetett emeletek (hogy egy lépcső csak egyszer vigyen le).
+var _announced := {}
 ## A SceneTree hálózati kezelője: a létrehozáskor kapja meg, így akkor is használható, ha a csomópont
 ## még nincs a fában (a főmenü építése közben csak késleltetve lehet a gyökérhez adni).
 var _mp: MultiplayerAPI
@@ -151,6 +155,12 @@ func leave() -> void:
 	if _mp.multiplayer_peer != null and not (_mp.multiplayer_peer is OfflineMultiplayerPeer):
 		_mp.multiplayer_peer.close()
 	_mp.multiplayer_peer = OfflineMultiplayerPeer.new()
+	# Vissza a profil saját (egyjátékos) mentésére.
+	if Profiles.multiplayer:
+		Progress.save_game()
+		Profiles.multiplayer = false
+		Progress.load_game(true)
+	GameState.net_seed = 0
 	state = "idle"
 	code = ""
 	players = {}
@@ -294,21 +304,92 @@ func everyone_ready() -> bool:
 	return true
 
 
-## Gazda: indítás (ha mindenki készen áll): mindenki a saját táborába kerül.
+## Gazda: indítás (ha mindenki készen áll): mindenki a saját táborába kerül, a profilja
+## többjátékos mentésével (Profiles.multiplayer). `fresh_save`: a gazda új közös játékot kért,
+## ilyenkor mindenki tiszta többjátékos mentéssel kezd.
 func start() -> void:
 	if is_host() and state == "lobby" and everyone_ready():
 		_beacon = null
-		_start.rpc()
+		_start.rpc(fresh_save)
 
 
 @rpc("authority", "call_local", "reliable")
-func _start() -> void:
+func _start(fresh: bool) -> void:
 	state = "playing"
 	lobby_changed.emit()
-	Progress.load_game(true)
+	Profiles.multiplayer = true
+	if fresh:
+		Progress.reset_game()
+	else:
+		Progress.load_game(true)
 	GameState.reset()
+	GameState.net_seed = 0
+	_announced = {}
 	get_tree().paused = false
 	get_tree().change_scene_to_file(GAME_SCENE)
+
+
+# ---------------------------------------------------------------- közös kazamata
+
+## Valaki lemenne a táborból: a gazda sorsol egy közös magot, és mindenki, aki a táborban van,
+## együtt megy le vele (a már lent lévők maradnak).
+func request_descent(depth: int) -> void:
+	if state != "playing":
+		return
+	if is_host():
+		_host_descent(depth)
+	else:
+		_ask_descent.rpc_id(1, depth)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _ask_descent(depth: int) -> void:
+	if is_host():
+		_host_descent(depth)
+
+
+func _host_descent(depth: int) -> void:
+	_announced = {depth: true}
+	_descend.rpc(depth, randi_range(1, 2147483646))
+
+
+@rpc("authority", "call_local", "reliable")
+func _descend(depth: int, run_seed: int) -> void:
+	var scene := get_tree().current_scene
+	if scene == null or not scene.has_method("enter_dungeon_now"):
+		return
+	GameState.net_seed = run_seed
+	scene.call("enter_dungeon_now", depth)
+
+
+## Valaki a lépcsőhöz ért: a gazda az egész csapatot leviszi a következő emeletre (egyszer).
+func request_floor(depth: int) -> void:
+	if state != "playing":
+		return
+	if is_host():
+		_host_floor(depth)
+	else:
+		_ask_floor.rpc_id(1, depth)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _ask_floor(depth: int) -> void:
+	if is_host():
+		_host_floor(depth)
+
+
+func _host_floor(depth: int) -> void:
+	if _announced.has(depth):
+		return
+	_announced[depth] = true
+	_floor.rpc(depth)
+
+
+@rpc("authority", "call_local", "reliable")
+func _floor(depth: int) -> void:
+	var scene := get_tree().current_scene
+	if scene != null and scene.has_method("go_to_floor") and GameState.depth < depth:
+		scene.call("go_to_floor", depth)
 
 
 # ---------------------------------------------------------------- a táborban

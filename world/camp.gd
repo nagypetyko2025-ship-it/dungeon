@@ -1289,7 +1289,26 @@ func cheat_select_character(id: String) -> bool:
 
 
 func _enter_dungeon(start_depth := 1, cheat := false) -> void:
+	# Közös játékban a gazda indítja a lejutást, és a táborban lévők együtt mennek le
+	# (NetLobby._descend → enter_dungeon_now).
+	if NetLobby.is_playing(get_tree()) and not cheat:
+		if not _leaving:
+			NetLobby.current(get_tree()).request_descent(start_depth)
+		return
+	_enter_dungeon_now(start_depth, cheat)
+
+
+## A lejutás közös játékban (mindenkinél, aki a táborban van; a NetLobby hívja).
+func enter_dungeon_now(start_depth: int) -> void:
+	if not _leaving:
+		_enter_dungeon_now(start_depth, false)
+
+
+func _enter_dungeon_now(start_depth: int, cheat: bool) -> void:
 	_leaving = true
+	# A nyitott ablakok (táska, könyv...) bezárulnak, és a játék sem marad megállítva.
+	get_node("Menus").call("close_current")
+	get_tree().paused = false
 	Audio.play("stairs")
 	var tween := create_tween()
 	tween.tween_property(_fade, "color:a", 1.0, 0.5)

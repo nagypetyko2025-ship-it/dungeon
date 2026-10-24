@@ -1,9 +1,11 @@
 class_name NetAvatars
 extends Node
-## Közös játékban a táborban: a saját helyzetünket (hely, irány, animáció, karakter) gyakran
-## elküldjük a többieknek, és az ő figuráikat (névvel a fejük fölött) megjelenítjük a táborban.
-## Aki egy ideig nem küld semmit (pl. lement a kazamatába), annak a figurája eltűnik.
-## (A tábor adja hozzá, ha fut közös játék: setup(camp).)
+## Közös játékban (a táborban és a kazamatában): a saját helyzetünket (hely, irány, animáció,
+## karakter, és hogy hol vagyunk) gyakran elküldjük a többieknek, és az ő figuráikat (névvel a fejük
+## fölött) megjelenítjük, ha ugyanott vannak (a táborban, vagy a kazamata ugyanazon emeletén).
+## Akkor is küld, ha nálunk nyitva van egy menü (a játék ilyenkor áll), így a figuránk nem tűnik el.
+## Aki egy ideig nem küld semmit, vagy máshol jár, annak a figurája eltűnik.
+## (A tábor és a kazamata adja hozzá, ha fut közös játék: setup(scene).)
 
 signal message(text: String)
 
@@ -19,10 +21,11 @@ var _send_left := 0.0
 var _avatars := {}
 
 
-func setup(camp: Node2D) -> void:
-	_player = camp.get_node("Entities/Player")
-	_entities = camp.get_node("Entities")
-	_lobby = NetLobby.current(camp.get_tree())
+func setup(scene: Node2D) -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	_player = scene.get_node("Entities/Player")
+	_entities = scene.get_node("Entities")
+	_lobby = NetLobby.current(scene.get_tree())
 	_lobby.pose_received.connect(_on_pose)
 	_lobby.player_left.connect(_remove)
 	_lobby.closed.connect(func(reason: String) -> void:
@@ -39,7 +42,7 @@ func _process(delta: float) -> void:
 		_send_left = SEND_INTERVAL
 		var sprite := _player.get_node("Visual/AnimatedSprite2D") as AnimatedSprite2D
 		_lobby.send_pose({"p": _player.global_position, "f": sprite.flip_h, "a": str(sprite.animation),
-			"c": Progress.character})
+			"c": Progress.character, "w": _where()})
 	for id: int in _avatars.keys():
 		var avatar: Dictionary = _avatars[id]
 		avatar["age"] = float(avatar["age"]) + delta
@@ -55,7 +58,17 @@ func _process(delta: float) -> void:
 			node.position = node.position.lerp(target, minf(1.0, delta * FOLLOW))
 
 
+## Hol vagyunk: "camp", vagy a kazamata emelete a közös maggal (csak az azonos helyűek látják egymást).
+func _where() -> String:
+	if _entities.get_parent().has_method("go_to_floor"):
+		return "d%d:%d" % [GameState.depth, GameState.net_seed]
+	return "camp"
+
+
 func _on_pose(id: int, data: Dictionary) -> void:
+	if str(data.get("w", "camp")) != _where():
+		_remove(id)
+		return
 	var character := str(data.get("c", Characters.DEFAULT))
 	if not _avatars.has(id) or _avatars[id]["character"] != character:
 		_remove(id)
@@ -87,7 +100,7 @@ func _create(id: int, character: String, at: Vector2) -> Dictionary:
 	node.add_child(label)
 	label.position = Vector2(-label.get_combined_minimum_size().x / 2.0, -78)
 	if not _avatars.has(id):
-		message.emit("%s megérkezett a táborba." % _lobby.player_name(id))
+		message.emit("%s itt van veled." % _lobby.player_name(id))
 	return {"node": node, "sprite": sprite, "target": at, "age": 0.0, "character": character}
 
 

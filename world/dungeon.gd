@@ -114,6 +114,9 @@ func _ready() -> void:
 	_wall_layer.tile_set = tile_set
 
 	var depth := GameState.depth
+	# Közös játékban mindenki ugyanazt az emeletet generálja (a gazda magjából).
+	if GameState.net_seed != 0 and NetLobby.is_playing(get_tree()):
+		seed(hash([GameState.net_seed, depth]))
 	_big_rooms = depth >= BIG_ROOMS_FROM
 	_huge_rooms = depth >= HUGE_ROOMS_FROM
 	_cell = HUGE_CELL if _huge_rooms else BIG_CELL if _big_rooms else CELL
@@ -236,6 +239,15 @@ func _ready() -> void:
 	add_child(cheats)
 	if not tutorial:
 		GameState.visited_dungeon = true
+	# Közös játékban a csapattársak is itt vannak (ugyanazon az emeleten; lásd NetAvatars).
+	if NetLobby.is_playing(get_tree()):
+		# A szobák tartalma (szörnyek, ládák) már a saját véletlenünkből jön.
+		randomize()
+		var avatars := NetAvatars.new()
+		avatars.name = "NetAvatars"
+		add_child(avatars)
+		avatars.setup(self)
+		avatars.message.connect(_hud.show_message)
 	# A varázsló a futás elején kiválasztja az első varázslatát.
 	if Characters.data(Progress.character).get("spells", false) and GameState.spells.is_empty():
 		add_child(preload("res://ui/spell_picker.gd").new())
@@ -414,8 +426,17 @@ func _go_deeper() -> void:
 	if GameState.tutorial:
 		get_node("TutorialGuide").call("finish")
 		return
+	# Közös játékban a gazda viszi le az egész csapatot (lásd NetLobby.request_floor).
+	if NetLobby.is_playing(get_tree()):
+		NetLobby.current(get_tree()).request_floor(GameState.depth + 1)
+		return
+	go_to_floor(GameState.depth + 1)
+
+
+## Átlépés a megadott emeletre (közös játékban a NetLobby hívja mindenkinél).
+func go_to_floor(target_depth: int) -> void:
 	_player.save_state()
-	GameState.depth += 1
+	GameState.depth = target_depth
 	get_tree().reload_current_scene.call_deferred()
 
 

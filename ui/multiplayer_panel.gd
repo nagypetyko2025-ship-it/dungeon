@@ -138,6 +138,16 @@ func _build_lobby() -> void:
 		mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		line.add_child(mark)
 	if host:
+		# A profil többjátékos mentése: folytatható, vagy indításkor új közös játék kezdődik.
+		var has_save := FileAccess.file_exists("user://save_mp_%d.cfg" % Profiles.current())
+		if not has_save:
+			_lobby.fresh_save = false
+			_text("Új közös játék (a %d. profil többjátékos mentése még üres)." % Profiles.current(), 15)
+		else:
+			var label := "Közös mentés: ÚJ KEZDÉS" if _lobby.fresh_save else "Közös mentés: folytatás"
+			_button(label, func() -> void:
+				_lobby.fresh_save = not _lobby.fresh_save
+				_show("lobby"))
 		var start := _button("Indítás", _lobby.start)
 		start.disabled = not _lobby.everyone_ready()
 		if start.disabled:

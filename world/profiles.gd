@@ -8,6 +8,9 @@ const COUNT := 3
 const SETTINGS_PATH := "user://profile.cfg"
 
 static var _current := 0
+## Közös (többjátékos) játék alatt igaz: ilyenkor minden profilnak külön többjátékos mentése van
+## (user://save_mp_<profil>.cfg), amit a következő közös játék újra betölt.
+static var multiplayer := false
 
 
 ## Az aktív profil száma (1..COUNT).
@@ -22,6 +25,8 @@ static func current() -> int:
 ## A profil tábori mentése (0 = az aktív profilé).
 static func save_path(profile := 0) -> String:
 	var number := current() if profile == 0 else profile
+	if multiplayer:
+		return "user://save_mp_%d.cfg" % number
 	return "user://save.cfg" if number == 1 else "user://save_%d.cfg" % number
 
 
