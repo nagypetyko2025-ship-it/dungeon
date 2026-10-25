@@ -1,10 +1,10 @@
 class_name NetSession
 ## A többjátékos mód közös beállításai és segédei (a váró maga: NetLobby).
 ##
-## Felállás: gazda–vendég (ENet). A gazda készít egy várót, kap egy 6 jegyű meghívókódot, és a
-## helyi hálózaton (LAN) másodpercenként bejelenti (UDP üzenetszórás). A csatlakozó a kódot
-## beírva figyeli ezeket a bejelentéseket, és amelyik váró kódja egyezik, ahhoz csatlakozik.
-## Kód alapján csak ugyanazon a hálózaton lehet csatlakozni (internethez szerver kellene).
+## Felállás: gazda–vendég (ENet). A gazda készít egy várót (6 jegyű kód azonosítja), és a helyi
+## hálózaton (LAN) másodpercenként bejelenti a kódját és a nevét (UDP üzenetszórás). A csatlakozó
+## ezeket figyelve listázza a várókat, és a kiválasztotthoz csatlakozik (kódot nem kell beírni).
+## Így csak ugyanazon a hálózaton lehet csatlakozni (internethez szerver kellene).
 ##
 ## A tervezett lépések:
 ##   1. Váró: kód, játékosok (legfeljebb 4), "készen állok", indítás – kész (NetLobby).

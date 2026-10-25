@@ -66,6 +66,16 @@ func _line(parent: Node2D, from: Vector2, to: Vector2, width: float, color: Colo
 	parent.add_child(line)
 
 
+## Közös játékban: aki lelépett a lépcsőről (mozgásgombbal), de rajta állva megállt, az újra vár.
+func _physics_process(_delta: float) -> void:
+	if not _used or _locked:
+		return
+	for body in get_overlapping_bodies():
+		if body.has_method("wants_to_wait_again") and body.call("wants_to_wait_again"):
+			body.set("net_stepped_off", false)
+			used.emit()
+
+
 func _on_body_entered(body: Node2D) -> void:
 	if _used or _locked or not body.is_in_group("player"):
 		return

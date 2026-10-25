@@ -3,16 +3,18 @@ extends PanelContainer
 ## Többjátékos mód a főmenüben (lásd NetLobby):
 ##   választás  – "Váró készítése" / "Csatlakozás váróhoz"
 ##   név        – ha a beállításokban nincs fix név, előbb megkérdezi
-##   kód        – csatlakozáskor a 6 jegyű meghívókód
+##   lista      – csatlakozáskor a helyi hálózaton talált várók (kódot nem kell beírni)
 ##   váró       – a kód, a játékosok (legfeljebb 4, pipa = készen áll), a gazdánál "Indítás",
 ##                a többieknél "Készen állok"
 ## Ha az ablak bezárul (Vissza / Esc), a váróból is kilép.
 
 signal closed
 
+const MAX_LISTED_GAMES := 5
+
 var _lobby: NetLobby
 var _box: VBoxContainer
-## "choose" | "name" | "code" | "wait" | "lobby"
+## "choose" | "name" | "browse" | "wait" | "lobby"
 var _step := "choose"
 ## Mit csinál a név után: "create" | "join"
 var _intent := ""
@@ -28,9 +30,16 @@ func _ready() -> void:
 	add_child(_box)
 	_lobby = NetLobby.get_or_create(get_tree())
 	_lobby.lobby_changed.connect(_on_lobby_changed)
+	# Ha nem sikerült csatlakozni (vagy a gazda bezárta a várót), vissza a listához.
 	_lobby.failed.connect(func(reason: String) -> void:
 		_error = reason
-		_show("code" if _intent == "join" else "choose"))
+		if visible and _intent == "join":
+			_browse()
+		else:
+			_show("choose"))
+	_lobby.games_changed.connect(func() -> void:
+		if visible and _step == "browse":
+			_show("browse"))
 	visibility_changed.connect(func() -> void:
 		if visible:
 			_error = ""
@@ -50,7 +59,7 @@ func _on_lobby_changed() -> void:
 		return
 	if _lobby.state in ["lobby"]:
 		_show("lobby")
-	elif _lobby.state in ["preparing", "searching", "connecting"]:
+	elif _lobby.state in ["preparing", "connecting"]:
 		_show("wait")
 
 
@@ -67,7 +76,7 @@ func _show(step: String) -> void:
 	match step:
 		"choose":
 			_text("Legfeljebb %d kalandor együtt. Készíts egy várót, vagy csatlakozz egy barátod " % NetSession.MAX_PLAYERS \
-				+ "várójához a meghívókódjával (ugyanazon a hálózaton).")
+				+ "várójához (ugyanazon a hálózaton: a játékuk magától megjelenik a listán).")
 			_add_error()
 			_button("Váró készítése", func() -> void: _begin("create"))
 			_button("Csatlakozás váróhoz", func() -> void: _begin("join"))
@@ -79,16 +88,10 @@ func _show(step: String) -> void:
 			_text("(A Beállításokban megadhatsz egy fix nevet, akkor nem kérdezem.)", 15)
 			_button("Tovább", _submit_name)
 			_button("Vissza", func() -> void: _show("choose"))
-		"code":
-			_text("Írd be a váró 6 jegyű meghívókódját:")
-			_input = _line_edit("123456", NetSession.CODE_DIGITS)
-			_input.text_submitted.connect(func(_submitted: String) -> void: _submit_code())
-			_add_error()
-			_button("Csatlakozás", _submit_code)
-			_button("Vissza", func() -> void: _show("choose"))
+		"browse":
+			_build_browse()
 		"wait":
-			var waiting := {"preparing": "Váró készítése...", "searching": "A váró keresése a hálózaton...",
-				"connecting": "Csatlakozás..."}
+			var waiting := {"preparing": "Váró készítése...", "connecting": "Csatlakozás..."}
 			_text(waiting.get(_lobby.state, "..."), 22)
 			_button("Mégse", func() -> void:
 				_lobby.leave()
@@ -96,8 +99,33 @@ func _show(step: String) -> void:
 		"lobby":
 			_build_lobby()
 	reset_size()
-	if _input != null and is_instance_valid(_input) and step in ["name", "code"]:
+	if _input != null and is_instance_valid(_input) and step == "name":
 		_input.grab_focus.call_deferred()
+
+
+## A helyi hálózaton talált várók (a gazda neve, létszám); kattintásra csatlakozik.
+func _build_browse() -> void:
+	var codes: Array = _lobby.games.keys()
+	codes.sort_custom(func(a: String, b: String) -> bool:
+		return str(_lobby.games[a]["name"]).naturalnocasecmp_to(str(_lobby.games[b]["name"])) < 0)
+	if codes.is_empty():
+		_text("Várók keresése a hálózaton...", 22)
+		_text("Ha a barátod már készített várót, pár másodpercen belül itt lesz. Ugyanazon a hálózaton (pl. ugyanazon a wifin) legyetek.", 15)
+	else:
+		_text("Válaszd ki, kinek a várójához csatlakozol:")
+	_add_error()
+	# Ennél több ritkán van egy hálózaton; így a panel nem lóg ki a képből.
+	for game_code: String in codes.slice(0, MAX_LISTED_GAMES):
+		var game: Dictionary = _lobby.games[game_code]
+		var full := int(game["players"]) >= int(game["max"])
+		var label := "%s várója   ·   %d / %d" % [game["name"], game["players"], game["max"]]
+		var button := _button(label + ("  (megtelt)" if full else ""), func() -> void:
+			_error = ""
+			_lobby.join_game(game_code))
+		button.disabled = full
+	_button("Vissza", func() -> void:
+		_lobby.leave()
+		_show("choose"))
 
 
 func _build_lobby() -> void:
@@ -106,7 +134,7 @@ func _build_lobby() -> void:
 	code_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	code_row.add_theme_constant_override("separation", 14)
 	_box.add_child(code_row)
-	code_row.add_child(UiStyle.label("Meghívókód:", 22, MenuStyle.PARCHMENT))
+	code_row.add_child(UiStyle.label("Váró kódja:", 22, MenuStyle.PARCHMENT))
 	var code := MenuStyle.title_label(_lobby.code if not _lobby.code.is_empty() else "······", 44, MenuStyle.GOLD)
 	code_row.add_child(code)
 	if not host:
@@ -197,18 +225,16 @@ func _after_name() -> void:
 		_lobby.create(_name)
 		_show("wait")
 	else:
-		_show("code")
+		_browse()
 
 
-func _submit_code() -> void:
-	var value := _input.text.strip_edges()
-	if not NetSession.is_valid_code(value):
-		_error = "A kód 6 számjegyből áll."
-		_show("code")
-		return
-	_error = ""
-	_lobby.join(_name, value)
-	_show("wait")
+## A várók keresése; ha nem lehet figyelni a hálózatot, vissza a választáshoz a hibával.
+func _browse() -> void:
+	if _lobby.browse(_name):
+		_show("browse")
+	else:
+		_error = "Nem sikerült figyelni a hálózatot (fut már egy csatlakozó ezen a gépen?)."
+		_show("choose")
 
 
 # ---------------------------------------------------------------- segédek

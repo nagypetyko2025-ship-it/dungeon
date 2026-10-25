@@ -4,8 +4,9 @@ extends Node
 ## jelenetváltáskor is megmaradjon, és az RPC-k minden gépen ugyanazon az úton érjék el).
 ##
 ## Gazda: create(név) – először 1 mp-ig figyeli a hálózaton hirdetett várókat (hogy a kódja ne
-## egyezzen egyikkel sem), aztán elindítja a szervert, és másodpercenként bejelenti a kódját.
-## Vendég: join(név, kód) – figyeli a bejelentéseket, és a megfelelő kódú várohoz csatlakozik.
+## egyezzen egyikkel sem), aztán elindítja a szervert, és másodpercenként bejelenti a kódját és a nevét.
+## Vendég: browse(név) – figyeli a bejelentéseket, a talált várók a `games`-ben (games_changed);
+## join_game(kód) – csatlakozás a kiválasztotthoz. Kódot nem kell beírni.
 ## A vendégek "készen állnak"; a gazda indít (start), ekkor mindenki a saját táborába kerül.
 ## Játék közben a táborban a játékosok a helyzetüket küldik egymásnak (send_pose, lásd NetAvatars).
 
@@ -19,14 +20,18 @@ signal effect_received(id: int, kind: String, args: Array)
 ## Egy társ (`by_id`) felélesztett minket.
 signal revive_requested(by_id: int)
 signal player_left(id: int)
+## Változott a hálózaton talált várók listája (games).
+signal games_changed
 
 const BEACON_TAG := "DUNGEON1"
 const SCAN_FOR_CODES := 1.0
 const JOIN_TIMEOUT := 6.0
+## Ennyi ideig marad a listán egy váró az utolsó bejelentése után (a gazda kilépett / elindította).
+const GAME_FORGET_MS := 3500
 const BEACON_INTERVAL := 1.0
 const GAME_SCENE := "res://world/camp.tscn"
 
-## "idle" | "preparing" (a gazda kódot keres) | "searching" (a vendég a várót keresi) |
+## "idle" | "preparing" (a gazda kódot keres) | "browsing" (a vendég a várókat keresi) |
 ## "connecting" | "lobby" | "playing"
 var state := "idle"
 var code := ""
@@ -38,7 +43,8 @@ var _listener: PacketPeerUDP
 var _beacon: PacketPeerUDP
 var _timer := 0.0
 var _taken_codes: Array = []
-var _wanted_code := ""
+## A hálózaton talált várók: kód -> {"name", "address", "port", "players", "max", "seen" (ms)}.
+var games := {}
 ## Gazda: új közös játék (a többjátékos mentések törlődnek indításkor) vagy a régi folytatása.
 var fresh_save := false
 ## Gazda: a mostani futásban már kihirdetett emeletek (hogy egy lépcső csak egyszer vigyen le).
@@ -125,18 +131,29 @@ func _open_lobby() -> void:
 	lobby_changed.emit()
 
 
-func join(player_name: String, wanted_code: String) -> void:
+## A hálózaton hirdetett várók keresése (amíg a csatlakozó ablak nyitva van). Hamis, ha nem lehet
+## figyelni a hálózatot (pl. egy másik csatlakozó már figyel ezen a gépen).
+func browse(player_name: String) -> bool:
 	leave()
 	my_name = player_name
-	_wanted_code = wanted_code
 	_listener = PacketPeerUDP.new()
 	if _listener.bind(NetSession.BEACON_PORT) != OK:
 		_listener = null
-		_fail("Nem sikerült figyelni a hálózatot (fut már egy csatlakozó ezen a gépen?).")
-		return
-	state = "searching"
-	_timer = JOIN_TIMEOUT
+		return false
+	state = "browsing"
 	lobby_changed.emit()
+	return true
+
+
+## Csatlakozás a listáról kiválasztott váróhoz.
+func join_game(game_code: String) -> void:
+	if state != "browsing" or not games.has(game_code):
+		return
+	var game: Dictionary = games[game_code]
+	if int(game["players"]) >= int(game["max"]):
+		_fail("A váró megtelt (legfeljebb %d játékos)." % NetSession.MAX_PLAYERS)
+		return
+	_connect_to(str(game["address"]), int(game["port"]))
 
 
 func _connect_to(address: String, port: int) -> void:
@@ -167,6 +184,7 @@ func leave() -> void:
 	state = "idle"
 	code = ""
 	players = {}
+	games = {}
 	_pending.clear()
 	_gold_pending.clear()
 	_gold_acked.clear()
@@ -201,11 +219,9 @@ func _process(delta: float) -> void:
 			_timer -= delta
 			if _timer <= 0.0:
 				_open_lobby()
-		"searching":
+		"browsing":
 			_read_beacons()
-			_timer -= delta
-			if state == "searching" and _timer <= 0.0:
-				_fail("Nem található váró ezzel a kóddal ezen a hálózaton.")
+			_forget_old_games()
 		"connecting":
 			_timer -= delta
 			if _timer <= 0.0:
@@ -222,7 +238,8 @@ func _process(delta: float) -> void:
 func _announce() -> void:
 	if _beacon == null:
 		return
-	var message := "%s|%s|%d|%d|%d" % [BEACON_TAG, code, NetSession.GAME_PORT, players.size(), NetSession.MAX_PLAYERS]
+	# A név a végén: ha "|" van benne, az olvasó a maradékot összefűzi.
+	var message := "%s|%s|%d|%d|%d|%s" % [BEACON_TAG, code, NetSession.GAME_PORT, players.size(), NetSession.MAX_PLAYERS, my_name]
 	for address in _beacon_targets():
 		_beacon.set_dest_address(address, NetSession.BEACON_PORT)
 		_beacon.put_packet(message.to_utf8_buffer())
@@ -255,12 +272,31 @@ func _read_beacons() -> void:
 		if state == "preparing":
 			if not _taken_codes.has(parts[1]):
 				_taken_codes.append(parts[1])
-		elif state == "searching" and parts[1] == _wanted_code:
-			if int(parts[3]) >= int(parts[4]):
-				_fail("A váró megtelt (legfeljebb %d játékos)." % NetSession.MAX_PLAYERS)
-			else:
-				_connect_to(address, int(parts[2]))
-			return
+		elif state == "browsing":
+			_note_game(parts, address)
+
+
+## Egy bejelentés a listára; jelez, ha új váró, vagy változott a létszáma / neve. (Ugyanaz a váró
+## több címről is befuthat, pl. 127.0.0.1 és a helyi IP: a kód azonosítja.)
+func _note_game(parts: PackedStringArray, address: String) -> void:
+	var game_name := "|".join(parts.slice(5)) if parts.size() > 5 else "?"
+	var old: Dictionary = games.get(parts[1], {})
+	var changed := old.is_empty() or int(old["players"]) != int(parts[3]) or str(old["name"]) != game_name
+	games[parts[1]] = {"name": game_name, "address": old.get("address", address), "port": int(parts[2]),
+		"players": int(parts[3]), "max": int(parts[4]), "seen": Time.get_ticks_msec()}
+	if changed:
+		games_changed.emit()
+
+
+func _forget_old_games() -> void:
+	var now := Time.get_ticks_msec()
+	var gone := false
+	for game_code: String in games.keys():
+		if now - int(games[game_code]["seen"]) > GAME_FORGET_MS:
+			games.erase(game_code)
+			gone = true
+	if gone:
+		games_changed.emit()
 
 
 # ---------------------------------------------------------------- játékosok

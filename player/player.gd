@@ -100,6 +100,10 @@ var net_death_at := Vector2.ZERO
 const REVIVE_HEALTH := 0.5
 const REVIVE_INVINCIBILITY := 2.0
 var net_waiting := false
+## Közös játékban lelépett a lépcsőről (mozgásgombbal); ha rajta állva megáll, újra vár (lásd Stairs).
+var net_stepped_off := false
+## A lépcsőre lépéskor nyomva tartott mozgásgomb: ezzel érkezett, ettől nem lép le (csak egy új lenyomástól).
+var _wait_held_move := false
 
 @onready var _visual: Node2D = $Visual
 @onready var _sprite: AnimatedSprite2D = $Visual/AnimatedSprite2D
@@ -1094,9 +1098,13 @@ func revive_from_net() -> void:
 
 
 ## Lépcső közös játékban: itt állsz, amíg a társaid is ide nem érnek (nem sebezhető közben).
-## Ha elindulsz (mozgásgomb), lelépsz a lépcsőről, és már nem vársz (visszalépve újra).
+## Ha elindulsz (mozgásgomb), lelépsz a lépcsőről, és már nem vársz (visszalépve, vagy rajta megállva újra).
 func start_waiting() -> void:
 	net_waiting = true
+	net_stepped_off = false
+	# Mindenki mozgásgombot nyomva lép a lépcsőre: régen ettől a következő képkockában le is lépett,
+	# így senki sem várt, és a csapat sosem ment tovább.
+	_wait_held_move = _move_input() != Vector2.ZERO
 	velocity = Vector2.ZERO
 	set_physics_process(false)
 	_hurtbox.set_deferred("monitoring", false)
@@ -1107,10 +1115,24 @@ func stop_waiting() -> void:
 	if not net_waiting or net_dead:
 		return
 	net_waiting = false
+	net_stepped_off = true
 	set_physics_process(true)
 	_hurtbox.set_deferred("monitoring", true)
 
 
+## Lelépett a lépcsőről, de rajta állva megállt: újra várhat (a Stairs kérdezi).
+func wants_to_wait_again() -> bool:
+	return net_stepped_off and not net_waiting and not net_dead and _move_input() == Vector2.ZERO
+
+
+func _move_input() -> Vector2:
+	return Input.get_vector("move_left", "move_right", "move_up", "move_down")
+
+
 func _process(_delta: float) -> void:
-	if net_waiting and Input.get_vector("move_left", "move_right", "move_up", "move_down") != Vector2.ZERO:
+	if not net_waiting:
+		return
+	if _move_input() == Vector2.ZERO:
+		_wait_held_move = false
+	elif not _wait_held_move:
 		stop_waiting()
