@@ -19,7 +19,8 @@ class_name Characters
 ## dodge / crit_chance   a kikerülés / kritikus esély alapértéke (%, alapból 10 / 2)
 ## dagger_damage tőrrel ennyivel nagyobbat sebez (pl. 0.25 = +25%)
 ## gold_bonus    ennyivel több aranyat talál (pl. 0.2 = +20%)
-## summon        Vendel: Ctrl-re csontvázakat idéz (lásd Player._summon, SkeletonMinion)
+## summon        Vendel: bal klikkre csontvázakat idéz, 5 szintenként az idézést fejleszti (lásd Player._summon,
+##               SkeletonMinion, Necromancy)
 ## max_health    az élet alapértéke (alapból 10)
 ## spells        varázsló: varázspálcával a választott varázslatokat szórja (lásd Spells)
 ## shadow_step   van-e Árnyéklépése (Ctrl: a kurzorhoz legközelebbi szörny mögé, biztos kritikus)
@@ -114,7 +115,8 @@ const ALL := {
 			"Csak 9 élettel indul (csontváz), 80% találati esély, 20% kikerülés",
 			"14%-kal lassabban mozog",
 			"Ütési sebesség kártya szintlépéskor: 15%-kal többet ad neki",
-			"Csontváz-idézés [Ctrl]: 3 csontváz kel ki a földből, és érte harcol (legfeljebb 6 egyszerre; 3 mp, az ütési sebességgel rövidül). Olyan gyorsak, mint ő, és átjutnak a harc közbeni zárakon",
+			"Csontváz-idézés [bal klikk]: 3 csontváz kel ki a földből, és érte harcol (legfeljebb 6 egyszerre; 3 mp, az ütési sebességgel rövidül). Olyan gyorsak, mint ő, és átjutnak a harc közbeni zárakon",
+			"Minden 5. szintlépéskor a statok helyett az idézését fejleszti: +1 csontváz (legfeljebb 12), +2 mp élet (legfeljebb 1 perc), +1 sebzés, vagy jobb klikkre 3 íjász csontváz",
 		],
 	},
 	# Bence, a volt tolvaj (Benedek zászlóvivő fia): a levél-küldetés után költözik a kocsmába.

@@ -12,6 +12,7 @@ static func _state() -> Dictionary:
 		"saved_level": GameState.saved_level, "saved_xp": GameState.saved_xp, "saved_gold": GameState.saved_gold,
 		"saved_inventory": GameState.saved_inventory, "kills": GameState.kills,
 		"chests_opened": GameState.chests_opened, "spells": GameState.spells, "spell_levels": GameState.spell_levels,
+		"necromancy": GameState.necromancy,
 		"run_time": GameState.run_time, "lift_used_floor": GameState.lift_used_floor,
 		"break_gold_left": GameState.break_gold_left, "break_floor": GameState.break_floor, "exits": GameState.exits,
 		"merchant_stock": GameState.merchant_stock, "rerolls": GameState.rerolls, "potions": GameState.potions,
@@ -30,6 +31,7 @@ static func _apply(state: Dictionary) -> void:
 	GameState.chests_opened = int(state.get("chests_opened", 0))
 	GameState.spells = state.get("spells", [])
 	GameState.spell_levels = state.get("spell_levels", {})
+	GameState.necromancy = state.get("necromancy", {})
 	GameState.run_time = float(state.get("run_time", 0.0))
 	GameState.lift_used_floor = int(state.get("lift_used_floor", 0))
 	GameState.break_gold_left = int(state.get("break_gold_left", 0))

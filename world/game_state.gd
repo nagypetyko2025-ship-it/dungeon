@@ -22,6 +22,8 @@ static var chests_opened := 0
 ## A varázsló varázslatai ebben a futásban (az első az elsődleges, a második a jobb egérgomb), és a szintjeik.
 static var spells: Array = []
 static var spell_levels := {}
+## Vendel idézésének fejlesztései ebben a futásban (lásd Necromancy): fejlesztés -> szint.
+static var necromancy := {}
 ## Játékidő másodpercben (szünet alatt nem nő).
 static var run_time := 0.0
 ## A futás már bekerült az eredménytáblába (halálkor vagy feladáskor egyszer).
@@ -95,6 +97,7 @@ static func reset() -> void:
 	chests_opened = 0
 	spells = []
 	spell_levels = {}
+	necromancy = {}
 	run_time = 0.0
 	run_recorded = false
 	lift_used_floor = 0

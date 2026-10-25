@@ -95,10 +95,12 @@ func _page_button(text: String, step: int) -> Button:
 	return button
 
 
-## Az oldalak: a varázslónál elöl a "Varázslatok" oldal (így neki 4 oldal van).
+## Az oldalak: a varázslónál elöl a "Varázslatok", Vendelnél az "Idézés" oldal (így nekik 4 oldal van).
 func _pages() -> Array:
 	if Characters.data(Progress.character).get("spells", false):
 		return [["Varázslatok", []]] + PAGES
+	if Characters.data(Progress.character).get("summon", false):
+		return [["Idézés", []]] + PAGES
 	return PAGES
 
 
@@ -140,6 +142,8 @@ func _refresh() -> void:
 	_page_label.text = "%s  (%d / %d)" % [pages[_page][0], _page + 1, pages.size()]
 	if pages[_page][0] == "Varázslatok":
 		_add_spells()
+	elif pages[_page][0] == "Idézés":
+		_add_necromancy()
 	for stat: String in pages[_page][1]:
 		# Az elemi sebzés csak a varázslónál látszik.
 		if stat == "elemental_damage" and not Characters.data(Progress.character).get("spells", false):
@@ -231,6 +235,59 @@ func _add_spells() -> void:
 			label.custom_minimum_size.x = 300
 			detail.add_child(label)
 		_left.add_child(detail)
+
+
+## Vendel idézése: a csontvázak (bal klikk), az íjász csontvázak (jobb klikk) és a fejlesztések
+## (5 szintenként, lásd Necromancy): mennyi lehet egyszerre, meddig élnek, mennyit ütnek.
+func _add_necromancy() -> void:
+	var damage: int = _player.call("minion_damage")
+	var next_level := (int(_player.get_node("Experience").get("level")) / Necromancy.LEVEL_EVERY + 1) * Necromancy.LEVEL_EVERY
+	_necromancy_row(SpriteSheet.region(Necromancy.SKELETON_REGION), "Csontváz-idézés", "bal egérgomb", true,
+		"%d sebzés" % damage, [
+			"%d csontváz kel ki egyszerre, legfeljebb %d lehet (a határ %d)" % [PLAYER_SCRIPT.SUMMON_COUNT,
+				Necromancy.max_minions(), Necromancy.MAX_MAX],
+			"%d mp-ig élnek (legfeljebb %d mp)" % [roundi(Necromancy.lifetime()), roundi(Necromancy.MAX_LIFE)],
+			"%.1f mp / idézés (az ütési sebességgel rövidül)" % float(_player.call("summon_cooldown"))])
+	var archers := Necromancy.has_archers()
+	_necromancy_row(load(Necromancy.ARCHER_ICON), "Íjász csontvázak", "jobb egérgomb" if archers else "még nem tanultad",
+		archers, "%d sebzés" % damage, [
+			"%d íjász csontváz kel ki, és távolról lő a szörnyekre" % Necromancy.ARCHER_COUNT,
+			"%.1f mp / idézés" % float(_player.call("archer_cooldown")) if archers \
+				else "az 5. szintenkénti választásnál tanulhatod meg"])
+	_necromancy_row(load(Necromancy.DAMAGE_ICON), "Fejlesztések", "5 szintenként", true,
+		"+%d sebzés" % Necromancy.bonus_damage(), [
+			"csontvázhad: +%d (egyszerre %d)" % [Necromancy.max_minions() - Necromancy.BASE_MAX, Necromancy.max_minions()],
+			"csontkötés: +%d mp (%d mp-ig élnek)" % [roundi(Necromancy.lifetime() - Necromancy.BASE_LIFE),
+				roundi(Necromancy.lifetime())],
+			"éles csontok: +%d sebzés csontvázanként" % Necromancy.bonus_damage(),
+			"következő választás szintje: %d." % next_level])
+
+
+func _necromancy_row(texture: Texture2D, name_text: String, where: String, active: bool, value: String,
+		lines: Array) -> void:
+	var icon := TextureRect.new()
+	icon.texture = texture
+	icon.custom_minimum_size = ICON_SIZE
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.modulate = Color.WHITE if active else Color(1, 1, 1, 0.45)
+	_left.add_child(icon)
+	var title := VBoxContainer.new()
+	title.add_theme_constant_override("separation", -2)
+	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	title.add_child(_cell(name_text, UiStyle.INK if active else UiStyle.INK_LIGHT, 17))
+	title.add_child(_cell(where, SPECIAL_INK if active else UiStyle.INK_LIGHT, 14))
+	_left.add_child(title)
+	_left.add_child(_cell(value, UiStyle.INK if active else UiStyle.INK_LIGHT, 18))
+	var detail := VBoxContainer.new()
+	detail.add_theme_constant_override("separation", -2)
+	detail.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	for line: String in lines:
+		var label := _cell(line, UiStyle.INK_LIGHT, 14)
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.custom_minimum_size.x = 300
+		detail.add_child(label)
+	_left.add_child(detail)
 
 
 ## Egy stat sora a megfelelő felirattal, értékkel és magyarázattal.

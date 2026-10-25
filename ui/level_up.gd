@@ -162,6 +162,10 @@ func _roll_options() -> Array[Dictionary]:
 		# Ha már minden varázslat a legmagasabb szinten van: a szokásos fejlesztések.
 		if not spell_options.is_empty():
 			return spell_options
+	# Vendel (csontváz sírásó) minden 5. szinten az idézését fejleszti (lásd Necromancy).
+	if Characters.data(Progress.character).get("summon", false) and not _level_queue.is_empty() \
+			and _level_queue[0] % Necromancy.LEVEL_EVERY == 0:
+		return Necromancy.level_options()
 	return Upgrades.roll(_stats, CARD_COUNT, _has_bow())
 
 
@@ -191,6 +195,8 @@ func _choose(index: int) -> void:
 	Audio.play("ui_click")
 	if _options[index].has("spell"):
 		Spells.choose(_options[index]["spell"])
+	elif _options[index].has("necromancy"):
+		Necromancy.choose(_options[index]["necromancy"])
 	else:
 		Upgrades.apply(_stats, _options[index])
 	_level_queue.pop_front()
@@ -218,6 +224,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_1: _choose(0)
 		KEY_2: _choose(1)
 		KEY_3: _choose(2)
+		KEY_4: _choose(3)
 		KEY_R: _reroll()
 	get_viewport().set_input_as_handled()
 
@@ -247,8 +254,8 @@ func _make_card(index: int, upgrade: Dictionary) -> Button:
 	icon.custom_minimum_size = Vector2(72, 72)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(icon)
-	# A varázslat-kártyák szövege hosszabb: kisebb ikon és betű, hogy beférjen a kártyába.
-	var spell := upgrade.has("spell")
+	# A varázslat- és idézés-kártyák szövege hosszabb: kisebb ikon és betű, hogy beférjen a kártyába.
+	var spell := upgrade.has("spell") or upgrade.has("necromancy")
 	if spell:
 		icon.custom_minimum_size = Vector2(52, 52)
 		box.add_theme_constant_override("separation", 6)
