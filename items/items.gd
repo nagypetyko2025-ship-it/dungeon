@@ -24,8 +24,8 @@ const RARITIES := {
 const RARITY_ORDER: Array[String] = ["common", "rare", "epic", "legendary", "mythic"]
 ## Az átlagos tárgyak súlya mélyen sem esik ennyiszeres alá.
 const MIN_RARITY_FACTOR := 0.12
-## Fegyverdobás a harcmód szerint: a karaktered által használható fajta (közelharci / távolsági)
-## ennyiszer gyakoribb, a másik ennyiszer ritkább (lásd _drop_weight).
+## Bolti fegyverek a harcmód szerint: a karaktered által használható fajta (közelharci / távolsági)
+## ennyiszer gyakoribb, a másik ennyiszer ritkább (lásd _style_weight). A szörnyek és a ládák nem így dobnak.
 const STYLE_MATCH := 2.0
 const STYLE_MISMATCH := 0.25
 ## A boltos a vételár ennyied részéért veszi meg a tárgyakat.
@@ -650,10 +650,11 @@ static func create(id: String, rarity := "") -> Dictionary:
 
 
 ## Véletlen tárgy a ritkaságok súlyozásával (a mítikus a legritkább); `depth`: az emelet, mélyebben
-## több a ritkább tárgy (rarity_weight). A fegyverek közül a karakter harcmódjához illők gyakoribbak.
+## több a ritkább tárgy (rarity_weight). `style` ("melee" / "ranged", lásd weapon_style): ilyenkor a
+## fegyverek közül az ehhez illők gyakoribbak (a boltban); üresen minden tárgy egyformán eshet.
 ## `max_rarity`: ennél ritkább nem lehet (pl. a ládákban legfeljebb "rare");
 ## `min_rarity`: ennél gyakoribb nem lehet (pl. a főellenség legalább "epic"-et dob).
-static func random_item(max_rarity := "mythic", min_rarity := "common", depth := 1) -> Dictionary:
+static func random_item(max_rarity := "mythic", min_rarity := "common", depth := 1, style := "") -> Dictionary:
 	var allowed := RARITY_ORDER.slice(RARITY_ORDER.find(min_rarity), RARITY_ORDER.find(max_rarity) + 1)
 	var total := 0.0
 	for rarity in allowed:
@@ -668,11 +669,10 @@ static func random_item(max_rarity := "mythic", min_rarity := "common", depth :=
 	# Csak azok a tárgyak, amelyeknek ez a ritkasága elérhető (a sajátjuk vagy a mítikus).
 	var ids: Array = DEFINITIONS.keys().filter(func(id: String) -> bool:
 		return chosen in available_rarities(id) and DEFINITIONS[id].get("shop", true))
-	var style := _weapon_style(_drop_character())
 	var weights: Array[float] = []
 	var weight_total := 0.0
 	for id: String in ids:
-		weights.append(_drop_weight(id, style))
+		weights.append(_style_weight(id, style))
 		weight_total += weights[-1]
 	var pick := randf() * weight_total
 	for i in ids.size():
@@ -690,26 +690,15 @@ static func rarity_weight(rarity: String, depth: int) -> float:
 	return float(data["weight"]) * maxf(factor, MIN_RARITY_FACTOR)
 
 
-## Kinek a harcmódja számít a dobásnál: egyjátékosban a sajátunk; közös játékban (a gazda dob
-## mindenkinek) dobásonként egy véletlen játékosé.
-static func _drop_character() -> String:
-	var lobby := NetLobby.current(null)
-	if lobby != null and lobby.state == "playing" and not lobby.players.is_empty():
-		var id: int = lobby.players.keys().pick_random()
-		if id != lobby.my_id():
-			return str(lobby.players[id].get("character", Progress.character))
-	return Progress.character
-
-
-## "melee" / "ranged", vagy "" ha a karakternek saját, kötött fegyvere van (varázsló, Vendel).
-static func _weapon_style(character: String) -> String:
+## A karakter harcmódja: "melee" / "ranged", vagy "" ha saját, kötött fegyvere van (varázsló, Vendel).
+static func weapon_style(character: String) -> String:
 	var kind := str(Characters.data(character).get("weapons", "melee"))
 	return kind if kind in ["melee", "ranged"] else ""
 
 
-## A tárgy súlya a dobásnál: a harcmódhoz illő fegyver STYLE_MATCH-szor, a nem illő STYLE_MISMATCH-szor
+## A tárgy súlya a választásnál: a harcmódhoz illő fegyver STYLE_MATCH-szor, a nem illő STYLE_MISMATCH-szor
 ## olyan gyakori, mint egy nem fegyver tárgy.
-static func _drop_weight(id: String, style: String) -> float:
+static func _style_weight(id: String, style: String) -> float:
 	var definition: Dictionary = DEFINITIONS[id]
 	if style.is_empty() or definition["slot"] != "weapon":
 		return 1.0
@@ -718,9 +707,10 @@ static func _drop_weight(id: String, style: String) -> float:
 
 
 ## Bolti tárgy az adott emelethez: minél mélyebben vagy, annál erősebb (lásd for_depth), és annál
-## gyakrabban ritkább.
+## gyakrabban ritkább. A fegyverek közül a karaktered harcmódjához illők jönnek többször (a bolt áruja
+## közös játékban is mindenkinek a saját).
 static func random_shop_item(depth: int) -> Dictionary:
-	return for_depth(random_item("mythic", "common", depth), depth)
+	return for_depth(random_item("mythic", "common", depth, weapon_style(Progress.character)), depth)
 
 
 ## A mélyebb boltok jobb árut tartanak: emeletenként a pozitív statok +STAT_PER_FLOOR-ral, a fegyver

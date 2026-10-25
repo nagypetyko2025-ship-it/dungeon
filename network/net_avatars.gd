@@ -112,13 +112,10 @@ func _where() -> String:
 
 func _on_pose(id: int, data: Dictionary) -> void:
 	_last_where[id] = str(data.get("w", "camp"))
-	var character := str(data.get("c", Characters.DEFAULT))
-	# (A táborban karaktert lehet váltani: a dobások a társ mostani harcmódjához igazodnak, lásd Items.)
-	if _lobby.players.has(id):
-		_lobby.players[id]["character"] = character
 	if str(data.get("w", "camp")) != _where():
 		_remove(id)
 		return
+	var character := str(data.get("c", Characters.DEFAULT))
 	if not _avatars.has(id) or _avatars[id]["character"] != character:
 		_remove(id)
 		_avatars[id] = _create(id, character, data.get("p", Vector2.ZERO))
