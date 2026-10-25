@@ -128,8 +128,9 @@ var _weapon_type := "sword"
 var _step_distance := 0.0
 var _war_cry_left := 0.0
 var _summon_left := 0.0
-## Vendel íjász csontvázainak (jobb egérgomb) hátralévő cooldownja.
+## Vendel íjász csontvázainak (jobb egérgomb) és óriás csontvázának (Ctrl) hátralévő cooldownja.
 var _archer_left := 0.0
+var _giant_left := 0.0
 var _shadow_left := 0.0
 ## A varázsló második varázslatának (jobb egérgomb) hátralévő cooldownja.
 var _secondary_left := 0.0
@@ -475,10 +476,13 @@ func _physics_process(delta: float) -> void:
 	_shadow_left = maxf(_shadow_left - delta, 0.0)
 	_summon_left = maxf(_summon_left - delta, 0.0)
 	_archer_left = maxf(_archer_left - delta, 0.0)
+	_giant_left = maxf(_giant_left - delta, 0.0)
 	if Input.is_action_pressed("attack") and _can_summon():
 		_summon()
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and _can_summon_archers():
 		_summon_archers()
+	if Input.is_physical_key_pressed(KEY_CTRL) and _can_summon_giant():
+		_summon_giant()
 	_secondary_left = maxf(_secondary_left - delta, 0.0)
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and _secondary_left <= 0.0 and GameState.spells.size() > 1 \
 			and _weapon_type == "wand" and not get_tree().paused:
@@ -570,40 +574,46 @@ func _closest_threat() -> Node2D:
 	return best
 
 
-## Csontváz-idézés (csak Vendel, bal egérgomb, a kazamatában): SUMMON_COUNT csontváz kel ki a földből
-## körülötte, és érte harcol (lásd SkeletonMinion); egyszerre legfeljebb Necromancy.max_minions(). A töltési
-## idő SUMMON_COOLDOWN mp, az ütési sebességgel arányosan rövidül. Ha megtanulta (Necromancy, 5 szintenként),
-## jobb egérgombra íjász csontvázakat is idéz (legfeljebb Necromancy.ARCHER_COUNT egyszerre).
+## Csontváz-idézés (csak Vendel, a kazamatában): bal egérgombra SUMMON_COUNT csontváz kel ki a földből
+## körülötte, és érte harcol (lásd SkeletonMinion). Ha megtanulta (Necromancy, 5 szintenként): jobb
+## egérgombra íjász csontvázak, Ctrl-ra egy óriás csontváz. Egyszerre legfeljebb Necromancy.max_minions()
+## csontváza lehet, minden fajta együtt számít. A töltési idők és a csontvázak statjai a szinttel és
+## Vendel statjaival nem nőnek, csak a fejlesztésekkel (Necromancy).
 const SUMMON_COOLDOWN := 3.0
 const ARCHER_COOLDOWN := 8.0
+const GIANT_COOLDOWN := 12.0
 ## Ennyire közel érő szörnyre csap le magától az ásó (a Hatótávval nő).
 const SHOVEL_AUTO_RANGE := 74.0
 const SUMMON_COUNT := 3
 
 
+func _can_raise() -> bool:
+	return Characters.data(Progress.character).get("summon", false) and not get_tree().paused 		and get_tree().current_scene.name == "Dungeon" and _minion_count() < Necromancy.max_minions()
+
+
 func _can_summon() -> bool:
-	return Characters.data(Progress.character).get("summon", false) and _summon_left <= 0.0 \
-		and not get_tree().paused and get_tree().current_scene.name == "Dungeon" \
-		and _minion_count(false) < Necromancy.max_minions()
+	return _summon_left <= 0.0 and _can_raise()
 
 
 func _can_summon_archers() -> bool:
-	return Characters.data(Progress.character).get("summon", false) and Necromancy.has_archers() \
-		and _archer_left <= 0.0 and not get_tree().paused and get_tree().current_scene.name == "Dungeon" \
-		and _minion_count(true) < Necromancy.ARCHER_COUNT
+	return Necromancy.has_archers() and _archer_left <= 0.0 and _can_raise() 		and _minion_count("archer") < Necromancy.ARCHER_COUNT
 
 
-## A saját élő csontvázaink száma (íjászok vagy a sima csontvázak).
-func _minion_count(archers: bool) -> int:
+func _can_summon_giant() -> bool:
+	return Necromancy.has_giant() and _giant_left <= 0.0 and _can_raise()
+
+
+## A saját élő csontvázaink száma (`kind`: csak az adott fajtából; "" = mind).
+func _minion_count(kind := "") -> int:
 	var count := 0
 	for node in get_tree().get_nodes_in_group("minions"):
-		if node.get("owner_player") == self and bool(node.get("archer")) == archers:
+		if node.get("owner_player") == self and (kind.is_empty() or str(node.get("kind")) == kind):
 			count += 1
 	return count
 
 
 func summon_cooldown() -> float:
-	return SUMMON_COOLDOWN / maxf(_stats.attack_speed / 100.0, 0.1)
+	return Necromancy.cooldown(SUMMON_COOLDOWN)
 
 
 func summon_cooldown_left() -> float:
@@ -611,46 +621,58 @@ func summon_cooldown_left() -> float:
 
 
 func archer_cooldown() -> float:
-	return ARCHER_COOLDOWN / maxf(_stats.attack_speed / 100.0, 0.1)
+	return Necromancy.cooldown(ARCHER_COOLDOWN)
 
 
 func archer_cooldown_left() -> float:
 	return _archer_left
 
 
-## Egy csontváz sebzése: Vendel ütésének DAMAGE_SHARE része, plusz a fejlesztések.
-func minion_damage() -> int:
-	return maxi(1, roundi(hit_damage() * SkeletonMinion.DAMAGE_SHARE)) + Necromancy.bonus_damage()
+func giant_cooldown() -> float:
+	return Necromancy.cooldown(GIANT_COOLDOWN)
+
+
+func giant_cooldown_left() -> float:
+	return _giant_left
 
 
 func _summon() -> void:
 	_summon_left = summon_cooldown()
-	var count := mini(SUMMON_COUNT, Necromancy.max_minions() - _minion_count(false))
 	Audio.play("boss_slam", -10.0, 0.2)
 	Audio.play("magic", -6.0, 0.2)
 	FloatingText.spawn(get_parent(), global_position + Vector2(0, -60), "Keljetek fel!", Color(0.7, 1.0, 0.8), 20)
-	_raise_minions(count, false)
+	_raise_minions(SUMMON_COUNT, "skeleton")
 
 
 func _summon_archers() -> void:
 	_archer_left = archer_cooldown()
-	var count := Necromancy.ARCHER_COUNT - _minion_count(true)
 	Audio.play("boss_slam", -10.0, 0.4)
 	Audio.play("arrow", -4.0)
 	FloatingText.spawn(get_parent(), global_position + Vector2(0, -60), "Íjászok, fel!", Color(0.75, 0.88, 1.0), 20)
-	_raise_minions(count, true)
+	_raise_minions(Necromancy.ARCHER_COUNT - _minion_count("archer"), "archer")
 
 
-func _raise_minions(count: int, archers: bool) -> void:
+func _summon_giant() -> void:
+	_giant_left = giant_cooldown()
+	Audio.play("boss_slam", -4.0, 0.1)
+	Audio.play("boss_roar", -12.0, 0.3)
+	FloatingText.spawn(get_parent(), global_position + Vector2(0, -70), "Kelj fel, óriás!", Color(0.7, 1.0, 0.8), 22)
+	_raise_minions(1, "giant")
+
+
+## `count` csontváz kel ki körülöttünk (de csak annyi, amennyi még belefér a határba).
+func _raise_minions(count: int, kind: String) -> void:
+	count = mini(count, Necromancy.max_minions() - _minion_count())
 	for i in count:
 		var minion := SkeletonMinion.new()
 		minion.owner_player = self
-		minion.damage = minion_damage()
+		minion.kind = kind
+		minion.damage = Necromancy.damage(kind)
+		minion.hits = Necromancy.hits(kind)
 		minion.lifetime = Necromancy.lifetime()
-		minion.archer = archers
 		var angle := TAU * i / maxi(count, 1) + randf_range(-0.3, 0.3)
 		get_parent().add_child(minion)
-		minion.global_position = global_position + Vector2.from_angle(angle) * (44.0 if archers else 34.0)
+		minion.global_position = global_position + Vector2.from_angle(angle) * (44.0 if kind != "skeleton" else 34.0)
 
 
 ## Árnyéklépés (csak Bence, Ctrl): a kurzorhoz legközelebbi szörny háta mögé lép (SHADOW_STEP_RANGE-en

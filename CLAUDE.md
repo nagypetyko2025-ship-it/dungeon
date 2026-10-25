@@ -63,8 +63,10 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   bizalom és feltett kérdések: `Progress.trust` / `Progress.asked` (mentve).
 - Karakterek: `world/characters.gd` (lovag, íjász, Bence/"thief" a levél-küldetés után, Gáspár/"veteran" — utóbbi az "unlock" jelzővel, a 30. emelet
   után; Ctrl: íjász suhanás, Gáspár hadi kiáltás, Bence árnyéklépés a `player.gd`-ben; Lőrinc/"wizard" varázsló a küldetései után ("lorinc_tavern"): `player/spells.gd`; Vendel/"gravedigger" (ásó magától üt; bal klikk: csontváz-idézés, `player/skeleton_minion.gd`; 5 szintenként a stat-kártyák helyett
-  idézés-fejlesztés: `player/necromancy.gd` — +1 csontváz (max 12), +2 mp élet (max 60), +1 sebzés, jobb klikkre 3 íjász csontváz;
-  `GameState.necromancy`; Tab-ban "Idézés" oldal), választó: `ui/spell_picker.gd`). Kocsmai székek: `world/town.gd`.
+  idézés-fejlesztés: `player/necromancy.gd` (4 véletlen kártya) — +1 csontváz (max 12, MINDEN fajta együtt számít), +2 mp élet (max 60),
+  +1 sebzés, csontváz-erősítés, gyors idézés, jobb klikkre 3 íjász, Ctrl-ra óriás csontváz; a csontvázak statjai és a töltési idők a
+  szinttel / Vendel statjaival NEM nőnek; a szörnyek (a főellenség nem) a közelebbi csontvázra is rátámadnak, a csontváz `hits`
+  találatot bír ki (saját Hurtbox); `GameState.necromancy`; Tab-ban "Idézés" oldal), választó: `ui/spell_picker.gd`). Kocsmai székek: `world/town.gd`.
 - Csalómenü: [0], kód nélkül (`ui/cheat_menu.gd`): teleport a 10. / 20. vagy a beírt emeletre (1–99; `cheat_teleport` a Dungeon/Camp jeleneten),
   halhatatlanság (`GameState.god_mode`), karakterváltás a táborban (zároltakra is; `cheat_select_character` a Camp-en →
   `Town.cheat_switch_to`), tárgylap (bármelyik tárgy bármelyik ritkaságban a táskába). Teszteléshez is hasznos.

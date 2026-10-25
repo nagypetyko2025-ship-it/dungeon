@@ -115,8 +115,8 @@ const ALL := {
 			"Csak 9 élettel indul (csontváz), 80% találati esély, 20% kikerülés",
 			"14%-kal lassabban mozog",
 			"Ütési sebesség kártya szintlépéskor: 15%-kal többet ad neki",
-			"Csontváz-idézés [bal klikk]: 3 csontváz kel ki a földből, és érte harcol (legfeljebb 6 egyszerre; 3 mp, az ütési sebességgel rövidül). Olyan gyorsak, mint ő, és átjutnak a harc közbeni zárakon",
-			"Minden 5. szintlépéskor a statok helyett az idézését fejleszti: +1 csontváz (legfeljebb 12), +2 mp élet (legfeljebb 1 perc), +1 sebzés, vagy jobb klikkre 3 íjász csontváz",
+			"Csontváz-idézés [bal klikk]: 3 csontváz kel ki a földből, és érte harcol (legfeljebb 6 egyszerre; 3 mp). Olyan gyorsak, mint ő, és átjutnak a harc közbeni zárakon; a szörnyek rájuk is rátámadnak",
+			"Minden 5. szintlépéskor a statok helyett az idézését fejleszti (a csontvázak maguktól nem erősödnek): +1 csontváz (legfeljebb 12), +2 mp élet (legfeljebb 1 perc), +1 sebzés, csontváz-erősítés, gyorsabb idézés, jobb klikkre 3 íjász csontváz, vagy Ctrl-ra óriás csontváz",
 		],
 	},
 	# Bence, a volt tolvaj (Benedek zászlóvivő fia): a levél-küldetés után költözik a kocsmába.

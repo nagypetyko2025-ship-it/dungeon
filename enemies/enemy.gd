@@ -237,6 +237,7 @@ func _physics_process(delta: float) -> void:
 
 
 ## Kit üldöz: egyedül a játékost; közös játékban a gazdánál a legközelebbi játékost (társat is).
+## Vendel csontvázaira is rátámad, ha egy közelebb van (a főellenség nem: ő a játékosra megy).
 func _pick_target(delta: float) -> void:
 	_retarget_left -= delta
 	if is_instance_valid(_player) and _retarget_left > 0.0:
@@ -247,6 +248,15 @@ func _pick_target(delta: float) -> void:
 		_player = NetEnemies.nearest_target(get_tree(), global_position)
 	else:
 		_player = get_tree().get_first_node_in_group("player")
+	if is_in_group("boss"):
+		return
+	var best := global_position.distance_squared_to(_player.global_position) if is_instance_valid(_player) else INF
+	for node in get_tree().get_nodes_in_group("minions"):
+		var minion := node as Node2D
+		var distance := global_position.distance_squared_to(minion.global_position)
+		if distance < best:
+			best = distance
+			_player = minion
 
 
 ## Báb (közös játék, vendég): a gazda szörnyének helyét és animációját követi; a lövés és az

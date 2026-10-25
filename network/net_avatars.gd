@@ -354,7 +354,7 @@ func _minion_data() -> PackedFloat32Array:
 			_minion_uid += 1
 			minion.set_meta("net_uid", _minion_uid)
 		var sprite := minion.get("_sprite") as AnimatedSprite2D
-		var flags := (1 if sprite != null and sprite.flip_h else 0) + (2 if sprite != null and sprite.animation == "run" else 0) 			+ (4 if bool(minion.get("archer")) else 0)
+		var flags := (1 if sprite != null and sprite.flip_h else 0) + (2 if sprite != null and sprite.animation == "run" else 0) 			+ (4 if str(minion.get("kind")) == "archer" else 0) + (8 if str(minion.get("kind")) == "giant" else 0)
 		data.append_array(PackedFloat32Array([int(minion.get_meta("net_uid")), minion.global_position.x,
 			minion.global_position.y, minion.velocity.x, minion.velocity.y, flags]))
 	return data
@@ -370,7 +370,7 @@ func _update_minions(avatar: Dictionary, data: PackedFloat32Array) -> void:
 		seen[uid] = true
 		var flags := int(data[i + 5])
 		if not shown.has(uid):
-			shown[uid] = _create_minion(at, (flags & 4) == 4)
+			shown[uid] = _create_minion(at, "giant" if (flags & 8) == 8 else ("archer" if (flags & 4) == 4 else "skeleton"))
 		var minion: Dictionary = shown[uid]
 		(minion["smooth"] as NetSmooth).receive(at, Vector2(data[i + 3], data[i + 4]))
 		var sprite: AnimatedSprite2D = minion["sprite"]
@@ -386,23 +386,25 @@ func _update_minions(avatar: Dictionary, data: PackedFloat32Array) -> void:
 			shown.erase(uid)
 
 
-func _create_minion(at: Vector2, archer: bool) -> Dictionary:
+func _create_minion(at: Vector2, kind: String) -> Dictionary:
 	var body := Node2D.new()
 	body.position = at
 	_entities.add_child(body)
+	var giant := kind == "giant"
 	var sprite := AnimatedSprite2D.new()
-	sprite.sprite_frames = SpriteSheet.character_frames(SkeletonMinion.FIGURE, true)
-	sprite.offset = Vector2(0, -8)
-	sprite.modulate = SkeletonMinion.ARCHER_TINT if archer else SkeletonMinion.TINT
+	sprite.sprite_frames = SkeletonMinion.giant_frames() if giant else SpriteSheet.character_frames(SkeletonMinion.FIGURE, true)
+	sprite.offset = Vector2(0, -SkeletonMinion.GIANT_FRAME.y / 2.0) if giant else Vector2(0, -8)
+	sprite.modulate = SkeletonMinion.ARCHER_TINT if kind == "archer" else SkeletonMinion.TINT
 	sprite.play("idle")
 	body.add_child(sprite)
 	# Az íjász csontváz íjat tart (mint a társ gépén).
-	var bow: Sprite2D = SkeletonMinion.make_bow() if archer else null
+	var bow: Sprite2D = SkeletonMinion.make_bow() if kind == "archer" else null
 	if bow != null:
 		sprite.add_child(bow)
 	# Kikel a földből (mint a társ gépén).
-	sprite.scale = Vector2(2, 0.1)
-	sprite.create_tween().tween_property(sprite, "scale", Vector2(2, 2), 0.35) \
+	var full := Vector2(SkeletonMinion.GIANT_SCALE, SkeletonMinion.GIANT_SCALE) if giant else Vector2(2, 2)
+	sprite.scale = Vector2(full.x, 0.1)
+	sprite.create_tween().tween_property(sprite, "scale", full, 0.35) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	var smooth := NetSmooth.new()
 	smooth.receive(at, Vector2.ZERO)

@@ -237,29 +237,31 @@ func _add_spells() -> void:
 		_left.add_child(detail)
 
 
-## Vendel idézése: a csontvázak (bal klikk), az íjász csontvázak (jobb klikk) és a fejlesztések
-## (5 szintenként, lásd Necromancy): mennyi lehet egyszerre, meddig élnek, mennyit ütnek.
+## Vendel idézése: a csontvázak (bal klikk), az íjászok (jobb klikk), az óriás (Ctrl) és a fejlesztések
+## (5 szintenként, lásd Necromancy). A csontvázak statjai a szinttel nem nőnek, csak a fejlesztésekkel.
 func _add_necromancy() -> void:
-	var damage: int = _player.call("minion_damage")
 	var next_level := (int(_player.get_node("Experience").get("level")) / Necromancy.LEVEL_EVERY + 1) * Necromancy.LEVEL_EVERY
-	_necromancy_row(SpriteSheet.region(Necromancy.SKELETON_REGION), "Csontváz-idézés", "bal egérgomb", true,
-		"%d sebzés" % damage, [
-			"%d csontváz kel ki egyszerre, legfeljebb %d lehet (a határ %d)" % [PLAYER_SCRIPT.SUMMON_COUNT,
-				Necromancy.max_minions(), Necromancy.MAX_MAX],
-			"%d mp-ig élnek (legfeljebb %d mp)" % [roundi(Necromancy.lifetime()), roundi(Necromancy.MAX_LIFE)],
-			"%.1f mp / idézés (az ütési sebességgel rövidül)" % float(_player.call("summon_cooldown"))])
+	var learn := "az 5. szintenkénti választásnál tanulhatod meg"
+	_necromancy_row(SpriteSheet.region(Necromancy.SKELETON_REGION), "Csontvázak", "bal egérgomb", true,
+		"%d sebzés" % Necromancy.damage("skeleton"), [
+			"%d kel ki egyszerre; %d találatot bírnak ki" % [PLAYER_SCRIPT.SUMMON_COUNT, Necromancy.hits("skeleton")],
+			"%.1f mp / idézés" % float(_player.call("summon_cooldown"))])
 	var archers := Necromancy.has_archers()
 	_necromancy_row(load(Necromancy.ARCHER_ICON), "Íjász csontvázak", "jobb egérgomb" if archers else "még nem tanultad",
-		archers, "%d sebzés" % damage, [
-			"%d íjász csontváz kel ki, és távolról lő a szörnyekre" % Necromancy.ARCHER_COUNT,
-			"%.1f mp / idézés" % float(_player.call("archer_cooldown")) if archers \
-				else "az 5. szintenkénti választásnál tanulhatod meg"])
-	_necromancy_row(load(Necromancy.DAMAGE_ICON), "Fejlesztések", "5 szintenként", true,
-		"+%d sebzés" % Necromancy.bonus_damage(), [
-			"csontvázhad: +%d (egyszerre %d)" % [Necromancy.max_minions() - Necromancy.BASE_MAX, Necromancy.max_minions()],
-			"csontkötés: +%d mp (%d mp-ig élnek)" % [roundi(Necromancy.lifetime() - Necromancy.BASE_LIFE),
-				roundi(Necromancy.lifetime())],
-			"éles csontok: +%d sebzés csontvázanként" % Necromancy.bonus_damage(),
+		archers, "%d sebzés" % Necromancy.damage("archer"), [
+			"%d íjász, távolról lő; %d találatot bírnak ki" % [Necromancy.ARCHER_COUNT, Necromancy.hits("archer")],
+			"%.1f mp / idézés" % float(_player.call("archer_cooldown")) if archers else learn])
+	var giant := Necromancy.has_giant()
+	_necromancy_row(load(Necromancy.GIANT_ICON), "Óriás csontváz", "Ctrl" if giant else "még nem tanultad",
+		giant, "%d sebzés" % Necromancy.damage("giant"), [
+			"egyesével kel ki, lassú, nagyot lök; %d találatot bír ki" % Necromancy.hits("giant"),
+			"%.1f mp / idézés" % float(_player.call("giant_cooldown")) if giant else learn])
+	_necromancy_row(load(Necromancy.POWER_ICON), "Fejlesztések", "5 szintenként", true,
+		"%d / %d" % [_player.call("_minion_count"), Necromancy.max_minions()], [
+			"egyszerre legfeljebb %d csontváz (mind együtt; a határ %d)" % [Necromancy.max_minions(), Necromancy.MAX_MAX],
+			"%d mp-ig élnek (legfeljebb %d mp)" % [roundi(Necromancy.lifetime()), roundi(Necromancy.MAX_LIFE)],
+			"éles csontok: +%d sebzés · erősítés: %d. szint · gyors idézés: %d / %d" % [Necromancy.bonus_damage(),
+				Necromancy.power(), Necromancy.level("cooldown"), Necromancy.MAX_COOLDOWN],
 			"következő választás szintje: %d." % next_level])
 
 
