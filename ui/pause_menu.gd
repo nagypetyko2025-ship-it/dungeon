@@ -118,7 +118,7 @@ func _to_camp() -> void:
 	_record_run()
 	RunSave.clear()
 	GameState.reset()
-	get_tree().paused = false
+	GamePause.set_paused(get_tree(), false)
 	get_tree().change_scene_to_file(CAMP)
 
 
@@ -131,5 +131,5 @@ func _to_main_menu() -> void:
 		_record_run()
 		RunSave.clear()
 	GameState.reset()
-	get_tree().paused = false
+	GamePause.set_paused(get_tree(), false)
 	get_tree().change_scene_to_file(MAIN_MENU)

@@ -301,7 +301,7 @@ func _walk_to_chapel() -> void:
 
 
 func _process(delta: float) -> void:
-	if not _walking and _digger.visible and Gravedigger.should_walk() and not get_tree().paused:
+	if not _walking and _digger.visible and Gravedigger.should_walk() and not GamePause.active(get_tree()):
 		_walk_to_chapel()
 	# Lépés közben kicsit billeg.
 	if _walking:
@@ -311,12 +311,12 @@ func _process(delta: float) -> void:
 	var digger := _near_digger()
 	if digger or _near_grave():
 		_prompt.text = "[E] Beszélgetés: Vendel" if digger else "[E] Sírfelirat elolvasása"
-	var target := 1.0 if (digger or _near_grave()) and not get_tree().paused else 0.0
+	var target := 1.0 if (digger or _near_grave()) and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or get_tree().paused:
+	if not event.is_action_pressed("interact") or GamePause.active(get_tree()):
 		return
 	var digger := _near_digger()
 	if not digger and not _near_grave():

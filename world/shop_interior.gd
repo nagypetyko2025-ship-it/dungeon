@@ -309,6 +309,9 @@ func _update_tooltip() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# (Közös játékban az ablakok alatt nem áll meg a bolt sem: ilyenkor ne vásároljon, ne nyisson.)
+	if GamePause.active(get_tree()):
+		return
 	var key := event as InputEventKey
 	if _at_counter and key != null and key.pressed and not key.echo and key.physical_keycode == KEY_F:
 		_buy_potion()

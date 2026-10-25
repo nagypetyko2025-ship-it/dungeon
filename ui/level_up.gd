@@ -92,7 +92,7 @@ func _show_pending() -> void:
 
 
 func _open_pending() -> void:
-	if visible or _level_queue.is_empty() or get_tree().paused:
+	if visible or _level_queue.is_empty() or GamePause.active(get_tree()):
 		return
 	_pending_layer.visible = false
 	_open()
@@ -174,7 +174,7 @@ func _open() -> void:
 	_title.text = "Szintlépés! — %d. szint" % _level_queue[0]
 	_show_cards()
 	visible = true
-	get_tree().paused = true
+	GamePause.set_paused(get_tree(), true)
 	Audio.play("level_up")
 	_accepting_input = false
 	await get_tree().create_timer(INPUT_DELAY, true).timeout
@@ -204,7 +204,7 @@ func _choose(index: int) -> void:
 		GameState.pending_level_ups.assign(_level_queue)
 	if _level_queue.is_empty():
 		visible = false
-		get_tree().paused = false
+		GamePause.set_paused(get_tree(), false)
 	else:
 		_open()
 

@@ -225,7 +225,7 @@ func finish() -> void:
 		return
 	Audio.play("level_up")
 	_panel.visible = false
-	get_tree().paused = true
+	GamePause.set_paused(get_tree(), true)
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_finish_layer = Control.new()
 	_finish_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -265,7 +265,7 @@ func finish() -> void:
 static func leave_tutorial(tree: SceneTree) -> void:
 	GameState.tutorial = false
 	GameState.reset()
-	tree.paused = false
+	GamePause.set_paused(tree, false)
 	tree.change_scene_to_file(MAIN_MENU)
 
 

@@ -461,7 +461,7 @@ func _load_state() -> void:
 func _physics_process(delta: float) -> void:
 	var aim := _weapon_pivot.get_global_mouse_position() - _weapon_pivot.global_position
 
-	var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var input_dir := _move_input()
 	_dash_cooldown_left = maxf(_dash_cooldown_left - delta, 0.0)
 	if _dash_left > 0.0:
 		# Suhanás közben fix sebességgel a kurzor felé repül, a szörnyeken át.
@@ -491,7 +491,7 @@ func _physics_process(delta: float) -> void:
 			_summon_giant()
 	_secondary_left = maxf(_secondary_left - delta, 0.0)
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and _secondary_left <= 0.0 and GameState.spells.size() > 1 \
-			and _weapon_type == "wand" and not get_tree().paused:
+			and _weapon_type == "wand" and not GamePause.active(get_tree()):
 		_cast(1, (get_global_mouse_position() - _weapon_pivot.global_position).angle())
 	if _backstab_left > 0.0:
 		_backstab_left -= delta
@@ -511,13 +511,14 @@ func _physics_process(delta: float) -> void:
 		_sprite.play("run" if input_dir != Vector2.ZERO else "idle")
 
 	_cooldown_left = maxf(_cooldown_left - delta, 0.0)
-	# Vendel ásója magától üt, ha egy szörny túl közel ér (vele nem lehet kattintásra ütni).
+	# Vendel ásója magától üt, ha egy szörny túl közel ér (vele nem lehet kattintásra ütni); közös játékban
+	# nyitott ablak alatt is.
 	if _weapon_type == "shovel":
 		if _cooldown_left <= 0.0 and not get_tree().paused:
 			var threat := _closest_threat()
 			if threat != null:
 				_swing((threat.global_position + Vector2(0, -12) - _weapon_pivot.global_position).angle())
-	elif Input.is_action_pressed("attack") and _cooldown_left <= 0.0:
+	elif Input.is_action_pressed("attack") and _cooldown_left <= 0.0 and not GamePause.active(get_tree()):
 		_swing(aim.angle())
 	_cooldown_bar.set_ratio(1.0 - _cooldown_left / _primary_cooldown())
 
@@ -529,7 +530,7 @@ func _physics_process(delta: float) -> void:
 ## pillanatra megtöri (a főellenségeket nem mozdítja). WAR_CRY_COOLDOWN mp-enként.
 func _can_war_cry() -> bool:
 	return Characters.data(Progress.character).get("war_cry", false) and _war_cry_left <= 0.0 \
-		and not get_tree().paused
+		and not GamePause.active(get_tree())
 
 
 func _war_cry() -> void:
@@ -595,7 +596,7 @@ const SUMMON_COUNT := 3
 
 
 func _can_raise() -> bool:
-	return Characters.data(Progress.character).get("summon", false) and not get_tree().paused 		and get_tree().current_scene.name == "Dungeon" and _minion_count() < Necromancy.max_minions()
+	return Characters.data(Progress.character).get("summon", false) and not GamePause.active(get_tree()) 		and get_tree().current_scene.name == "Dungeon" and _minion_count() < Necromancy.max_minions()
 
 
 func _can_summon() -> bool:
@@ -711,7 +712,7 @@ func _free_spawn_spot(angle: float, distance: float, radius: float) -> Vector2:
 ## belül), egy pillanatig sérthetetlen, és a következő találata biztos kritikus. Ha nincs a közelben
 ## szörny, nem történik semmi (és nem megy le a cooldown).
 func _can_shadow_step() -> bool:
-	return Characters.data(Progress.character).get("shadow_step", false) and _shadow_left <= 0.0 		and not get_tree().paused
+	return Characters.data(Progress.character).get("shadow_step", false) and _shadow_left <= 0.0 		and not GamePause.active(get_tree())
 
 
 func _shadow_step(cursor: Vector2) -> void:
@@ -778,7 +779,7 @@ func shadow_step_cooldown_ratio() -> float:
 ## (és a lövedékeken) át lehet menni, és nem lehet megsebezni. Fix DASH_COOLDOWN mp.
 func _can_dash() -> bool:
 	return Characters.data(Progress.character).get("dash", false) and _dash_cooldown_left <= 0.0 \
-		and not get_tree().paused
+		and not GamePause.active(get_tree())
 
 
 func _start_dash(aim: Vector2) -> void:
@@ -1125,7 +1126,10 @@ func wants_to_wait_again() -> bool:
 	return net_stepped_off and not net_waiting and not net_dead and _move_input() == Vector2.ZERO
 
 
+## A mozgásgombok iránya (nyitott ablak alatt nincs: közös játékban ilyenkor a karakter csak áll).
 func _move_input() -> Vector2:
+	if GamePause.active(get_tree()):
+		return Vector2.ZERO
 	return Input.get_vector("move_left", "move_right", "move_up", "move_down")
 
 

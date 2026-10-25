@@ -61,7 +61,7 @@ func show_for(player: Node) -> void:
 	if rank > 0:
 		_stats_label.text += "\n\n★ Új eredmény: %d. hely! ★" % rank
 	visible = true
-	get_tree().paused = true
+	GamePause.set_paused(get_tree(), true)
 
 	_dim.modulate.a = 0.0
 	_content.modulate.a = 0.0
@@ -84,14 +84,14 @@ func _unhandled_input(event: InputEvent) -> void:
 func _to_main_menu() -> void:
 	GameState.tutorial = false
 	GameState.reset()
-	get_tree().paused = false
+	GamePause.set_paused(get_tree(), false)
 	get_tree().change_scene_to_file(MAIN_MENU)
 
 
 ## Halál után vissza a táborba (onnan lehet újra lemenni).
 func _restart_run() -> void:
 	GameState.reset()
-	get_tree().paused = false
+	GamePause.set_paused(get_tree(), false)
 	# Gyakorláskor a gyakorló pálya indul újra.
 	get_tree().change_scene_to_file(GAME_SCENE if GameState.tutorial else CAMP)
 

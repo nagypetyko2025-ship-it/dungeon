@@ -304,7 +304,7 @@ func _focus() -> Array:
 
 func _process(delta: float) -> void:
 	_bell_left = maxf(0.0, _bell_left - delta)
-	if not get_tree().paused:
+	if not GamePause.active(get_tree()):
 		_vendel.visible = Gravedigger.in_chapel()
 		# A legendás talizmán után (a beszélgetés bezárásakor) kisétál a kápolnából, a kocsmába.
 		if Gravedigger.leaving() and not _vendel_walking:
@@ -313,12 +313,12 @@ func _process(delta: float) -> void:
 	var focus := _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]
-	var target := 1.0 if not focus.is_empty() and not get_tree().paused else 0.0
+	var target := 1.0 if not focus.is_empty() and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or get_tree().paused:
+	if not event.is_action_pressed("interact") or GamePause.active(get_tree()):
 		return
 	var focus := _focus()
 	if focus.is_empty():

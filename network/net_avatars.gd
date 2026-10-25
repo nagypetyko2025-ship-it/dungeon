@@ -460,7 +460,7 @@ func _update_grave(id: int, avatar: Dictionary, dead: bool, at: Vector2) -> void
 ## Élesztés: ha élünk, és egy elesett társ mellett nyomva tartjuk az E-t, REVIVE_TIME alatt feláll.
 func _update_revive(delta: float) -> void:
 	var alive := _player.is_in_group("player") and not bool(_player.get("net_dead")) \
-		and not get_tree().paused
+		and not GamePause.active(get_tree())
 	var holding := alive and Input.is_action_pressed("interact")
 	for id: int in _avatars:
 		var avatar: Dictionary = _avatars[id]

@@ -243,7 +243,7 @@ func _near_player() -> bool:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or get_tree().paused or not _near_player() or _dialogue == null:
+	if not event.is_action_pressed("interact") or GamePause.active(get_tree()) or not _near_player() or _dialogue == null:
 		return
 	get_viewport().set_input_as_handled()
 	Audio.play("ui_open")
@@ -310,7 +310,7 @@ func _set_frame(index: int) -> void:
 func _process(delta: float) -> void:
 	_time += delta
 	if _prompt != null:
-		var shown := 1.0 if _near_player() and not get_tree().paused else 0.0
+		var shown := 1.0 if _near_player() and not GamePause.active(get_tree()) else 0.0
 		_prompt.modulate.a = move_toward(_prompt.modulate.a, shown, delta * 5.0)
 	if _fishing:
 		_timer -= delta

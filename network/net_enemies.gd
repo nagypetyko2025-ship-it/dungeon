@@ -15,7 +15,8 @@ extends Node
 ## így két játékos sosem veheti fel ugyanazt. A felvett XP-t mindenki megkapja.
 ## Ha a gazda nincs ugyanazon az emeleten (pl. kilépett, vagy a táborba ment), a vendégnél a bábok
 ## önállóak lesznek, és onnantól a vendég saját szörnyekkel játszik (local_mode).
-## A menük a játékot megállítják, de a szörnyek ilyenkor is mennek (PROCESS_MODE_ALWAYS).
+## Közös játékban a menük semmit sem állítanak meg (GamePause); a szörnyek PROCESS_MODE_ALWAYS-szal
+## akkor is mennének, ha mégis megállna a játék.
 ## Minden üzenet első argumentuma az emelet kulcsa (key); a NetLobby a más emeletre szólókat
 ## megőrzi, amíg az az emelet be nem töltődik.
 

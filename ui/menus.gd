@@ -2,7 +2,8 @@ extends Node
 ## A teljes képernyős ablakok kezelője: I = felszerelés, Tab = karakter,
 ## M = térkép, Esc = bezárás, F11 / Alt+Enter = teljes képernyő be/ki.
 ## Egyszerre csak egy lehet nyitva (másik gombra
-## átvált), és amíg valamelyik nyitva van, megáll a játék.
+## átvált), és amíg valamelyik nyitva van, megáll a játék (közös játékban nem áll meg, csak a karakter
+## nem irányítható: GamePause).
 ## Szintlépés vagy halál közben (amikor már más állította meg a játékot) nem nyílik.
 
 ## Gomb -> a kezelt ablak útvonala (a Dungeon jelenetben).
@@ -53,14 +54,14 @@ func close_current() -> void:
 
 ## Egy ablak megnyitása kívülről (pl. a tárgylift vagy a tábori sátor E-re).
 func open_menu(menu: Node) -> void:
-	if _open != null or get_tree().paused:
+	if _open != null or GamePause.active(get_tree()):
 		return
 	_toggle(menu)
 
 
 ## A boltos pultjánál: az inventory eladás módban nyílik meg.
 func open_sell() -> void:
-	if _open != null or get_tree().paused:
+	if _open != null or GamePause.active(get_tree()):
 		return
 	var inventory := get_node(KEYS[KEY_I])
 	inventory.set("sell_mode", true)
@@ -71,13 +72,13 @@ func _toggle(menu: Node) -> void:
 	if _open == menu:
 		_close()
 		return
-	if _open == null and get_tree().paused:
+	if _open == null and GamePause.active(get_tree()):
 		return
 	if _open != null:
 		_open.call("close")
 	_open = menu
 	menu.call("open")
-	get_tree().paused = true
+	GamePause.set_paused(get_tree(), true)
 	Audio.play("ui_open")
 
 
@@ -85,4 +86,4 @@ func _close() -> void:
 	Audio.play("ui_close")
 	_open.call("close")
 	_open = null
-	get_tree().paused = false
+	GamePause.set_paused(get_tree(), false)

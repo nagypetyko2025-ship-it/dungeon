@@ -383,7 +383,7 @@ func _process(delta: float) -> void:
 	var focus := _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]
-	var target := 1.0 if not focus.is_empty() and not get_tree().paused else 0.0
+	var target := 1.0 if not focus.is_empty() and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 	if _quest_mark:
 		# Zöld "?" a kocsmáros fölött, ha van átvehető jutalom.
@@ -396,7 +396,7 @@ func _process(delta: float) -> void:
 		_intro_for = character_id
 		if not character_id.is_empty():
 			_fill_intro(character_id)
-	var intro_target := 1.0 if not character_id.is_empty() and not get_tree().paused else 0.0
+	var intro_target := 1.0 if not character_id.is_empty() and not GamePause.active(get_tree()) else 0.0
 	_intro.modulate.a = move_toward(_intro.modulate.a, intro_target, delta * 6.0)
 	_intro.visible = _intro.modulate.a > 0.01
 
@@ -456,7 +456,7 @@ func _fill_intro(id: String) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or get_tree().paused:
+	if not event.is_action_pressed("interact") or GamePause.active(get_tree()):
 		return
 	var focus := _focus()
 	if focus.is_empty():

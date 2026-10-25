@@ -261,12 +261,12 @@ func _process(delta: float) -> void:
 		"grave": _prompt.text = "[E] Sírfelirat elolvasása"
 		"note": _prompt.text = "[E] A fára szögezett papír elolvasása"
 		"chest": _prompt.text = "[E] Láda kinyitása"
-	var target := 1.0 if near != "" and not get_tree().paused else 0.0
+	var target := 1.0 if near != "" and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or get_tree().paused:
+	if not event.is_action_pressed("interact") or GamePause.active(get_tree()):
 		return
 	var near := _near()
 	if near == "":

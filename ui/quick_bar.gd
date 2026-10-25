@@ -94,7 +94,7 @@ func _update() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
-	if key == null or not key.pressed or key.echo or get_tree().paused:
+	if key == null or not key.pressed or key.echo or GamePause.active(get_tree()):
 		return
 	if key.physical_keycode == KEY_1:
 		get_viewport().set_input_as_handled()

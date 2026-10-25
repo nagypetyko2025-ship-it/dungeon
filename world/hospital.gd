@@ -247,10 +247,10 @@ func _process(delta: float) -> void:
 	var focus := _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]
-	var target := 1.0 if not focus.is_empty() and not get_tree().paused else 0.0
+	var target := 1.0 if not focus.is_empty() and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 	# Bent a betegek néha felnyögnek.
-	if _inside and not get_tree().paused and not _patients.is_empty():
+	if _inside and not GamePause.active(get_tree()) and not _patients.is_empty():
 		_moan_left -= delta
 		if _moan_left <= 0.0:
 			_moan_left = _rng.randf_range(3.5, 7.0)
@@ -259,7 +259,7 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or get_tree().paused:
+	if not event.is_action_pressed("interact") or GamePause.active(get_tree()):
 		return
 	var focus := _focus()
 	if focus.is_empty():

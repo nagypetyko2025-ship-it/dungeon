@@ -1209,7 +1209,7 @@ func _show_title() -> void:
 
 func _process(delta: float) -> void:
 	# Gáspár elköszönt (30. emelet): amint bezárult a beszélgetés, elindul a kocsmába.
-	if is_instance_valid(_veteran_sprite) and not _veteran_walking and not get_tree().paused \
+	if is_instance_valid(_veteran_sprite) and not _veteran_walking and not GamePause.active(get_tree()) \
 			and Progress.npc_quest_state(Dialogues.TAVERN_FLAG) == "done":
 		_start_gaspar_walk()
 	var near_stairs := _is_near_stairs()
@@ -1235,13 +1235,13 @@ func _process(delta: float) -> void:
 			else "[E] Tábori láda (%d tárgy)" % Progress.stash.size()
 	elif near_npc:
 		_prompt.text = "[E] Zoltán, a vándorárus" if _on_break else "Zoltán: \"Majd ha visszajössz a mélyből...\""
-	var target := 1.0 if any_near and not _leaving and not get_tree().paused else 0.0
+	var target := 1.0 if any_near and not _leaving and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 	_update_gold()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or _leaving or get_tree().paused:
+	if not event.is_action_pressed("interact") or _leaving or GamePause.active(get_tree()):
 		return
 	# A veteránnal pihenő közben is lehet beszélgetni.
 	if _is_near_veteran():
@@ -1344,7 +1344,7 @@ func _enter_dungeon_now(start_depth: int, cheat: bool) -> void:
 	_leaving = true
 	# A nyitott ablakok (táska, könyv...) bezárulnak, és a játék sem marad megállítva.
 	get_node("Menus").call("close_current")
-	get_tree().paused = false
+	GamePause.set_paused(get_tree(), false)
 	Audio.play("stairs")
 	var tween := create_tween()
 	tween.tween_property(_fade, "color:a", 1.0, 0.5)

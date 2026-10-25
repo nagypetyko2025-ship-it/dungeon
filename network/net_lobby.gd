@@ -397,7 +397,7 @@ func _start(fresh: bool) -> void:
 	GameState.reset()
 	GameState.net_seed = 0
 	_announced = {}
-	get_tree().paused = false
+	GamePause.set_paused(get_tree(), false)
 	get_tree().change_scene_to_file(GAME_SCENE)
 
 

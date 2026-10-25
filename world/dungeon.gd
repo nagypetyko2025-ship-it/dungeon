@@ -501,7 +501,7 @@ func cheat_teleport(target_depth: int) -> bool:
 		return false
 	_player.save_state()
 	GameState.depth = target_depth
-	get_tree().paused = false
+	GamePause.set_paused(get_tree(), false)
 	get_tree().reload_current_scene.call_deferred()
 	return true
 
@@ -528,7 +528,7 @@ func go_to_floor(target_depth: int) -> void:
 	var menus := get_node_or_null("Menus")
 	if menus != null:
 		menus.call("close_current")
-	get_tree().paused = false
+	GamePause.set_paused(get_tree(), false)
 	_player.save_state()
 	GameState.depth = target_depth
 	get_tree().reload_current_scene.call_deferred()

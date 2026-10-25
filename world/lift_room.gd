@@ -80,9 +80,9 @@ func _near() -> bool:
 
 func _process(delta: float) -> void:
 	# A javítás után, amint bezárult a beszélgetés: beszáll a ketrecbe, és felmegy vele.
-	if not _riding and not get_tree().paused and Progress.npc_quest_state(Engineer.RIDE_FLAG) == "pending":
+	if not _riding and not GamePause.active(get_tree()) and Progress.npc_quest_state(Engineer.RIDE_FLAG) == "pending":
 		_ride()
-	var target := 1.0 if _near() and not get_tree().paused else 0.0
+	var target := 1.0 if _near() and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 
 
@@ -112,7 +112,7 @@ func _ride() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or get_tree().paused or not _near():
+	if not event.is_action_pressed("interact") or GamePause.active(get_tree()) or not _near():
 		return
 	get_viewport().set_input_as_handled()
 	Audio.play("ui_open")

@@ -36,7 +36,7 @@ func _ready() -> void:
 	for spell: String in Spells.ALL:
 		_ids.append(spell)
 		row.add_child(_card(_ids.size() - 1, spell))
-	get_tree().paused = true
+	GamePause.set_paused(get_tree(), true)
 
 
 func _card(index: int, spell: String) -> Button:
@@ -98,5 +98,5 @@ func _unhandled_input(event: InputEvent) -> void:
 func _choose(index: int) -> void:
 	Audio.play("level_up")
 	Spells.pick_first(_ids[index])
-	get_tree().paused = false
+	GamePause.set_paused(get_tree(), false)
 	queue_free()

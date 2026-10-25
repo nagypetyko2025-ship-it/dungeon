@@ -373,18 +373,18 @@ func _process(delta: float) -> void:
 	var focus := _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]
-	var target := 1.0 if not focus.is_empty() and not get_tree().paused else 0.0
+	var target := 1.0 if not focus.is_empty() and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 	# Gyula: alvás közben lassan szuszog; ha a közelébe mész, felriad.
 	_time += delta
 	if is_instance_valid(_miner) and not _miner_awake:
 		_miner.scale = Vector2(2.0, 2.0 + sin(_time * 2.0) * 0.06)
-		if _near_miner(WAKE_RANGE) and not get_tree().paused and not _busy:
+		if _near_miner(WAKE_RANGE) and not GamePause.active(get_tree()) and not _busy:
 			_wake_miner()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or get_tree().paused:
+	if not event.is_action_pressed("interact") or GamePause.active(get_tree()):
 		return
 	var focus := _focus()
 	if focus.is_empty():

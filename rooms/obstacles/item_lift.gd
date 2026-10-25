@@ -71,7 +71,7 @@ func _sprite(texture: Texture2D, region: Rect2, at: Vector2, scale_factor: float
 func _process(delta: float) -> void:
 	if not is_instance_valid(_player):
 		_player = get_tree().get_first_node_in_group("player")
-	var target := 1.0 if _is_near() and not get_tree().paused else 0.0
+	var target := 1.0 if _is_near() and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 
 
@@ -80,7 +80,7 @@ func _is_near() -> bool:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or not _is_near() or get_tree().paused:
+	if not event.is_action_pressed("interact") or not _is_near() or GamePause.active(get_tree()):
 		return
 	get_viewport().set_input_as_handled()
 	var scene := get_tree().current_scene

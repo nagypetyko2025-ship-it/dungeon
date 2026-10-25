@@ -22,8 +22,8 @@ const CRIT_MULTIPLIER := 1.5
 const MAX_CRIT := 70
 ## A kikerülés ennél több százalékos esélyt nem adhat.
 const MAX_DODGE := 75
-const MAX_MOVE_SPEED := 200
-const MAX_ATTACK_SPEED := 300
+const MAX_MOVE_SPEED := 150
+const MAX_ATTACK_SPEED := 500
 ## A védelem (a kapott sebzés ennyi százalékát védi ki) legfeljebb ennyi lehet.
 const MAX_DEFENSE := 70
 ## Többlövés: ennyi nyíl repül egyszerre (íjjal). Csak legendás tárgy és a legendás

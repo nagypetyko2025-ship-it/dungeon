@@ -396,7 +396,7 @@ func _magic_show() -> void:
 	await _fireball()
 	await get_tree().create_timer(0.9).timeout
 	_showing = false
-	if not is_instance_valid(_player) or get_tree().paused:
+	if not is_instance_valid(_player) or GamePause.active(get_tree()):
 		return
 	_well_dialogue.greeting = Stranger.show_magic_after(first)
 	_refresh_stranger_panel()
@@ -477,20 +477,20 @@ func _process(delta: float) -> void:
 		_well_mark.visible = not Stranger.is_rescued()
 	if is_instance_valid(_lorinc):
 		# A kocsmába költözése után (a beszélgetés bezárásakor) eltűnik a kút mellől.
-		if not get_tree().paused:
+		if not GamePause.active(get_tree()):
 			_lorinc.visible = Stranger.is_rescued() and not Stranger.moved_to_tavern()
 		# A talizmán után, amint bezárult a beszélgetés, tűzgolyót lő a romos ház felé.
-		if Progress.npc_quest_state(Stranger.FIREBALL_FLAG) == "pending" and not get_tree().paused and not _showing:
+		if Progress.npc_quest_state(Stranger.FIREBALL_FLAG) == "pending" and not GamePause.active(get_tree()) and not _showing:
 			_fireball()
 	var focus := _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]
-	var target := 1.0 if not focus.is_empty() and not get_tree().paused else 0.0
+	var target := 1.0 if not focus.is_empty() and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or get_tree().paused:
+	if not event.is_action_pressed("interact") or GamePause.active(get_tree()):
 		return
 	var focus := _focus()
 	if focus.is_empty():

@@ -105,12 +105,12 @@ func _process(delta: float) -> void:
 		_prompt.text = "[E] Beszélgetés: %s" % Engineer.NAME
 	elif _near():
 		_prompt.text = "[E] Lift: lefelé utazás"
-	var target := 1.0 if (_near() or _near_engineer()) and not get_tree().paused else 0.0
+	var target := 1.0 if (_near() or _near_engineer()) and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or get_tree().paused:
+	if not event.is_action_pressed("interact") or GamePause.active(get_tree()):
 		return
 	var talk := _near_engineer()
 	if not talk and not _near():

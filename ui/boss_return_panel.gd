@@ -172,5 +172,5 @@ func _go_to_camp() -> void:
 	GameState.exits += 1
 	GameState.merchant_stock = []
 	Audio.play("level_up")
-	get_tree().paused = false
+	GamePause.set_paused(get_tree(), false)
 	get_tree().change_scene_to_file(CAMP)
