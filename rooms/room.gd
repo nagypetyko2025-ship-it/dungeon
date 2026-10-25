@@ -189,6 +189,32 @@ func is_cleared() -> bool:
 	return enemy_count <= 0 or _cleared
 
 
+## Visszatérés a pihenőből (lásd Dungeon.break_snapshot): a már kitisztított szoba harc nélkül áll
+## vissza, nyitott lépcsővel (a főellenség termében is). `with_chest`: a ládája még nem volt kinyitva.
+func restore_cleared(with_chest: bool) -> void:
+	visited = true
+	_fought = true
+	_cleared = true
+	if is_instance_valid(_stairs) and _stairs.call("is_locked"):
+		_stairs.call("set_locked", false)
+	if has_boss and not final_boss:
+		if is_instance_valid(_gate):
+			_gate.set_blocked(false)
+		elif alcove_dir == Vector2i.ZERO:
+			_add_at_tile.call_deferred(stairs_scene, _traps, anchor)
+			_connect_center_stairs.call_deferred()
+	if with_chest:
+		_spawn_chest.call_deferred()
+
+
+## Áll-e a szobában ki nem nyitott láda (a harc végén jelent meg).
+func has_closed_chest() -> bool:
+	for child in _pillars.get_children():
+		if child.scene_file_path == chest_scene.resource_path and not bool(child.get("_opened")):
+			return true
+	return false
+
+
 ## A bolt az északi falba kerül, a középső folyosótól jobbra (két csempe széles),
 ## így akkor sem takar el ajtót, ha felfelé is van folyosó.
 func _place_shop() -> void:

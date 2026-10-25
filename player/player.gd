@@ -996,9 +996,23 @@ func revive_from_net() -> void:
 
 
 ## Lépcső közös játékban: itt állsz, amíg a társaid is ide nem érnek (nem sebezhető közben).
+## Ha elindulsz (mozgásgomb), lelépsz a lépcsőről, és már nem vársz (visszalépve újra).
 func start_waiting() -> void:
 	net_waiting = true
 	velocity = Vector2.ZERO
 	set_physics_process(false)
 	_hurtbox.set_deferred("monitoring", false)
 	_sprite.play("idle")
+
+
+func stop_waiting() -> void:
+	if not net_waiting or net_dead:
+		return
+	net_waiting = false
+	set_physics_process(true)
+	_hurtbox.set_deferred("monitoring", true)
+
+
+func _process(_delta: float) -> void:
+	if net_waiting and Input.get_vector("move_left", "move_right", "move_up", "move_down") != Vector2.ZERO:
+		stop_waiting()

@@ -1,8 +1,8 @@
 extends CanvasLayer
 ## A főellenség legyőzése után: kimehetsz pihenni a táborba. Egy általad választott
 ## tárgyat a tábori ládába küldhetsz (végleg megmarad), a többi felszerelésed, a
-## szinted és a statjaid megmaradnak: a táborban a kék portálon át a következő
-## emeletről folytatod. A pénzed kiviheted (a táborban a vándorárusnál elköltheted,
+## szinted és a statjaid megmaradnak: a táborban a kék portálon át ugyanide, a
+## főellenség termébe térsz vissza. A pénzed kiviheted (a táborban a vándorárusnál elköltheted,
 ## a maradékot visszaviszed), vagy bent hagyhatod (visszatéréskor visszakapod).
 ## "Maradok": tovább lehet menni a lépcsőn.
 
@@ -70,7 +70,7 @@ func _build() -> void:
 	window.add_child(root)
 	root.add_child(UiStyle.title_bar("Győzelem! Kimész pihenni?"))
 	root.add_child(UiStyle.label("Pihenj a táborban: egy választott tárgy a tábori ládába kerül, a többi felszerelésed, a szinted és a statjaid megmaradnak.\n"
-		+ "A kék portálon át a következő emeletről folytatod. Pihenő közben Zoltán, a vándorárus árul.", 15, UiStyle.INK_LIGHT))
+		+ "A kék portálon át ide, a főellenség termébe térsz vissza. Pihenő közben Zoltán, a vándorárus árul.", 15, UiStyle.INK_LIGHT))
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 20)
@@ -162,6 +162,9 @@ func _go_to_camp() -> void:
 				inventory.equipment["weapon"] = Items.create(FALLBACK_WEAPON)
 			inventory.changed.emit()
 	player.call("save_state")
+	# Az emelet és a terem, ahova a kék portál visszahoz (lásd Dungeon.break_snapshot).
+	var scene := get_tree().current_scene
+	GameState.break_floor = scene.call("break_snapshot") if scene.has_method("break_snapshot") else {}
 	if not _take_gold.button_pressed:
 		GameState.break_gold_left = GameState.saved_gold
 		GameState.saved_gold = 0

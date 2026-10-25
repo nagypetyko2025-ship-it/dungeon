@@ -31,8 +31,11 @@ static var lift_used_floor := 0
 ## Az arany egy része már a táborba került ebben a futásban (halálkor / kilépéskor egyszer).
 static var gold_rescued := false
 ## Pihenő a táborban (főellenség után kimentél): a futás áll, a tárgyaid, szinted, statjaid
-## megvannak; a táborban a kék portálon át a következő emeletről folytatod.
+## megvannak; a táborban a kék portálon át ugyanoda, a főellenség termébe térsz vissza.
 static var on_break := false
+## Az emelet, ahonnan pihenni mentél (Dungeon.break_snapshot): mag, kitisztított és bejárt szobák,
+## ládák, hol álltál. Ebből épül újra ugyanez az emelet a visszatéréskor (üres = nincs ilyen).
+static var break_floor := {}
 ## Ha nem vitted ki a pénzed a táborba, az "bent marad nálad": visszatéréskor visszakapod.
 static var break_gold_left := 0
 ## Hányszor mentél ki pihenni ebben a futásban (az eredmények közé is bekerül).
@@ -95,6 +98,7 @@ static func reset() -> void:
 	lift_used_floor = 0
 	gold_rescued = false
 	on_break = false
+	break_floor = {}
 	break_gold_left = 0
 	exits = 0
 	merchant_stock = []

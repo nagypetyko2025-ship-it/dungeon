@@ -3,7 +3,7 @@ class_name RunSave
 ## BossReturnPanel / Camp._setup_break) lépsz ki, a futás teljes állapota (emelet, statok, szint, XP,
 ## arany, a nálad lévő tárgyak, varázslatok, bájitalok, a vándorárus kínálata...) ide mentődik, és a
 ## főmenü "Folytatás" gombjával onnan folytathatod, ahol abbahagytad (a pihenő-táborban, a kék
-## portállal a következő emeletre). Profilonként külön fájl; közös (többjátékos) játékban nincs.
+## portállal vissza a főellenség termébe). Profilonként külön fájl; közös (többjátékos) játékban nincs.
 ## Ha visszamész a kazamatába, vagy a futás véget ér (feladod, új játék), a mentés törlődik.
 
 ## A futás állapota (a GameState mentett mezői) szótárként.
@@ -13,7 +13,7 @@ static func _state() -> Dictionary:
 		"saved_inventory": GameState.saved_inventory, "kills": GameState.kills,
 		"chests_opened": GameState.chests_opened, "spells": GameState.spells, "spell_levels": GameState.spell_levels,
 		"run_time": GameState.run_time, "lift_used_floor": GameState.lift_used_floor,
-		"break_gold_left": GameState.break_gold_left, "exits": GameState.exits,
+		"break_gold_left": GameState.break_gold_left, "break_floor": GameState.break_floor, "exits": GameState.exits,
 		"merchant_stock": GameState.merchant_stock, "rerolls": GameState.rerolls, "potions": GameState.potions,
 		"cheated": GameState.cheated}
 
@@ -33,6 +33,7 @@ static func _apply(state: Dictionary) -> void:
 	GameState.run_time = float(state.get("run_time", 0.0))
 	GameState.lift_used_floor = int(state.get("lift_used_floor", 0))
 	GameState.break_gold_left = int(state.get("break_gold_left", 0))
+	GameState.break_floor = state.get("break_floor", {})
 	GameState.exits = int(state.get("exits", 0))
 	GameState.merchant_stock = state.get("merchant_stock", [])
 	GameState.rerolls = int(state.get("rerolls", 0))

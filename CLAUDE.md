@@ -68,6 +68,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   `Room.has_lift_room`) Bertalan mérnökkel (`world/engineer.gd`): 500 kazamatai aranyért megjavítja (J könyv "Mérnök" fül), felmegy a lifttel, és a táborban a lift mellett áll (2 új történet); a lift a 10. emeletre is visz.
   Mindkét helyen ugyanaz a lift: `LiftRoom.LiftRig` (pixelrácsra rajzolt bakállvány, láncon lógó ketrec, a gerenda végén
   forgó fogaskerék: `assets/props/lift_gear.png`, 8 kocka); lent a szoba közepén, a táborban a kőpadló mellett egy akna fölött (`CampLift.Shaft`).
+- Pihenő a főellenség után (`ui/boss_return_panel.gd`): a kék portál a táborból ugyanoda hoz vissza — `GameState.break_floor`
+  (`Dungeon.break_snapshot`: mag (`_floor_seed`, egyjátékosban is rögzítve), kitisztított/bejárt szobák, zárt ládák, hely),
+  visszatéréskor `Room.restore_cleared`; a RunSave is menti. Új portál nem nyílik újra (egy pihenő főellenségenként).
 - Bejátszás az első visszatéréskor a kazamatából: `world/stretcher_scene.gd` (hordágyas katonák, `GameState.visited_dungeon`).
 - Többjátékos: `network/` — `net_session.gd` (beállítások, fix név: user://player.cfg, kód), `net_lobby.gd` (/root/NetLobby:
   váró, LAN-bejelentés a kóddal UDP-n, ENet, RPC-k, indítás → mindenki a táborba), `net_avatars.gd` (a többiek a táborban
@@ -78,7 +81,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   emeleten, a vendég önálló lesz (local_mode). Szintén a NetEnemies-ben (net_event): a felvehetőket a gazda dobja
   (XP-t a felvételkor mindenki megkapja), közös arany (`Player.add_gold`), ládák (a helyükkel azonosítva), a szörnyek
   lövései; halál után néző mód (`Player.become_spectator`, `GameState.net_dead`), amíg valaki él; a lépcsőn mindenki
-  bevárja a többieket (`start_waiting`, a pózban "r"). A terem és a tereptárgyak a közös magból, a bolt áruja saját.
+  bevárja a többieket (`start_waiting`, a pózban "r"; mozgásgombra lelép: `stop_waiting`, a lépcső a lelépés után újra jelez). A terem és a tereptárgyak a közös magból, a bolt áruja saját.
   Szinkron részletei: a póz (20 Hz, 1-es csatorna) és a szörny-pillanatkép (20 Hz, tömör PackedFloat32Array, 2-es csatorna)
   sebességet is visz, a fogadó `network/net_smooth.gd`-vel előre számol; az ENet-fojtás ki van kapcsolva (`_no_throttle`).
   Felvehető: a vendég a gazdától kéri ("claim"), a gazda dönti el, ki kapja ("taken") — kettős felvétel nincs. A közös arany

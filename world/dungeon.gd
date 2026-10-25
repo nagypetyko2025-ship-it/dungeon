@@ -90,6 +90,9 @@ var _teleporting := false
 var _cell := CELL
 var _big_rooms := false
 var _huge_rooms := false
+## Az emelet generálásának magja (egyjátékosban): a pihenőből visszatérve ebből épül újra pontosan
+## ugyanez az emelet (lásd break_snapshot). Közös játékban a gazda magja (net_seed) dönt.
+var _floor_seed := 0
 
 @onready var _floor_layer: TileMapLayer = $FloorLayer
 @onready var _wall_layer: TileMapLayer = $WallLayer
@@ -114,9 +117,16 @@ func _ready() -> void:
 	_wall_layer.tile_set = tile_set
 
 	var depth := GameState.depth
+	# Pihenőből visszatérve (a főellenség után a táborba mentél): ugyanez az emelet, a kitisztított
+	# szobákkal, és ugyanott állsz, ahonnan kimentél.
+	var resume: Dictionary = GameState.break_floor if int(GameState.break_floor.get("depth", -1)) == depth else {}
+	GameState.break_floor = {}
 	# Közös játékban mindenki ugyanazt az emeletet generálja (a gazda magjából).
 	if GameState.net_seed != 0 and NetLobby.is_playing(get_tree()):
 		seed(hash([GameState.net_seed, depth]))
+	else:
+		_floor_seed = int(resume["seed"]) if resume.has("seed") else randi()
+		seed(_floor_seed)
 	_big_rooms = depth >= BIG_ROOMS_FROM
 	_huge_rooms = depth >= HUGE_ROOMS_FROM
 	_cell = HUGE_CELL if _huge_rooms else BIG_CELL if _big_rooms else CELL
@@ -228,6 +238,8 @@ func _ready() -> void:
 		interior.exited.connect(_exit_shop)
 
 	_player.global_position = Room.tile_center(Vector2i.ZERO)
+	if not resume.is_empty():
+		_resume_floor(resume)
 	_player.get_node("Camera2D").reset_smoothing()
 	_player.connect("death_finished", Callable(_death_screen, "show_for").bind(_player))
 	# Közös játékban, ha már halott vagy, ezen az emeleten is nézőként követed a társaidat.
@@ -291,6 +303,43 @@ func _ready() -> void:
 			_hud.show_message("%d. emelet — a szörnyek ismét megerősödtek, a termek is hatalmasak!" % depth)
 		else:
 			_hud.show_message(("%d. emelet — főellenség vár!" if boss_floor else "%d. emelet") % depth)
+
+
+## Pihenőre a táborba (a főellenség után, lásd BossReturnPanel): amit a visszatéréshez meg kell
+## jegyezni — az emelet magja, a kitisztított és a bejárt szobák, ahol még ki nem nyitott láda
+## áll, és hol álltál. (A földön hagyott zsákmány nem jön vissza.)
+func break_snapshot() -> Dictionary:
+	var cleared: Array[int] = []
+	var visited: Array[int] = []
+	var chests: Array[int] = []
+	for node in _rooms.get_children():
+		# (A szobák mellett lebegő feliratok is ide kerülnek.)
+		var room := node as Room
+		if room == null:
+			continue
+		if room.visited:
+			visited.append(room.get_index())
+		if room.visited and room.is_cleared():
+			cleared.append(room.get_index())
+			if room.has_closed_chest():
+				chests.append(room.get_index())
+	return {"depth": GameState.depth, "seed": _floor_seed, "cleared": cleared, "visited": visited,
+		"chests": chests, "position": _player.global_position}
+
+
+## Visszatérés a pihenőből: a mentett szobák kitisztítva (a főellenség termében szabad a lépcső),
+## és ott állsz, ahonnan kimentél.
+func _resume_floor(state: Dictionary) -> void:
+	var rooms := _rooms.get_children()
+	var chests: Array = state.get("chests", [])
+	for index: int in state.get("cleared", []):
+		if index < rooms.size():
+			(rooms[index] as Room).restore_cleared(chests.has(index))
+	for index: int in state.get("visited", []):
+		if index < rooms.size():
+			(rooms[index] as Room).visited = true
+	_player.global_position = state.get("position", _player.global_position)
+	_hud.show_message.call_deferred("Visszatértél a pihenőből — a lépcső szabad, mehetsz tovább.")
 
 
 ## Küldetések könyve (J), a Menus kezeli.
@@ -446,7 +495,7 @@ func _go_deeper() -> void:
 	var net := NetEnemies.active(get_tree())
 	if net != null and not net.local_mode:
 		_player.call("start_waiting")
-		_hud.show_message("A lépcsőn vársz a társaidra...")
+		_hud.show_message("A lépcsőn vársz a társaidra... (ha elindulsz, lelépsz róla)")
 		return
 	go_to_floor(GameState.depth + 1)
 

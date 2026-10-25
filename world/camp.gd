@@ -315,11 +315,11 @@ func _stretcher_path() -> Array[Vector2]:
 	]
 
 
-## Pihenő: rács a lépcsőn, kék portál a lépcső mellett (vissza a kazamatába, a következő emeletre).
+## Pihenő: rács a lépcsőn, kék portál a lépcső mellett (vissza a kazamatába, a főellenség termébe).
 func _setup_break() -> void:
 	_stairs_node.call("set_locked", true)
 	var portal: Node2D = RETURN_PORTAL.new()
-	portal.prompt_text = "[E] Vissza a kazamatába (%d. emelet)" % (GameState.depth + 1)
+	portal.prompt_text = "[E] Vissza a kazamatába (%d. emelet)" % _return_depth()
 	portal.on_use = _return_to_dungeon
 	portal.position = _tile_center(STAIRS_TILE + Vector2i(5, 1))
 	add_child(portal)
@@ -353,7 +353,13 @@ func _notification(what: int) -> void:
 		Progress.rescue_gold(int(_player.get("gold")) + GameState.break_gold_left, 0.4)
 
 
-## Vissza a kazamatába a pihenőből: a futás a következő emeletről folytatódik, minden
+## Hova visz vissza a kék portál: ugyanarra az emeletre, ahonnan pihenni jöttél (a főellenség termébe,
+## lásd GameState.break_floor). A régi, emelet nélküli futásmentésből a következő emeletre.
+func _return_depth() -> int:
+	return GameState.depth if not GameState.break_floor.is_empty() else GameState.depth + 1
+
+
+## Vissza a kazamatába a pihenőből: ugyanoda, ahonnan kijöttél (a főellenség termébe), minden
 ## megmarad (a bent hagyott pénzt is visszakapod).
 func _return_to_dungeon() -> void:
 	if _leaving:
@@ -366,7 +372,7 @@ func _return_to_dungeon() -> void:
 	GameState.saved_gold += GameState.break_gold_left
 	GameState.break_gold_left = 0
 	GameState.on_break = false
-	GameState.depth += 1
+	GameState.depth = _return_depth()
 	var tween := create_tween()
 	tween.tween_property(_fade, "color:a", 1.0, 0.5)
 	await tween.finished

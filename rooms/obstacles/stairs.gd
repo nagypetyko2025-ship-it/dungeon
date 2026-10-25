@@ -15,6 +15,11 @@ var _bars: Node2D
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	# Közös játékban a lépcsőn várni kell a társakra, de le is lehet lépni róla: ha visszalépsz,
+	# újra jelez.
+	body_exited.connect(func(body: Node2D) -> void:
+		if body.is_in_group("player"):
+			_used = false)
 
 
 func is_locked() -> bool:
