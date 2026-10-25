@@ -499,7 +499,7 @@ func _point_free(world_position: Vector2) -> bool:
 
 func _on_boss_defeated(boss: Node2D) -> void:
 	Quests.notify("boss")
-	# Minden főellenség után jár egy HP bájital (a gyorstár első helyére).
+	# Minden főellenség után jár egy HP bájital (Q-val iszod meg, lásd PotionBadge).
 	GameState.potions += 1
 	if is_instance_valid(_player):
 		FloatingText.spawn(get_parent(), _player.global_position + Vector2(-60, -80),
@@ -529,7 +529,7 @@ func _connect_center_stairs() -> void:
 	stairs.connect("used", stairs_used.emit)
 
 
-## Sok arany és egy biztosan legalább epikus tárgy.
+## Sok arany és egy biztosan legalább epikus tárgy (mítikusat csak a nagy főellenség dobhat, ritkán).
 func _drop_boss_loot(at: Vector2) -> void:
 	var total := (CHAOS_LORD_GOLD if lord == "chaos" else FINAL_BOSS_GOLD) if final_boss 		else BOSS_GOLD + depth * BOSS_GOLD_PER_DEPTH
 	var coins := (30 if lord == "chaos" else 20) if final_boss else 10
@@ -539,7 +539,9 @@ func _drop_boss_loot(at: Vector2) -> void:
 		coin.position = at + Vector2(0, -20)
 		_enemies.add_child(coin)
 	var drop = ITEM_DROP.instantiate()
-	drop.item = Items.random_item("mythic", BOSS_ITEM_MIN_RARITY, depth)
+	drop.item = Items.random_item("legendary", BOSS_ITEM_MIN_RARITY, depth)
+	if final_boss and randf() < Items.MYTHIC_LORD_CHANCE:
+		drop.item = Items.random_item("mythic", "mythic", depth)
 	drop.position = at + Vector2(0, -20)
 	_enemies.add_child(drop)
 	if final_boss:

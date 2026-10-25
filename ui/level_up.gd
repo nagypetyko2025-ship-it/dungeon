@@ -123,7 +123,7 @@ func _reroll() -> void:
 	_show_cards()
 
 
-## Íjjal vagy íjászként a Nyílzápor legendás kártya is felbukkanhat.
+## Íjjal vagy íjászként a Nyílzápor és az Átütés legendás kártya is felbukkanhat.
 func _has_bow() -> bool:
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null:

@@ -46,7 +46,7 @@ static var exits := 0
 static var merchant_stock: Array = []
 ## Szintlépéskor hányszor dobtad újra a fejlesztéseket (minden újradobás drágább).
 static var rerolls := 0
-## HP bájitalok a gyorstár első helyén ([1]): a futáshoz tartoznak (boltban vehető, főellenség után jár).
+## HP bájitalok (Q-val iszod meg, lásd PotionBadge): a futáshoz tartoznak (boltban vehető, főellenség után jár).
 static var potions := 0
 
 ## Gyakorló pálya (tutorial) megy: rögzített pálya, lépésről lépésre vezetés; semmi nem

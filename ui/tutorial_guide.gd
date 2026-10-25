@@ -89,9 +89,9 @@ func _build_steps() -> void:
 			+ "A pultnál E-vel el is adhatsz, [b]F[/b]-fel pedig HP bájitalt vehetsz tőle (60 arany, boltonként 2 db). "
 			+ "A szoba közepén lévő karral új árut kérhetsz. Ha körülnéztél, gyere ki a lenti ajtón.",
 			"done": func() -> bool: return _seen.has("shop_out")},
-		{"title": "HP bájital", "text": "Alul, az XP-csík fölött a [b]gyorstár[/b]: az első helyén vannak a HP bájitalaid "
+		{"title": "HP bájital", "text": "Bal fent, az életcsík mellett látod a [b]HP bájitalaidat[/b] "
 			+ "(a szám mutatja, mennyi van nálad). A boltos adott egyet kóstolónak, és közben megsérültél. "
-			+ "Nyomd meg az [b]1[/b]-es gombot: a bájital az elvesztett életed felét tölti vissza. "
+			+ "Nyomd meg a [b]Q[/b] gombot: a bájital az elvesztett életed felét tölti vissza. "
 			+ "Minden főellenség után is kapsz egyet.",
 			"start": _start_potion_step,
 			"done": func() -> bool: return _seen.has("potion")},

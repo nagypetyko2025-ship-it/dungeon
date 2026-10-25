@@ -18,7 +18,7 @@ const CHAPTERS := [
 	["Irányítás",
 		"[b]W A S D[/b] — mozgás\n[b]Bal klikk[/b] — támadás az egér irányába (nyomva tartva folyamatosan)\n"
 		+ "[b]E[/b] — használat (ajtó, lépcső, tárgylift, árus, karakterek)\n[b]I[/b] — felszerelés\n"
-		+ "[b]Tab[/b] — karakterlap\n[b]M[/b] — nagy térkép\n[b]J[/b] — küldetések könyve (lapozás: A / D)\n[b]1[/b] — HP bájital (gyorstár)\n[b]F[/b] — HP bájital vétele a boltos pultjánál\n[b]Esc[/b] — szünet menü / ablak bezárása\n"
+		+ "[b]Tab[/b] — karakterlap\n[b]M[/b] — nagy térkép\n[b]J[/b] — küldetések könyve (lapozás: A / D)\n[b]Q[/b] — HP bájital megivása\n[b]F[/b] — HP bájital vétele a boltos pultjánál\n[b]Esc[/b] — szünet menü / ablak bezárása\n"
 		+ "[b]Ctrl[/b] — suhanás (íjász) / hadi kiáltás (Gáspár)\n[b]F11[/b] vagy [b]Alt+Enter[/b] — teljes képernyő\n"
 		+ "Szintlépéskor: [b]1 2 3[/b] — kártya választása, [b]R[/b] — újradobás aranyért"],
 	["A kazamata",
@@ -39,14 +39,17 @@ const CHAPTERS := [
 	["Statok",
 		"[b]Élet[/b], [b]Regeneráció[/b], [b]Védelem[/b] (a sebzés %-át kivédi, max 70%), [b]Találati esély[/b] (ennyire találod el a szörnyet; íjász 80%, lovag 75%), [b]Kikerülés[/b] (esély, hogy nem sebződsz),"
 		+ "[b]Sebesség[/b], [b]Ütési sebesség[/b], [b]Kritikus esély[/b], [b]Hatótáv[/b], [b]Közelharci[/b] és [b]Távolsági sebzés[/b], "
-		+ "[b]Sebzés%[/b], [b]Többlövés[/b] (íjjal, max 5, csak legendás növeli).\n\n"
+		+ "[b]Sebzés%[/b], [b]Többlövés[/b] (íjjal, max 5, csak legendás növeli), [b]Átütés[/b] (a nyíl ennyi "
+		+ "szörnyön megy át, mindet sebzi; csak a legendás kártya növeli, max 1).\n\n"
 		+ "Szintlépéskor minden stat nő egy kicsit, és 3 kártya közül választasz. Ritkán legendás kártya is felbukkan."],
 	["Tárgyak és bolt",
-		"A tárgyaknak 4 ritkasága van: átlagos, ritka, epikus, legendás. Ládákból, szörnyekből és a boltból jutsz hozzájuk. "
+		"A tárgyaknak 5 ritkasága van: átlagos, ritka, epikus, legendás és mítikus. Ládákból, szörnyekből és a boltból "
+		+ "jutsz hozzájuk; mítikus tárgyat csak a nagy főellenségek dobhatnak (ritkán), és a bolt a 21. emelettől "
+		+ "(ritkán, 1000 arany felett). "
 		+ "A felszerelés-helyek: fegyver, sisak, mellvért, nadrág, cipő, kesztyű, gyűrű, amulett, talizmán.\n\n"
 		+ "A boltba (a térképen narancs) nekimész az ajtajának: E-vel vásárolsz, a pultnál eladhatsz. A szoba közepén "
 		+ "lévő karral aranyért új árut kérhetsz. Mellette a [b]tárgylift[/b]: emeletenként egy tárgyat felküldhetsz a tábori ládába.\n\n"
-		+ "[b]HP bájital[/b]: a gyorstár (alul, az XP-csík fölött) első helyén. Az [b]1[/b]-es gombbal iszod meg: az "
+		+ "[b]HP bájital[/b]: bal fent, az életcsík mellett látod, mennyi van nálad. A [b]Q[/b] gombbal iszod meg: az "
 		+ "elvesztett életed felét tölti vissza. A gyanús boltostól a pultnál F-fel veheted (60 arany, boltonként "
 		+ "legfeljebb 2), és minden főellenség után kapsz egyet."],
 	["Tábor és fejlődés",

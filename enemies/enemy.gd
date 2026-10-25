@@ -540,6 +540,7 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	var source: Variant = hitbox.get_meta("source", hitbox.owner)
 	# A játékos találati esélye: ha mellé megy, nem sebez (utána jön a szörny kikerülése).
 	if is_instance_valid(source) and source.has_method("hit_chance") and randf() >= float(source.call("hit_chance")):
+		hitbox.missed = true
 		_on_missed()
 		return
 	var hit := hitbox.roll_hit()
@@ -560,12 +561,15 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	if net_puppet:
 		# Báb: itt csak a kikerülés dől el és a látszat; meghalni csak a gazda szavára hal meg.
 		if not hit["pierce"] and randf() < _health.dodge_chance:
+			hitbox.missed = true
 			_health.dodged.emit()
 			return
 		_health.current = maxi(_health.current - int(hit["damage"]), 1)
 		_health.changed.emit(_health.current, _health.max_health)
 		_net_hp_hold = PUPPET_HP_HOLD
 	elif not _health.damage(hit["damage"], not hit["pierce"]):
+		# Kikerülte (vagy már halott): a lövedék továbbrepül.
+		hitbox.missed = true
 		return
 	# A játékos fegyvere talált: életlopás stb. (lásd Player.on_hit_enemy).
 	if is_instance_valid(source) and source.has_method("on_hit_enemy"):
@@ -656,7 +660,7 @@ func _on_died() -> void:
 
 func _drop_item() -> void:
 	var drop = ITEM_DROP.instantiate()
-	drop.item = Items.random_item("mythic", "common", GameState.depth)
+	drop.item = Items.random_item("legendary", "common", GameState.depth)
 	drop.position = position + Vector2(0, -8)
 	get_parent().add_child(drop)
 

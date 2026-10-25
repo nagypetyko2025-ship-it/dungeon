@@ -10,6 +10,9 @@ extends Area2D
 @export var crit_multiplier := 1.5
 ## Átütés: ezt a találatot nem lehet kikerülni (pl. lándzsa).
 @export var ignore_dodge := false
+## A célpont jelzi a `hurt` alatt, ha a találat mellément vagy kikerülték: a lövedék ilyenkor nem tűnik
+## el, hanem továbbrepül (lásd Hurtbox).
+var missed := false
 
 
 func _init() -> void:

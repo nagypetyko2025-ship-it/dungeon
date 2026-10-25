@@ -106,9 +106,9 @@ func _create_skill_label() -> void:
 	_dash_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	_dash_label.add_theme_constant_override("outline_size", 5)
 	_dash_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	# A gyorstár (QuickBar) fölött.
-	_dash_label.offset_top = -124
-	_dash_label.offset_bottom = -100
+	# Az XP-csík fölött.
+	_dash_label.offset_top = -66
+	_dash_label.offset_bottom = -42
 	_dash_label.offset_left = -200
 	_dash_label.offset_right = 200
 	_dash_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -221,3 +221,5 @@ func _on_stats_changed() -> void:
 		_stats.max_health, _stats.health_regen, _stats.defense, _stats.accuracy, _stats.dodge, _stats.move_speed,
 		_stats.attack_speed, _stats.crit_chance, _stats.attack_range,
 	]
+	if _stats.pierce > 0:
+		_stats_label.text += "\nÁtütés: %d" % _stats.pierce

@@ -1,6 +1,7 @@
 extends Hitbox
 ## A játékos nyílvesszője (íjjal): egyenesen repül a kurzor felé `max_distance`
-## távolságig (ezt a Hatótáv adja), falba csapódva vagy ellenséget eltalálva eltűnik.
+## távolságig (ezt a Hatótáv adja), falba csapódva vagy ellenséget eltalálva eltűnik. Ha mellément
+## vagy a szörny kikerülte, továbbrepül (lásd Hurtbox).
 ## A sebzést az ellenség Hurtboxa intézi, mint bármely Hitboxnál.
 
 const SHEET: Texture2D = preload("res://assets/0x72_dungeon/0x72_DungeonTilesetII_v1.7.png")
@@ -13,7 +14,7 @@ var max_distance := 420.0
 var look := "arrow"
 ## A lövő teste (ha a kiinduló pont falba esne, innen indul).
 var origin := Vector2.INF
-## Átütés (hadiíj): ennyi szörnyön repül még át találat után; mindegyiket csak egyszer sebzi.
+## Átütés (hadiíj, Átütés stat): ennyi szörnyön repül még át találat után; mindegyiket csak egyszer sebzi.
 var pierce := 0
 var _pierced: Array[Area2D] = []
 var _started := false

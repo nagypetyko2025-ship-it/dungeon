@@ -41,20 +41,25 @@ const LIMITS := {
 	"attack_range": Stats.MAX_RANGE,
 	"defense": Stats.MAX_DEFENSE,
 	"multishot": Stats.MAX_MULTISHOT,
+	"pierce": Stats.MAX_PIERCE,
 	"accuracy": Stats.MAX_ACCURACY,
 }
 
 ## Legendás fejlesztések: ritkábbak a többinél (LEGENDARY_CHANCE eséllyel kerül egy a
-## választhatók közé), és különleges, arany kártyán jelennek meg.
+## választhatók közé), és különleges, arany kártyán jelennek meg. "weight": melyik milyen gyakran jön
+## a legendások közül (az Átütés ritkább a Nyílzápornál).
 const LEGENDARY: Array[Dictionary] = [
 	{"stat": "multishot", "title": "Nyílzápor", "text": "+1 nyíl lövésenként", "amount": 1,
-		"icon_path": "res://assets/ui/icon_multishot.png", "legendary": true, "needs_bow": true},
+		"icon_path": "res://assets/ui/icon_multishot.png", "legendary": true, "needs_bow": true, "weight": 3.0},
+	{"stat": "pierce", "title": "Átütés", "text": "+1 szörnyön átmegy",
+		"amount": 1, "icon_path": "res://assets/ui/icon_pierce.png", "legendary": true, "needs_bow": true,
+		"weight": 1.0},
 ]
 const LEGENDARY_CHANCE := 0.1
 
 
 ## `count` darab különböző fejlesztés véletlenszerűen; ami már maxon van, kimarad.
-## `has_bow`: íjjal (vagy íjászként) a Nyílzápor legendás kártya is felbukkanhat, ritkán.
+## `has_bow`: íjjal (vagy íjászként) a Nyílzápor és az Átütés legendás kártya is felbukkanhat, ritkán.
 static func roll(stats: Stats, count: int, has_bow := false) -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	for upgrade in ALL:
@@ -67,10 +72,23 @@ static func roll(stats: Stats, count: int, has_bow := false) -> Array[Dictionary
 		if _available(stats, upgrade) and (has_bow or not upgrade.get("needs_bow", false)):
 			legendary.append(upgrade)
 	if not legendary.is_empty() and randf() < LEGENDARY_CHANCE and not options.is_empty():
-		options[randi() % options.size()] = legendary.pick_random()
+		options[randi() % options.size()] = _pick_weighted(legendary)
 	for i in options.size():
 		options[i] = _with_character_bonus(options[i])
 	return options
+
+
+## Egy a listából a "weight" szerint súlyozva.
+static func _pick_weighted(list: Array[Dictionary]) -> Dictionary:
+	var total := 0.0
+	for upgrade in list:
+		total += float(upgrade.get("weight", 1.0))
+	var ticket := randf() * total
+	for upgrade in list:
+		ticket -= float(upgrade.get("weight", 1.0))
+		if ticket <= 0.0:
+			return upgrade
+	return list[-1]
 
 
 ## A karakter saját kártya-bónusza ("card_bonus": stat -> szorzó-többlet, pl. Gáspárnál a

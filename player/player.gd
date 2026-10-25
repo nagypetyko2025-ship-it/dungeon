@@ -965,7 +965,7 @@ func _shoot(aim_angle: float) -> void:
 		arrow.direction = direction.rotated(deg_to_rad(spread) * k)
 		arrow.speed = ARROW_SPEED * float(type_data.get("arrow_speed", 1.0))
 		arrow.max_distance = BOW_RANGE * _stats.attack_range / 100.0 * float(type_data.get("range", 1.0))
-		arrow.pierce = int(type_data.get("pierce", 0))
+		arrow.pierce = int(type_data.get("pierce", 0)) + _stats.pierce
 		arrow.damage = hit_damage()
 		arrow.crit_chance = _stats.crit_chance / 100.0
 		arrow.crit_multiplier = weapon_crit_multiplier()

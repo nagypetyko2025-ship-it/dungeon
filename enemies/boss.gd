@@ -60,9 +60,14 @@ const TOUGHNESS_DAMAGE := 1.3
 const TOUGHNESS_XP := 1.5
 const MAX_LORD_SHARE := 0.7
 ## Az első ennyi főellenség (a 3., 6. és 9. emeleten) a mostani erősségű; az utánuk jövők életereje
-## LATER_BOSS_HEALTH-szoros.
+## LATER_BOSS_HEALTH-szoros, és főellenségenként még LATER_BOSS_GROWTH-szor nő (a 30. emelettől 100 000
+## fölött), a sebzésük pedig főellenségenként LATER_BOSS_DAMAGE_STEP-pel nő.
 const EASY_BOSSES := 3
+## Ennyi emeletenként jön főellenség (mint a Dungeon BOSS_EVERY-je).
+const BOSS_EVERY := 3
 const LATER_BOSS_HEALTH := 4.0
+const LATER_BOSS_GROWTH := 1.3
+const LATER_BOSS_DAMAGE_STEP := 0.06
 const BOSS_SCALE := 1.8
 const ATTACK_INTERVAL := Vector2(2.2, 3.2)
 const ENRAGE_SPEED := 1.2
@@ -150,10 +155,15 @@ func setup_boss(depth: int) -> void:
 	var health_cap := roundi(float(lord["health"]) * MAX_LORD_SHARE)
 	stats["health"] = maxi(stats["health"], mini(roundi(stats["health"] * TOUGHNESS), health_cap))
 	# Az első EASY_BOSSES főellenség (3., 6., 9. emelet) ilyen marad; az utánuk jövők sokkal szívósabbak.
-	if depth > EASY_BOSSES * 3:
+	if depth > EASY_BOSSES * BOSS_EVERY:
 		stats["health"] = roundi(stats["health"] * LATER_BOSS_HEALTH)
 	stats["damage"] = maxi(stats["damage"], mini(roundi(stats["damage"] * TOUGHNESS_DAMAGE), int(lord["damage"]) - 3))
 	stats["xp"] = roundi(stats["xp"] * TOUGHNESS_XP)
+	# A 4. főellenségtől (12. emelet) kezdve egyre szívósabbak és nagyobbat ütnek.
+	var later := depth / BOSS_EVERY - EASY_BOSSES
+	if later > 0:
+		stats["health"] = roundi(stats["health"] * pow(LATER_BOSS_GROWTH, later))
+		stats["damage"] = roundi(stats["damage"] * (1.0 + LATER_BOSS_DAMAGE_STEP * later))
 
 
 ## A kis főellenségnek csak a teste közepe sebez (a kép alsó-középső része).

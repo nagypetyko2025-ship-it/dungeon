@@ -262,7 +262,7 @@ func _ready() -> void:
 	if not tutorial and not GameState.cheated:
 		Progress.reached_depth(depth)
 	add_child(QuestTracker.new())
-	add_child(QuickBar.new())
+	add_child(PotionBadge.new())
 	_add_quest_book()
 	var cheats := CheatMenu.new()
 	cheats.name = "CheatMenu"

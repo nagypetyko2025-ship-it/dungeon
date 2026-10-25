@@ -10,7 +10,7 @@ const SPECIAL_INK := Color(0.48, 0.23, 0.66)
 ## A stat-oldalak: cím és a statok sorrendje.
 const PAGES := [
 	["Harc", ["damage", "ranged_damage", "elemental_damage", "damage_percent", "crit_chance", "attack_speed", "attack_range",
-		"accuracy", "multishot"]],
+		"accuracy", "multishot", "pierce"]],
 	["Védekezés és mozgás", ["max_health", "health_regen", "defense", "dodge", "move_speed"]],
 	["Különleges", ["lifesteal", "thorns", "gold_find", "xp_bonus"]],
 ]
@@ -307,6 +307,8 @@ func _add_stat(stat: String, stats: Stats, health: Health) -> void:
 		"health_regen": _stat_row(stat, "Regeneráció", "%.1f / mp" % stats.health_regen, "")
 		"multishot": _stat_row(stat, "Többlövés", "%d nyíl" % stats.multishot,
 			"íjjal egyszerre, max %d (csak legendás növeli)" % Stats.MAX_MULTISHOT)
+		"pierce": _stat_row(stat, "Átütés", "%d szörny" % stats.pierce,
+			"a nyíl ennyin megy át, mindet sebzi; max %d (csak legendás növeli)" % Stats.MAX_PIERCE)
 		"defense": _stat_row(stat, "Védelem", "%d%%" % stats.defense, "a sebzésből, max %d%%" % Stats.MAX_DEFENSE)
 		"accuracy": _stat_row(stat, "Találati esély", "%d%%" % stats.accuracy,
 			"ennyire találod el a szörnyet, max %d%%" % Stats.MAX_ACCURACY)

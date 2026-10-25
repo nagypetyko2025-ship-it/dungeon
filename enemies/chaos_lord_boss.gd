@@ -12,7 +12,7 @@ extends "res://enemies/boss.gd"
 
 const LORD := {
 	"name": "Ürességfaló, a Káosz Ura", "rect": Rect2(0, 0, 64, 64), "scale": 1.5,
-	"health": 150000, "damage": 80, "speed": 100.0, "xp": 3000,
+	"health": 1000000, "damage": 120, "speed": 100.0, "xp": 3000,
 	"attacks": ["rifts", "rifts", "vortex", "blink", "charge", "summon", "nova"], "minion": "chaos_spawn",
 }
 const SHEET := "res://assets/enemies/chaos_lord.png"

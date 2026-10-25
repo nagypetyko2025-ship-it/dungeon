@@ -17,9 +17,10 @@ const RARITIES := {
 		"price": [80, 120], "weight": 15, "per_floor": 0.05},
 	"legendary": {"name": "Legendás", "color": Color(1.0, 0.62, 0.15), "ink": Color(0.72, 0.36, 0.0),
 		"price": [170, 250], "weight": 6, "per_floor": 0.08},
-	# Mítikus: saját tárgyak (a DEFINITIONS végén), a legendásnál ritkábbak és erősebbek.
+	# Mítikus: saját tárgyak (a DEFINITIONS végén), a legendásnál erősebbek. Nem a súlyok szerint esnek:
+	# csak a nagy főellenségek dobhatják és a bolt árulhatja, ritkán (lásd MYTHIC_*).
 	"mythic": {"name": "Mítikus", "color": Color(1.0, 0.24, 0.2), "ink": Color(0.72, 0.07, 0.05),
-		"price": [380, 560], "weight": 1.2, "per_floor": 0.1, "fill": 2.2},
+		"price": [600, 850], "fill": 2.2},
 }
 const RARITY_ORDER: Array[String] = ["common", "rare", "epic", "legendary", "mythic"]
 ## Az átlagos tárgyak súlya mélyen sem esik ennyiszeres alá.
@@ -28,6 +29,13 @@ const MIN_RARITY_FACTOR := 0.12
 ## ennyiszer gyakoribb, a másik ennyiszer ritkább (lásd _style_weight). A szörnyek és a ládák nem így dobnak.
 const STYLE_MATCH := 2.0
 const STYLE_MISMATCH := 0.25
+## Mítikus tárgy: a nagy főellenség (Vérfarkas, Káosz Ura) MYTHIC_LORD_CHANCE eséllyel dob egyet; a boltban
+## csak a MYTHIC_SHOP_DEPTH. emelettől van, áruhelyenként MYTHIC_SHOP_CHANCE eséllyel, és legalább
+## MYTHIC_SHOP_PRICE aranyba kerül. Más (szörny, láda, kis főellenség) nem dob mítikusat.
+const MYTHIC_LORD_CHANCE := 0.01
+const MYTHIC_SHOP_DEPTH := 21
+const MYTHIC_SHOP_CHANCE := 0.015
+const MYTHIC_SHOP_PRICE := 1000
 ## A boltos a vételár ennyied részéért veszi meg a tárgyakat.
 const SELL_RATIO := 0.4
 ## A távolsági fegyverfajták (íjak, számszeríj).
@@ -709,12 +717,12 @@ static func create(id: String, rarity := "") -> Dictionary:
 	return item
 
 
-## Véletlen tárgy a ritkaságok súlyozásával (a mítikus a legritkább); `depth`: az emelet, mélyebben
-## több a ritkább tárgy (rarity_weight). `style` ("melee" / "ranged", lásd weapon_style): ilyenkor a
-## fegyverek közül az ehhez illők gyakoribbak (a boltban); üresen minden tárgy egyformán eshet.
-## `max_rarity`: ennél ritkább nem lehet (pl. a ládákban legfeljebb "rare");
+## Véletlen tárgy a ritkaságok súlyozásával; `depth`: az emelet, mélyebben több a ritkább tárgy
+## (rarity_weight). `style` ("melee" / "ranged", lásd weapon_style): ilyenkor a fegyverek közül az ehhez
+## illők gyakoribbak (a boltban); üresen minden tárgy egyformán eshet.
+## `max_rarity`: ennél ritkább nem lehet (pl. a ládákban legfeljebb "rare"; mítikus csak kérésre, lásd MYTHIC_*);
 ## `min_rarity`: ennél gyakoribb nem lehet (pl. a főellenség legalább "epic"-et dob).
-static func random_item(max_rarity := "mythic", min_rarity := "common", depth := 1, style := "") -> Dictionary:
+static func random_item(max_rarity := "legendary", min_rarity := "common", depth := 1, style := "") -> Dictionary:
 	var allowed := RARITY_ORDER.slice(RARITY_ORDER.find(min_rarity), RARITY_ORDER.find(max_rarity) + 1)
 	var total := 0.0
 	for rarity in allowed:
@@ -746,8 +754,8 @@ static func random_item(max_rarity := "mythic", min_rarity := "common", depth :=
 ## (az átlagos fogy, a ritkábbak szaporodnak), de MIN_RARITY_FACTOR alá nem esik.
 static func rarity_weight(rarity: String, depth: int) -> float:
 	var data: Dictionary = RARITIES[rarity]
-	var factor := 1.0 + float(data["per_floor"]) * maxi(depth - 1, 0)
-	return float(data["weight"]) * maxf(factor, MIN_RARITY_FACTOR)
+	var factor := 1.0 + float(data.get("per_floor", 0.0)) * maxi(depth - 1, 0)
+	return float(data.get("weight", 1.0)) * maxf(factor, MIN_RARITY_FACTOR)
 
 
 ## A karakter harcmódja: "melee" / "ranged", vagy "" ha saját, kötött fegyvere van (varázsló, Vendel).
@@ -768,9 +776,14 @@ static func _style_weight(id: String, style: String) -> float:
 
 ## Bolti tárgy az adott emelethez: minél mélyebben vagy, annál erősebb (lásd for_depth), és annál
 ## gyakrabban ritkább. A fegyverek közül a karaktered harcmódjához illők jönnek többször (a bolt áruja
-## közös játékban is mindenkinek a saját).
+## közös játékban is mindenkinek a saját). Mítikus csak a MYTHIC_SHOP_DEPTH. emelettől, ritkán és drágán.
 static func random_shop_item(depth: int) -> Dictionary:
-	return for_depth(random_item("mythic", "common", depth, weapon_style(Progress.character)), depth)
+	var style := weapon_style(Progress.character)
+	if depth >= MYTHIC_SHOP_DEPTH and randf() < MYTHIC_SHOP_CHANCE:
+		var mythic := for_depth(random_item("mythic", "mythic", depth, style), depth)
+		mythic["price"] = maxi(mythic["price"], MYTHIC_SHOP_PRICE + randi_range(20, 180))
+		return mythic
+	return for_depth(random_item("legendary", "common", depth, style), depth)
 
 
 ## A mélyebb boltok jobb árut tartanak: emeletenként a pozitív statok +STAT_PER_FLOOR-ral, a fegyver

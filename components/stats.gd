@@ -14,7 +14,7 @@ signal changed
 
 const NAMES: Array[String] = [
 	"damage", "ranged_damage", "damage_percent", "max_health", "health_regen", "dodge", "move_speed", "attack_speed",
-	"crit_chance", "attack_range", "defense", "multishot", "accuracy", "elemental_damage",
+	"crit_chance", "attack_range", "defense", "multishot", "accuracy", "elemental_damage", "pierce",
 ]
 const MAX_RANGE := 200
 ## Alapértelmezett kritikus szorzó (ha a fegyver nem ad meg sajátot).
@@ -29,6 +29,9 @@ const MAX_DEFENSE := 70
 ## Többlövés: ennyi nyíl repül egyszerre (íjjal). Csak legendás tárgy és a legendás
 ## szintlépési kártya növeli; legfeljebb ennyi lehet.
 const MAX_MULTISHOT := 5
+## Átütés: a nyíl ennyi szörnyön megy át (mindegyiket sebzi). Csak a legendás szintlépési kártya
+## növeli; legfeljebb ennyi lehet.
+const MAX_PIERCE := 1
 ## Találati esély: ennyi % eséllyel találod el a szörnyet (a szörny kikerülése ezután még
 ## jön). Az alapérték karakterenként más (Characters), legfeljebb ennyi lehet.
 const MAX_ACCURACY := 95
@@ -66,6 +69,7 @@ const LIMITS := {
 	"attack_range": [50, MAX_RANGE],
 	"defense": [0, MAX_DEFENSE],
 	"multishot": [1, MAX_MULTISHOT],
+	"pierce": [0, MAX_PIERCE],
 	"accuracy": [5, MAX_ACCURACY],
 	"elemental_damage": [-99, 999],
 }
@@ -132,6 +136,11 @@ const LIMITS := {
 	set(value):
 		base_multishot = value
 		changed.emit()
+## Átütés: a nyíl ennyi szörnyön repül át (a hadiíj saját átütése ehhez adódik).
+@export var base_pierce := 0.0:
+	set(value):
+		base_pierce = value
+		changed.emit()
 ## Elemi sebzés: a varázsló (Lőrinc) varázslatai skálázódnak vele; egyelőre csak neki van.
 @export var base_elemental_damage := 0.0:
 	set(value):
@@ -168,6 +177,8 @@ var defense: int:
 	get: return floori(_final("defense"))
 var multishot: int:
 	get: return floori(_final("multishot"))
+var pierce: int:
+	get: return floori(_final("pierce"))
 var accuracy: int:
 	get: return roundi(_final("accuracy"))
 var elemental_damage: int:

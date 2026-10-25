@@ -33,7 +33,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 
 ## Felépítés (fő fájlok)
 - `world/dungeon.gd` emelet-generálás (boss minden 3. emeleten, 20. emelet: Vérfarkas + győzelem; 40. emelet (`CHAOS_DEPTH`): ugyanígy
-  aréna, benne a Káosz Ura — `enemies/chaos_lord_boss.gd`, 150 000 HP, hasadékok/káoszörvény/káoszalak, `Room.lord` = "werewolf" / "chaos"), `world/camp.gd` tábor
+  aréna, benne a Káosz Ura — `enemies/chaos_lord_boss.gd`, 1 000 000 HP, hasadékok/káoszörvény/káoszalak, `Room.lord` = "werewolf" / "chaos"), `world/camp.gd` tábor
   (város keletre: `world/town.gd`, 68 csempe széles, a keleti fele (OLD_END_X-től) üres rét, kovács: `world/smithy.gd`, veterán + sáros ösvény nyugatra, a végén a romos ház:
   `world/ruin.gd`, benne a tolvaj rejtekszobája: `world/thief.gd`), `world/shop_interior.gd` bolt.
 - Félbehagyott futás: `world/run_save.gd` (a főellenség utáni pihenőnél kilépve a futás profilonként user://run*.cfg-be mentődik; a főmenü Folytatás gombja onnan indít; a kazamatába visszatéréskor / feladáskor / új játéknál törlődik; multiban nincs).
@@ -42,13 +42,23 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Ellenségek: `enemies/enemy_types.gd` (statok, 10. emeleti ugrás; a kikerülés a végén ×0.25, `DODGE_FACTOR`; Káosz kategória: chaos_spawn 16.-tól,
   chaos_hound 26.-tól), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`, `chaos_lord_boss.gd`;
   képességek: `enemies/enemy_abilities.gd` (méreg/fagy/fosztogatás a `Player.apply_poison/apply_slow/lose_gold`-on át).
+  Főellenségek: az első 3 (3., 6., 9. emelet) változatlan; a 12.-től `Boss.LATER_BOSS_GROWTH` (×1.3 élet) és
+  `LATER_BOSS_DAMAGE_STEP` (+6% sebzés) főellenségenként (30. emelet: ~110 000, 39.: ~180 000 élet). Vérfarkas:
+  `LORD_HEALTH` ×40 = 128 000 (+ feltámadás), `LORD_DAMAGE` ×2 = 32; Káosz Ura: 1 000 000 élet, 120 sebzés.
+  Mellé / kikerülés: a szörny `_on_hurt`-ja `hitbox.missed = true`-t állít, a Hurtbox ilyenkor nem hívja az `on_hit`-et,
+  a lövedék továbbrepül (az átütést sem fogyasztja; ugyanazt a célt a `skips` miatt nem találja el újra).
 - Tárgyak: `items/items.gd` (DEFINITIONS; a bolti áru emeletenként erősebb: `Items.for_depth`); statok: `components/stats.gd`; szintlépés-kártyák: `components/upgrades.gd`.
   Ritkaságok: common → rare → epic → legendary → mythic (Mítikus, piros: 17 saját tárgy, fegyverfajtánként / helyenként
-  egy, a DEFINITIONS végén). Minden tárgynak minden ritkaságra van változata (`Items.variant`), de esni / a boltban
+  egy, a DEFINITIONS végén). Mítikus csak két helyről jön: a nagy főellenség (Vérfarkas, Káosz Ura) fő dobása
+  `MYTHIC_LORD_CHANCE` (1%) eséllyel, és a bolt a `MYTHIC_SHOP_DEPTH` (21.) emelettől, áruhelyenként `MYTHIC_SHOP_CHANCE`
+  (1.5%) eséllyel, legalább `MYTHIC_SHOP_PRICE` (1000) aranyért; a `random_item` alapból legfeljebb legendásat dob. Minden tárgynak minden ritkaságra van változata (`Items.variant`), de esni / a boltban
   jönni csak a saját ritkaságában tud (`available_rarities`); a többi változat a csalómenü tárgylapján. `Items.random_item(max, min, depth, style)`: mélyebben
   több a ritkább (`rarity_weight`, RARITIES "per_floor"); a boltban (`random_shop_item`) a fegyverek közül a karakter
   harcmódjához illők gyakoribbak (`weapon_style`, `STYLE_MATCH` / `STYLE_MISMATCH`), a szörnyek és ládák dobásában nem. Íjfajták: bow, shortbow (gyors,
   rövid), warbow (lassú, átütő nyíl: `PlayerArrow.pierce`, a Hurtbox `skips`-szel kérdezi), crossbow (`Player.WEAPON_TYPES`).
+  Átütés stat (`Stats.pierce`, max `MAX_PIERCE` = 1): csak a legendás "Átütés" szintlépési kártya adja (íjjal, a
+  Nyílzápornál 3× ritkább: `Upgrades.LEGENDARY` "weight"), a fegyver saját átütéséhez adódik.
+- HP bájital: `ui/potion_badge.gd` (`PotionBadge`, Q gomb; a kazamatában a HP-csík mellett, a táborban bal fent). Gyorstár nincs.
 - UI: minden ablak CanvasLayer `open()/close()`-zal, a `ui/menus.gd` kezeli (KEYS: I, Tab, M, J). Stílus: `UiStyle`, `MenuStyle`.
   Megállítás: `GamePause.set_paused(tree, on)` / `GamePause.active(tree)` (`ui/game_pause.gd`) a `get_tree().paused` helyett —
   egyjátékosban a fa áll meg, közös játékban semmi (szintlépés, halál, Esc-menü alatt sem), csak a karakter nem irányítható és a világ nem fogad E-t.

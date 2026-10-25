@@ -239,9 +239,9 @@ func _ready() -> void:
 	var cheats := CheatMenu.new()
 	cheats.name = "CheatMenu"
 	add_child(cheats)
-	var quick_bar := QuickBar.new()
-	quick_bar.bottom_offset = -16.0
-	add_child(quick_bar)
+	var potion_badge := PotionBadge.new()
+	potion_badge.left_offset = 16.0
+	add_child(potion_badge)
 	var book: CanvasLayer = preload("res://ui/quest_book.gd").new()
 	book.name = "QuestBook"
 	add_child(book)

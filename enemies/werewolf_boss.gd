@@ -17,9 +17,11 @@ const WEREWOLF := {
 	"attacks": ["circles", "circles", "charge", "slam"], "minion": "",
 }
 const SHEET := "res://assets/enemies/werewolf.png"
-## A Mélység Ura szívósabb: a WEREWOLF életerejének ennyiszerese (25 600), hogy minden más
-## főellenségnél több élete legyen (a legszívósabb, a 33. emeleti Nyálkakirály: kb. 23 700).
-const LORD_HEALTH := 8.0
+## A Mélység Ura szívósabb: a WEREWOLF életerejének ennyiszerese (128 000, és egyszer feltámad), a sebzése
+## pedig ennyiszerese (32), hogy jóval erősebb legyen a körülötte lévő főellenségeknél (18. emelet: kb.
+## 20 000 élet, 24 sebzés; 21. emelet: kb. 30 000, 37).
+const LORD_HEALTH := 40.0
+const LORD_DAMAGE := 2.0
 ## Életlopás: a játékosnak okozott sebzés ennyiszeresét gyógyítja (de legalább a max élet ennyi részét).
 const LIFESTEAL_MULTIPLIER := 8.0
 const LIFESTEAL_MIN := 0.01
@@ -51,7 +53,7 @@ func setup_werewolf(depth: int) -> void:
 	_type = {"name": "werewolf", "rect": WEREWOLF["rect"], "sheet": SHEET, "run": true}
 	stats = {
 		"health": roundi(WEREWOLF["health"] * LORD_HEALTH),
-		"damage": WEREWOLF["damage"],
+		"damage": roundi(WEREWOLF["damage"] * LORD_DAMAGE),
 		"speed": WEREWOLF["speed"],
 		"dodge": 0,
 		"knockback": 420.0,

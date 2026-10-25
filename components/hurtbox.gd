@@ -26,10 +26,13 @@ func _physics_process(delta: float) -> void:
 			if area.has_method("skips") and area.call("skips", self):
 				continue
 			_invincible_left = invincibility_time
-			hurt.emit(area)
-			# Lövedékek (pl. nyíl) ilyenkor eltűnnek.
-			if area.has_method("on_hit"):
-				area.call("on_hit")
+			var hitbox := area as Hitbox
+			hitbox.missed = false
+			hurt.emit(hitbox)
+			# Lövedékek (pl. nyíl) ilyenkor eltűnnek; ha mellément vagy a szörny kikerülte, továbbrepülnek
+			# (ugyanazt a célt a nyíl nem találja el újra, lásd PlayerArrow.skips).
+			if hitbox.has_method("on_hit") and not hitbox.missed:
+				hitbox.call("on_hit")
 			return
 
 
