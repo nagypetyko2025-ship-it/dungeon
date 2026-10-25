@@ -237,25 +237,28 @@ func _add_spells() -> void:
 		_left.add_child(detail)
 
 
-## Vendel idézése: a csontvázak (bal klikk), az íjászok (jobb klikk), az óriás (Ctrl) és a fejlesztések
+## Vendel idézése: a csontvázak (bal klikk), a másodlagos idézés (jobb klikk: íjászok vagy óriás) és a fejlesztések
 ## (5 szintenként, lásd Necromancy). A csontvázak statjai a szinttel nem nőnek, csak a fejlesztésekkel.
 func _add_necromancy() -> void:
 	var next_level := (int(_player.get_node("Experience").get("level")) / Necromancy.LEVEL_EVERY + 1) * Necromancy.LEVEL_EVERY
-	var learn := "az 5. szintenkénti választásnál tanulhatod meg"
+	# A másodlagos idézés: az íjászok és az óriás közül csak az egyiket lehet választani.
+	var learn := "az 5. szintenkénti választásnál (vagy ez, vagy a másik)"
+	var other := "nem választható: a másikat választottad"
 	_necromancy_row(SpriteSheet.region(Necromancy.SKELETON_REGION), "Csontvázak", "bal egérgomb", true,
 		"%d sebzés" % Necromancy.damage("skeleton"), [
 			"%d kel ki egyszerre; %d találatot bírnak ki" % [PLAYER_SCRIPT.SUMMON_COUNT, Necromancy.hits("skeleton")],
 			"%.1f mp / idézés" % float(_player.call("summon_cooldown"))])
 	var archers := Necromancy.has_archers()
-	_necromancy_row(load(Necromancy.ARCHER_ICON), "Íjász csontvázak", "jobb egérgomb" if archers else "még nem tanultad",
+	var chosen := Necromancy.secondary()
+	_necromancy_row(load(Necromancy.ARCHER_ICON), "Íjász csontvázak", "jobb egérgomb" if archers 			else ("még nem tanultad" if chosen.is_empty() else "nem választható"),
 		archers, "%d sebzés" % Necromancy.damage("archer"), [
 			"%d íjász, távolról lő; %d találatot bírnak ki" % [Necromancy.ARCHER_COUNT, Necromancy.hits("archer")],
-			"%.1f mp / idézés" % float(_player.call("archer_cooldown")) if archers else learn])
+			"%.1f mp / idézés" % float(_player.call("archer_cooldown")) if archers 				else (learn if chosen.is_empty() else other)])
 	var giant := Necromancy.has_giant()
-	_necromancy_row(load(Necromancy.GIANT_ICON), "Óriás csontváz", "Ctrl" if giant else "még nem tanultad",
+	_necromancy_row(load(Necromancy.GIANT_ICON), "Óriás csontváz", "jobb egérgomb" if giant 			else ("még nem tanultad" if chosen.is_empty() else "nem választható"),
 		giant, "%d sebzés" % Necromancy.damage("giant"), [
 			"egyesével kel ki, lassú, nagyot lök; %d találatot bír ki" % Necromancy.hits("giant"),
-			"%.1f mp / idézés" % float(_player.call("giant_cooldown")) if giant else learn])
+			"%.1f mp / idézés" % float(_player.call("giant_cooldown")) if giant 				else (learn if chosen.is_empty() else other)])
 	_necromancy_row(load(Necromancy.POWER_ICON), "Fejlesztések", "5 szintenként", true,
 		"%d / %d" % [_player.call("_minion_count"), Necromancy.max_minions()], [
 			"egyszerre legfeljebb %d csontváz (mind együtt; a határ %d)" % [Necromancy.max_minions(), Necromancy.MAX_MAX],

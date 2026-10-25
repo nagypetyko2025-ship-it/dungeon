@@ -10,7 +10,7 @@ extends CharacterBody2D
 ##   "skeleton"  a sima csontváz (bal klikk)
 ##   "archer"    íjász (jobb klikk): kékes, íjat tart, és távolról lő (SHOOT_RANGE-en belül, ha rálát);
 ##               ha a szörny túl közel jön, hátrál
-##   "giant"     óriás (Ctrl): nagy (a "Skeletons Rework" óriás csontváza), erős, sokat bír, de lassú,
+##   "giant"     óriás (jobb klikk, ha az íjászok helyett ezt választotta): nagy (a "Skeletons Rework" óriás csontváza), erős, sokat bír, de lassú,
 ##               és nagyot lök
 ## A sebzést és a kibírt találatokat Vendel fejlesztései adják (Necromancy), a szinttel nem nőnek.
 

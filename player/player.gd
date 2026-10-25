@@ -479,10 +479,12 @@ func _physics_process(delta: float) -> void:
 	_giant_left = maxf(_giant_left - delta, 0.0)
 	if Input.is_action_pressed("attack") and _can_summon():
 		_summon()
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and _can_summon_archers():
-		_summon_archers()
-	if Input.is_physical_key_pressed(KEY_CTRL) and _can_summon_giant():
-		_summon_giant()
+	# A másodlagos idézés (jobb klikk): amelyiket választotta, az íjászok vagy az óriás (lásd Necromancy).
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		if _can_summon_archers():
+			_summon_archers()
+		elif _can_summon_giant():
+			_summon_giant()
 	_secondary_left = maxf(_secondary_left - delta, 0.0)
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and _secondary_left <= 0.0 and GameState.spells.size() > 1 \
 			and _weapon_type == "wand" and not get_tree().paused:
@@ -576,7 +578,8 @@ func _closest_threat() -> Node2D:
 
 ## Csontváz-idézés (csak Vendel, a kazamatában): bal egérgombra SUMMON_COUNT csontváz kel ki a földből
 ## körülötte, és érte harcol (lásd SkeletonMinion). Ha megtanulta (Necromancy, 5 szintenként): jobb
-## egérgombra íjász csontvázak, Ctrl-ra egy óriás csontváz. Egyszerre legfeljebb Necromancy.max_minions()
+## egérgombra a másodlagos idézés — íjász csontvázak VAGY egy óriás csontváz (a kettő közül amelyiket
+## választotta). Egyszerre legfeljebb Necromancy.max_minions()
 ## csontváza lehet, minden fajta együtt számít. A töltési idők és a csontvázak statjai a szinttel és
 ## Vendel statjaival nem nőnek, csak a fejlesztésekkel (Necromancy).
 const SUMMON_COOLDOWN := 3.0
@@ -671,8 +674,33 @@ func _raise_minions(count: int, kind: String) -> void:
 		minion.hits = Necromancy.hits(kind)
 		minion.lifetime = Necromancy.lifetime()
 		var angle := TAU * i / maxi(count, 1) + randf_range(-0.3, 0.3)
+		var spot := _free_spawn_spot(angle, 44.0 if kind != "skeleton" else 34.0, 14.0 if kind == "giant" else 9.0)
 		get_parent().add_child(minion)
-		minion.global_position = global_position + Vector2.from_angle(angle) * (44.0 if kind != "skeleton" else 34.0)
+		minion.global_position = spot
+
+
+## Szabad hely egy új csontváznak körülöttünk (hogy fal mellett állva ne a falba keljen ki): a kért
+## irányban, ha ott nincs fal / oszlop, és nem a fal túloldalára esik; különben más irányban, egyre
+## közelebb; végső esetben a lábunknál (a csontváz a játékoson átmegy).
+func _free_spawn_spot(angle: float, distance: float, radius: float) -> Vector2:
+	var space := get_world_2d().direct_space_state
+	var circle := CircleShape2D.new()
+	circle.radius = radius
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = circle
+	query.collision_mask = 1
+	for reach: float in [distance, distance * 0.6, distance * 0.3]:
+		for turn in 8:
+			# Felváltva jobbra-balra fordulva a kért iránytól.
+			var offset := ceili(turn / 2.0) * (1.0 if turn % 2 == 1 else -1.0) * TAU / 8.0
+			var spot := global_position + Vector2.from_angle(angle + offset) * reach
+			query.transform = Transform2D(0.0, spot)
+			if not space.intersect_shape(query, 1).is_empty():
+				continue
+			var ray := PhysicsRayQueryParameters2D.create(global_position, spot, 1)
+			if space.intersect_ray(ray).is_empty():
+				return spot
+	return global_position
 
 
 ## Árnyéklépés (csak Bence, Ctrl): a kurzorhoz legközelebbi szörny háta mögé lép (SHADOW_STEP_RANGE-en

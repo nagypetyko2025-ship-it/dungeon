@@ -66,13 +66,13 @@ func _process(_delta: float) -> void:
 			_create_skill_label()
 		_dash_label.visible = true
 		_update_skill_label("Csontvázak", player.call("summon_cooldown_left"), "Bal klikk")
-		# Ha már megtanulta az íjászokat (jobb klikk) / az óriást (Ctrl), azok állapota is mellette.
+		# A másodlagos idézés (jobb klikk: íjászok vagy óriás) állapota is mellette, ha már választotta.
 		if Necromancy.has_archers():
 			var archers_left: float = player.call("archer_cooldown_left")
 			_dash_label.text += "   ·   Íjászok [Jobb klikk]: " + ("kész" if archers_left <= 0.0 else "%.1f mp" % archers_left)
 		if Necromancy.has_giant():
 			var giant_left: float = player.call("giant_cooldown_left")
-			_dash_label.text += "   ·   Óriás [Ctrl]: " + ("kész" if giant_left <= 0.0 else "%.1f mp" % giant_left)
+			_dash_label.text += "   ·   Óriás [Jobb klikk]: " + ("kész" if giant_left <= 0.0 else "%.1f mp" % giant_left)
 		return
 	if player != null and Characters.data(Progress.character).get("shadow_step", false):
 		_update_skill_label("Árnyéklépés", player.call("shadow_step_cooldown_ratio") * player.SHADOW_STEP_COOLDOWN)

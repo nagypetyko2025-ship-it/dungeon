@@ -8,9 +8,10 @@ class_name Necromancy
 ##   damage    +1 sebzés minden csontváznak (korlát nélkül)
 ##   power     csontváz-erősítés: +POWER_DAMAGE sebzés, +1 kibírt találat, gyorsabb ütés/lövés (MAX_POWER-ig)
 ##   cooldown  gyors idézés: minden idézés COOLDOWN_STEP-szer rövidebb töltésű (MAX_COOLDOWN-ig)
-##   archers   jobb klikk: ARCHER_COUNT íjász csontváz (egyszer lehet megtanulni)
-##   giant     Ctrl: egy óriás csontváz — erősebb, de lassabb, és ritkábban idézhető (egyszer)
-## Az idézések: Player._summon (bal klikk), _summon_archers (jobb klikk), _summon_giant (Ctrl).
+##   archers   másodlagos idézés: ARCHER_COUNT íjász csontváz
+##   giant     másodlagos idézés: egy óriás csontváz — erősebb, de lassabb, és ritkábban idézhető
+## A másodlagos idézés (jobb klikk) a kettő közül az egyik: amelyiket választja, a másik már nem jön.
+## Az idézések: Player._summon (bal klikk), _summon_archers / _summon_giant (jobb klikk).
 
 const LEVEL_EVERY := 5
 ## Ennyi kártyát mutatunk egyszerre (a többi újradobással jöhet).
@@ -97,8 +98,18 @@ static func has_archers() -> bool:
 	return level("archers") > 0
 
 
+## (Ha valahogy mindkettő meglenne, az íjászok számítanak.)
 static func has_giant() -> bool:
-	return level("giant") > 0
+	return level("giant") > 0 and not has_archers()
+
+
+## A másodlagos idézés (jobb klikk): "archers", "giant", vagy "" ha még nem választott.
+static func secondary() -> String:
+	if has_archers():
+		return "archers"
+	if has_giant():
+		return "giant"
+	return ""
 
 
 ## A választható kártyák (minden 5. szinten): ami még nem érte el a határát, és a még meg nem tanult
@@ -124,14 +135,14 @@ static func level_options() -> Array[Dictionary]:
 		options.append({"necromancy": "cooldown", "stat": "", "amount": 0, "icon_path": COOLDOWN_ICON,
 			"title": "Gyors idézés", "text": "%d%%-kal rövidebb idő két idézés között (most %d / %d)" \
 				% [roundi((1.0 - COOLDOWN_STEP) * 100.0), level("cooldown"), MAX_COOLDOWN], "note": "minden idézés"})
-	if not has_archers():
+	# A másodlagos idézés (jobb klikk): íjászok VAGY óriás — ha az egyiket választotta, a másik már nem jön.
+	if secondary().is_empty():
 		options.append({"necromancy": "archers", "stat": "", "amount": 0, "icon_path": ARCHER_ICON,
 			"title": "Íjász csontvázak", "text": "%d íjász csontváz kel ki, és távolról lő a szörnyekre" % ARCHER_COUNT,
-			"note": "új képesség · jobb klikk"})
-	if not has_giant():
+			"note": "jobb klikk · vagy ez, vagy az óriás"})
 		options.append({"necromancy": "giant", "stat": "", "amount": 0, "icon_path": GIANT_ICON,
 			"title": "Óriás csontváz", "text": "Egy nagy csontváz kel ki: %dx erősebb, %dx többet bír, de lassabb" \
-				% [roundi(GIANT_DAMAGE), GIANT_HITS], "note": "új képesség · Ctrl"})
+				% [roundi(GIANT_DAMAGE), GIANT_HITS], "note": "jobb klikk · vagy ez, vagy az íjászok"})
 	options.shuffle()
 	options.resize(mini(options.size(), CARD_COUNT))
 	return options
