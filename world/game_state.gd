@@ -58,6 +58,8 @@ static var visited_dungeon := false
 ## Épp most győzted le a Vérfarkast (20. emelet): a tábor egyszer kiírja a győzelmet.
 ## (A reset() nem törli: a futás vége után állítjuk be.)
 static var dungeon_won := false
+## Melyik nagy főellenség után ("werewolf" / "chaos"): a tábor felirata ehhez igazodik.
+static var won_lord := "werewolf"
 ## Csalás (CheatMenu): a játékos nem sebződik. A reset() nem törli, csak a menü kapcsolja.
 static var god_mode := false
 ## Ebben a futásban csaltál (teleport vagy halhatatlanság, akár csak egyszer is): a futásból

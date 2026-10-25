@@ -12,6 +12,9 @@ const KINGS := ["Ogrekirály", "Orkhadúr", "Gyíkkirály", "Démonúr", "Nekrom
 const LORD := "Vérfarkas, a Mélység Ura"
 ## A 21. emelet utáni új főellenségek (24., 27., 30., 33. emelet).
 const DEEP_BOSSES := ["Kalózkirály", "Lánggólem", "A Mélység Szeme", "Nyálkakirály"]
+## A 40. emelet nagy főellensége.
+const CHAOS_LORD := "Ürességfaló, a Káosz Ura"
+const CHAOS_SCRIPT := preload("res://enemies/chaos_lord_boss.gd")
 ## Kategóriák sorrendben: [cím, szörnyek].
 const CATEGORIES := [
 	["Élőholtak", ["tiny_zombie", "zombie", "ice_zombie", "big_zombie", "skelet", "skeleton_legionary",
@@ -26,9 +29,9 @@ const CATEGORIES := [
 	["Fenevadak", ["rat", "cave_bat", "minotaur", "yeti", "wendigo", "mammoth", "giant_crab"]],
 	["Sárkányok", ["fire_dragon", "frost_dragon", "gold_dragon", "shadow_dragon"]],
 	["Bogarak", ["fly", "spider"]],
-	["Káosz", ["chaos_spawn"]],
+	["Káosz", ["chaos_spawn", "chaos_hound"]],
 	["Különös lények", ["mimic", "pumpkin_dude", "angel", "toadstool"]],
-	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES],
+	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES + [CHAOS_LORD]],
 ]
 ## A képességek neve a könyvben (EnemyAbilities, és a típus "dash" / "ranged" jelzője).
 const ABILITY_NAMES := {
@@ -51,6 +54,7 @@ const ENTRIES := {
 	"red_demon": ["Vörös démon", "Lángoló bőrű démon: a semmiből terem melletted, és halálakor szétrobban."],
 	"gold_dragon": ["Aranysárkány", "Kincseken alszik; ha eltalál, a te aranyadat is a halmára gyűjti."],
 	"chaos_spawn": ["Káoszivadék", "Fekete-lila, folyton alakot váltó csápgomolyag egyetlen vörös szemmel. A Mélység legaljáról tör fel, ahol a világ szabályai már nem érvényesek: eltűnik, cikázik, és ha elpusztul, szétrobban."],
+	"chaos_hound": ["Káoszkopó", "Fekete-lila árnyékfenevad, a szeme ibolyán izzik. A 25. emelet alól tör fel: nekiront, a semmin át melletted terem, és minél jobban megsebzed, annál vadabb."],
 	"cave_bat": ["Barlangi denevér", "Barna szárnyú denevér a kazamata mennyezetéről. Gyenge, de gyors, és ide-oda cikázva csap le: nehéz eltalálni."],
 	"toadstool": ["Mérges gombaszörny", "Vöröskalapú, lábra kelt gomba a nyirkos termekből. Lassú és szívós, a csípése mérgez, és ha elpusztul, mérges spórafelhővé robban szét."],
 	"blood_wraith": ["Vérszellem", "Vörös leplű szellem a Mélység középső szintjeiről. Hirtelen eltűnik és máshol bukkan fel, az érintése pedig jéghideg: lelassít."],
@@ -125,6 +129,9 @@ const ENTRIES := {
 		+ "és egy pillanat alatt melletted terem."],
 	"Nyálkakirály": ["Nyálkakirály", "Hatalmas, remegő kocsonya. Mérgező tócsákat hagy maga után, " \
 		+ "és kisebb nyálkákat szül."],
+	"Ürességfaló, a Káosz Ura": ["Ürességfaló, a Káosz Ura", "A 40. emelet ura: fogas torkú csápgomolyag a " \
+		+ "valóság szélén túlról. Hasadékokat nyit a földön, lövedékörvényt szór, és ha félholtra vered, " \
+		+ "széthasad körülötte a világ."],
 }
 
 
@@ -167,6 +174,11 @@ static func icon(monster: String) -> Array:
 					own.region = boss["rect"]
 					return [own, boss.get("tint", Color.WHITE)]
 				return [SpriteSheet.region(boss["rect"]), boss.get("tint", Color.WHITE)]
+		if monster == CHAOS_LORD:
+			var chaos := AtlasTexture.new()
+			chaos.atlas = load(CHAOS_SCRIPT.SHEET)
+			chaos.region = CHAOS_SCRIPT.LORD["rect"]
+			return [chaos, Color.WHITE]
 		var sheet := AtlasTexture.new()
 		sheet.atlas = load(WEREWOLF_SCRIPT.SHEET)
 		sheet.region = WEREWOLF_SCRIPT.WEREWOLF["rect"]

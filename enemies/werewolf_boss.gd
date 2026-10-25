@@ -214,6 +214,12 @@ class GroundCircle:
 	var fuse := 3.0
 	var damage := 10
 	var source: Node2D
+	## Színek: a Vérfarkasé piros; a Káosz Ura lila hasadékai ezt írják felül (lásd chaos_lord_boss.gd).
+	var fill_color := Color(0.8, 0.05, 0.08)
+	var core_color := Color(0.9, 0.12, 0.12)
+	var edge_color := Color(1, 0.25, 0.2)
+	var mark_color := Color(0.35, 0.02, 0.04)
+	var flash_color := Color(1, 0.55, 0.45)
 	var _t := 0.0
 	var _struck := false
 
@@ -250,16 +256,16 @@ class GroundCircle:
 		if _struck:
 			# Lecsapás: fehéres-piros villanás, ami elhalványul.
 			var fade := 1.0 - clampf((_t - fuse) / 0.35, 0.0, 1.0)
-			draw_circle(Vector2.ZERO, radius, Color(1, 0.55, 0.45, 0.6 * fade))
-			draw_arc(Vector2.ZERO, radius, 0, TAU, 40, Color(1, 0.9, 0.8, fade), 4.0)
+			draw_circle(Vector2.ZERO, radius, Color(flash_color, 0.6 * fade))
+			draw_arc(Vector2.ZERO, radius, 0, TAU, 40, Color(flash_color.lightened(0.6), fade), 4.0)
 			return
 		var progress := clampf(_t / fuse, 0.0, 1.0)
 		# Az utolsó fél másodpercben villog.
 		var blink := 1.0 if _t < fuse - 0.5 or int(_t * 12.0) % 2 == 0 else 0.55
-		draw_circle(Vector2.ZERO, radius, Color(0.8, 0.05, 0.08, 0.16 * blink))
-		draw_circle(Vector2.ZERO, radius * progress, Color(0.9, 0.12, 0.12, 0.38 * blink))
-		draw_arc(Vector2.ZERO, radius, 0, TAU, 40, Color(1, 0.25, 0.2, 0.9 * blink), 3.0)
-		# Karmolásnyomok középen.
+		draw_circle(Vector2.ZERO, radius, Color(fill_color, 0.16 * blink))
+		draw_circle(Vector2.ZERO, radius * progress, Color(core_color, 0.38 * blink))
+		draw_arc(Vector2.ZERO, radius, 0, TAU, 40, Color(edge_color, 0.9 * blink), 3.0)
+		# Karmolásnyomok (repedések) középen.
 		for i in 3:
 			var x := (i - 1) * radius * 0.28
-			draw_line(Vector2(x - 6, -radius * 0.35), Vector2(x + 6, radius * 0.35), Color(0.35, 0.02, 0.04, 0.7 * blink), 3.0)
+			draw_line(Vector2(x - 6, -radius * 0.35), Vector2(x + 6, radius * 0.35), Color(mark_color, 0.7 * blink), 3.0)

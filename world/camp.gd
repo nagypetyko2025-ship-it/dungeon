@@ -1190,10 +1190,12 @@ func _show_title() -> void:
 	var tween := create_tween()
 	tween.tween_interval(2.0)
 	tween.tween_property(title, "modulate:a", 0.0, 1.0)
-	# A Vérfarkas után egyszer: győzelmi felirat.
+	# A Vérfarkas (vagy a Káosz Ura) után egyszer: győzelmi felirat.
 	if GameState.dungeon_won:
 		GameState.dungeon_won = false
-		var won := MenuStyle.title_label("Végigértél a kazamatán! A Mélység Ura elesett.", 40, Color(1, 0.85, 0.4))
+		var text := "Legyőzted a Káosz Urát! A 40. emelet elcsendesedett." if GameState.won_lord == "chaos" \
+			else "Végigértél a kazamatán! A Mélység Ura elesett."
+		var won := MenuStyle.title_label(text, 40, Color(1, 0.85, 0.4))
 		won.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 		won.offset_top = 130
 		won.offset_left = -500

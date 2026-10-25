@@ -17,3 +17,5 @@ rat.png: "Animal sprites" (marionline, CC0, https://opengameart.org/content/anim
 cave_bat.png: "bat 32x32" (MoikMellah, CC0, https://opengameart.org/content/bat-32x32), a barna változat repülő kockái, átlátszó háttérrel, 8 kockás sávba rendezve.
 toadstool.png: "Animated Mushroom Monster (Pixel-Art)" (ScratchIO, CC0, https://opengameart.org/content/animated-mushroom-monster-pixel-art), a járás kockáiból.
 blood_wraith.png: "Ghost monster" (ImogiaGames, Balmer szellemének remixe, CC0, https://opengameart.org/content/ghost-monster), a vörös színváltozat 6 kockájából.
+chaos_lord.png: "Top-down Tentacle Creature" (Sean Noonan, CC0, https://opengameart.org/content/top-down-tentacle-creature), a fogas változat (monster_flesh_teeth_sheet) 8 kockája 62 px-re kicsinyítve, a lila test fekete-lilára sötétítve, ibolya peremfénnyel.
+chaos_hound.png: "Shadow monster" (Game2rise, CC0, https://opengameart.org/content/shadow-monster), a vicsorgás 4 és a futás 4 kockája 56 px szélesre kicsinyítve, fekete-lilára színezve, ibolya peremfénnyel és szemmel.

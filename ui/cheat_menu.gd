@@ -1,13 +1,15 @@
 class_name CheatMenu
 extends Node
 ## Csalómenü a [0] gombra (a Menus kezeli, megnyitva megáll a játék). Csalások:
-##   - teleport a 20. emeletre (a kazamatában és a táborból is; pihenő közben nem)
+##   - teleport a 10. / 20. emeletre, vagy a beírt emeletre (a kazamatában és a táborból is; pihenő közben nem)
 ##   - halhatatlanság be/ki (GameState.god_mode: a játékos nem sebződik)
 ##   - karakterváltás (csak a táborban, a még zárolt karakterekre is; nem számít csalt futásnak)
 ##   - tárgyak a táskába (külön lapon: fajta és ritkaság szerint szűrve; nem számít csalt futásnak)
 ## Halhatatlanság alatt felül középen egy kis felirat jelzi, hogy be van kapcsolva.
 
 const TELEPORT_DEPTH := 20
+## A beírható emelet felső határa.
+const MAX_TELEPORT_DEPTH := 99
 const CHARACTER_BUTTON_SIZE := Vector2(225, 48)
 const ITEM_BUTTON_SIZE := Vector2(212, 44)
 const ITEM_COLUMNS := 4
@@ -22,6 +24,7 @@ var _menu_box: VBoxContainer
 var _items_box: VBoxContainer
 var _item_grid: GridContainer
 var _god_button: Button
+var _depth_input: LineEdit
 var _character_buttons := {}
 var _slot_buttons := {}
 var _rarity_buttons := {}
@@ -40,6 +43,7 @@ func _ready() -> void:
 
 func open() -> void:
 	_status.text = ""
+	_depth_input.text = ""
 	_show_items_page(false)
 	_update_god_button()
 	_update_character_buttons()
@@ -107,6 +111,19 @@ func _build() -> void:
 		var teleport := _small_button("Teleport: %d. emelet" % depth, CHARACTER_BUTTON_SIZE, 20)
 		teleport.pressed.connect(_teleport.bind(depth))
 		teleports.add_child(teleport)
+	# Teleport a beírt emeletre (Enter vagy a gomb).
+	_depth_input = LineEdit.new()
+	_depth_input.placeholder_text = "Emelet (1-%d)" % MAX_TELEPORT_DEPTH
+	_depth_input.max_length = 2
+	_depth_input.custom_minimum_size = CHARACTER_BUTTON_SIZE
+	_depth_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_depth_input.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
+	_depth_input.add_theme_font_size_override("font_size", 20)
+	_depth_input.text_submitted.connect(func(_text: String) -> void: _teleport_typed())
+	teleports.add_child(_depth_input)
+	var typed := _small_button("Teleport ide", CHARACTER_BUTTON_SIZE, 20)
+	typed.pressed.connect(_teleport_typed)
+	teleports.add_child(typed)
 	_god_button = MenuStyle.button("")
 	_god_button.pressed.connect(_toggle_god_mode)
 	_menu_box.add_child(_god_button)
@@ -293,6 +310,17 @@ func _teleport(depth := TELEPORT_DEPTH) -> void:
 		return
 	GameState.cheated = true
 	_menus().call("close_current")
+
+
+## Teleport a beírt emeletre (1..MAX_TELEPORT_DEPTH).
+func _teleport_typed() -> void:
+	var text := _depth_input.text.strip_edges()
+	if not text.is_valid_int() or int(text) < 1 or int(text) > MAX_TELEPORT_DEPTH:
+		Audio.play("ui_error")
+		_status.text = "Írj be egy emeletet 1 és %d között." % MAX_TELEPORT_DEPTH
+		return
+	_depth_input.release_focus()
+	_teleport(int(text))
 
 
 func _toggle_god_mode() -> void:

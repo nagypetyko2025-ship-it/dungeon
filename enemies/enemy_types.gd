@@ -235,6 +235,12 @@ const TYPES: Array[Dictionary] = [
 		"rect": Rect2(0, 0, 34, 34), "run": true, "size": 1.0,
 		"health": [36, 45], "damage": [7, 9], "speed": [100, 120], "dodge": [18, 28],
 		"knockback": [320, 380], "resist": [0.55, 0.65], "xp": [21, 26], "min_depth": 16, "weight": 2},
+	# Káoszkopó: fekete-lila árnyékfenevad izzó szemmel (a 25. emelet után). Nekiront, átsuhan a
+	# semmin, és ha megsebzik, csak még vadabb lesz ("Shadow monster", Game2rise, CC0).
+	{"name": "chaos_hound", "abilities": ["teleport", "berserk"], "dash": true, "sheet": "res://assets/enemies/chaos_hound.png",
+		"rect": Rect2(0, 0, 58, 38), "run": true, "size": 1.0,
+		"health": [58, 72], "damage": [9, 11], "speed": [125, 145], "dodge": [20, 30],
+		"knockback": [380, 440], "resist": [0.6, 0.7], "xp": [30, 36], "min_depth": 26, "weight": 2},
 	# Patkány: kicsi, nagyon gyors, alig lehet eltalálni, kevés élete van, és mérgez.
 	{"name": "rat", "abilities": ["poison", "zigzag"], "sheet": "res://assets/enemies/rat.png",
 		"rect": Rect2(0, 0, 20, 20), "run": true, "size": 0.9,

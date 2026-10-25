@@ -35,8 +35,11 @@ const BOSS_GOLD_PER_DEPTH := 10
 const BOSS_ITEM_MIN_RARITY := "epic"
 const COIN := preload("res://pickups/coin.tscn")
 const WEREWOLF := preload("res://enemies/werewolf_boss.gd")
+const CHAOS_LORD := preload("res://enemies/chaos_lord_boss.gd")
 ## A nagy főellenség (Vérfarkas, 20. emelet) jutalma: sok arany és két tárgy.
 const FINAL_BOSS_GOLD := 400
+## A Káosz Uráé (40. emelet) még több arany (és szintén két tárgy).
+const CHAOS_LORD_GOLD := 2500
 const ITEM_DROP := preload("res://pickups/item_drop.tscn")
 
 @export var enemy_scene: PackedScene
@@ -69,9 +72,11 @@ var visited := false
 var has_boss := false
 ## Ennyi elesett királyi őr csontváza fekszik a szobában (a 20. emeleten: Gáspár emberei).
 var fallen_guards := 0
-## A nagy főellenség terme (20. emelet, Vérfarkas): nincs fülke és lépcső, győzelem után
-## a portálon át a táborba mehetsz, és vége a kazamatának.
+## A nagy főellenség terme (20. emelet: Vérfarkas, 40. emelet: a Káosz Ura): nincs fülke és lépcső,
+## győzelem után a portálon át a táborba mehetsz (vége a futásnak), vagy a lépcsőn tovább.
 var final_boss := false
+## Melyik nagy főellenség vár itt: "werewolf" (20. emelet) vagy "chaos" (a Káosz Ura, 40. emelet).
+var lord := "werewolf"
 ## A tárgylift jobb oldali csempéjének x-e (csak a bolt szobájában; a fáklyák kikerülik).
 var lift_x := -99999
 ## A szoba lépcsője (ha van): a harc végéig rács van rajta.
@@ -392,6 +397,12 @@ func add_puppet(type_name: String, at: Vector2, stats: Dictionary, id: int, boss
 		enemy.set("net_puppet", true)
 		enemy.call("setup_werewolf", depth)
 		enemy.connect("final_died", _on_enemy_died.bind(enemy))
+	elif boss_kind == "chaos":
+		enemy.set_script(CHAOS_LORD)
+		enemy.set("net_id", id)
+		enemy.set("net_puppet", true)
+		enemy.call("setup_chaos", depth)
+		enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
 	elif boss_kind != "":
 		enemy.call("setup_boss", depth)
 		enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
@@ -416,7 +427,13 @@ func _spawn_boss() -> void:
 	if net != null and net.is_client_mode():
 		return
 	var boss = boss_scene.instantiate()
-	if final_boss:
+	if final_boss and lord == "chaos":
+		# A Káosz Ura is a terem túlsó (keleti) felén vár.
+		boss.set_script(CHAOS_LORD)
+		boss.setup_chaos(depth)
+		boss.position = Vector2(rect.size.x * 0.25, 0) * TILE
+		boss.get_node("Health").died.connect(_on_enemy_died.bind(boss))
+	elif final_boss:
 		# A Vérfarkas a terem túlsó (keleti) felén vár; csak az igazi halála számít.
 		boss.set_script(WEREWOLF)
 		boss.setup_werewolf(depth)
@@ -430,7 +447,7 @@ func _spawn_boss() -> void:
 	_alive_enemies.append(boss)
 	_enemies.add_child.call_deferred(boss)
 	if net != null:
-		net.register(boss, self, "werewolf" if final_boss else "boss")
+		net.register(boss, self, lord if final_boss else "boss")
 	Audio.play("boss_roar")
 	boss_fight_started.emit(boss)
 
@@ -514,8 +531,8 @@ func _connect_center_stairs() -> void:
 
 ## Sok arany és egy biztosan legalább epikus tárgy.
 func _drop_boss_loot(at: Vector2) -> void:
-	var total := FINAL_BOSS_GOLD if final_boss else BOSS_GOLD + depth * BOSS_GOLD_PER_DEPTH
-	var coins := 20 if final_boss else 10
+	var total := (CHAOS_LORD_GOLD if lord == "chaos" else FINAL_BOSS_GOLD) if final_boss 		else BOSS_GOLD + depth * BOSS_GOLD_PER_DEPTH
+	var coins := (30 if lord == "chaos" else 20) if final_boss else 10
 	for i in coins:
 		var coin = COIN.instantiate()
 		coin.value = total / coins + (total % coins if i == 0 else 0)
@@ -526,7 +543,7 @@ func _drop_boss_loot(at: Vector2) -> void:
 	drop.position = at + Vector2(0, -20)
 	_enemies.add_child(drop)
 	if final_boss:
-		# A Vérfarkas egy biztos legendás tárgyat is hagy.
+		# A nagy főellenség (Vérfarkas, Káosz Ura) egy biztos legendás tárgyat is hagy.
 		var legendary = ITEM_DROP.instantiate()
 		legendary.item = Items.random_item("legendary", "legendary")
 		legendary.position = at + Vector2(40, -20)

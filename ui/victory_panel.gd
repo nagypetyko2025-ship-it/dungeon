@@ -1,11 +1,14 @@
 extends CanvasLayer
-## A Vérfarkas (a 20. emelet nagy főellensége) legyőzése után, a portálnál: vége a
-## kazamatának. A pénzed 100%-a a táborba kerül, és legfeljebb 2 választott tárgyat
+## A Vérfarkas (a 20. emelet nagy főellensége) vagy a Káosz Ura (a 40. emeleté) legyőzése után,
+## a portálnál: vége a futásnak. A pénzed 100%-a a táborba kerül, és legfeljebb 2 választott tárgyat
 ## felvihetsz (a tábori ládába); a többi felszerelésed elvész, mint egy futás végén.
 ## A következő leszállás újra az 1. emeletről indul. "Még maradok": körülnézhetsz.
 
 const CAMP := "res://world/camp.tscn"
 const MAX_ITEMS := 2
+
+## Melyik nagy főellenség esett el: "werewolf" vagy "chaos" (a feliratokhoz; a Dungeon állítja be).
+var lord := "werewolf"
 
 var _grid: ItemGrid
 var _items: Array = []
@@ -62,8 +65,10 @@ func _build() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 10)
 	window.add_child(root)
-	root.add_child(UiStyle.title_bar("A Mélység Ura elesett — győzelem!"))
-	root.add_child(UiStyle.label("Legyőzted a Vérfarkast, és ezzel végigértél a kazamatán. A pénzed 100%-át megtartod,\n"
+	var chaos := lord == "chaos"
+	root.add_child(UiStyle.title_bar("A Káosz Ura elesett — győzelem!" if chaos else "A Mélység Ura elesett — győzelem!"))
+	root.add_child(UiStyle.label(("Legyőzted az Ürességfalót, a Káosz Urát a 40. emeleten. A pénzed 100%-át megtartod,\n" if chaos
+		else "Legyőzted a Vérfarkast, és ezzel végigértél a kazamatán. A pénzed 100%-át megtartod,\n")
 		+ "és 2 tárgyat felvihetsz a tábori ládába; a többi felszerelésed itt marad. A következő út az 1. emeletről indul.",
 		15, UiStyle.INK_LIGHT))
 
@@ -164,6 +169,7 @@ func _go_to_camp() -> void:
 	Progress.rescue_gold(int(player.get("gold")) + GameState.break_gold_left, 1.0)
 	GameState.reset()
 	GameState.dungeon_won = true
+	GameState.won_lord = lord
 	Audio.play("level_up")
 	get_tree().paused = false
 	get_tree().change_scene_to_file(CAMP)
