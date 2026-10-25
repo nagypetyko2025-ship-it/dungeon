@@ -209,13 +209,13 @@ func _place_shop() -> void:
 
 ## A liftszoba: a fülke a hátsó fal előtt, a szoba közepén; körülötte nem lesz oszlop.
 func _place_lift_room() -> void:
-	var top := Vector2i(anchor.x, rect.position.y + 1)
+	# A lift a szoba közepén áll (a bakállvány magasra nyúlik: fölötte is szabadon marad a hely).
 	var lift_room := LiftRoom.new()
-	lift_room.position = tile_center(top) - position
+	lift_room.position = tile_center(anchor) - position
 	add_child(lift_room)
-	for dx in range(-2, 4):
-		for dy in range(0, 4):
-			_used_tiles[top + Vector2i(dx, dy)] = true
+	for dx in range(-3, 4):
+		for dy in range(-4, 3):
+			_used_tiles[anchor + Vector2i(dx, dy)] = true
 
 
 ## Tárgylift ugyanebben a falban, a középső folyosó bal oldalán (két csempe széles,

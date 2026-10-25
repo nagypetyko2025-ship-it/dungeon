@@ -1,7 +1,7 @@
 class_name LiftRoom
 extends Node2D
-## A 10. emelet liftszobája (a Room teszi bele, ha has_lift_room): a hátsó fal előtt láncon lóg a
-## lift vasketrece, mellette egy nagy fogaskerék és Bertalan, a mérnök (E: beszélgetés, lásd Engineer).
+## A 10. emelet liftszobája (a Room teszi bele, ha has_lift_room): a szoba közepén áll a lift (LiftRig:
+## bakállvány, láncon lógó vasketrec, fogaskerék), mellette Bertalan, a mérnök (E: beszélgetés, lásd Engineer).
 ## A szobában nincs szörny, csapda és láda; a térképen kék.
 
 const TILE := 32
@@ -21,42 +21,12 @@ var _prompt: Label
 
 func _ready() -> void:
 	_player = get_tree().get_first_node_in_group("player")
-	# A liftfülke a hátsó fal előtt (a szoba közepén), mellette a fogaskerék és a mérnök.
-	var cage := Sprite2D.new()
-	_cage = cage
-	cage.texture = CAGE
-	cage.scale = Vector2(CAGE_SCALE, CAGE_SCALE)
-	cage.offset = Vector2(0, -CAGE.get_height() / 2.0)
-	cage.position = Vector2(0, TILE * 0.6)
-	add_child(cage)
-	if Engineer.repaired():
-		# Megjavítva: lámpás ég a ketrecben.
-		var glow := PointLight2D.new()
-		var gradient := Gradient.new()
-		gradient.set_color(0, Color(1.0, 0.8, 0.45))
-		gradient.set_color(1, Color(0, 0, 0, 0))
-		var texture := GradientTexture2D.new()
-		texture.gradient = gradient
-		texture.fill = GradientTexture2D.FILL_RADIAL
-		texture.fill_from = Vector2(0.5, 0.5)
-		texture.fill_to = Vector2(0.5, 0.0)
-		glow.texture = texture
-		glow.texture_scale = 1.5
-		glow.energy = 0.8
-		glow.position = Vector2(0, -TILE * 0.8)
-		add_child(glow)
-	var cage_body := StaticBody2D.new()
-	var cage_shape := CollisionShape2D.new()
-	var cage_box := RectangleShape2D.new()
-	cage_box.size = Vector2(CAGE.get_width() * CAGE_SCALE, 14)
-	cage_shape.shape = cage_box
-	cage_shape.position = Vector2(0, TILE * 0.6 - 7)
-	cage_body.add_child(cage_shape)
-	add_child(cage_body)
-	var gear := Gear.new()
-	gear.position = Vector2(TILE * 1.6, -TILE * 0.6)
-	gear.spinning = Engineer.repaired()
-	add_child(gear)
+	# A szoba közepén a lift, jobbra mellette a mérnök (a játékossal együtt rendeződnek mélység szerint).
+	y_sort_enabled = true
+	var rig := LiftRig.new()
+	rig.working = Engineer.repaired()
+	add_child(rig)
+	_cage = rig.cage
 	_engineer = Node2D.new()
 	_engineer.position = Vector2(TILE * 1.9, TILE * 1.0)
 	add_child(_engineer)
@@ -129,7 +99,7 @@ func _ride() -> void:
 	Audio.play("boss_slam", -14.0, 0.1)
 	var start := _cage.position
 	var up := create_tween()
-	up.tween_property(_cage, "position", start + Vector2(0, -TILE * 6), 2.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	up.tween_property(_cage, "position", start + Vector2(0, -TILE * 3), 2.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	up.parallel().tween_property(_cage, "modulate:a", 0.0, 2.2)
 	await up.finished
 	Progress.set_npc_quest(Engineer.RIDE_FLAG, "done")
@@ -149,50 +119,119 @@ func _unhandled_input(event: InputEvent) -> void:
 	get_tree().current_scene.get_node("Menus").call("open_menu", _dialogue)
 
 
-## A liftfülke: sötét akna vaskerettel, a tetején csigakerék és kötél, elöl a csukott ollórács.
-## (A táborban is ez áll, lásd CampLift.) `working`: ég benne a lámpa.
-class LiftCabin:
+## A lift (a kazamatában és a táborban is ez áll, lásd CampLift): fa bakállvány két oszloppal és
+## gerendával, a gerenda alatt csiga, róla láncon lóg a vasketrec; a gerenda bal végén a csörlő
+## rozsdás fogaskereke. Pixelrácsra rajzolva (2 px = 1 képpont), mint a pálya többi grafikája.
+## Az origó a lábak vonala a földön. `working`: megjavítva forog a kerék, és lámpa ég a ketrecben.
+class LiftRig:
 	extends Node2D
-	const GATE_TEXTURE: Texture2D = preload("res://assets/props/lift_gate.png")
-	const GATE_SCALE := 0.42
+	const GEAR: Texture2D = preload("res://assets/props/lift_gear.png")
+	const GEAR_FRAMES := 8
+	const GEAR_FPS := 10.0
+	const POST_X := 38.0
+	const BEAM_TOP := -128.0
+	const OUTLINE := Color8(29, 20, 24)
+	const WOOD_DARK := Color8(92, 58, 38)
+	const WOOD := Color8(130, 86, 52)
+	const WOOD_LIGHT := Color8(166, 116, 70)
+	const IRON_DARK := Color8(50, 48, 60)
+	const IRON := Color8(82, 80, 96)
+	const IRON_LIGHT := Color8(122, 119, 138)
+	const STONE := Color8(96, 90, 98)
+	const STONE_LIGHT := Color8(128, 121, 128)
+
 	var working := false
+	## A ketrec alja a lábak vonalához képest (a tábori akna fölött kisebb, ott a lyukba lóg).
+	var cage_bottom := 18.0
+	## Ütközik-e (a táborban az akna teste ütközik helyette).
+	var solid := true
+	var cage: Sprite2D
+	var _gear: Sprite2D
+	var _gear_time := 0.0
 
-	func _draw() -> void:
-		var w := GATE_TEXTURE.get_width() * GATE_SCALE + 8.0
-		var h := GATE_TEXTURE.get_height() * GATE_SCALE + 8.0
-		var top := Vector2(-w / 2.0, -h)
-		var iron := Color(0.28, 0.27, 0.3)
-		# A fülke: sötét belső, vaskeret, felette a gerenda a csigakerékkel.
-		draw_rect(Rect2(top, Vector2(w, h)), Color(0.05, 0.05, 0.07))
+	func _init() -> void:
+		cage = Sprite2D.new()
+		_gear = Sprite2D.new()
+
+	func _ready() -> void:
+		cage.texture = CAGE
+		cage.scale = Vector2(CAGE_SCALE, CAGE_SCALE)
+		cage.offset = Vector2(0, -CAGE.get_height() / 2.0)
+		cage.position = Vector2(0, cage_bottom)
+		add_child(cage)
+		_gear.texture = GEAR
+		_gear.hframes = GEAR_FRAMES
+		_gear.scale = Vector2(2, 2)
+		_gear.position = Vector2(-POST_X - 10.0, BEAM_TOP + 4.0)
+		add_child(_gear)
 		if working:
-			draw_rect(Rect2(top + Vector2(4, 4), Vector2(w - 8, 6)), Color(1.0, 0.82, 0.45, 0.6))
-		draw_set_transform(top + Vector2(4, 4), 0.0, Vector2(GATE_SCALE, GATE_SCALE))
-		draw_texture(GATE_TEXTURE, Vector2.ZERO)
-		draw_set_transform(Vector2.ZERO)
-		draw_rect(Rect2(top, Vector2(w, h)), iron, false, 3.0)
-		draw_rect(Rect2(top + Vector2(-6, -8), Vector2(w + 12, 8)), Color(0.36, 0.25, 0.16))
-		var wheel := top + Vector2(w / 2.0, -16)
-		draw_line(wheel, wheel + Vector2(0, 12), Color(0.55, 0.48, 0.36), 2.0)
-		draw_circle(wheel, 8.0, iron)
-		draw_circle(wheel, 3.0, Color(0.6, 0.58, 0.55))
-		draw_arc(wheel, 8.0, 0.0, TAU, 16, Color(0.15, 0.15, 0.17), 2.0)
-
-
-## Nagy, rozsdás fogaskerék a lift mellett (megjavítva forog).
-class Gear:
-	extends Node2D
-	var spinning := false
+			# Megjavítva: lámpás ég a ketrecben.
+			var glow := PointLight2D.new()
+			var gradient := Gradient.new()
+			gradient.set_color(0, Color(1.0, 0.8, 0.45))
+			gradient.set_color(1, Color(0, 0, 0, 0))
+			var texture := GradientTexture2D.new()
+			texture.gradient = gradient
+			texture.fill = GradientTexture2D.FILL_RADIAL
+			texture.fill_from = Vector2(0.5, 0.5)
+			texture.fill_to = Vector2(0.5, 0.0)
+			glow.texture = texture
+			glow.texture_scale = 1.5
+			glow.energy = 0.8
+			glow.position = Vector2(0, cage_bottom - 44.0)
+			add_child(glow)
+		if solid:
+			var body := StaticBody2D.new()
+			var shape := CollisionShape2D.new()
+			var box := RectangleShape2D.new()
+			box.size = Vector2(POST_X * 2.0 + 8.0, cage_bottom + 8.0)
+			shape.shape = box
+			shape.position = Vector2(0, (cage_bottom - 8.0) / 2.0)
+			body.add_child(shape)
+			add_child(body)
 
 	func _process(delta: float) -> void:
-		if spinning:
-			rotation += delta * 1.2
+		if working:
+			_gear_time += delta
+			_gear.frame = int(_gear_time * GEAR_FPS) % GEAR_FRAMES
+
+	## Kitöltött téglalap 2 px-es körvonallal, bal/felső világos és jobb/alsó sötét széllel.
+	func _block(rect: Rect2, fill: Color, light: Color, dark: Color) -> void:
+		draw_rect(rect.grow(2.0), OUTLINE)
+		draw_rect(rect, fill)
+		draw_rect(Rect2(rect.position, Vector2(2, rect.size.y)), light)
+		draw_rect(Rect2(rect.position, Vector2(rect.size.x, 2)), light)
+		draw_rect(Rect2(rect.end - Vector2(2, rect.size.y), Vector2(2, rect.size.y)), dark)
 
 	func _draw() -> void:
-		var rust := Color(0.5, 0.32, 0.2)
-		for i in 10:
-			var dir := Vector2.from_angle(TAU * i / 10.0)
-			draw_colored_polygon(PackedVector2Array([dir * 14.0 + dir.orthogonal() * 4.0, dir * 20.0 + dir.orthogonal() * 3.0,
-				dir * 20.0 - dir.orthogonal() * 3.0, dir * 14.0 - dir.orthogonal() * 4.0]), rust)
-		draw_circle(Vector2.ZERO, 15.0, rust)
-		draw_circle(Vector2.ZERO, 6.0, Color(0.2, 0.15, 0.12))
-		draw_arc(Vector2.ZERO, 15.0, 0.0, TAU, 20, rust.darkened(0.4), 2.0)
+		var beam_bottom := BEAM_TOP + 10.0
+		# Kőtalpak az oszlopok alatt.
+		for side: float in [-1.0, 1.0]:
+			_block(Rect2(side * POST_X - 7.0, -4.0, 14.0, 6.0), STONE, STONE_LIGHT, IRON_DARK)
+		# Oszlopok és ferde merevítők (lépcsőzetes pixelvonal).
+		for side: float in [-1.0, 1.0]:
+			_block(Rect2(side * POST_X - 4.0, beam_bottom, 8.0, -beam_bottom - 2.0), WOOD, WOOD_LIGHT, WOOD_DARK)
+			for i in 9:
+				var at := Vector2(side * (POST_X - 4.0 - 2.0 * i) - (2.0 if side > 0 else 0.0), beam_bottom + 20.0 - 2.0 * i)
+				draw_rect(Rect2(at - Vector2(1, 1), Vector2(4, 4)), OUTLINE)
+			for i in 9:
+				var at := Vector2(side * (POST_X - 4.0 - 2.0 * i) - (2.0 if side > 0 else 0.0), beam_bottom + 20.0 - 2.0 * i)
+				draw_rect(Rect2(at, Vector2(2, 2)), WOOD_LIGHT if side < 0 else WOOD)
+		# Gerenda.
+		_block(Rect2(-POST_X - 10.0, BEAM_TOP, POST_X * 2.0 + 20.0, 10.0), WOOD, WOOD_LIGHT, WOOD_DARK)
+		# Vasszegecsek a gerenda és az oszlopok találkozásánál.
+		for side: float in [-1.0, 1.0]:
+			draw_rect(Rect2(side * POST_X - 1.0, BEAM_TOP + 4.0, 2, 2), IRON_LIGHT)
+		# Csiga a gerenda alatt (pixelkör).
+		var hub := Vector2(0, beam_bottom + 8.0)
+		draw_rect(Rect2(-2, beam_bottom, 4, 4), IRON_DARK)
+		for y in range(-9, 9, 2):
+			for x in range(-9, 9, 2):
+				var cell := Vector2(x + 1, y + 1)
+				var d := cell.length()
+				if d <= 8.0:
+					draw_rect(Rect2(hub + Vector2(x, y), Vector2(2, 2)), OUTLINE)
+				if d <= 6.0:
+					var shade := IRON_LIGHT if x + y < -4 else (IRON_DARK if x + y > 4 else IRON)
+					draw_rect(Rect2(hub + Vector2(x, y), Vector2(2, 2)), shade)
+		draw_rect(Rect2(hub - Vector2(1, 1), Vector2(2, 2)), OUTLINE)

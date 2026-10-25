@@ -1,12 +1,15 @@
 class_name CampLift
 extends Node2D
-## A tábori lift a kazamata lépcsője mellett (a szürke köveken túl, balra): rácsos fülke, egy csempényi.
+## A tábori lift a kazamata lépcsője mellett (a szürke köveken túl, balra): ugyanaz a bakállványos,
+## láncon lógó vasketrec, mint lent (LiftRoom.LiftRig), csak itt egy kőperemes akna fölött lóg.
 ## E-re megnyílik a "Lefelé utazás" ablak: az 1. emelet mindig, a 10. emelet csak akkor, ha Bertalan,
 ## a mérnök megjavította a liftet (lásd Engineer). A javítás után Bertalan feljön a lifttel, és
 ## onnantól mellette áll (E: beszélgetés, két új történettel). (A tábor rakja le: setup(camp).)
 
 const TILE := 32
-const RANGE := 52.0
+const RANGE := 60.0
+## A ketrec alja a bakállvány lábaihoz képest: az akna nyílása fölött lóg.
+const CAGE_BOTTOM := 2.0
 
 var _camp: Node2D
 var _player: Node2D
@@ -20,16 +23,22 @@ const TALK_RANGE := 56.0
 func setup(camp: Node2D) -> void:
 	_camp = camp
 	_player = camp.get_node("Entities/Player")
-	var cabin := LiftRoom.LiftCabin.new()
-	cabin.working = Engineer.repaired()
-	cabin.position = Vector2(0, 8)
-	add_child(cabin)
+	y_sort_enabled = true
+	# Az akna a földben (mindig a figurák alatt), fölötte a bakállványon a ketrec.
+	var shaft := Shaft.new()
+	shaft.z_index = -7
+	add_child(shaft)
+	var rig := LiftRoom.LiftRig.new()
+	rig.working = Engineer.repaired()
+	rig.cage_bottom = CAGE_BOTTOM
+	rig.solid = false
+	add_child(rig)
 	var body := StaticBody2D.new()
 	var shape := CollisionShape2D.new()
 	var box := RectangleShape2D.new()
-	box.size = Vector2(36, 14)
+	box.size = Shaft.OUTER.size
 	shape.shape = box
-	shape.position = Vector2(0, 0)
+	shape.position = Shaft.OUTER.get_center()
 	body.add_child(shape)
 	add_child(body)
 	_panel = LiftPanel.new()
@@ -54,7 +63,7 @@ func setup(camp: Node2D) -> void:
 ## Bertalan a lift bal oldalán, a villáskulcsát lóbálva.
 func _build_engineer() -> void:
 	_engineer = Node2D.new()
-	_engineer.position = Vector2(-44, 18)
+	_engineer.position = Vector2(-62, 30)
 	add_child(_engineer)
 	var figure := AnimatedSprite2D.new()
 	figure.sprite_frames = Engineer.frames()
@@ -115,6 +124,45 @@ func _on_chosen(depth: int) -> void:
 	_camp.get_node("Menus").call("close_current")
 	Audio.play("door_unlock", -4.0)
 	_camp.call("_enter_dungeon", depth)
+
+
+## A lift aknája: kőperem, a nyílás túlsó falán a deszkabélés látszik, ahogy lefelé elsötétül, alatta
+## a feneketlen sötétség (a ketrec fölötte lóg). Pixelrácsra rajzolva, mint a LiftRig.
+class Shaft:
+	extends Node2D
+	## A kőperem külső széle és a nyílás (a lift origójához, a bakállvány lábaihoz képest).
+	const OUTER := Rect2(-38, -18, 76, 56)
+	const OPENING := Rect2(-32, -12, 64, 44)
+	const VOID := Color8(10, 8, 12)
+	const WALL := [Color8(70, 50, 38), Color8(52, 37, 30), Color8(34, 25, 22), Color8(20, 15, 15)]
+	const PLANK_GAP := Color8(26, 18, 16)
+	const STONES := [Color8(104, 98, 104), Color8(92, 86, 94), Color8(116, 110, 114)]
+
+	func _draw() -> void:
+		draw_rect(OUTER.grow(2.0), LiftRoom.LiftRig.OUTLINE)
+		# Kőperem: 8x6-os kövek, soronként eltolva, egyenként körvonallal.
+		var row := 0
+		for y in range(int(OUTER.position.y), int(OUTER.end.y), 6):
+			var shift := 4 if row % 2 == 1 else 0
+			for x in range(int(OUTER.position.x) - shift, int(OUTER.end.x), 8):
+				var stone := Rect2(x, y, 8, 6).intersection(OUTER)
+				if stone.size.x <= 0.0:
+					continue
+				draw_rect(stone, LiftRoom.LiftRig.OUTLINE)
+				var inner := stone.grow_individual(0, 0, -2, -2)
+				if inner.size.x > 0.0:
+					draw_rect(inner, STONES[posmod((x >> 3) + row, STONES.size())])
+					draw_rect(Rect2(inner.position, Vector2(inner.size.x, 2)), LiftRoom.LiftRig.STONE_LIGHT)
+			row += 1
+		# A nyílás: a túlsó fal deszkái egyre sötétebben, alatta a mélység.
+		draw_rect(OPENING.grow(2.0), LiftRoom.LiftRig.OUTLINE)
+		draw_rect(OPENING, VOID)
+		for i in WALL.size():
+			draw_rect(Rect2(OPENING.position + Vector2(0, i * 4), Vector2(OPENING.size.x, 4)), WALL[i])
+		for x in range(int(OPENING.position.x) + 8, int(OPENING.end.x), 10):
+			draw_rect(Rect2(x, OPENING.position.y, 2, 12), PLANK_GAP)
+		# A közeli perem árnyéka a nyílás alján.
+		draw_rect(Rect2(OPENING.position.x, OPENING.end.y - 2, OPENING.size.x, 2), Color8(0, 0, 0))
 
 
 ## A "Lefelé utazás" ablak: emeletenként egy gomb (a zártak szürkék, a felirat megmondja, miért).

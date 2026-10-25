@@ -12,3 +12,4 @@ lake_tiles.png: a Kenney RPG csomag (CC0, https://kenney.nl) víz- és partcsemp
 dead_tree.png: "Dead Tree" (bonzille, CC0, https://opengameart.org/content/dead-tree-2), az eredeti pixelrácsra kicsinyítve (48x50), szürkésbarnára (kiszáradt fa) színezve.
 storage.png: 0-48 px: "16x16 boxes, crates, chests" (Kutejnikov, CC0, https://opengameart.org/content/16x16-boxes-crates-chests) fa láda és két vasalt rakodóláda; 48-80 px: "Various Containers" (zwonky, CC0, https://opengameart.org/content/various-containers) üst (2 kocka).
 pickaxe.png: "Pixel Pickaxe and Axe" (6666, CC0, https://opengameart.org/content/pixel-pickaxe-and-axe), a csákány.
+lift_gear.png: rozsdás fogaskerék 8 forgási képkockával (24x24), ehhez a projekthez rajzolva (pixel art, programmal raszterizálva), szabadon használható (CC0).

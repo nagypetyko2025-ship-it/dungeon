@@ -61,8 +61,8 @@ const EVENING := Color(0.26, 0.3, 0.48)
 
 ## A tábor elrendezése (csempékben).
 const STAIRS_TILE := Vector2i(22, 7)
-## A lift a lépcső kőpadlóján túl, balra.
-const LIFT_TILE := Vector2i(19, 7)
+## A lift a lépcső kőpadlóján túl, balra (egy kis hellyel mellette: az aknája ne lógjon a kövekre).
+const LIFT_TILE := Vector2i(18, 7)
 const FIRE_TILE := Vector2i(22, 17)
 ## A kovács bódéjának bal felső csempéje (a tábor jobb alsó sarkában, az úttól délre).
 const SMITHY_TILE := FIRE_TILE + Vector2i(5, 1)
@@ -409,8 +409,10 @@ func _build_entrance() -> void:
 	lift.position = _tile_center(LIFT_TILE)
 	_entities.add_child(lift)
 	lift.setup(self)
-	_blocked[LIFT_TILE] = true
-	_blocked[LIFT_TILE + Vector2i.UP] = true
+	# Az akna, a magas bakállvány és mellette Bertalan helye (fa, bokor ne kerüljön oda).
+	for dx in range(-2, 2):
+		for dy in range(-4, 2):
+			_blocked[LIFT_TILE + Vector2i(dx, dy)] = true
 	_stairs_position = _tile_center(STAIRS_TILE)
 	for dx in range(-2, 3):
 		for dy in range(-1, 2):

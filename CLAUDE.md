@@ -66,6 +66,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   `Town.cheat_switch_to`), tárgylap (bármelyik tárgy bármelyik ritkaságban a táskába). Teszteléshez is hasznos.
 - Lift: a táborban a lépcső mellett (`world/camp_lift.gd`, "Lefelé utazás"); a 10. emeleten kék liftszoba (`world/lift_room.gd`,
   `Room.has_lift_room`) Bertalan mérnökkel (`world/engineer.gd`): 500 kazamatai aranyért megjavítja (J könyv "Mérnök" fül), felmegy a lifttel, és a táborban a lift mellett áll (2 új történet); a lift a 10. emeletre is visz.
+  Mindkét helyen ugyanaz a lift: `LiftRoom.LiftRig` (pixelrácsra rajzolt bakállvány, láncon lógó ketrec, a gerenda végén
+  forgó fogaskerék: `assets/props/lift_gear.png`, 8 kocka); lent a szoba közepén, a táborban a kőpadló mellett egy akna fölött (`CampLift.Shaft`).
 - Bejátszás az első visszatéréskor a kazamatából: `world/stretcher_scene.gd` (hordágyas katonák, `GameState.visited_dungeon`).
 - Többjátékos: `network/` — `net_session.gd` (beállítások, fix név: user://player.cfg, kód), `net_lobby.gd` (/root/NetLobby:
   váró, LAN-bejelentés a kóddal UDP-n, ENet, RPC-k, indítás → mindenki a táborba), `net_avatars.gd` (a többiek a táborban
