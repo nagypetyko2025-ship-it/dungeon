@@ -16,6 +16,8 @@ var look := "arrow"
 var origin := Vector2.INF
 ## Átütés (hadiíj, Átütés stat): ennyi szörnyön repül még át találat után; mindegyiket csak egyszer sebzi.
 var pierce := 0
+## Közös játék: a lövés sorszáma a társaknál (lásd Player.share_shot); 0 = nincs megosztva.
+var net_id := 0
 var _pierced: Array[Area2D] = []
 var _started := false
 
@@ -123,9 +125,15 @@ func skips(hurtbox: Area2D) -> bool:
 	return false
 
 
-## A Hurtbox hívja, ha a nyíl talált.
+## A Hurtbox hívja, ha a nyíl talált. Ha eltűnik, a társak gépén repülő mása is itt áll meg (a falba
+## csapódást és a táv végét az a sajátjából tudja).
 func on_hit() -> void:
 	if pierce > 0:
 		pierce -= 1
 		return
+	if net_id > 0:
+		var scene := get_tree().current_scene
+		var avatars := scene.get_node_or_null("NetAvatars") as NetAvatars if scene != null else null
+		if avatars != null:
+			avatars.share("shot_end", [net_id, global_position])
 	queue_free()

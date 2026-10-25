@@ -19,8 +19,6 @@ const LOOK_EVERY := 20
 ## A fegyver forgáspontja a figurán (mint a Player WeaponPivot-ja).
 const WEAPON_PIVOT_POSITION := Vector2(0, -18)
 const PLAYER_ARROW := preload("res://player/player_arrow.gd")
-## A társ lövedéke akkor tűnik el, ha szörnybe csapódik (a szörnyek teste a 3. rétegen van).
-const ENEMY_BODY_LAYER := 4
 ## Élesztés: ilyen közel kell állni az elesett társhoz, és ennyi ideig nyomva tartani az E-t.
 const REVIVE_RANGE := 56.0
 ## Egy csontváz a pózban: azonosító, x, y, sebesség x, y, tükrözés + fut-e.
@@ -41,6 +39,8 @@ var _minion_uid := 0
 var _avatars := {}
 ## Peer id -> hol járt legutóbb ("camp", vagy "d<emelet>:<mag>"; lásd _where).
 var _last_where := {}
+## A társak repülő lövedékei: "<peer id>:<sorszám>" -> a mása (a "shot_end" ezt állítja meg).
+var _shots := {}
 
 
 func setup(scene: Node2D) -> void:
@@ -252,7 +252,9 @@ func _on_effect(id: int, kind: String, args: Array) -> void:
 			tween.tween_interval(float(args[2]))
 			tween.tween_callback(_hide_weapon.bind(avatar))
 		"shot":
-			# [hely, kinézet, hely, kiinduló pont, irány, sebesség, táv]
+			# [hely, kinézet, hely, kiinduló pont, irány, sebesség, táv, sorszám]
+			# Nem a szörnyekbe csapódva tűnik el (a társnál mellémehetett, átüthetett), hanem ahol a társnál
+			# eltalált valamit ("shot_end"); a falat és a táv végét magától tudja.
 			var shot: Area2D = PLAYER_ARROW.new()
 			shot.set("look", str(args[1]))
 			shot.set("direction", args[4])
@@ -260,10 +262,18 @@ func _on_effect(id: int, kind: String, args: Array) -> void:
 			shot.set("max_distance", float(args[6]))
 			_entities.add_child(shot)
 			_make_harmless(shot)
-			shot.collision_mask = ENEMY_BODY_LAYER
-			shot.body_entered.connect(func(_body: Node2D) -> void: shot.queue_free())
+			shot.set_deferred("monitoring", false)
 			shot.global_position = args[2]
 			shot.set("origin", args[3])
+			var key := "%d:%d" % [id, int(args[7])]
+			_shots[key] = shot
+			shot.tree_exiting.connect(func() -> void: _shots.erase(key))
+		"shot_end":
+			# [hely, sorszám, hol tűnt el]
+			var shot: Variant = _shots.get("%d:%d" % [id, int(args[1])])
+			if is_instance_valid(shot):
+				(shot as Node2D).global_position = args[2]
+				(shot as Node2D).queue_free()
 		"spike":
 			var spike := Spells.EarthSpike.new()
 			_entities.add_child(spike)

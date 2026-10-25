@@ -7,6 +7,8 @@ extends CanvasLayer
 
 const CARD_COUNT := 3
 const CARD_SIZE := Vector2(210, 250)
+## A kártya tartalma ennyire van a szélétől.
+const CARD_PADDING := 18
 ## Ennyi ideig nem fogad kattintást, hogy egy harc közbeni kattintás
 ## ne válasszon véletlenül.
 const INPUT_DELAY := 0.4
@@ -187,6 +189,23 @@ func _show_cards() -> void:
 	for i in _options.size():
 		_cards.add_child(_make_card(i, _options[i]))
 	_update_reroll_button()
+	_fit_cards()
+
+
+## Ha egy kártya szövege nem fér el (pl. az Erőé három sorban), a kártyák magasabbak lesznek (mind
+## egyforma, a legmagasabbhoz igazodva). A címkék sortörése csak az elrendezés után derül ki.
+func _fit_cards() -> void:
+	await get_tree().process_frame
+	var cards: Array[Control] = []
+	var height := CARD_SIZE.y
+	for card in _cards.get_children():
+		if card.is_queued_for_deletion():
+			continue
+		cards.append(card)
+		var box := card.get_child(0) as Control
+		height = maxf(height, box.get_combined_minimum_size().y + CARD_PADDING * 2.0)
+	for card in cards:
+		card.custom_minimum_size.y = height
 
 
 func _choose(index: int) -> void:
@@ -239,7 +258,7 @@ func _make_card(index: int, upgrade: Dictionary) -> Button:
 	card.pressed.connect(_choose.bind(index))
 
 	var box := VBoxContainer.new()
-	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 18)
+	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, CARD_PADDING)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_theme_constant_override("separation", 10)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE

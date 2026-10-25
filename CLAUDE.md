@@ -113,7 +113,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Felvehető: a vendég a gazdától kéri ("claim"), a gazda dönti el, ki kapja ("taken") — kettős felvétel nincs. A közös arany
   összegét a gazda vezeti (NetLobby "közös arany", sorszámozott változások). A más emeletre szóló üzeneteket a NetLobby
   megőrzi (`_pending`), amíg az emelet be nem töltődik. A támadások látszata (fegyver, lövedék) a társaknál is lejátszódik
-  (`Player.share_effect` → `NetAvatars._on_effect`; ott nem sebez). Közös játékban a szobák ajtajai nem záródnak be
+  (`Player.share_effect` → `NetAvatars._on_effect`; ott nem sebez). A lövedék mása nem a szörnyekbe csapódva tűnik el,
+  hanem ahol a lövőnél eltűnt (`PlayerArrow.net_id`, "shot_end"; falat és távot magától tudja). Közös játékban a szobák ajtajai nem záródnak be
   (`Room._set_doors_locked`). Élesztés: az elesett társ a halála helyén fekszik (pózban "g" = `Player.net_death_at`);
   mellette 3 mp-ig nyomva tartott E → `NetLobby.send_revive` → az ő gépén `Player.revive_from_net` (fél HP).
   Tárgyátadás: a táska ablakban a táska tárgyát egy társ nevére húzva (`ui/give_slot.gd`, `InventoryScreen._give_from_bag`)

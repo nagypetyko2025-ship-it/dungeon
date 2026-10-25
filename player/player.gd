@@ -125,6 +125,8 @@ var _wait_held_move := false
 
 var _knockback := Vector2.ZERO
 var _cooldown_left := 0.0
+## A társakkal megosztott lövéseink sorszáma (lásd share_shot).
+var _shot_count := 0
 var _swing_side := 1.0
 ## Tőrből mindig kettő van a kezében: felváltva döf az egyikkel, aztán a másikkal; a kettő között
 ## DAGGER_GAP rés van. A másik tőr (_twin_pivot) addig a helyén marad, a célzás felé fordítva.
@@ -988,10 +990,13 @@ func share_effect(kind: String, args: Array) -> void:
 		avatars.share(kind, args)
 
 
-## Egy kilőtt nyíl / varázslövedék a társaknál is repül (ott nem sebez).
+## Egy kilőtt nyíl / varázslövedék a társaknál is repül (ott nem sebez). A sorszámával jelzi majd, ha
+## nálunk eltalált valamit és eltűnt (PlayerArrow.on_hit): akkor ott is ott áll meg.
 func share_shot(shot: Area2D) -> void:
+	_shot_count += 1
+	shot.set("net_id", _shot_count)
 	share_effect("shot", [str(shot.get("look")), shot.global_position, shot.get("origin"), shot.get("direction"),
-		float(shot.get("speed")), float(shot.get("max_distance"))])
+		float(shot.get("speed")), float(shot.get("max_distance")), _shot_count])
 
 
 ## A fegyver kinézete a társak figuráján: ikon, és a kép helyzete a forgásponthoz (lásd NetAvatars).
