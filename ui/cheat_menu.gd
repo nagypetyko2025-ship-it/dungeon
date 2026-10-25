@@ -17,7 +17,7 @@ const FILTER_BUTTON_SIZE := Vector2(80, 36)
 ## A tárgylap szűrői: "" = mind.
 const SLOT_FILTERS: Array[String] = ["", "weapon", "helmet", "chest", "pants", "boots", "gloves", "ring", "amulet", "trinket"]
 ## "" = a tárgy saját ritkasága; a többinél annak a változata (lásd Items.variant).
-const RARITY_FILTERS: Array[String] = ["", "common", "rare", "epic", "legendary"]
+const RARITY_FILTERS: Array[String] = ["", "common", "rare", "epic", "legendary", "mythic"]
 
 var _layer: CanvasLayer
 var _menu_box: VBoxContainer

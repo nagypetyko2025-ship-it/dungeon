@@ -43,6 +43,11 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   chaos_hound 26.-tól), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`, `chaos_lord_boss.gd`;
   képességek: `enemies/enemy_abilities.gd` (méreg/fagy/fosztogatás a `Player.apply_poison/apply_slow/lose_gold`-on át).
 - Tárgyak: `items/items.gd` (DEFINITIONS; a bolti áru emeletenként erősebb: `Items.for_depth`); statok: `components/stats.gd`; szintlépés-kártyák: `components/upgrades.gd`.
+  Ritkaságok: common → rare → epic → legendary → mythic (Mítikus, piros: minden tárgynak van mítikus változata,
+  `Items.variant` / `available_rarities`, a kötött tárgyaknak nincs). `Items.random_item(max, min, depth)`: mélyebben
+  több a ritkább (`rarity_weight`, RARITIES "per_floor"); a fegyverek közül a karakter harcmódjához illők gyakoribbak
+  (`STYLE_MATCH` / `STYLE_MISMATCH`; közös játékban dobásonként egy véletlen játékosé). Íjfajták: bow, shortbow (gyors,
+  rövid), warbow (lassú, átütő nyíl: `PlayerArrow.pierce`, a Hurtbox `skips`-szel kérdezi), crossbow (`Player.WEAPON_TYPES`).
 - UI: minden ablak CanvasLayer `open()/close()`-zal, a `ui/menus.gd` kezeli (KEYS: I, Tab, M, J). Stílus: `UiStyle`, `MenuStyle`.
   Megállítás: `GamePause.set_paused(tree, on)` / `GamePause.active(tree)` (`ui/game_pause.gd`) a `get_tree().paused` helyett —
   egyjátékosban a fa áll meg, közös játékban semmi (szintlépés, halál, Esc-menü alatt sem), csak a karakter nem irányítható és a világ nem fogad E-t.
@@ -100,6 +105,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   (`Player.share_effect` → `NetAvatars._on_effect`; ott nem sebez). Közös játékban a szobák ajtajai nem záródnak be
   (`Room._set_doors_locked`). Élesztés: az elesett társ a halála helyén fekszik (pózban "g" = `Player.net_death_at`);
   mellette 3 mp-ig nyomva tartott E → `NetLobby.send_revive` → az ő gépén `Player.revive_from_net` (fél HP).
+  Tárgyátadás: a táska ablakban a táska tárgyát egy társ nevére húzva (`ui/give_slot.gd`, `InventoryScreen._give_from_bag`)
+  → `NetLobby.send_item` → nála `NetAvatars._on_item_received` a táskába; ha tele, visszajön (`item_returned`; ha a
+  küldőnél sincs hely / épp jelenetet vált, a tábori ládába). A küldő azonnal kiveszi, így nem kettőződik.
   Közös játékban a szintlépés nem nyílik fel magától: alul gomb / L (`ui/level_up.gd`, `GameState.pending_level_ups`);
   a szörnyek kijöhetnek a szobájukból (a főellenség nem); a láda üres-e: a közös magból és a helyéből (mindenkinél ugyanaz).
   Emeletváltáskor (`Dungeon.go_to_floor`) a nyitott ablak bezárul és a szünet feloldódik (menü alatt is jöhet a lépcső).

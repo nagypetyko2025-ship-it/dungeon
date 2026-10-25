@@ -19,6 +19,10 @@ signal pose_received(id: int, data: Dictionary)
 signal effect_received(id: int, kind: String, args: Array)
 ## Egy társ (`by_id`) felélesztett minket.
 signal revive_requested(by_id: int)
+## Egy társ (`from_id`) tárgyat adott nekünk (lásd send_item; a NetAvatars teszi a táskába).
+signal item_received(from_id: int, item: Dictionary)
+## Az átadott tárgyunk visszajött (a társnál nem fért el, vagy épp nem tudta fogadni).
+signal item_returned(from_id: int, item: Dictionary)
 signal player_left(id: int)
 ## Változott a hálózaton talált várók listája (games).
 signal games_changed
@@ -649,6 +653,40 @@ func send_revive(id: int) -> void:
 @rpc("any_peer", "call_remote", "reliable")
 func _revive() -> void:
 	revive_requested.emit(_mp.get_remote_sender_id())
+
+
+## Tárgy átadása egy társnak (`id`): a küldő már kivette a táskájából. Ha a társnál nem fér el (vagy
+## épp jelenetet vált), visszajön (item_returned); így a tárgy sosem kettőződik meg.
+func send_item(id: int, item: Dictionary) -> void:
+	if state == "playing" and players.has(id) and id != my_id():
+		_give.rpc_id(id, item)
+	else:
+		item_returned.emit(id, item)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _give(item: Dictionary) -> void:
+	var from := _mp.get_remote_sender_id()
+	if item_received.get_connections().is_empty():
+		_give_back.rpc_id(from, item)
+		return
+	item_received.emit(from, item)
+
+
+## A kapott tárgy visszaküldése (nem fért el nálunk).
+func return_item(id: int, item: Dictionary) -> void:
+	if state == "playing" and players.has(id):
+		_give_back.rpc_id(id, item)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _give_back(item: Dictionary) -> void:
+	var from := _mp.get_remote_sender_id()
+	# Épp jelenetet váltunk (nincs, aki a táskába tegye): a tábori ládába kerül, nem vész el.
+	if item_returned.get_connections().is_empty():
+		Progress.add_to_stash(item)
+		return
+	item_returned.emit(from, item)
 
 
 func player_name(id: int) -> String:

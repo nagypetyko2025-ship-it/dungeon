@@ -28,7 +28,7 @@ func setup(slot_kind: String, slot_key: Variant, slot_item: Variant, owner_inven
 	add_theme_stylebox_override("panel", UiStyle.slot())
 	if item != null and item.has("rarity"):
 		var fill := ColorRect.new()
-		fill.color = Color(Items.rarity_color(item), RARITY_FILL_ALPHA)
+		fill.color = Items.rarity_fill(item, RARITY_FILL_ALPHA)
 		fill.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 6)
 		fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(fill)

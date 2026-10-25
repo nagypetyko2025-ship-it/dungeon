@@ -91,7 +91,7 @@ func _open_now() -> void:
 		return
 	if randf() < ITEM_CHANCE:
 		var drop = ITEM_DROP.instantiate()
-		drop.item = Items.random_item(ITEM_MAX_RARITY)
+		drop.item = Items.random_item(ITEM_MAX_RARITY, "common", depth)
 		drop.position = position + Vector2(0, -12)
 		get_parent().add_child(drop)
 	var total := randi_range(GOLD_BASE.x, GOLD_BASE.y) + depth * GOLD_PER_DEPTH

@@ -25,3 +25,5 @@ Számszeríjak (crossbow_*): "CC0 Ranged Icons" gyűjtemény (antumdeluge, https
 royal_letter.png: a thief_letter.png (Pixelart icons, CC0) átszínezve: világos papír, aranypecsét.
 ring_ember, amulet_arcane, hat_sorcerer, trinket_flamecore: a meglévő CC0 ikonok (ring_moon, amulet_heart, hat_apprentice, trinket_crystal) átszínezve.
 fishing_rod.png: a "16x16 Beginner Pixel Art Item Pack" (benjaminkford, CC0, https://benjaminkford.itch.io/16x16-beginner-pixel-art-item-pack) horgászbotja, háttér nélkül; fishing_rod_bare.png: ugyanaz zsinór és úszó nélkül (azokat a játék rajzolja a vízig).
+Rövid íjak és hadiíjak (bow_short, bow_reflex, bow_hornet, bow_storm, warbow_yew, warbow_bone, warbow_dragon, warbow_titan):
+  a meglévő CC0 íjikonok ("496 pixel art icons", 7Soul1) átszínezve, a rövid íjak kisebbre véve.

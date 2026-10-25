@@ -4,27 +4,39 @@ class_name Items
 ## (pl. a Zafírszív mindig regenerációt ad, egyszer +0.3-at, máskor +0.5-öt).
 ## Az ár a ritkaságtól és attól függ, mennyire jó lett a dobás.
 
-## color: fény / slot-árnyalat (sötét háttéren); ink: szöveg a világos pergamenen.
+## color: fény / slot-árnyalat (sötét háttéren); ink: szöveg a világos pergamenen; fill: a tárgy helyének
+## kitöltése ennyiszer erősebb (lásd rarity_fill).
+## weight: a dobás súlya az 1. emeleten; per_floor: emeletenként ennyivel (arányosan) nő / csökken
+## (lásd rarity_weight): mélyebben egyre több a ritkább tárgy, és egyre kevesebb az átlagos.
 const RARITIES := {
 	"common": {"name": "Átlagos", "color": Color(0.85, 0.85, 0.82), "ink": Color(0.36, 0.33, 0.3),
-		"price": [12, 22], "weight": 50},
+		"price": [12, 22], "weight": 50, "per_floor": -0.025},
 	"rare": {"name": "Ritka", "color": Color(0.35, 0.62, 1.0), "ink": Color(0.12, 0.32, 0.72),
-		"price": [35, 55], "weight": 30},
+		"price": [35, 55], "weight": 30, "per_floor": 0.01},
 	"epic": {"name": "Epikus", "color": Color(0.78, 0.42, 1.0), "ink": Color(0.48, 0.18, 0.68),
-		"price": [80, 120], "weight": 15},
+		"price": [80, 120], "weight": 15, "per_floor": 0.05},
 	"legendary": {"name": "Legendás", "color": Color(1.0, 0.62, 0.15), "ink": Color(0.72, 0.36, 0.0),
-		"price": [170, 250], "weight": 6},
+		"price": [170, 250], "weight": 6, "per_floor": 0.08},
+	# Mítikus: minden tárgynak van ilyen változata; a legendásnál ritkább és erősebb.
+	"mythic": {"name": "Mítikus", "color": Color(1.0, 0.24, 0.2), "ink": Color(0.72, 0.07, 0.05),
+		"price": [380, 560], "weight": 1.2, "per_floor": 0.1, "fill": 2.2},
 }
-const RARITY_ORDER: Array[String] = ["common", "rare", "epic", "legendary"]
+const RARITY_ORDER: Array[String] = ["common", "rare", "epic", "legendary", "mythic"]
+## Az átlagos tárgyak súlya mélyen sem esik ennyiszeres alá.
+const MIN_RARITY_FACTOR := 0.12
+## Fegyverdobás a harcmód szerint: a karaktered által használható fajta (közelharci / távolsági)
+## ennyiszer gyakoribb, a másik ennyiszer ritkább (lásd _drop_weight).
+const STYLE_MATCH := 2.0
+const STYLE_MISMATCH := 0.25
 ## A boltos a vételár ennyied részéért veszi meg a tárgyakat.
 const SELL_RATIO := 0.4
-## A távolsági fegyverfajták (íj, számszeríj).
-const RANGED_TYPES: Array[String] = ["bow", "crossbow"]
+## A távolsági fegyverfajták (íjak, számszeríj).
+const RANGED_TYPES: Array[String] = ["bow", "shortbow", "warbow", "crossbow"]
 const SPEAR_NOTE_INK := Color(0.42, 0.28, 0.12)
 const SLOT_NOTE_INK := Color(0.3, 0.22, 0.14)
 const WEAPON_NOTE_INK := Color(0.45, 0.16, 0.1)
 const WEAPON_KIND_NAMES := {"sword": "Kard", "spear": "Lándzsa", "axe": "Balta", "dagger": "Tőr", "mace": "Buzogány", "bow": "Íj",
-	"crossbow": "Számszeríj", "wand": "Varázspálca", "shovel": "Ásó"}
+	"shortbow": "Rövid íj", "warbow": "Hadiíj", "crossbow": "Számszeríj", "wand": "Varázspálca", "shovel": "Ásó"}
 ## A fegyverfajták rövid leírása (a kard az alap, ahhoz nincs).
 const WEAPON_NOTES := {
 	"spear": "Lándzsa: messzebbre ér és szúr. Átütés: a szúrást nem lehet kikerülni, és erősen hátralök.",
@@ -32,6 +44,8 @@ const WEAPON_NOTES := {
 	"dagger": "Tőr: rövid, de nagyon gyors; nagy kritikus szorzó.",
 	"mace": "Buzogány: lassú, de nagyot üt és messzire löki az ellenséget.",
 	"bow": "Íj: nyilat lő a kurzor felé; a Távolsági sebzés erősíti, a Hatótáv a nyíl repülési távolsága.",
+	"shortbow": "Rövid íj: nagyon gyorsan lő, de kisebbet üt, és rövidebben repül a nyila.",
+	"warbow": "Hadiíj: lassan feszül, de a nyila gyors, messzire repül, és átüt: legfeljebb 3 szörnyet sebez.",
 	"wand": "Varázspálca: a választott varázslatokat szórja (bal és jobb egérgomb); az Elemi sebzés erősíti.",
 	"shovel": "Ásó: magától üt, ha egy szörny túl közel ér; lassan és gyengén, de nagyon messzire löki.",
 	"crossbow": "Számszeríj: lassabban tölt, de nagyot üt; legfeljebb 3 vesszőt lő, szűk, egyenes sorban.",
@@ -116,6 +130,28 @@ const DEFINITIONS := {
 	"bow_star": {"name": "Csillagíj", "slot": "weapon", "rarity": "legendary", "weapon_type": "bow",
 		"base": [4, 5], "scaling": 1.2, "crit": 2.0,
 		"stats": {"multishot": [1, 1], "ranged_damage": [2, 3], "attack_range": [15, 25], "crit_chance": [8, 12], "damage_percent": [6, 10], "accuracy": [6, 10]}},
+	# Rövid íjak: nagyon gyorsan lőnek, de kisebbet ütnek, és rövidebben repül a nyiluk (lásd Player.WEAPON_TYPES).
+	"bow_short": {"name": "Rövid íj", "slot": "weapon", "rarity": "common", "weapon_type": "shortbow",
+		"base": [1, 2], "scaling": 0.7, "crit": 1.5, "stats": {"attack_speed": [5, 10]}},
+	"bow_reflex": {"name": "Reflexíj", "slot": "weapon", "rarity": "rare", "weapon_type": "shortbow",
+		"base": [2, 2], "scaling": 0.75, "crit": 1.6, "stats": {"attack_speed": [8, 14], "crit_chance": [2, 4]}},
+	"bow_hornet": {"name": "Darázsíj", "slot": "weapon", "rarity": "epic", "weapon_type": "shortbow",
+		"base": [2, 3], "scaling": 0.85, "crit": 1.7,
+		"stats": {"attack_speed": [12, 18], "ranged_damage": [1, 1], "accuracy": [3, 5]}},
+	"bow_storm": {"name": "Viharíj", "slot": "weapon", "rarity": "legendary", "weapon_type": "shortbow",
+		"base": [3, 4], "scaling": 1.0, "crit": 1.8,
+		"stats": {"multishot": [1, 1], "attack_speed": [18, 26], "ranged_damage": [1, 2], "crit_chance": [5, 8], "move_speed": [4, 6]}},
+	# Hadiíjak: lassan feszülnek, de nagyot ütnek, messzire és gyorsan repül a nyiluk, ami átüti a szörnyeket.
+	"warbow_yew": {"name": "Tiszafa hadiíj", "slot": "weapon", "rarity": "common", "weapon_type": "warbow",
+		"base": [3, 3], "scaling": 1.0, "crit": 1.6, "stats": {"attack_range": [6, 10]}},
+	"warbow_bone": {"name": "Csont hadiíj", "slot": "weapon", "rarity": "rare", "weapon_type": "warbow",
+		"base": [3, 4], "scaling": 1.1, "crit": 1.7, "stats": {"attack_range": [10, 16], "crit_chance": [2, 4]}},
+	"warbow_dragon": {"name": "Sárkányín", "slot": "weapon", "rarity": "epic", "weapon_type": "warbow",
+		"base": [4, 6], "scaling": 1.2, "crit": 1.9,
+		"stats": {"ranged_damage": [1, 2], "damage_percent": [4, 6], "attack_speed": [-6, -3]}},
+	"warbow_titan": {"name": "A titánok íja", "slot": "weapon", "rarity": "legendary", "weapon_type": "warbow",
+		"base": [6, 7], "scaling": 1.35, "crit": 2.1,
+		"stats": {"ranged_damage": [2, 3], "crit_chance": [8, 12], "damage_percent": [8, 12], "attack_range": [15, 25]}},
 	# Elemi sebzést adó tárgyak (a varázsló varázslatait erősítik; kicsit, de érezhetően).
 	"ring_ember": {"name": "Parázsgyűrű", "slot": "ring", "rarity": "rare",
 		"stats": {"elemental_damage": [1, 1], "crit_chance": [2, 3]}},
@@ -135,7 +171,7 @@ const DEFINITIONS := {
 		"base": [3, 3], "scaling": 1.0, "crit": 1.6, "stats": {},
 		"description": "Régi, vörös kristályos pálca. A gazdája hangjára felizzik."},
 	# Számszeríjak (íjászoknak): lassabbak, de nagyobbat ütnek, mint az íjak; legfeljebb 3 vesszőt
-	# lőnek egyszerre, szűk sorban. Ugyanannyi van belőlük, mint íjból (ritkaságonként is).
+	# lőnek egyszerre, szűk sorban.
 	"crossbow_light": {"name": "Könnyű számszeríj", "slot": "weapon", "rarity": "common", "weapon_type": "crossbow",
 		"base": [2, 3], "scaling": 1.0, "crit": 1.6, "stats": {}},
 	"crossbow_hunter": {"name": "Vadász-számszeríj", "slot": "weapon", "rarity": "common", "weapon_type": "crossbow",
@@ -449,22 +485,22 @@ const DEFINITIONS := {
 }
 
 
-## Ritkasági változatok: minden tárgynak mind a 4 ritkaságra van stat-változata. Az alap a
+## Ritkasági változatok: minden tárgynak mind az 5 ritkaságra van stat-változata. Az alap a
 ## definícióban megadott (mostani) ritkaság; a többit szabály számolja (RARITY_POWER szorzók,
 ## magasabb ritkaságon lépcsőnként +1, a tárgy jellegéhez illő extra stat: VARIANT_BONUS), és
 ## tárgyanként felülírható ("variants": {ritkaság: {"stats": {...}, "base": [...]}}).
-## Elérhető (eshet, kapható) egyelőre csak a definíció saját ritkasága (available_rarities).
-const RARITY_POWER := {"common": 0.65, "rare": 0.85, "epic": 1.0, "legendary": 1.3}
+## Elérhető (eshet, kapható) a definíció saját ritkasága és a mítikus változat (available_rarities).
+const RARITY_POWER := {"common": 0.65, "rare": 0.85, "epic": 1.0, "legendary": 1.3, "mythic": 1.75}
 ## Az extra stat helyenként (fegyvernél fajtánként) az epikus szintre méretezve.
 const VARIANT_BONUS := {
 	"sword": {"attack_speed": [6, 9]}, "spear": {"attack_range": [6, 9]}, "axe": {"damage_percent": [4, 6]},
 	"dagger": {"crit_chance": [3, 5]}, "mace": {"defense": [2, 4]}, "bow": {"ranged_damage": [1, 2]},
-	"crossbow": {"crit_chance": [3, 5]},
+	"shortbow": {"attack_speed": [5, 8]}, "warbow": {"ranged_damage": [1, 2]}, "crossbow": {"crit_chance": [3, 5]},
 	"helmet": {"max_health": [3, 5]}, "chest": {"defense": [3, 5]}, "pants": {"dodge": [2, 4]},
 	"boots": {"move_speed": [5, 8]}, "gloves": {"attack_speed": [5, 8]}, "ring": {"crit_chance": [2, 4]},
 	"amulet": {"health_regen": [0.2, 0.4]}, "trinket": {"xp_bonus": [6, 10]},
 }
-## Ezek a statok nem skálázódnak (a többlövés csak legendás tárgyon lehet).
+## Ezek a statok nem skálázódnak (a többlövés csak legendás és mítikus tárgyon lehet).
 const UNSCALED_STATS: Array[String] = ["multishot"]
 
 
@@ -481,7 +517,7 @@ static func variant(id: String, rarity := "") -> Dictionary:
 	for stat: String in base["stats"]:
 		var pair: Array = base["stats"][stat]
 		if stat in UNSCALED_STATS:
-			if rarity == "legendary":
+			if at_least(rarity, "legendary"):
 				stats[stat] = pair
 			continue
 		# A hátrány (negatív) alacsonyabb ritkaságon nagyobb, magasabbon kisebb.
@@ -517,7 +553,7 @@ static func variant(id: String, rarity := "") -> Dictionary:
 	return result
 
 
-## Mind a 4 ritkasági változat: ritkaság -> definíció.
+## Mind az 5 ritkasági változat: ritkaság -> definíció.
 static func variants(id: String) -> Dictionary:
 	var all := {}
 	for rarity in RARITY_ORDER:
@@ -525,10 +561,18 @@ static func variants(id: String) -> Dictionary:
 	return all
 
 
-## Milyen ritkaságban eshet / kapható a tárgy (egyelőre csak a saját ritkaságában).
+## Milyen ritkaságban eshet / kapható a tárgy: a saját ritkaságában, és (a kötött tárgyakat kivéve)
+## mítikusként is.
 static func available_rarities(id: String) -> Array[String]:
 	var list: Array[String] = [DEFINITIONS[id]["rarity"]]
+	if not DEFINITIONS[id].get("unique", false) and not list.has("mythic"):
+		list.append("mythic")
 	return list
+
+
+## Legalább ilyen ritka-e (pl. a "legendás talizmán" küldetéshez a mítikus is jó).
+static func at_least(rarity: String, minimum: String) -> bool:
+	return RARITY_ORDER.find(rarity) >= RARITY_ORDER.find(minimum)
 
 
 static func _scaled_pair(stat: String, pair: Array, factor: float) -> Array:
@@ -605,30 +649,78 @@ static func create(id: String, rarity := "") -> Dictionary:
 	return item
 
 
-## Véletlen tárgy a ritkaságok súlyozásával (a legendás a legritkább).
+## Véletlen tárgy a ritkaságok súlyozásával (a mítikus a legritkább); `depth`: az emelet, mélyebben
+## több a ritkább tárgy (rarity_weight). A fegyverek közül a karakter harcmódjához illők gyakoribbak.
 ## `max_rarity`: ennél ritkább nem lehet (pl. a ládákban legfeljebb "rare");
 ## `min_rarity`: ennél gyakoribb nem lehet (pl. a főellenség legalább "epic"-et dob).
-static func random_item(max_rarity := "legendary", min_rarity := "common") -> Dictionary:
+static func random_item(max_rarity := "mythic", min_rarity := "common", depth := 1) -> Dictionary:
 	var allowed := RARITY_ORDER.slice(RARITY_ORDER.find(min_rarity), RARITY_ORDER.find(max_rarity) + 1)
-	var total := 0
+	var total := 0.0
 	for rarity in allowed:
-		total += RARITIES[rarity]["weight"]
-	var ticket := randi_range(1, total)
-	var chosen := "common"
+		total += rarity_weight(rarity, depth)
+	var ticket := randf() * total
+	var chosen: String = allowed[-1]
 	for rarity in allowed:
-		ticket -= RARITIES[rarity]["weight"]
-		if ticket <= 0:
+		ticket -= rarity_weight(rarity, depth)
+		if ticket <= 0.0:
 			chosen = rarity
 			break
-	# Csak azok a tárgyak, amelyeknek ez a ritkasága elérhető (egyelőre a sajátjuk).
+	# Csak azok a tárgyak, amelyeknek ez a ritkasága elérhető (a sajátjuk vagy a mítikus).
 	var ids: Array = DEFINITIONS.keys().filter(func(id: String) -> bool:
 		return chosen in available_rarities(id) and DEFINITIONS[id].get("shop", true))
-	return create(ids.pick_random(), chosen)
+	var style := _weapon_style(_drop_character())
+	var weights: Array[float] = []
+	var weight_total := 0.0
+	for id: String in ids:
+		weights.append(_drop_weight(id, style))
+		weight_total += weights[-1]
+	var pick := randf() * weight_total
+	for i in ids.size():
+		pick -= weights[i]
+		if pick <= 0.0:
+			return create(ids[i], chosen)
+	return create(ids[-1], chosen)
 
 
-## Bolti tárgy az adott emelethez: minél mélyebben vagy, annál erősebb (lásd for_depth).
+## Egy ritkaság dobási súlya az adott emeleten: emeletenként "per_floor"-ral arányosan változik
+## (az átlagos fogy, a ritkábbak szaporodnak), de MIN_RARITY_FACTOR alá nem esik.
+static func rarity_weight(rarity: String, depth: int) -> float:
+	var data: Dictionary = RARITIES[rarity]
+	var factor := 1.0 + float(data["per_floor"]) * maxi(depth - 1, 0)
+	return float(data["weight"]) * maxf(factor, MIN_RARITY_FACTOR)
+
+
+## Kinek a harcmódja számít a dobásnál: egyjátékosban a sajátunk; közös játékban (a gazda dob
+## mindenkinek) dobásonként egy véletlen játékosé.
+static func _drop_character() -> String:
+	var lobby := NetLobby.current(null)
+	if lobby != null and lobby.state == "playing" and not lobby.players.is_empty():
+		var id: int = lobby.players.keys().pick_random()
+		if id != lobby.my_id():
+			return str(lobby.players[id].get("character", Progress.character))
+	return Progress.character
+
+
+## "melee" / "ranged", vagy "" ha a karakternek saját, kötött fegyvere van (varázsló, Vendel).
+static func _weapon_style(character: String) -> String:
+	var kind := str(Characters.data(character).get("weapons", "melee"))
+	return kind if kind in ["melee", "ranged"] else ""
+
+
+## A tárgy súlya a dobásnál: a harcmódhoz illő fegyver STYLE_MATCH-szor, a nem illő STYLE_MISMATCH-szor
+## olyan gyakori, mint egy nem fegyver tárgy.
+static func _drop_weight(id: String, style: String) -> float:
+	var definition: Dictionary = DEFINITIONS[id]
+	if style.is_empty() or definition["slot"] != "weapon":
+		return 1.0
+	var ranged: bool = definition.get("weapon_type", "") in RANGED_TYPES
+	return STYLE_MATCH if ranged == (style == "ranged") else STYLE_MISMATCH
+
+
+## Bolti tárgy az adott emelethez: minél mélyebben vagy, annál erősebb (lásd for_depth), és annál
+## gyakrabban ritkább.
 static func random_shop_item(depth: int) -> Dictionary:
-	return for_depth(random_item(), depth)
+	return for_depth(random_item("mythic", "common", depth), depth)
 
 
 ## A mélyebb boltok jobb árut tartanak: emeletenként a pozitív statok +STAT_PER_FLOOR-ral, a fegyver
@@ -675,6 +767,13 @@ static func rarity_name(item: Dictionary) -> String:
 
 static func rarity_color(item: Dictionary) -> Color:
 	return RARITIES[item.get("rarity", "common")]["color"]
+
+
+## A tárgy helyének háttérszíne `alpha` átlátszósággal (a mítikusé erősebb, hogy a sárga mezőn is
+## pirosnak lássék, ne narancsnak).
+static func rarity_fill(item: Dictionary, alpha: float) -> Color:
+	var data: Dictionary = RARITIES[item.get("rarity", "common")]
+	return Color(data["color"], minf(alpha * float(data.get("fill", 1.0)), 1.0))
 
 
 ## A ritkaság színe szövegnek, a világos pergamen háttéren is olvashatóan.

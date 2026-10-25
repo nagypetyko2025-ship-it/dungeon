@@ -42,7 +42,7 @@ func set_items(items: Array, min_slots := 0) -> void:
 		slot.add_theme_stylebox_override("panel", UiStyle.slot())
 		if item != null:
 			var fill := ColorRect.new()
-			fill.color = Color(Items.rarity_color(item), 0.3)
+			fill.color = Items.rarity_fill(item, 0.3)
 			fill.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 6)
 			fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			slot.add_child(fill)

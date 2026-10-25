@@ -209,12 +209,16 @@ func _refresh() -> void:
 	_bag_grid.set_items(_inventory().bag, Inventory.BAG_SIZE)
 
 
-## Igaz-e a tárgyra mindhárom szűrő. (A régi kardoknak nincs "weapon_type"-ja: azok kardok.)
+## Igaz-e a tárgyra mindhárom szűrő. (A régi kardoknak nincs "weapon_type"-ja: azok kardok; az "Íj"
+## szűrő a rövid íjat és a hadiíjat is mutatja.)
 func _matches(item: Dictionary) -> bool:
 	var slot: String = item.get("slot", "")
 	if _type_filter != ALL and slot != _type_filter:
 		return false
-	if _kind_filter != ALL and (slot != "weapon" or item.get("weapon_type", "sword") != _kind_filter):
+	var kind: String = item.get("weapon_type", "sword")
+	if kind in ["shortbow", "warbow"]:
+		kind = "bow"
+	if _kind_filter != ALL and (slot != "weapon" or kind != _kind_filter):
 		return false
 	return _rarity_filter == ALL or item.get("rarity", "common") == _rarity_filter
 

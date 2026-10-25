@@ -51,6 +51,8 @@ func setup(scene: Node2D) -> void:
 	_lobby.pose_received.connect(_on_pose)
 	_lobby.effect_received.connect(_on_effect)
 	_lobby.revive_requested.connect(_on_revive_requested)
+	_lobby.item_received.connect(_on_item_received)
+	_lobby.item_returned.connect(_on_item_returned)
 	_lobby.player_left.connect(_remove)
 	_lobby.closed.connect(func(reason: String) -> void:
 		for id: int in _avatars.keys():
@@ -110,10 +112,13 @@ func _where() -> String:
 
 func _on_pose(id: int, data: Dictionary) -> void:
 	_last_where[id] = str(data.get("w", "camp"))
+	var character := str(data.get("c", Characters.DEFAULT))
+	# (A táborban karaktert lehet váltani: a dobások a társ mostani harcmódjához igazodnak, lásd Items.)
+	if _lobby.players.has(id):
+		_lobby.players[id]["character"] = character
 	if str(data.get("w", "camp")) != _where():
 		_remove(id)
 		return
-	var character := str(data.get("c", Characters.DEFAULT))
 	if not _avatars.has(id) or _avatars[id]["character"] != character:
 		_remove(id)
 		_avatars[id] = _create(id, character, data.get("p", Vector2.ZERO))
@@ -496,3 +501,31 @@ func _on_revive_requested(by_id: int) -> void:
 		return
 	_player.call("revive_from_net")
 	message.emit("%s felélesztett!" % _lobby.player_name(by_id))
+
+
+func _inventory() -> Inventory:
+	return _player.get_node_or_null("Inventory") as Inventory if is_instance_valid(_player) else null
+
+
+## Egy társ tárgyat adott (a táska ablakban, lásd InventoryScreen): a táskánkba kerül; ha tele van,
+## visszaküldjük neki.
+func _on_item_received(from_id: int, item: Dictionary) -> void:
+	var who := _lobby.player_name(from_id)
+	var inventory := _inventory()
+	if inventory == null or item.get("quest", false) or not inventory.add_item(item):
+		_lobby.return_item(from_id, item)
+		message.emit("%s átadna egy tárgyat (%s), de tele a táskád." % [who, item.get("name", "?")])
+		return
+	Audio.play("item_pickup")
+	message.emit("%s átadta neked: %s" % [who, item.get("name", "?")])
+
+
+## Az átadott tárgyunk visszajött: vissza a táskába (ha közben megtelt, a tábori ládába).
+func _on_item_returned(from_id: int, item: Dictionary) -> void:
+	var inventory := _inventory()
+	var item_name: String = item.get("name", "?")
+	if inventory != null and inventory.add_item(item):
+		message.emit("%s nem tudta elfogadni (tele a táskája): %s visszakerült hozzád." % [_lobby.player_name(from_id), item_name])
+	else:
+		Progress.add_to_stash(item)
+		message.emit("Nem sikerült átadni: %s a tábori ládádba került." % item_name)

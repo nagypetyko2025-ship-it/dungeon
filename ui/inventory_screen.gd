@@ -32,6 +32,9 @@ var _info_text: RichTextLabel
 var _hint: Label
 var _title: Label
 var _sell_slot: SellSlot
+## Közös játékban: átadás a társaknak (egy-egy GiveSlot társanként).
+var _give_box: VBoxContainer
+var _give_row: HBoxContainer
 
 ## Eladás mód (a boltos pultjánál nyitva): a táska tárgyait el lehet adni.
 ## A Menus állítja be megnyitás előtt; bezáráskor visszaáll.
@@ -50,6 +53,7 @@ func open() -> void:
 		_inventory.changed.connect(_on_inventory_changed)
 	_title.text = "Eladás a boltosnak" if sell_mode else "Felszerelés"
 	_set_sell_slot_shown(sell_mode)
+	_fill_give_row()
 	_refresh()
 	_show_info(null, "")
 	visible = true
@@ -128,6 +132,15 @@ func _build() -> void:
 	var trash := TrashSlot.new()
 	trash.on_drop = func(data: Dictionary) -> void: _ask_trash(int(data["inventory_key"]))
 	bottom_row.add_child(trash)
+	# Közös játékban: a táska tárgyát egy társ nevére húzva átkerül hozzá.
+	_give_box = VBoxContainer.new()
+	_give_box.add_theme_constant_override("separation", 4)
+	_give_box.visible = false
+	bag_box.add_child(_give_box)
+	_give_box.add_child(UiStyle.label("Átadás a társnak", 16, UiStyle.TEXT_GOLD, true))
+	_give_row = HBoxContainer.new()
+	_give_row.add_theme_constant_override("separation", 6)
+	_give_box.add_child(_give_row)
 
 	# Jobbra: leírás (pergamen), fix méretű, hogy a hosszabb leírástól se változzon az ablak.
 	var info := PanelContainer.new()
@@ -243,6 +256,45 @@ func _sell_from_bag(index: int) -> void:
 	_show_info(item, "Eladva: +%d arany" % price)
 
 
+## Közös játékban a társak átadás mezői (a mostani játékosokból, megnyitáskor).
+func _fill_give_row() -> void:
+	for child in _give_row.get_children():
+		child.queue_free()
+	var lobby := NetLobby.current(get_tree())
+	var count := 0
+	if lobby != null and lobby.state == "playing":
+		for id: int in lobby.players:
+			if id == lobby.my_id():
+				continue
+			var slot := GiveSlot.new()
+			slot.setup(id, lobby.player_name(id), str(lobby.players[id].get("character", Characters.DEFAULT)))
+			slot.on_give = _give_from_bag
+			_give_row.add_child(slot)
+			count += 1
+	_give_box.visible = count > 0
+
+
+## Közös játék: a táska adott helyén lévő tárgy átadása egy társnak (ha nála nem fér el, visszajön).
+func _give_from_bag(index: int, peer_id: int) -> void:
+	var item = _inventory.bag[index]
+	if item == null:
+		return
+	if item.get("quest", false):
+		Audio.play("ui_error")
+		_show_info(item, "Küldetéstárgy: nem adhatod át.")
+		return
+	var lobby := NetLobby.current(get_tree())
+	if lobby == null or lobby.state != "playing" or not lobby.players.has(peer_id):
+		Audio.play("ui_error")
+		_show_info(item, "Ez a társad már nincs a játékban.")
+		_fill_give_row()
+		return
+	_inventory.take_from_bag(index)
+	lobby.send_item(peer_id, item)
+	Audio.play("item_pickup")
+	_show_info(item, "Átadva neki: %s" % lobby.player_name(peer_id))
+
+
 ## A táskában kijelölt tárgy célhelyének kiemelése (hova lehet betenni).
 func _mark_target(slot_name: String) -> void:
 	for key: String in _equip_slots:
@@ -265,6 +317,8 @@ func _on_slot_hovered(item: Variant, slot: InventorySlot) -> void:
 		var hint := "Húzd a kiemelt %s helyre • jobb klikk: gyors felvétel" % Items.slot_name(item)
 		if not Characters.can_use(item):
 			hint = "Ezt a fegyvert a mostani karaktered nem veheti fel."
+		if _give_box.visible and slot.kind == "bag":
+			hint += " • egy társ nevére húzva átadod"
 		if slot.kind == "equip":
 			hint = "A fegyvert csak egy másik fegyverre cserélheted." if slot.key == "weapon" \
 				else "Húzd a táskába • jobb klikk: levétel"

@@ -539,7 +539,7 @@ func _drop_boss_loot(at: Vector2) -> void:
 		coin.position = at + Vector2(0, -20)
 		_enemies.add_child(coin)
 	var drop = ITEM_DROP.instantiate()
-	drop.item = Items.random_item("legendary", BOSS_ITEM_MIN_RARITY)
+	drop.item = Items.random_item("mythic", BOSS_ITEM_MIN_RARITY, depth)
 	drop.position = at + Vector2(0, -20)
 	_enemies.add_child(drop)
 	if final_boss:

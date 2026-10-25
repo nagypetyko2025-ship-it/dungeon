@@ -656,7 +656,7 @@ func _on_died() -> void:
 
 func _drop_item() -> void:
 	var drop = ITEM_DROP.instantiate()
-	drop.item = Items.random_item()
+	drop.item = Items.random_item("mythic", "common", GameState.depth)
 	drop.position = position + Vector2(0, -8)
 	get_parent().add_child(drop)
 

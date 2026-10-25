@@ -55,6 +55,11 @@ const WEAPON_TYPES := {
 	"shovel": {"style": "swing", "arc": 150.0, "cooldown": 1.7, "knockback": 360.0, "length": 58.0, "width": 30.0,
 		"forward": 18.0},
 	"crossbow": {"style": "bow", "cooldown": 1.45, "knockback": 220.0, "length": 40.0, "width": 10.0},
+	# Íjfajták (lásd Items.WEAPON_NOTES). range: a nyíl repülési távolságának szorzója; arrow_speed: a
+	# nyíl sebességének szorzója; pierce: ennyi szörnyön üt át a nyíl (utána a következőben elakad).
+	"shortbow": {"style": "bow", "cooldown": 0.7, "knockback": 80.0, "length": 34.0, "width": 10.0, "range": 0.75},
+	"warbow": {"style": "bow", "cooldown": 1.55, "knockback": 240.0, "length": 46.0, "width": 10.0, "range": 1.3,
+		"arrow_speed": 1.35, "pierce": 2},
 }
 ## Az átlós ikonú fegyvereknél a markolat ennyied része a forgáspont mögött.
 const ICON_WEAPON_GRIP := 0.15
@@ -953,12 +958,14 @@ func _shoot(aim_angle: float) -> void:
 	# Az oldalirány ugyanarra mutat, amerre a szög is nő: így a nyilak egymás mellől indulnak,
 	# és szétfelé repülnek (sosem keresztezik egymást).
 	var side := direction.rotated(PI / 2.0)
+	var type_data: Dictionary = WEAPON_TYPES[_weapon_type]
 	for i in count:
 		var k := i - (count - 1) / 2.0
 		var arrow: Area2D = PLAYER_ARROW.new()
 		arrow.direction = direction.rotated(deg_to_rad(spread) * k)
-		arrow.speed = ARROW_SPEED
-		arrow.max_distance = BOW_RANGE * _stats.attack_range / 100.0
+		arrow.speed = ARROW_SPEED * float(type_data.get("arrow_speed", 1.0))
+		arrow.max_distance = BOW_RANGE * _stats.attack_range / 100.0 * float(type_data.get("range", 1.0))
+		arrow.pierce = int(type_data.get("pierce", 0))
 		arrow.damage = hit_damage()
 		arrow.crit_chance = _stats.crit_chance / 100.0
 		arrow.crit_multiplier = weapon_crit_multiplier()

@@ -13,6 +13,9 @@ var max_distance := 420.0
 var look := "arrow"
 ## A lövő teste (ha a kiinduló pont falba esne, innen indul).
 var origin := Vector2.INF
+## Átütés (hadiíj): ennyi szörnyön repül még át találat után; mindegyiket csak egyszer sebzi.
+var pierce := 0
+var _pierced: Array[Area2D] = []
 var _started := false
 
 var _travelled := 0.0
@@ -111,6 +114,17 @@ func _in_wall(at: Vector2) -> bool:
 	return not get_world_2d().direct_space_state.intersect_point(query, 1).is_empty()
 
 
+## A Hurtbox kérdezi a találat előtt: ezt a célt már átütötte-e (akkor kihagyja); ha nem, megjegyzi.
+func skips(hurtbox: Area2D) -> bool:
+	if hurtbox in _pierced:
+		return true
+	_pierced.append(hurtbox)
+	return false
+
+
 ## A Hurtbox hívja, ha a nyíl talált.
 func on_hit() -> void:
+	if pierce > 0:
+		pierce -= 1
+		return
 	queue_free()
