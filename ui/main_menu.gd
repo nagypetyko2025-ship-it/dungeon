@@ -69,6 +69,8 @@ func _ready() -> void:
 	_build_footer()
 	_build_profiles()
 	_buttons.get_child(0).grab_focus()
+	# Van-e újabb változat a GitHubon (indításonként egyszer; ha van, magától frissít, lásd Updater).
+	add_child(Updater.new())
 
 
 func _build_background() -> void:
@@ -273,7 +275,9 @@ func _build_settings() -> void:
 
 func _build_footer() -> void:
 	var footer := Label.new()
-	footer.text = "F11 — teljes képernyő   ·   v0.1"
+	# A változat a GitHub-commit rövid azonosítója (közös játékhoz mindenkinél ugyanaz kell).
+	var version := Updater.current_version()
+	footer.text = "F11 — teljes képernyő   ·   v0.1" + ("  (%s)" % version if not version.is_empty() else "")
 	footer.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
 	footer.add_theme_font_size_override("font_size", 14)
 	footer.add_theme_color_override("font_color", Color(0.6, 0.52, 0.45, 0.8))

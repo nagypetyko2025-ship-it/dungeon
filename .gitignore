@@ -8,3 +8,7 @@
 # Helyi szerkesztő / MCP beállítások
 .cursor/
 .mcp.json
+
+# Az automatikus frissítő (ui/updater.gd) a git nélküli, ZIP-ből frissített mappában
+.update_version
+.update_manifest

@@ -102,3 +102,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   a gazda a váróban "új kezdés"-t is választhat.
   Menü: `ui/multiplayer_panel.gd`. Teszt: két példány (_host.gd / _client.gd) egyszerre fut.
 - Gyakorló pálya: `ui/tutorial_guide.gd` (lépések), kézikönyv: `ui/tutorial_manual.gd` (az irányítás szövege a Beállítások fülön is).
+- Automatikus frissítés: `ui/updater.gd` (a főmenü teszi be, indításonként egyszer; headless és exportált játékban nem fut).
+  GitHub compare API a helyi main-fej és az origin main között; ha a helyi mögötte van: felül az újdonságok, 6 mp múlva
+  magától frissít (git-es mappában `git pull --ff-only`, de commitolatlan változásnál csak gombra; git nélküli mappában
+  a main ZIP-je, `.update_version` / `.update_manifest`), utána `--headless --import`, és újraindul. Ha a helyi előrébb
+  jár (fel nem töltött commit) vagy más ágon van, nem nyúl semmihez. A főmenü jobb alsó sarkában a commit rövid azonosítója.
