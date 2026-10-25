@@ -43,8 +43,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   chaos_hound 26.-tól), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`, `chaos_lord_boss.gd`;
   képességek: `enemies/enemy_abilities.gd` (méreg/fagy/fosztogatás a `Player.apply_poison/apply_slow/lose_gold`-on át).
 - Tárgyak: `items/items.gd` (DEFINITIONS; a bolti áru emeletenként erősebb: `Items.for_depth`); statok: `components/stats.gd`; szintlépés-kártyák: `components/upgrades.gd`.
-  Ritkaságok: common → rare → epic → legendary → mythic (Mítikus, piros: minden tárgynak van mítikus változata,
-  `Items.variant` / `available_rarities`, a kötött tárgyaknak nincs). `Items.random_item(max, min, depth, style)`: mélyebben
+  Ritkaságok: common → rare → epic → legendary → mythic (Mítikus, piros: 17 saját tárgy, fegyverfajtánként / helyenként
+  egy, a DEFINITIONS végén). Minden tárgynak minden ritkaságra van változata (`Items.variant`), de esni / a boltban
+  jönni csak a saját ritkaságában tud (`available_rarities`); a többi változat a csalómenü tárgylapján. `Items.random_item(max, min, depth, style)`: mélyebben
   több a ritkább (`rarity_weight`, RARITIES "per_floor"); a boltban (`random_shop_item`) a fegyverek közül a karakter
   harcmódjához illők gyakoribbak (`weapon_style`, `STYLE_MATCH` / `STYLE_MISMATCH`), a szörnyek és ládák dobásában nem. Íjfajták: bow, shortbow (gyors,
   rövid), warbow (lassú, átütő nyíl: `PlayerArrow.pierce`, a Hurtbox `skips`-szel kérdezi), crossbow (`Player.WEAPON_TYPES`).

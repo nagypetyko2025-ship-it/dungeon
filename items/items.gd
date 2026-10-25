@@ -17,7 +17,7 @@ const RARITIES := {
 		"price": [80, 120], "weight": 15, "per_floor": 0.05},
 	"legendary": {"name": "Legendás", "color": Color(1.0, 0.62, 0.15), "ink": Color(0.72, 0.36, 0.0),
 		"price": [170, 250], "weight": 6, "per_floor": 0.08},
-	# Mítikus: minden tárgynak van ilyen változata; a legendásnál ritkább és erősebb.
+	# Mítikus: saját tárgyak (a DEFINITIONS végén), a legendásnál ritkábbak és erősebbek.
 	"mythic": {"name": "Mítikus", "color": Color(1.0, 0.24, 0.2), "ink": Color(0.72, 0.07, 0.05),
 		"price": [380, 560], "weight": 1.2, "per_floor": 0.1, "fill": 2.2},
 }
@@ -482,6 +482,67 @@ const DEFINITIONS := {
 		"stats": {"xp_bonus": [10, 15], "dodge": [2, 3]}},
 	"trinket_orb": {"name": "Vérgömb", "slot": "trinket", "rarity": "legendary",
 		"stats": {"damage_percent": [8, 12], "crit_chance": [5, 8], "lifesteal": [4, 6]}},
+	# Mítikus tárgyak: fajtánként / helyenként egy, a legendásoknál ritkábbak és erősebbek (piros ikon, izzással).
+	"sword_bloodmoon": {"name": "Vérhold pengéje", "slot": "weapon", "rarity": "mythic", "hand_scale": 0.6,
+		"base": [6, 7], "scaling": 1.5, "crit": 2.0,
+		"stats": {"attack_speed": [30, 45], "crit_chance": [10, 15], "attack_range": [18, 28], "damage_percent": [10, 14], "lifesteal": [5, 8]},
+		"description": "Vörös holdtöltekor kovácsolták; azóta is iszik minden sebből."},
+	"spear_doom": {"name": "Végítélet dárdája", "slot": "weapon", "rarity": "mythic", "weapon_type": "spear",
+		"base": [7, 8], "scaling": 1.25, "crit": 2.5,
+		"stats": {"attack_range": [25, 34], "attack_speed": [12, 20], "crit_chance": [10, 15], "damage_percent": [8, 12]},
+		"description": "Azt mondják, egy egész sereg utolsó harcosa dobta el."},
+	"axe_inferno": {"name": "Pokoltűz bárd", "slot": "weapon", "rarity": "mythic", "weapon_type": "axe",
+		"base": [8, 10], "scaling": 1.6, "crit": 2.0,
+		"stats": {"damage_percent": [12, 16], "attack_range": [12, 18], "max_health": [6, 9], "lifesteal": [4, 6]},
+		"description": "A pengéje sosem hűl ki egészen."},
+	"dagger_eclipse": {"name": "Napfogyatkozás tőre", "slot": "weapon", "rarity": "mythic", "weapon_type": "dagger",
+		"base": [5, 6], "scaling": 1.3, "crit": 2.8,
+		"stats": {"crit_chance": [16, 22], "attack_speed": [20, 28], "dodge": [6, 9], "lifesteal": [5, 8]},
+		"description": "Egy pillanatra elsötétül tőle a fény, mielőtt lesújt."},
+	"mace_world": {"name": "Világverő buzogány", "slot": "weapon", "rarity": "mythic", "weapon_type": "mace",
+		"base": [10, 12], "scaling": 1.75, "crit": 2.0,
+		"stats": {"damage_percent": [10, 14], "defense": [7, 10], "max_health": [7, 10], "thorns": [3, 4]},
+		"description": "Minden csapásától megremeg a kazamata fala."},
+	"bow_phoenix": {"name": "Főnixíj", "slot": "weapon", "rarity": "mythic", "weapon_type": "bow",
+		"base": [6, 7], "scaling": 1.5, "crit": 2.2,
+		"stats": {"multishot": [1, 1], "ranged_damage": [3, 5], "attack_range": [20, 30], "crit_chance": [10, 15], "damage_percent": [10, 14], "accuracy": [8, 12]},
+		"description": "Húrja egy főnix tolla; a nyilai parázsként húznak csíkot."},
+	"bow_lightning": {"name": "Villámíj", "slot": "weapon", "rarity": "mythic", "weapon_type": "shortbow",
+		"base": [4, 5], "scaling": 1.25, "crit": 2.0,
+		"stats": {"multishot": [1, 1], "attack_speed": [25, 35], "ranged_damage": [2, 3], "crit_chance": [8, 12], "move_speed": [6, 9]},
+		"description": "Gyorsabban lő, mint ahogy a szem követni tudja."},
+	"warbow_abyss": {"name": "A Mélység íja", "slot": "weapon", "rarity": "mythic", "weapon_type": "warbow",
+		"base": [8, 10], "scaling": 1.65, "crit": 2.4,
+		"stats": {"ranged_damage": [3, 5], "crit_chance": [10, 15], "damage_percent": [12, 16], "attack_range": [20, 30]},
+		"description": "A legmélyebb emeletről hozta fel valaki, aki nem beszél róla."},
+	"crossbow_hellfire": {"name": "Pokolvető", "slot": "weapon", "rarity": "mythic", "weapon_type": "crossbow",
+		"base": [9, 11], "scaling": 1.6, "crit": 2.4,
+		"stats": {"multishot": [1, 1], "ranged_damage": [3, 5], "crit_chance": [10, 15], "damage_percent": [12, 16], "accuracy": [8, 12]},
+		"description": "A vesszői izzanak, mintha a pokol tüzéből húznák ki őket."},
+	"helmet_demon": {"name": "Démonkirály koronája", "slot": "helmet", "rarity": "mythic",
+		"stats": {"crit_chance": [10, 15], "damage": [3, 4], "max_health": [6, 10], "accuracy": [6, 9]},
+		"description": "Aki viseli, suttogást hall. Nem mindig rosszat."},
+	"chest_abyss": {"name": "A Mélység páncélja", "slot": "chest", "rarity": "mythic",
+		"stats": {"max_health": [16, 22], "defense": [10, 14], "health_regen": [0.8, 1.2], "thorns": [3, 5]},
+		"description": "Vörösen lüktet, mintha szíve volna."},
+	"pants_titan": {"name": "Titán lábvért", "slot": "pants", "rarity": "mythic",
+		"stats": {"max_health": [12, 16], "dodge": [6, 9], "damage": [2, 2], "defense": [4, 6]},
+		"description": "Egy óriás méretére készült, mégis könnyű, mint a toll."},
+	"boots_comet": {"name": "Üstököscsizma", "slot": "boots", "rarity": "mythic",
+		"stats": {"move_speed": [30, 40], "attack_speed": [18, 26], "dodge": [4, 6]},
+		"description": "Izzó nyomot hagy maga után a köveken."},
+	"gloves_doom": {"name": "Végzet markolata", "slot": "gloves", "rarity": "mythic",
+		"stats": {"damage": [3, 4], "defense": [8, 11], "attack_speed": [18, 24], "lifesteal": [4, 6]},
+		"description": "Amit ez a kéz megragad, azt nem engedi el."},
+	"ring_blood": {"name": "Vérszövetség gyűrűje", "slot": "ring", "rarity": "mythic",
+		"stats": {"crit_chance": [16, 22], "damage": [2, 3], "damage_percent": [8, 12], "lifesteal": [5, 8]},
+		"description": "Két ősi királyság esküje van belevésve."},
+	"amulet_chaos": {"name": "Káoszszív medál", "slot": "amulet", "rarity": "mythic",
+		"stats": {"attack_speed": [30, 45], "damage_percent": [8, 12], "crit_chance": [6, 9], "max_health": [6, 10]},
+		"description": "A Káosz Urának egy szilánkja dobog benne."},
+	"trinket_bloodclock": {"name": "Véróra", "slot": "trinket", "rarity": "mythic",
+		"stats": {"damage_percent": [12, 16], "crit_chance": [8, 11], "lifesteal": [5, 8], "xp_bonus": [10, 15]},
+		"description": "A mutatói vérvörösek, és sosem mozdulnak."},
 }
 
 
@@ -489,7 +550,8 @@ const DEFINITIONS := {
 ## definícióban megadott (mostani) ritkaság; a többit szabály számolja (RARITY_POWER szorzók,
 ## magasabb ritkaságon lépcsőnként +1, a tárgy jellegéhez illő extra stat: VARIANT_BONUS), és
 ## tárgyanként felülírható ("variants": {ritkaság: {"stats": {...}, "base": [...]}}).
-## Elérhető (eshet, kapható) a definíció saját ritkasága és a mítikus változat (available_rarities).
+## Elérhető (eshet, kapható) csak a definíció saját ritkasága (available_rarities); a többi változat
+## (pl. egy átlagos tárgy mítikus változata) csak a csalómenüből jön.
 const RARITY_POWER := {"common": 0.65, "rare": 0.85, "epic": 1.0, "legendary": 1.3, "mythic": 1.75}
 ## Az extra stat helyenként (fegyvernél fajtánként) az epikus szintre méretezve.
 const VARIANT_BONUS := {
@@ -561,12 +623,10 @@ static func variants(id: String) -> Dictionary:
 	return all
 
 
-## Milyen ritkaságban eshet / kapható a tárgy: a saját ritkaságában, és (a kötött tárgyakat kivéve)
-## mítikusként is.
+## Milyen ritkaságban eshet / kapható a tárgy: csak a saját ritkaságában (mítikus tárgy is csak a
+## saját mítikus tárgyakból esik).
 static func available_rarities(id: String) -> Array[String]:
 	var list: Array[String] = [DEFINITIONS[id]["rarity"]]
-	if not DEFINITIONS[id].get("unique", false) and not list.has("mythic"):
-		list.append("mythic")
 	return list
 
 
@@ -666,7 +726,7 @@ static func random_item(max_rarity := "mythic", min_rarity := "common", depth :=
 		if ticket <= 0.0:
 			chosen = rarity
 			break
-	# Csak azok a tárgyak, amelyeknek ez a ritkasága elérhető (a sajátjuk vagy a mítikus).
+	# Csak azok a tárgyak, amelyeknek ez a ritkasága elérhető (a sajátjuk).
 	var ids: Array = DEFINITIONS.keys().filter(func(id: String) -> bool:
 		return chosen in available_rarities(id) and DEFINITIONS[id].get("shop", true))
 	var weights: Array[float] = []

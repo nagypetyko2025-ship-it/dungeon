@@ -27,3 +27,8 @@ ring_ember, amulet_arcane, hat_sorcerer, trinket_flamecore: a meglévő CC0 ikon
 fishing_rod.png: a "16x16 Beginner Pixel Art Item Pack" (benjaminkford, CC0, https://benjaminkford.itch.io/16x16-beginner-pixel-art-item-pack) horgászbotja, háttér nélkül; fishing_rod_bare.png: ugyanaz zsinór és úszó nélkül (azokat a játék rajzolja a vízig).
 Rövid íjak és hadiíjak (bow_short, bow_reflex, bow_hornet, bow_storm, warbow_yew, warbow_bone, warbow_dragon, warbow_titan):
   a meglévő CC0 íjikonok ("496 pixel art icons", 7Soul1) átszínezve, a rövid íjak kisebbre véve.
+Mítikus tárgyak (sword_bloodmoon, spear_doom, axe_inferno, dagger_eclipse, mace_world, bow_phoenix, bow_lightning,
+  warbow_abyss, crossbow_hellfire, helmet_demon, chest_abyss, pants_titan, boots_comet, gloves_doom, ring_blood,
+  amulet_chaos, trinket_bloodclock): a meglévő CC0 ikonok (sword_dawn, spear_siege, axe_double, dagger_shadow, mace_star,
+  bow_star, bow_feather, bow_frost, crossbow_void, helmet_shadow, chest_dragon, pants_knight, boots_wind, gloves_titan,
+  ring_onyx, amulet_sunking, trinket_clock) mélypirosra színezve, piros izzással körbe.
