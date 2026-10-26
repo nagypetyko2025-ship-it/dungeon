@@ -92,6 +92,14 @@ static func door_position() -> Vector2:
 	return Vector2(DOOR_TILE.x + 0.5, DOOR_TILE.y + 1) * TILE + Vector2(0, 12)
 
 
+## Keskeny (egy csempe széles) ösvény az ajtótól le a városi útig (a tábor rajzolja ki a többi földdel).
+static func path_tiles() -> Array[Vector2i]:
+	var tiles: Array[Vector2i] = []
+	for y in range(DOOR_TILE.y + 1, 17):
+		tiles.append(Vector2i(DOOR_TILE.x, y))
+	return tiles
+
+
 func build() -> void:
 	_rng.seed = 4242
 	_build_exterior()

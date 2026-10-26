@@ -31,6 +31,9 @@ const DIRT := {
 	"l": Vector2i(7, 10), "c": Vector2i(8, 10), "r": Vector2i(9, 10),
 	"bl": Vector2i(7, 11), "b": Vector2i(8, 11), "br": Vector2i(9, 11),
 }
+## Keskeny, egy csempe széles ösvény (Kenney): a felső vége (lekerekítve), a közepe, és az alja, ahol a széles útba
+## torkollik (ott kiszélesedik).
+const NARROW := {"top": Vector2i(6, 11), "mid": Vector2i(9, 7), "join": Vector2i(7, 12)}
 ## Fák és bokrok a Kenney lapról (oszlop, sor). A magas fák két csempések (felül a lomb).
 const TALL_TREES: Array[Vector2i] = [Vector2i(13, 11), Vector2i(15, 11), Vector2i(16, 11), Vector2i(18, 11)]
 const SMALL_TREES: Array[Vector2i] = [Vector2i(13, 9), Vector2i(15, 9), Vector2i(16, 9), Vector2i(18, 9)]
@@ -105,6 +108,8 @@ var _leaving := false
 var _dirt := {}
 ## A nyugati sáros ösvény csempéi (külön, sötétebb rétegen).
 var _mud := {}
+## Keskeny ösvények (egy csempe szélesek) az útról az egyajtós házakhoz és a mólóhoz.
+var _narrow := {}
 var _blocked := {}
 ## A kiképzősátor bejárata (a jobb oldali sátor eleje): itt E-re nyílik a fejlesztés-ablak.
 var _training_tent_position := Vector2.ZERO
@@ -166,6 +171,7 @@ func _ready() -> void:
 	_build_smithy()
 	_build_veteran()
 	_build_bestiary()
+	_build_signs()
 	_build_trees()
 	_build_forest()
 	_build_bounds()
@@ -210,6 +216,12 @@ func _ready() -> void:
 	add_child(lake)
 	lake.setup(self)
 	lake.build()
+	# A raktár és a tó között félúton földút vezet fel északra, az erdőn át a bánya hegyéhez.
+	var mine := Mine.new()
+	mine.name = "Mine"
+	add_child(mine)
+	mine.setup(self)
+	mine.build()
 	# A tábor jobb felső sarkából rejtett ösvény vezet egy erdei sírhoz (HiddenGrave).
 	var hidden_grave := HiddenGrave.new()
 	hidden_grave.name = "HiddenGrave"
@@ -471,6 +483,15 @@ func _build_dirt() -> void:
 	# Földút az úttól le a temetőhöz (a kocsma alatt).
 	for tile in Graveyard.path_tiles():
 		_dirt[tile] = true
+	# Földút a kápolnához (a keleti oldala mellett le, a déli ajtajáig), és fel északra, a bánya hegyéig.
+	for tile in Chapel.path_tiles():
+		_dirt[tile] = true
+	for tile in Mine.path_tiles():
+		_dirt[tile] = true
+	# Keskeny ösvények az útról a kórház és a raktár ajtajához, és a tó mólójához.
+	for tiles: Array[Vector2i] in [Hospital.path_tiles(), Warehouse.path_tiles(), Lake.path_tiles()]:
+		for tile in tiles:
+			_narrow[tile] = true
 	# Kis sáros ösvény nyugatra (a várossal ellentétes irányba): a tisztásokon kanyarog,
 	# az erdőben egyenes, és a nyugati tisztáson ér véget (a végén a romos ház).
 	for x in range(WEST_RECT.position.x + 3, FIRE_TILE.x - 8):
@@ -490,11 +511,14 @@ func _build_dirt() -> void:
 	source.texture_region_size = Vector2i(16, 16)
 	source.separation = Vector2i(1, 1)
 	tile_set.add_source(source, DIRT_SOURCE)
-	for coords: Vector2i in DIRT.values():
+	for coords: Vector2i in DIRT.values() + NARROW.values():
 		source.create_tile(coords)
 	_dirt_layer.tile_set = tile_set
 	for cell: Vector2i in _dirt:
 		_dirt_layer.set_cell(cell, DIRT_SOURCE, DIRT[_dirt_piece(cell)])
+		_blocked[cell] = true
+	for cell: Vector2i in _narrow:
+		_dirt_layer.set_cell(cell, DIRT_SOURCE, NARROW[_narrow_piece(cell)])
 		_blocked[cell] = true
 	# A sár ugyanazokból a földcsempékből, de egy külön, sötét, nedves rétegen (a földút
 	# fölött, hogy a csatlakozásnál a sár látsszon), tócsákkal.
@@ -533,7 +557,16 @@ class Puddle:
 
 
 func _is_path(tile: Vector2i) -> bool:
-	return _dirt.has(tile) or _mud.has(tile)
+	return _dirt.has(tile) or _mud.has(tile) or _narrow.has(tile)
+
+
+## A keskeny ösvény darabja: alul a széles útba torkollik, felül (az ajtónál, a mólónál) lekerekítve ér véget.
+func _narrow_piece(cell: Vector2i) -> String:
+	if _dirt.has(cell + Vector2i.DOWN):
+		return "join"
+	if not _narrow.has(cell + Vector2i.UP):
+		return "top"
+	return "mid"
 
 
 ## A szomszédok alapján melyik szélezett földdarab kell (a széle lekerekített).
@@ -892,6 +925,18 @@ func _build_trees() -> void:
 				_tree(tile, randf() < 0.6, true)
 			elif edge >= 3 and randf() < 0.04:
 				_rpg_sprite(FLOWERS.pick_random(), _tile_center(tile) + Vector2(randf_range(-8, 8), randf_range(-8, 8)), -9)
+	# A bánya tisztásának szélén is fasor (a hegy és az út kimarad; a hegy körül a Mine rak fát), a réten virág.
+	var mine := Mine.RECT
+	for x in range(mine.position.x, mine.end.x):
+		for y in range(mine.position.y, mine.end.y):
+			var tile := Vector2i(x, y)
+			if _blocked.has(tile) or Mine.mountain_rect().has_point(tile) or _near_path(tile):
+				continue
+			var edge := mini(mini(x - mine.position.x, mine.end.x - 1 - x), mini(y - mine.position.y, mine.end.y - 1 - y))
+			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.3):
+				_tree(tile, randf() < 0.6, true)
+			elif edge >= 2 and randf() < 0.06:
+				_rpg_sprite(FLOWERS.pick_random(), _tile_center(tile) + Vector2(randf_range(-8, 8), randf_range(-8, 8)), -9)
 	# A nyugati tisztás szélén is fasor (az ösvény kimarad).
 	var west := WEST_RECT
 	for x in range(west.position.x, west.end.x):
@@ -924,20 +969,24 @@ func _build_forest() -> void:
 	# A vár tisztása fölött (és körülötte) magasabbra nyúlik az erdő.
 	var castle_forest := Rect2i(Castle.RECT.position - Vector2i(FOREST_DEPTH, FOREST_DEPTH),
 		Castle.RECT.size + Vector2i(FOREST_DEPTH * 2, FOREST_DEPTH))
+	# A bánya hegye körül is (keletre a világ széléig, hogy a kamera sehol ne lásson üres rétet).
+	var mine_forest := Rect2i(Mine.RECT.position - Vector2i(FOREST_DEPTH, FOREST_DEPTH),
+		Vector2i(WORLD_END_X - Mine.RECT.position.x + FOREST_DEPTH, Mine.RECT.size.y + FOREST_DEPTH))
 	for x in range(WORLD_START_X, WORLD_END_X):
 		for y in range(Castle.RECT.position.y - FOREST_DEPTH, SIZE.y + FOREST_DEPTH):
 			var tile := Vector2i(x, y)
-			if y < -FOREST_DEPTH and not castle_forest.has_point(tile):
+			if y < -FOREST_DEPTH and not castle_forest.has_point(tile) and not mine_forest.has_point(tile):
 				continue
 			if Rect2i(Vector2i.ZERO, SIZE).has_point(tile) or Town.RECT.has_point(tile) or WEST_RECT.has_point(tile) \
-					or Castle.RECT.has_point(tile) or _is_path(tile) 					or HiddenGrave.keeps_clear(tile):
+					or Castle.RECT.has_point(tile) or Mine.RECT.has_point(tile) or _is_path(tile) 					or HiddenGrave.keeps_clear(tile):
 				continue
-			if _is_path(tile + Vector2i.UP) or _is_path(tile + Vector2i.DOWN):
+			if _is_path(tile + Vector2i.UP) or _is_path(tile + Vector2i.DOWN) or _is_path(tile + Vector2i.LEFT) \
+					or _is_path(tile + Vector2i.RIGHT):
 				if randf() < 0.6:
 					continue
 			# Hány csempére van a tisztás szélétől.
-			var depth := mini(mini(mini(_outside_distance(tile, Rect2i(Vector2i.ZERO, SIZE)), _outside_distance(tile, Town.RECT)),
-				_outside_distance(tile, WEST_RECT)), _outside_distance(tile, Castle.RECT))
+			var depth := mini(mini(mini(mini(_outside_distance(tile, Rect2i(Vector2i.ZERO, SIZE)), _outside_distance(tile, Town.RECT)),
+				_outside_distance(tile, WEST_RECT)), _outside_distance(tile, Castle.RECT)), _outside_distance(tile, Mine.RECT))
 			var shade := clampf(1.0 - depth * 0.06, 0.35, 1.0)
 			var tree := _tree(tile, randf() < 0.75, false)
 			tree.position += Vector2(randf_range(-8, 8), randf_range(-6, 6))
@@ -946,33 +995,9 @@ func _build_forest() -> void:
 
 ## Útjelző tábla az út mellett, a tisztás keleti szélén: "Város →" (a város felé mutat).
 func _build_town_sign() -> void:
-	var tile := Vector2i(SIZE.x - 4, ROAD_ROW - 1)
-	var holder := Node2D.new()
-	holder.position = _tile_center(tile) + Vector2(0, 12)
-	_entities.add_child(holder)
-	_body(holder, Vector2(0, -4), Vector2(12, 8))
-	# Fa útjelző tábla: oszlop, rajta nyíl alakú deszka a felirattal.
-	var post := ColorRect.new()
-	post.color = Color(0.36, 0.22, 0.12)
-	post.size = Vector2(8, 52)
-	post.position = Vector2(-4, -50)
-	holder.add_child(post)
-	var board := Polygon2D.new()
-	board.polygon = PackedVector2Array([Vector2(-46, -62), Vector2(40, -62), Vector2(56, -47),
-		Vector2(40, -32), Vector2(-46, -32)])
-	board.color = Color(0.62, 0.42, 0.22)
-	holder.add_child(board)
-	var rim := Line2D.new()
-	rim.points = board.polygon
-	rim.closed = true
-	rim.width = 3.0
-	rim.default_color = Color(0.3, 0.17, 0.08)
-	holder.add_child(rim)
-	var text := UiStyle.label("Város", 18, Color(0.2, 0.1, 0.04))
-	text.size = Vector2(90, 26)
-	text.position = Vector2(-46, -60)
-	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	holder.add_child(text)
+	var holder := _signpost(_tile_center(Vector2i(SIZE.x - 4, ROAD_ROW - 1)) + Vector2(0, 12), "Város",
+		PackedVector2Array([Vector2(-46, -62), Vector2(40, -62), Vector2(56, -47), Vector2(40, -32), Vector2(-46, -32)]),
+		Rect2(-46, -60, 90, 26))
 	# Lebegő, csillogó nyíl a tábla fölött, a város felé.
 	var label := MenuStyle.title_label("Város →", 26, MenuStyle.GOLD)
 	label.size = Vector2(160, 32)
@@ -982,6 +1007,56 @@ func _build_town_sign() -> void:
 	var bob := label.create_tween().set_loops()
 	bob.tween_property(label, "position:x", -72.0, 0.7).set_trans(Tween.TRANS_SINE)
 	bob.tween_property(label, "position:x", -80.0, 0.7).set_trans(Tween.TRANS_SINE)
+
+
+## Útjelző táblák a leágazásoknál, felfelé mutató (hegyes tetejű) deszkával: a királyi palotához vezető úton,
+## a bánya útjának elején és a móló felé vezető ösvénynél. A deszka az út mellé kerül (nem lóg az útra).
+func _build_signs() -> void:
+	_branch_sign(Vector2i(Castle.PATH_COLUMN + 2, 8), "Királyi palota", true)
+	_branch_sign(Vector2i(Mine.PATH_COLUMN + 2, ROAD_ROW - 1), "Bánya", true)
+	_branch_sign(Vector2i(Lake.PIER_COLUMN, ROAD_ROW - 1), "Tó", false)
+
+
+## Egy felfelé mutató tábla: `tile` az út melletti csempe (`east`: az út jobb oldalán, különben a bal oldalán).
+func _branch_sign(tile: Vector2i, text: String, east: bool) -> void:
+	var measure := UiStyle.label(text, 18, Color.BLACK)
+	_entities.add_child(measure)
+	var half := maxf(measure.get_minimum_size().x / 2.0 + 10.0, 26.0)
+	measure.free()
+	var x := tile.x * TILE + half + 4.0 if east else tile.x * TILE - half - 4.0
+	_signpost(Vector2(x, (tile.y + 0.5) * TILE + 12), text,
+		PackedVector2Array([Vector2(-half, -32), Vector2(-half, -60), Vector2(0, -72), Vector2(half, -60), Vector2(half, -32)]),
+		Rect2(-half, -59, half * 2.0, 26))
+	_blocked[tile] = true
+
+
+## Fa útjelző tábla: oszlop, rajta a deszka (`board`: a körvonala, a hegye mutatja az irányt) a felirattal.
+func _signpost(at: Vector2, text: String, board: PackedVector2Array, text_rect: Rect2) -> Node2D:
+	var holder := Node2D.new()
+	holder.position = at
+	_entities.add_child(holder)
+	_body(holder, Vector2(0, -4), Vector2(12, 8))
+	var post := ColorRect.new()
+	post.color = Color(0.36, 0.22, 0.12)
+	post.size = Vector2(8, 52)
+	post.position = Vector2(-4, -50)
+	holder.add_child(post)
+	var plank := Polygon2D.new()
+	plank.polygon = board
+	plank.color = Color(0.62, 0.42, 0.22)
+	holder.add_child(plank)
+	var rim := Line2D.new()
+	rim.points = board
+	rim.closed = true
+	rim.width = 3.0
+	rim.default_color = Color(0.3, 0.17, 0.08)
+	holder.add_child(rim)
+	var label := UiStyle.label(text, 18, Color(0.2, 0.1, 0.04))
+	label.size = text_rect.size
+	label.position = text_rect.position
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	holder.add_child(label)
+	return holder
 
 
 ## Hány csempére van egy csempe a téglalapon kívül (0, ha benne van).
@@ -1040,7 +1115,19 @@ func _build_bounds() -> void:
 	var castle_gap_left := Castle.PATH_COLUMN * TILE
 	var castle_gap_right := (Castle.PATH_COLUMN + 2) * TILE
 	_solid(Rect2(town.position - Vector2(thickness, thickness), Vector2(castle_gap_left - town.position.x + thickness, thickness)))
-	_solid(Rect2(Vector2(castle_gap_right, town.position.y - thickness), Vector2(town.end.x + thickness - castle_gap_right, thickness)))
+	var mine_gap_left := Mine.PATH_COLUMN * TILE
+	var mine_gap_right := (Mine.PATH_COLUMN + 2) * TILE
+	_solid(Rect2(Vector2(castle_gap_right, town.position.y - thickness), Vector2(mine_gap_left - castle_gap_right, thickness)))
+	_solid(Rect2(Vector2(mine_gap_right, town.position.y - thickness), Vector2(town.end.x + thickness - mine_gap_right, thickness)))
+	# A bánya útja: folyosó az erdőn át a város északi falának nyílásától, fent a tisztás a hegy előtt (alul nyílás).
+	var mine := Rect2(Vector2(Mine.RECT.position) * TILE, Vector2(Mine.RECT.size) * TILE)
+	_solid(Rect2(Vector2(mine_gap_left - thickness, mine.end.y), Vector2(thickness, town.position.y - mine.end.y)))
+	_solid(Rect2(Vector2(mine_gap_right, mine.end.y), Vector2(thickness, town.position.y - mine.end.y)))
+	_solid(Rect2(mine.position - Vector2(thickness, thickness), Vector2(mine.size.x + thickness * 2, thickness)))
+	_solid(Rect2(Vector2(mine.position.x - thickness, mine.position.y), Vector2(thickness, mine.size.y)))
+	_solid(Rect2(Vector2(mine.end.x, mine.position.y), Vector2(thickness, mine.size.y)))
+	_solid(Rect2(Vector2(mine.position.x - thickness, mine.end.y), Vector2(mine_gap_left - mine.position.x + thickness, thickness)))
+	_solid(Rect2(Vector2(mine_gap_right, mine.end.y), Vector2(mine.end.x + thickness - mine_gap_right, thickness)))
 	# A vár tisztása közvetlenül a város fölött (délen a város északi fala zárja, az útnál nyitva).
 	var castle := Rect2(Vector2(Castle.RECT.position) * TILE, Vector2(Castle.RECT.size) * TILE)
 	_solid(Rect2(castle.position - Vector2(thickness, thickness), Vector2(castle.size.x + thickness * 2, thickness)))

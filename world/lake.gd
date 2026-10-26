@@ -47,6 +47,14 @@ static func blocked_rect() -> Rect2i:
 	return Rect2i(top_left, Vector2i((RADIUS * 2.0).ceil()) + Vector2i(5, 5))
 
 
+## Keskeny (egy csempe széles) ösvény a városi úttól a mólóig (a tábor rajzolja ki a többi földdel).
+static func path_tiles() -> Array[Vector2i]:
+	var tiles: Array[Vector2i] = []
+	for y in range(int(CENTER.y + RADIUS.y) + 1, 17):
+		tiles.append(Vector2i(PIER_COLUMN, y))
+	return tiles
+
+
 ## A móló csempéi (ezeken át lehet menni a víz fölött).
 static func pier_cells() -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []

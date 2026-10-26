@@ -81,6 +81,21 @@ static func blocked_rect() -> Rect2i:
 	return Rect2i(TOP_LEFT - Vector2i(2, 3), SIZE + Vector2i(4, 7))
 
 
+## Földút a városi úttól a kápolnához (a tábor rajzolja ki a többi földdel): a kápolna keleti oldala mellett le,
+## aztán befordul a déli ajtó elé (az ajtó délre néz, az út felől nem látszik).
+static func path_tiles() -> Array[Vector2i]:
+	var tiles: Array[Vector2i] = []
+	var east := TOP_LEFT.x + SIZE.x + 1
+	var front := TOP_LEFT.y + SIZE.y
+	for y in range(19, front + 2):
+		for x in [east, east + 1]:
+			tiles.append(Vector2i(x, y))
+	for x in range(DOOR_COLUMN, east):
+		for y in [front, front + 1]:
+			tiles.append(Vector2i(x, y))
+	return tiles
+
+
 static func door_position() -> Vector2:
 	return Vector2(DOOR_COLUMN + 1, TOP_LEFT.y + SIZE.y) * TILE + Vector2(0, 16)
 

@@ -80,6 +80,13 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   a kocsmába költözik, játszható "gravedigger" karakter; J könyv: "Csontváz sírásó" fül).
 - A kórháztól jobbra a poros raktár: `world/warehouse.gd` (belül ládák, hordók, polcok, por, asztal székekkel; a széken alszik Kormos Gyula, a bányász: közel érve felriad, felveszi a csákányát, 3 történet).
 - A kocsmától jobbra a kalandorok kórháza: `world/hospital.gd` (betegágyak, Kálmán doktor, Rozi nővér; a régi lakóház helyén).
+- Utak a városban: minden ház ajtajához földút vezet (a `path_tiles()` statikus függvényekből a tábor rajzolja ki);
+  az egyajtós házakhoz (kórház, raktár) és a mólóhoz keskeny, 1 csempés ösvény (`Camp.NARROW`: vége, közepe,
+  torkolat), a kápolnához a keleti oldala mellett le, a déli ajtajáig. Útjelző táblák (`Camp._branch_sign`):
+  "Királyi palota" a vár útján, "Bánya" és "Tó" a leágazásoknál, "Város" a tábor keleti szélén.
+- Bánya: `world/mine.gd` — a raktár és a tó között félúton (2 oszlop) földút fel északra, az erdőn át egy tisztásig;
+  ott hegy (`assets/props/mountain.png`: három füves sziklaterasz, havas csúcs, ácsolt bányabejárat sínnel; egyelőre
+  díszlet). A tisztáson a kamera feljebb néz (`Mine.LOOK_UP`), különben a nagyítás miatt nem látszana a csúcs.
   A doktor kérdései és küldetései: `world/doctor.gd` (J könyv "Doktor" fül; 1.: Vérgömb, 2.: A tudós szeme, 3.: Fűrészpenge, utána 3 történet).
 - Város északi része: `world/castle.gd` ( út, királyi vár, őrök, trónterem; király: `world/king.gd`; a
   "Király" fül a J könyvben az első látogatás után; engedély: `deep_30` jelző, a 30. emelet után a táborban "done").
