@@ -140,9 +140,9 @@ func _build_exterior() -> void:
 	add_child(board)
 	add_child(sign_text)
 	# Hordók és ládák a fal mellett, kívül.
-	_sprite(CONTAINERS, BARREL, _center(tl + Vector2i(w, 4)) + Vector2(2, 10), -4)
-	_sprite(CONTAINERS, BARREL, _center(tl + Vector2i(w, 4)) + Vector2(18, 14), -4)
-	_sprite(CONTAINERS, BIG_CRATE, _center(tl + Vector2i(-1, 4)) + Vector2(-2, 10), -4)
+	_prop(CONTAINERS, BARREL, _center(tl + Vector2i(w, 4)) + Vector2(2, 10))
+	_prop(CONTAINERS, BARREL, _center(tl + Vector2i(w, 4)) + Vector2(18, 14))
+	_prop(CONTAINERS, BIG_CRATE, _center(tl + Vector2i(-1, 4)) + Vector2(-2, 10))
 	_solid(Rect2(Vector2(tl) * TILE, Vector2(SIZE) * TILE - Vector2(0, 6)))
 
 
@@ -446,6 +446,22 @@ func _sprite(texture: Texture2D, region: Rect2, at: Vector2, z: int, parent: Nod
 	sprite.z_index = z
 	(parent if parent else self).add_child(sprite)
 	return sprite
+
+
+## Egy kellék (hordó, láda) a ház mellett, kívül: a y-szerint rendezett rétegben, ütközővel (nem lehet átsétálni rajta).
+func _prop(texture: Texture2D, region: Rect2, at: Vector2) -> void:
+	var holder := Node2D.new()
+	holder.position = at + Vector2(0, 16)
+	_entities.add_child(holder)
+	_sprite(texture, region, Vector2(0, -16), 0, holder)
+	var body := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = Vector2(26, 12)
+	shape.shape = box
+	shape.position = Vector2(0, -6)
+	body.add_child(shape)
+	holder.add_child(body)
 
 
 func _solid(rect: Rect2) -> void:

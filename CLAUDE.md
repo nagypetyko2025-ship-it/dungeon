@@ -40,7 +40,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Állapot: `world/game_state.gd` (futás; `reset()`), `world/progress.gd` (mentett tábor: arany, láda, fejlesztések, küldetések; `deepest` = a valaha elért legmélyebb emelet, az emeletes küldetések ezt is nézik).
 - Ellenségek útkeresése: `Dungeon.nav_path` (AStarGrid2D a padlón, oszlopok szilárdak), `Enemy._chase_direction`.
 - Ellenségek: `enemies/enemy_types.gd` (statok, 10. emeleti ugrás; a kikerülés a végén ×0.25, `DODGE_FACTOR`; Káosz kategória: chaos_spawn 16.-tól,
-  chaos_hound 26.-tól), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`, `chaos_lord_boss.gd`;
+  chaos_hound 26.-tól, és a 25. emelet utáni saját rajzúak: chaos_maw (Káosztorok, lő) 26.-tól, chaos_shard
+  (Hasadékszilánk, pajzs + gyógyulás) 27.-től, chaos_weaver (Káoszszövő, káoszivadékot idéz a típus "summon" kulcsával)
+  28.-tól; a rajzoló szkript nincs a repóban, a lapok: 8 kocka, 4 álló + 4 futás), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`, `chaos_lord_boss.gd`;
   képességek: `enemies/enemy_abilities.gd` (méreg/fagy/fosztogatás a `Player.apply_poison/apply_slow/lose_gold`-on át).
   Főellenségek: az első 3 (3., 6., 9. emelet) változatlan; a 12.-től `Boss.LATER_BOSS_GROWTH` (×1.3 élet) és
   `LATER_BOSS_DAMAGE_STEP` (+6% sebzés) főellenségenként (30. emelet: ~110 000, 39.: ~180 000 élet). Vérfarkas:

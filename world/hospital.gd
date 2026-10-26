@@ -117,8 +117,7 @@ func _build_exterior() -> void:
 	add_child(sign_text)
 	_light(Vector2(DOOR_TILE.x + 1.3, DOOR_TILE.y + 0.3) * TILE, Color(1.0, 0.8, 0.5), 1.2, 0.6)
 	# Két láda és egy vödör a ház mellett (kötszeres ládák).
-	_sprite(CONTAINERS, Rect2(16, 0, 16, 16), _center(tl + Vector2i(w, 4)) + Vector2(4, 10), -4)
-	_sprite(CONTAINERS, Rect2(32, 0, 16, 16), _center(tl + Vector2i(w, 4)) + Vector2(10, -6), -4)
+	_prop(CONTAINERS, Rect2(16, 0, 16, 16), _center(tl + Vector2i(w, 4)) + Vector2(4, 10), Rect2(32, 0, 16, 16))
 	_solid(Rect2(Vector2(tl) * TILE, Vector2(SIZE) * TILE - Vector2(0, 6)))
 
 
@@ -350,11 +349,14 @@ func _npc(region: Rect2, at: Vector2) -> AnimatedSprite2D:
 	return npc
 
 
-func _prop(texture: Texture2D, region: Rect2, at: Vector2) -> void:
+## Egy kellék (láda, hordó) ütközővel; `top`: egy kisebb a tetején (egymásra rakva).
+func _prop(texture: Texture2D, region: Rect2, at: Vector2, top := Rect2()) -> void:
 	var holder := Node2D.new()
 	holder.position = at + Vector2(0, 16)
 	_entities.add_child(holder)
 	_region_sprite(texture, region, Vector2(0, -16), 0, holder)
+	if top.has_area():
+		_region_sprite(texture, top, Vector2(6, -32), 0, holder)
 	var body := StaticBody2D.new()
 	var shape := CollisionShape2D.new()
 	var box := RectangleShape2D.new()

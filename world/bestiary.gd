@@ -29,7 +29,7 @@ const CATEGORIES := [
 	["Fenevadak", ["rat", "cave_bat", "minotaur", "yeti", "wendigo", "mammoth", "giant_crab"]],
 	["Sárkányok", ["fire_dragon", "frost_dragon", "gold_dragon", "shadow_dragon"]],
 	["Bogarak", ["fly", "spider"]],
-	["Káosz", ["chaos_spawn", "chaos_hound"]],
+	["Káosz", ["chaos_spawn", "chaos_hound", "chaos_maw", "chaos_shard", "chaos_weaver"]],
 	["Különös lények", ["mimic", "pumpkin_dude", "angel", "toadstool"]],
 	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES + [CHAOS_LORD]],
 ]
@@ -55,6 +55,9 @@ const ENTRIES := {
 	"gold_dragon": ["Aranysárkány", "Kincseken alszik; ha eltalál, a te aranyadat is a halmára gyűjti."],
 	"chaos_spawn": ["Káoszivadék", "Fekete-lila, folyton alakot váltó csápgomolyag egyetlen vörös szemmel. A Mélység legaljáról tör fel, ahol a világ szabályai már nem érvényesek: eltűnik, cikázik, és ha elpusztul, szétrobban."],
 	"chaos_hound": ["Káoszkopó", "Fekete-lila árnyékfenevad, a szeme ibolyán izzik. A 25. emelet alól tör fel: nekiront, a semmin át melletted terem, és minél jobban megsebzed, annál vadabb."],
+	"chaos_maw": ["Káosztorok", "Lebegő, féloldalas fekete tömeg, oldalán egy ferde, fogakkal szegett hasíték nyílik és csukódik. A 25. emelet alól tör fel: messziről a semmit köpi rád, megdermeszt, és ha közel érsz, egyszerre melletted terem."],
+	"chaos_shard": ["Hasadékszilánk", "Obszidiánszilánkok egy izzó repedés körül, a repedésben egyetlen vörös szem pislog. Lassú, de alig lehet megsebezni: pajzsot von maga köré, a sebei összeforrnak, és ha szétzúzod, szilánkokká robban."],
+	"chaos_weaver": ["Káoszszövő", "Szemekkel teleszórt, csavart fonaloszlop, fölötte törött glória forog. Káoszivadékot szakít fel a semmiből, gyógyítja a társait, és a semmin át melletted terem. Vele kezdd!"],
 	"cave_bat": ["Barlangi denevér", "Barna szárnyú denevér a kazamata mennyezetéről. Gyenge, de gyors, és ide-oda cikázva csap le: nehéz eltalálni."],
 	"toadstool": ["Mérges gombaszörny", "Vöröskalapú, lábra kelt gomba a nyirkos termekből. Lassú és szívós, a csípése mérgez, és ha elpusztul, mérges spórafelhővé robban szét."],
 	"blood_wraith": ["Vérszellem", "Vörös leplű szellem a Mélység középső szintjeiről. Hirtelen eltűnik és máshol bukkan fel, az érintése pedig jéghideg: lelassít."],

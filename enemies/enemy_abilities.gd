@@ -6,7 +6,7 @@ extends Node
 ##
 ##   zigzag       cikázva közelít, nehezebb eltalálni
 ##   teleport     felvillan, majd a játékos mellé / mögé ugrik
-##   summon       csontvázakat idéz (legfeljebb SUMMON_LIMIT-et)
+##   summon       csontvázakat idéz (legfeljebb SUMMON_LIMIT-et); a típus "summon" kulcsa mást is megadhat
 ##   heal         a közeli sérült társait gyógyítja
 ##   war_cry      harci kiáltás: a közeli társai rövid ideig gyorsabbak
 ##   berserk      fél élet alatt dühöng: sokkal gyorsabb és vöröses
@@ -185,7 +185,7 @@ func _physics_process(delta: float) -> void:
 
 func _worth_using(ability: String) -> bool:
 	match ability:
-		"summon": return _summoned < SUMMON_LIMIT
+		"summon": return _summoned < int(_summon_spec().get("limit", SUMMON_LIMIT))
 		"heal": return not _hurt_allies().is_empty()
 		"war_cry": return _allies_within(WAR_CRY_RADIUS).size() > 0
 		"shield": return not is_shielded()
@@ -227,9 +227,18 @@ func _summon() -> void:
 	if room == null:
 		return
 	Audio.play("boss_roar", -12.0, 0.3)
-	_summoned += SUMMON_COUNT
-	room.summon_minions(SUMMON_TYPE, SUMMON_COUNT, enemy.global_position)
-	FloatingText.spawn(enemy.get_parent(), _head(), "Ébredjetek!", Color(0.6, 1, 0.6))
+	var spec := _summon_spec()
+	var count := int(spec.get("count", SUMMON_COUNT))
+	_summoned += count
+	room.summon_minions(str(spec.get("type", SUMMON_TYPE)), count, enemy.global_position)
+	FloatingText.spawn(enemy.get_parent(), _head(), str(spec.get("text", "Ébredjetek!")),
+		Color(0.85, 0.55, 1) if spec.has("type") else Color(0.6, 1, 0.6))
+
+
+## A típus saját idézése ("summon": {type, count, limit, text}, pl. a Káoszszövő káoszivadékot idéz); üres = csontvázak.
+func _summon_spec() -> Dictionary:
+	var type: Dictionary = enemy.get("_type")
+	return type.get("summon", {})
 
 
 func _heal() -> void:

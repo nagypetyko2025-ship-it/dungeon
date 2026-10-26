@@ -29,6 +29,7 @@ class_name EnemyTypes
 ## abilities           további képességek listája, lásd EnemyAbilities (zigzag, teleport,
 ##                     summon, heal, war_cry, berserk, death_burst, regenerate, poison,
 ##                     frost, plunder, shield, explode)
+## summon              saját idézés a "summon" képességhez: {type, count, limit, text} (alapból csontvázak)
 ## mimic: true         ládának álcázva alszik, amíg közel nem mész vagy meg nem ütöd
 ## sheet               saját sprite-lap (rect = egy képkocka mérete), lásd Enemy._own_frames
 ## gold                halálakor ennyi aranyat dob ([min, max])
@@ -241,6 +242,27 @@ const TYPES: Array[Dictionary] = [
 		"rect": Rect2(0, 0, 58, 38), "run": true, "size": 1.0,
 		"health": [58, 72], "damage": [9, 11], "speed": [125, 145], "dodge": [20, 30],
 		"knockback": [380, 440], "resist": [0.6, 0.7], "xp": [30, 36], "min_depth": 26, "weight": 2},
+	# A 25. emelet utáni káoszlények (saját rajz, fekete-lila, aszimmetrikus, semmilyen élőlényre nem hasonlítanak).
+	# Káosztorok: lebegő, féloldalas tömeg ferde, fogas hasítékszájjal; messziről semmi-lövedékeket köp.
+	{"name": "chaos_maw", "abilities": ["teleport", "frost"], "ranged": true, "no_weapon": true,
+		"projectile": "magic", "weapon_region": Rect2(324, 129, 8, 30), "shots": 3, "spread": 18.0,
+		"sheet": "res://assets/enemies/chaos_maw.png", "rect": Rect2(0, 0, 40, 36), "run": true, "size": 1.0,
+		"health": [50, 62], "damage": [10, 12], "speed": [70, 85], "dodge": [15, 25],
+		"knockback": [300, 340], "resist": [0.6, 0.7], "xp": [32, 38], "min_depth": 26, "weight": 2,
+		"fire_interval": [2.0, 2.6], "arrow_speed": [250, 290], "keep_distance": [200, 260]},
+	# Hasadékszilánk: izzó repedés (benne egy szem) körül lebegő obszidiánszilánkok. Lassú, de alig
+	# lehet megsebezni: pajzsot von maga köré, visszagyógyul, és halálakor szilánkokká robban.
+	{"name": "chaos_shard", "abilities": ["shield", "regenerate", "death_burst"],
+		"sheet": "res://assets/enemies/chaos_shard.png", "rect": Rect2(0, 0, 42, 42), "run": true, "size": 0.95,
+		"health": [100, 120], "damage": [12, 14], "speed": [65, 80], "dodge": [0, 5],
+		"knockback": [460, 520], "resist": [0.85, 0.95], "xp": [40, 46], "min_depth": 27, "weight": 2},
+	# Káoszszövő: szemekkel teli, csavart fonaloszlop törött glóriával. Káoszivadékot szakít fel a
+	# semmiből (saját idézés: "summon"), gyógyítja a társait, és melletted terem.
+	{"name": "chaos_weaver", "abilities": ["summon", "heal", "teleport"],
+		"summon": {"type": "chaos_spawn", "count": 1, "limit": 2, "text": "Szakadj fel!"},
+		"sheet": "res://assets/enemies/chaos_weaver.png", "rect": Rect2(0, 0, 36, 48), "run": true, "size": 0.9,
+		"health": [72, 86], "damage": [10, 12], "speed": [80, 95], "dodge": [15, 25],
+		"knockback": [320, 360], "resist": [0.6, 0.7], "xp": [42, 48], "min_depth": 28, "weight": 1},
 	# Patkány: kicsi, nagyon gyors, alig lehet eltalálni, kevés élete van, és mérgez.
 	{"name": "rat", "abilities": ["poison", "zigzag"], "sheet": "res://assets/enemies/rat.png",
 		"rect": Rect2(0, 0, 20, 20), "run": true, "size": 0.9,

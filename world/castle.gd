@@ -139,7 +139,7 @@ func _build_house() -> void:
 	_tile(Town.WINDOW, tl + Vector2i(w - 2, 3), -5)
 	_tile(Town.DOUBLE_DOOR[0], tl + Vector2i(w / 2, 4), -5)
 	# Ablak alatt virágláda, a ház mellett hordó.
-	_sprite(CONTAINERS, Rect2(0, 0, 16, 16), _center(tl + Vector2i(w, 4)) + Vector2(6, 10), -4)
+	_prop(CONTAINERS, Rect2(0, 0, 16, 16), _center(tl + Vector2i(w, 4)) + Vector2(6, 10))
 	_solid(Rect2(Vector2(tl) * TILE, Vector2(HOUSE_SIZE) * TILE - Vector2(0, 6)))
 
 
@@ -448,6 +448,22 @@ func _dark(rect: Rect2) -> void:
 	dark.size = rect.size
 	dark.z_index = -4
 	add_child(dark)
+
+
+## Egy kellék (hordó, láda) a ház mellett, kívül: a y-szerint rendezett rétegben, ütközővel (nem lehet átsétálni rajta).
+func _prop(texture: Texture2D, region: Rect2, at: Vector2) -> void:
+	var holder := Node2D.new()
+	holder.position = at + Vector2(0, 16)
+	_entities.add_child(holder)
+	_region_sprite(texture, region, Vector2(0, -16), 0, holder)
+	var body := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = Vector2(26, 12)
+	shape.shape = box
+	shape.position = Vector2(0, -6)
+	body.add_child(shape)
+	holder.add_child(body)
 
 
 func _solid(rect: Rect2) -> void:
