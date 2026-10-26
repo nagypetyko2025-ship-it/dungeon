@@ -60,8 +60,22 @@ const SHOP_CHANCE := 0.6
 const BOSS_EVERY := 3
 const RETURN_PORTAL := preload("res://rooms/obstacles/return_portal.gd")
 const QUEST_BOOK := preload("res://ui/quest_book.gd")
-## A gyakorló pálya szobái (balról jobbra): kezdő, harc + láda, bolt, lépcső.
-const TUTORIAL_CELLS: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
+## A gyakorló pálya szobái balról jobbra, mindegyik egy leckéhez (lásd TutorialGuide): kezdőszoba, harc
+## + láda, csapdák + képesség, bolt + tárgylift, gyakorló üllő, különleges szörnyek, főellenség-terem.
+const TUTORIAL_CELLS: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0),
+	Vector2i(4, 0), Vector2i(5, 0), Vector2i(6, 0)]
+## A szobák tartalma ugyanilyen sorrendben: a szörnyek (fajtánként), csapdák, láda.
+const TUTORIAL_ROOMS: Array[Dictionary] = [
+	{},
+	{"enemies": ["tiny_zombie", "tiny_zombie", "tiny_zombie"], "chest": true},
+	{"enemies": ["skelet", "skelet", "tiny_zombie"], "traps": 3},
+	{},
+	{},
+	{"enemies": ["archer", "imp", "tiny_zombie"]},
+	{},
+]
+const TUTORIAL_SHOP_ROOM := 3
+const TUTORIAL_ANVIL_ROOM := 4
 const BOSS_ROOM_SIZE := Vector2i(15, 11)
 ## Az utolsó, 20. emelet: csak a kezdőszoba és a Vérfarkas nagy terme (tőle keletre).
 const FINAL_DEPTH := 20
@@ -134,7 +148,7 @@ func _ready() -> void:
 	_big_rooms = depth >= BIG_ROOMS_FROM
 	_huge_rooms = depth >= HUGE_ROOMS_FROM
 	_cell = HUGE_CELL if _huge_rooms else BIG_CELL if _big_rooms else CELL
-	# Gyakorló pálya (tutorial): rögzített, egyenes sor: kezdőszoba, harc + láda, bolt, lépcső.
+	# Gyakorló pálya (tutorial): rögzített, egyenes sor (TUTORIAL_CELLS), a végén főellenség-terem.
 	var tutorial := GameState.tutorial
 	# A nagy főellenség emelete: a 20. (Vérfarkas) és a 40. (a Káosz Ura).
 	var chaos_floor := depth == CHAOS_DEPTH and not tutorial
@@ -148,7 +162,8 @@ func _ready() -> void:
 		cells = _generate_layout(mini(base_room_count + depth - 1, max_room_count))
 	var distances := _distances_from_start(cells)
 	var stairs_cell := _farthest(distances)
-	var shop_cell := TUTORIAL_CELLS[2] if tutorial else NO_SHOP if final_floor else _pick_shop_cell(cells, stairs_cell)
+	var shop_cell := TUTORIAL_CELLS[TUTORIAL_SHOP_ROOM] if tutorial else NO_SHOP if final_floor \
+		else _pick_shop_cell(cells, stairs_cell)
 	# A 10. emeleten mindig van liftszoba (kék a térképen), a kezdőszobához legközelebbi szabad szobában.
 	var lift_cell := NO_SHOP
 	if depth == Engineer.DEPTH and not tutorial:
@@ -158,7 +173,8 @@ func _ready() -> void:
 				best = int(distances[cell])
 				lift_cell = cell
 	# Minden BOSS_EVERY. emeleten a lépcsős szoba helyett főellenség-terem van.
-	var boss_floor := depth % BOSS_EVERY == 0 and not tutorial and not final_floor
+	# (A gyakorló pálya utolsó szobája is főellenség-terem.)
+	var boss_floor := (depth % BOSS_EVERY == 0 or tutorial) and not final_floor
 	var alcove_dir := _free_direction(cells, stairs_cell) if boss_floor else Vector2i.ZERO
 
 	var room_rects := {}
@@ -225,10 +241,12 @@ func _ready() -> void:
 			room.has_chest = randf() < CHEST_CHANCE
 		room.has_stairs = cell == stairs_cell and not boss_floor and not final_floor
 		if tutorial:
-			room.trap_count = 1 if cell == stairs_cell else 0
-			room.has_chest = cell == TUTORIAL_CELLS[1]
-			if room.enemy_count > 0:
-				room.enemy_count = 3 if cell == TUTORIAL_CELLS[1] else 4
+			var plan: Dictionary = TUTORIAL_ROOMS[TUTORIAL_CELLS.find(cell)]
+			room.forced_enemies.assign(plan.get("enemies", []))
+			if not room.has_boss:
+				room.enemy_count = room.forced_enemies.size()
+			room.trap_count = int(plan.get("traps", 0))
+			room.has_chest = plan.get("chest", false)
 		_rooms.add_child(room)
 		room.cleared.connect(_hud.show_message.bind("Szoba kitisztítva!"))
 		room.stairs_used.connect(_go_deeper)
@@ -284,7 +302,7 @@ func _ready() -> void:
 	if Characters.data(Progress.character).get("spells", false) and GameState.spells.is_empty():
 		add_child(preload("res://ui/spell_picker.gd").new())
 	if tutorial:
-		_hud.show_message("Gyakorló pálya")
+		_setup_tutorial(rooms)
 		var guide := TutorialGuide.new()
 		guide.name = "TutorialGuide"
 		add_child(guide)
@@ -428,6 +446,23 @@ func _notification(what: int) -> void:
 
 ## A főellenség-terem mögötti fülke iránya: olyan oldal, ahol nincs szomszédos szoba
 ## (előnyben az észak). Vector2i.ZERO, ha minden oldalon van szomszéd.
+## A gyakorló pálya kellékei: a kovács ablaka és a gyakorló üllő, a játékos nem halhat meg, és a HUD üzenetei
+## lejjebb kerülnek (fent a vezető pergamenje van).
+func _setup_tutorial(rooms: Array[Room]) -> void:
+	_hud.show_message("Gyakorló pálya")
+	var smith := SmithPanel.new()
+	smith.name = "SmithPanel"
+	add_child(smith)
+	var anvil := TutorialAnvil.new()
+	anvil.name = "TutorialAnvil"
+	anvil.position = Room.tile_center(rooms[TUTORIAL_ANVIL_ROOM].anchor)
+	_entities.add_child(anvil)
+	(_player.get_node("Health") as Health).cannot_die = true
+	var message := _hud.get_node("Message") as Control
+	message.offset_top += 130
+	message.offset_bottom += 130
+
+
 func _free_direction(cells: Array[Vector2i], cell: Vector2i) -> Vector2i:
 	for dir: Vector2i in [Vector2i.UP, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.DOWN]:
 		if not cells.has(cell + dir):

@@ -12,6 +12,8 @@ signal dodged
 @export var regen_per_second := 0.0
 ## 0..1 közötti esély, hogy egy találat nem sebez.
 @export_range(0.0, 1.0) var dodge_chance := 0.0
+## Ha igaz, a sebzés legfeljebb 1 életig visz le (a gyakorló pályán a játékos nem halhat meg).
+var cannot_die := false
 
 var current := 0
 
@@ -41,7 +43,7 @@ func damage(amount: int, can_dodge := true) -> bool:
 	if can_dodge and randf() < dodge_chance:
 		dodged.emit()
 		return false
-	current = maxi(current - amount, 0)
+	current = maxi(current - amount, 1 if cannot_die else 0)
 	changed.emit(current, max_health)
 	if current == 0:
 		died.emit()

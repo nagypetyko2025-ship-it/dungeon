@@ -4,7 +4,12 @@ extends CanvasLayer
 ## oldalt a táskád, jobbra a felszerelésed és a tárgy leírása, középen egy izzó kör, közepén egy hellyel:
 ## ide húzz (vagy kattints) egy tárgyat. Utána két lehetőség (a szabályok: Smithing):
 ##   Fejlesztés — a következő ritkaságba lép, ha van 4 porod abból a ritkaságból; 65% eséllyel sikerül.
-##   Szétszedés — a tárgy elvész, és a ritkaságának porából 1-et (30% eséllyel 2-t) kapsz.
+##   Szétszedés — a tárgy elvész, és a ritkaságának porából 1-et (30% eséllyel 2-t) kapsz. Ami rajtad van
+##     (a felszerelésed), azt nem lehet beolvasztani, csak fejleszteni.
+
+## Sikeres fejlesztés / szétszedés (a gyakorló pálya vezetője figyeli).
+signal upgraded(item: Dictionary)
+signal dismantled(item: Dictionary)
 
 const RING_SIZE := Vector2(224, 224)
 const ACTION_SIZE := Vector2(236, 44)
@@ -262,7 +267,7 @@ func _selected_item() -> Variant:
 
 func _refresh() -> void:
 	for rarity: String in _dust_labels:
-		(_dust_labels[rarity] as Label).text = str(Progress.dust_of(rarity))
+		(_dust_labels[rarity] as Label).text = str(Smithing.dust_of(rarity))
 	var inventory := _inventory()
 	_bag_grid.set_items(inventory.bag, Inventory.BAG_SIZE)
 	var equipped: Array = []
@@ -284,7 +289,7 @@ func _refresh() -> void:
 		_upgrade_button.disabled = true
 		_dismantle_button.disabled = true
 		_upgrade_note.text = "%d por a következő ritkaságból\n%d%% esély a sikerre" % [Smithing.UPGRADE_COST,
-			roundi(Smithing.UPGRADE_CHANCE * 100.0)]
+			roundi(Smithing.upgrade_chance() * 100.0)]
 		_dismantle_note.text = "1 por a tárgy ritkaságából\n(%d%% eséllyel 2)" \
 			% roundi(Smithing.DOUBLE_DUST_CHANCE * 100.0)
 		_set_note_color(_upgrade_note, UiStyle.INK_LIGHT)
@@ -300,12 +305,14 @@ func _refresh() -> void:
 		_set_note_color(_upgrade_note, BAD_INK)
 	else:
 		var next := Smithing.next_rarity(item["rarity"])
-		var have := Progress.dust_of(next)
+		var have := Smithing.dust_of(next)
 		_upgrade_button.disabled = have < Smithing.UPGRADE_COST
 		_upgrade_note.text = "→ %s: %d %s (van: %d)\n%d%% esély a sikerre" % [Items.RARITIES[next]["name"],
-			Smithing.UPGRADE_COST, Smithing.dust_name(next).to_lower(), have, roundi(Smithing.UPGRADE_CHANCE * 100.0)]
+			Smithing.UPGRADE_COST, Smithing.dust_name(next).to_lower(), have, roundi(Smithing.upgrade_chance() * 100.0)]
 		_set_note_color(_upgrade_note, BAD_INK if have < Smithing.UPGRADE_COST else UiStyle.INK_LIGHT)
 	block = Smithing.dismantle_block(item)
+	if block.is_empty() and _selected[0] == "equip":
+		block = "Rajtad van: nem olvaszthatod be. Előbb vedd le az [I] ablakban."
 	_dismantle_button.disabled = not block.is_empty()
 	_dismantle_note.text = block if not block.is_empty() else "A tárgy elvész: +1 %s\n(%d%% eséllyel 2)" % [
 		Smithing.dust_name(item["rarity"]).to_lower(), roundi(Smithing.DOUBLE_DUST_CHANCE * 100.0)]
@@ -321,12 +328,12 @@ func _upgrade() -> void:
 	if item == null or not Smithing.upgrade_block(item).is_empty():
 		return
 	var next := Smithing.next_rarity(item["rarity"])
-	if Progress.dust_of(next) < Smithing.UPGRADE_COST:
+	if Smithing.dust_of(next) < Smithing.UPGRADE_COST:
 		Audio.play("ui_error")
 		return
-	Progress.add_dust(next, -Smithing.UPGRADE_COST)
+	Smithing.add_dust(next, -Smithing.UPGRADE_COST)
 	Audio.play("anvil", 2.0)
-	if randf() < Smithing.UPGRADE_CHANCE:
+	if randf() < Smithing.upgrade_chance():
 		var better := Smithing.upgraded(item)
 		_inventory().replace(_selected[0], _selected[1], better)
 		Audio.play("level_up", -6.0)
@@ -334,6 +341,7 @@ func _upgrade() -> void:
 		_say("Sikerült! %s mostantól %s." % [better["name"], Items.rarity_name(better).to_lower()], GOOD_INK)
 		_refresh()
 		_show_item(better)
+		upgraded.emit(better)
 	else:
 		Audio.play("door_lock", -4.0)
 		_ring.flash(Color(0.35, 0.3, 0.3))
@@ -344,10 +352,10 @@ func _upgrade() -> void:
 
 func _dismantle() -> void:
 	var item: Variant = _selected_item()
-	if item == null or not Smithing.dismantle_block(item).is_empty():
+	if item == null or not Smithing.dismantle_block(item).is_empty() or _selected[0] == "equip":
 		return
-	# Értékes vagy felvett tárgynál megerősítést kér.
-	if Items.at_least(item["rarity"], "epic") or _selected[0] == "equip":
+	# Értékes tárgynál megerősítést kér.
+	if Items.at_least(item["rarity"], "epic"):
 		ConfirmBox.ask(self, "Biztosan szétszeded: %s? A tárgy elvész." % item["name"], _do_dismantle)
 	else:
 		_do_dismantle()
@@ -355,11 +363,11 @@ func _dismantle() -> void:
 
 func _do_dismantle() -> void:
 	var item: Variant = _selected_item()
-	if item == null:
+	if item == null or _selected[0] == "equip":
 		return
 	var amount := Smithing.roll_dust()
 	_inventory().replace(_selected[0], _selected[1], null)
-	Progress.add_dust(item["rarity"], amount)
+	Smithing.add_dust(item["rarity"], amount)
 	_selected = []
 	Audio.play("anvil", 2.0)
 	Audio.play("coin")
@@ -367,6 +375,7 @@ func _do_dismantle() -> void:
 	_say("Szétszedve: %s  →  +%d %s" % [item["name"], amount, Smithing.dust_name(item["rarity"]).to_lower()], GOOD_INK)
 	_refresh()
 	_show_item(null)
+	dismantled.emit(item)
 
 
 func _say(text: String, color: Color) -> void:

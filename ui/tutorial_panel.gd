@@ -16,14 +16,14 @@ func _ready() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 14)
 	add_child(box)
-	box.add_child(MenuStyle.title_label("Tutorial", 56, MenuStyle.GOLD))
+	box.add_child(MenuStyle.title_label("Tutorial", 46, MenuStyle.GOLD))
 	_start = MenuStyle.button("Gyakorló pálya indítása")
-	_start.custom_minimum_size = Vector2(440, 64)
+	_start.custom_minimum_size = Vector2(440, 54)
 	_start.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_start.pressed.connect(start_requested.emit)
 	box.add_child(_start)
 	var hint := Label.new()
-	hint.text = "Egy rövid, külön pálya, ami lépésről lépésre végigvezet mindenen. Semmi nem mentődik belőle."
+	hint.text = "Egy külön pálya, ami lépésről lépésre végigvezet mindenen. Itt nem halhatsz meg, és semmi nem mentődik."
 	hint.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
 	hint.add_theme_font_size_override("font_size", 16)
 	hint.add_theme_color_override("font_color", MenuStyle.PARCHMENT)
@@ -34,18 +34,23 @@ func _ready() -> void:
 	columns.add_theme_constant_override("separation", 18)
 	box.add_child(columns)
 	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 6)
+	list.add_theme_constant_override("separation", 3)
 	columns.add_child(list)
 	for i in TutorialManual.CHAPTERS.size():
 		var button := MenuStyle.button(TutorialManual.CHAPTERS[i][0])
-		button.custom_minimum_size = Vector2(250, 46)
-		button.add_theme_font_size_override("font_size", 19)
+		button.custom_minimum_size = Vector2(250, 30)
+		button.add_theme_font_size_override("font_size", 15)
+		# Kisebb belső margó, hogy mind a 11 fejezet elférjen egymás alatt.
+		var textures := {"normal": MenuStyle.BUTTON_NORMAL, "hover": MenuStyle.BUTTON_HOVER,
+			"focus": MenuStyle.BUTTON_HOVER, "pressed": MenuStyle.BUTTON_PRESSED}
+		for state: String in textures:
+			button.add_theme_stylebox_override(state, MenuStyle.box(textures[state], 10, 3))
 		button.pressed.connect(_show_chapter.bind(i))
 		list.add_child(button)
 		_chapter_buttons.append(button)
 	var page := PanelContainer.new()
 	page.add_theme_stylebox_override("panel", UiStyle.plain_panel())
-	page.custom_minimum_size = Vector2(620, 380)
+	page.custom_minimum_size = Vector2(620, 360)
 	columns.add_child(page)
 	_text = RichTextLabel.new()
 	_text.bbcode_enabled = true
@@ -56,6 +61,7 @@ func _ready() -> void:
 	page.add_child(_text)
 
 	var back := MenuStyle.button("Vissza")
+	back.custom_minimum_size.y = 54
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	back.pressed.connect(closed.emit)
 	box.add_child(back)

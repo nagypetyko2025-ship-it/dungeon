@@ -66,7 +66,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Kovács (a tábor jobb alsó sarkában, `world/smithy.gd`): előtte E-re `ui/smith_panel.gd` (SmithPanel). Szabályok:
   `items/smithing.gd` — fejlesztés a következő ritkaságba 4 porért abból a ritkaságból, 65% eséllyel (ha nem sikerül,
   a por elvész; `Smithing.upgraded` a statokat a tartományukban ugyanott tartja), szétszedés: 1 (30%: 2) por a tárgy
-  ritkaságából. Porok: `Progress.dust` (ritkaság -> db, mentődik). Tárgycsere a helyén: `Inventory.replace`.
+  ritkaságából (a rajtad lévő tárgyat nem lehet beolvasztani, csak fejleszteni). Porok: `Progress.dust` (ritkaság -> db,
+  mentődik; mindig a `Smithing.dust_of / add_dust`-on át, mert a gyakorló pályán külön porok vannak). Tárgycsere a
+  helyén: `Inventory.replace`. A főellenség utáni pihenőnél (BossReturnPanel) is csak a táskából lehet felküldeni.
   Megállítás: `GamePause.set_paused(tree, on)` / `GamePause.active(tree)` (`ui/game_pause.gd`) a `get_tree().paused` helyett —
   egyjátékosban a fa áll meg, közös játékban semmi (szintlépés, halál, Esc-menü alatt sem), csak a karakter nem irányítható és a világ nem fogad E-t.
 - Nyugati tisztás: romos ház + tolvaj (`world/ruin.gd`, `world/thief.gd`), kút + Lőrinc (`world/stranger.gd`), a kút alja: `world/well_cave.gd`.
@@ -136,7 +138,14 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Teszt: két példány (_host.gd / _client.gd, közös _mp_common.gd). Közös játék alatt `Profiles.multiplayer`: külön mentés profilonként (user://save_mp_<profil>.cfg),
   a gazda a váróban "új kezdés"-t is választhat.
   Menü: `ui/multiplayer_panel.gd`. Teszt: két példány (_host.gd / _client.gd) egyszerre fut.
-- Gyakorló pálya: `ui/tutorial_guide.gd` (lépések), kézikönyv: `ui/tutorial_manual.gd` (az irányítás szövege a Beállítások fülön is).
+- Gyakorló pálya (GameState.tutorial): 7 szoba egy sorban (`Dungeon.TUTORIAL_CELLS` / `TUTORIAL_ROOMS`: kezdő, harc + láda,
+  csapdák + képesség, bolt + tárgylift, gyakorló üllő (`world/tutorial_anvil.gd`, SmithPanel gyakorló porokkal:
+  `GameState.tutorial_dust`, a fejlesztés mindig sikerül), különleges szörnyek, főellenség (gyenge:
+  `Room.TUTORIAL_BOSS_HEALTH`)). A vezető: `ui/tutorial_guide.gd` — feladat- és Enteres magyarázó lépések, a következő
+  szoba ajtaja zárva, amíg a lecke nincs kész (`Room.set_gate`), sárga nyíl a célra, villogó keret a HUD-on, H = átugrás,
+  a játékos nem halhat meg (`Health.cannot_die`); a végén lapozható összefoglaló. Szövegek: `ui/tutorial_manual.gd`
+  (CHAPTERS a főmenüben, FINISH_PAGES a pálya végén, az irányítás a Beállítások fülön is). A karakterek történetét nem
+  árulja el. Teszt: robot, ami minden karakterrel végigjátssza (lépésenként elvégzi a feladatot).
 - Automatikus frissítés: `ui/updater.gd` (a főmenü teszi be, indításonként egyszer; headless és exportált játékban nem fut).
   GitHub compare API a helyi main-fej és az origin main között; ha a helyi mögötte van: felül az újdonságok, 6 mp múlva
   magától frissít (git-es mappában `git pull --ff-only`, de commitolatlan változásnál csak gombra; git nélküli mappában

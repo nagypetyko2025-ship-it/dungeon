@@ -19,6 +19,25 @@ const DUST_ICONS := {
 }
 
 
+## Ennyi porod van ebből a ritkaságból (a gyakorló pályán a gyakorló porok, a valódiak nem változnak).
+static func dust_of(rarity: String) -> int:
+	if GameState.tutorial:
+		return int(GameState.tutorial_dust.get(rarity, 0))
+	return Progress.dust_of(rarity)
+
+
+static func add_dust(rarity: String, amount: int) -> void:
+	if GameState.tutorial:
+		GameState.tutorial_dust[rarity] = maxi(dust_of(rarity) + amount, 0)
+	else:
+		Progress.add_dust(rarity, amount)
+
+
+## A fejlesztés esélye (a gyakorló pályán mindig sikerül, hogy biztosan meglásd).
+static func upgrade_chance() -> float:
+	return 1.0 if GameState.tutorial else UPGRADE_CHANCE
+
+
 ## Pl. "Ritka por".
 static func dust_name(rarity: String) -> String:
 	return "%s por" % Items.RARITIES[rarity]["name"]

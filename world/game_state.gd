@@ -52,6 +52,8 @@ static var potions := 0
 ## Gyakorló pálya (tutorial) megy: rögzített pálya, lépésről lépésre vezetés; semmi nem
 ## mentődik belőle (eredmény, tábori arany, tárgylift). A reset() nem törli, csak a kilépés.
 static var tutorial := false
+## A gyakorló pálya kovács-porai (a valódiak a Progress.dust-ban; lásd Smithing.dust_of).
+static var tutorial_dust := {}
 
 ## Jártál-e lent a kazamatában (a gyakorló pályán kívül), mióta utoljára a táborba értél: a tábor
 ## ebből tudja, hogy most jöttél vissza (pl. a hordágyas bejátszáshoz). A reset() nem törli.
@@ -109,4 +111,5 @@ static func reset() -> void:
 	merchant_stock = []
 	rerolls = 0
 	potions = 0
+	tutorial_dust = {}
 	cheated = god_mode

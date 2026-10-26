@@ -1,18 +1,18 @@
 extends CanvasLayer
 ## A főellenség legyőzése után: kimehetsz pihenni a táborba. Egy általad választott
-## tárgyat a tábori ládába küldhetsz (végleg megmarad), a többi felszerelésed, a
+## tárgyat a táskádból a tábori ládába küldhetsz (végleg megmarad; ami rajtad van, azt nem,
+## hogy pl. a varázsló ne maradjon pálca nélkül), a többi felszerelésed, a
 ## szinted és a statjaid megmaradnak: a táborban a kék portálon át ugyanide, a
 ## főellenség termébe térsz vissza. A pénzed kiviheted (a táborban a vándorárusnál elköltheted,
 ## a maradékot visszaviszed), vagy bent hagyhatod (visszatéréskor visszakapod).
 ## "Maradok": tovább lehet menni a lépcsőn.
 
 const CAMP := "res://world/camp.tscn"
-const FALLBACK_WEAPON := "sword_rusty"
 
 var _grid: ItemGrid
 var _items: Array = []
-## Minden tárgyhoz: ["equip", hely] vagy ["bag", index].
-var _sources: Array = []
+## Minden tárgyhoz a táska-indexe.
+var _sources: Array[int] = []
 var _selected := -1
 var _take_gold: CheckBox
 var _info_title: Label
@@ -32,14 +32,10 @@ func open() -> void:
 	var inventory: Inventory = player.get_node("Inventory")
 	_items = []
 	_sources = []
-	for slot in Inventory.EQUIPMENT_SLOTS:
-		if inventory.equipment[slot] != null:
-			_items.append(inventory.equipment[slot])
-			_sources.append(["equip", slot])
 	for i in inventory.bag.size():
 		if inventory.bag[i] != null:
 			_items.append(inventory.bag[i])
-			_sources.append(["bag", i])
+			_sources.append(i)
 	_grid.set_items(_items, 12)
 	_selected = -1
 	_take_gold.text = "Kiviszem a pénzem (%d arany) — a táborban a vándorárusnál elköltheted" % int(player.get("gold"))
@@ -77,7 +73,9 @@ func _build() -> void:
 	root.add_child(columns)
 	var left := VBoxContainer.new()
 	columns.add_child(left)
-	left.add_child(UiStyle.label("Melyik tárgy kerüljön a tábori ládába? (nem kötelező)", 17, UiStyle.INK))
+	left.add_child(UiStyle.label("Melyik tárgy kerüljön a táskádból a tábori ládába? (nem kötelező)", 17, UiStyle.INK))
+	left.add_child(UiStyle.label("Ami rajtad van, azt nem küldheted fel. Ha mégis azt szeretnéd: Maradok, vedd le\n"
+		+ "az [I] ablakban, aztán gyere vissza a kék portálhoz.", 14, UiStyle.INK_LIGHT))
 	_grid = ItemGrid.new()
 	_grid.columns = 8
 	_grid.item_clicked.connect(func(index: int) -> void:
@@ -147,20 +145,17 @@ func _show_item(item: Variant) -> void:
 
 
 func _go_to_camp() -> void:
+	# A gyakorló pályán csak megmutatjuk: ki nem lehet menni.
+	if GameState.tutorial:
+		Audio.play("ui_error")
+		_choice_label.text = "Gyakorláskor nem mész ki: az igazi játékban most a táborba jutnál. (Maradok)"
+		return
 	var player := get_tree().get_first_node_in_group("player")
 	var inventory: Inventory = player.get_node("Inventory")
 	# Csalt futásból nem kerül tárgy a tábori ládába.
 	if _selected >= 0 and not GameState.cheated:
-		var source: Array = _sources[_selected]
 		Progress.add_to_stash(_items[_selected])
-		if source[0] == "bag":
-			inventory.take_from_bag(source[1])
-		else:
-			inventory.equipment[source[1]] = null
-			# Fegyver nélkül nem lehet harcolni: a rozsdás kard kerül a helyére.
-			if source[1] == "weapon":
-				inventory.equipment["weapon"] = Items.create(FALLBACK_WEAPON)
-			inventory.changed.emit()
+		inventory.take_from_bag(_sources[_selected])
 	player.call("save_state")
 	# Az emelet és a terem, ahova a kék portál visszahoz (lásd Dungeon.break_snapshot).
 	var scene := get_tree().current_scene

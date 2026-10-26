@@ -33,6 +33,8 @@ const ALCOVE_DEPTH := 3
 const BOSS_GOLD := 40
 const BOSS_GOLD_PER_DEPTH := 10
 const BOSS_ITEM_MIN_RARITY := "epic"
+## A gyakorló pálya főellenségének élete.
+const TUTORIAL_BOSS_HEALTH := 50
 const COIN := preload("res://pickups/coin.tscn")
 const WEREWOLF := preload("res://enemies/werewolf_boss.gd")
 const CHAOS_LORD := preload("res://enemies/chaos_lord_boss.gd")
@@ -58,6 +60,8 @@ var rect := Rect2i()
 ## Melyik irányokban van szomszédos szoba.
 var connections: Array[Vector2i] = []
 var enemy_count := 0
+## Gyakorló pálya: ezek a szörnyek jönnek (sorban, körbe) a véletlenszerűek helyett.
+var forced_enemies: Array[String] = []
 var trap_count := 0
 var depth := 1
 var has_stairs := false
@@ -379,7 +383,10 @@ func _begin_fight(at: Vector2, body: Node2D) -> void:
 		return
 	var taken := {}
 	for i in enemy_count:
-		_spawn_enemy(at, taken)
+		if not forced_enemies.is_empty():
+			_add_enemy(EnemyTypes.by_name(forced_enemies[i % forced_enemies.size()]), _random_spawn_point(at, taken), taken)
+		else:
+			_spawn_enemy(at, taken)
 
 
 ## Közös játék, vendég: a gazda egy szörnye itt jelent meg (báb; lásd NetEnemies).
@@ -441,6 +448,10 @@ func _spawn_boss() -> void:
 		boss.connect("final_died", _on_enemy_died.bind(boss))
 	else:
 		boss.setup_boss(depth)
+		# A gyakorló pálya főellensége ugyanúgy mozog és támad, csak hamar elfogy az élete.
+		if GameState.tutorial:
+			boss.stats["health"] = TUTORIAL_BOSS_HEALTH
+			boss.stats["damage"] = 1
 		var toward_alcove := Vector2(alcove_dir) * Vector2(rect.size) * 0.25
 		boss.position = toward_alcove * TILE
 		boss.get_node("Health").died.connect(_on_enemy_died.bind(boss))
@@ -704,6 +715,15 @@ func _spawn_chest() -> void:
 					var chest := _add_at_tile(chest_scene, _pillars, tile)
 					chest.set("depth", depth)
 					return
+
+
+## Gyakorló pálya: a szoba ajtói zárva maradnak, amíg a vezető nem engedi tovább (lásd TutorialGuide);
+## harc közben nem nyúl hozzájuk.
+func set_gate(blocked: bool) -> void:
+	if _fighting():
+		return
+	for door in _doors:
+		door.set_blocked(blocked)
 
 
 func _set_doors_locked(locked: bool) -> void:
