@@ -3,6 +3,7 @@ class_name King
 ## a küldetései (a J könyv "Király" fülén). Az első kihallgatáskor két küldetést ad (a hét király,
 ## a kincstár ajándéka); ha már találkoztál a tolvajjal, a tolvajról is kérdez: elárulhatod
 ## (jutalmat kapsz, de az őrök nem találják meg), vagy hallgathatsz (a tolvaj később meghálálja).
+## A hét király után: új küldetés (a Káosz kapuja: a 40. emelet ura) és négy új történet (STORIES).
 
 const ID := "king"
 const NAME := "IV. Aurél király"
@@ -14,8 +15,11 @@ const TREASURY_QUEST := "king_treasury"
 const THIEF_QUEST := "king_thief"
 ## A tolvaj sorsa (Progress.npc_quests): "betrayed" (elárultad) vagy "protected" (hallgattál).
 const THIEF_FATE := "thief_fate"
+## A hét király után: a 40. emelet ura (Ürességfaló, a Káosz Ura) tartja nyitva a Mélység kapuját.
+const CHAOS_QUEST := "king_chaos"
 const TREASURY_GOLD := 1000
 const BETRAY_GOLD := 120
+const CHAOS_GOLD := 3000
 
 ## A király küldetései (az engedély a vár kapujánál indul, lásd Castle).
 const QUESTS := {
@@ -41,7 +45,56 @@ const QUESTS := {
 			+ "tudni akarja, ki az, és hol rejtőzik. Te tudod. Elárulod neki, vagy hallgatsz?",
 		"reward": "%d tábori arany (ha elárulod)" % BETRAY_GOLD, "doing": "döntsd el, mit mondasz a királynak",
 		"done": "döntöttél"},
+	CHAOS_QUEST: {"name": "A Káosz kapuja",
+		"text": "A hét szörnykirály elesett, de a Mélység kapuja nem bezárult, hanem kinyílt. A legalján, "
+			+ "a [b]40. emeleten[/b] Ürességfaló, a Káosz Ura ül a kapuban, és nyitva tartja. "
+			+ "[b]Győzd le[/b], aztán jelentsd a királynak.",
+		"reward": "%d tábori arany" % CHAOS_GOLD, "doing": "győzd le a Káosz Urát a 40. emeleten",
+		"done": "a kapu bezárult"},
 }
+
+## A hét király után: négy új történet (a régi kérdés is marad; a beszélgetés lapozható).
+const STORIES: Array[Dictionary] = [
+	{"id": "truth", "text": "Miért küldted le valójában Gáspárt?", "trust": 4,
+		"answer": "[i]A király int az őröknek, hogy hagyjanak magatokra. Megvárja, amíg becsukódik mögöttük " \
+			+ "az ajtó.[/i]\n\n" \
+			+ "Nem a kincsért. Azt a nép kedvéért mondtam, és Gáspárnak is. Egy régi jóslatért senki sem megy " \
+			+ "le meghalni.\n\n" \
+			+ "Tizenkét éve megremegett a föld a város alatt. Kiszáradtak a kutak, a hegyben beomlott a bánya. " \
+			+ "A régi írások szerint ez az első jel: a hét őr megerősödött, és a sötétség elindult felfelé. " \
+			+ "Tudtam, hogy ha nem teszek semmit, tíz év múlva a piactéren tör fel.\n\n" \
+			+ "Harminc embert küldtem le egy hazugsággal. Hármat kaptam vissza.\n\n" \
+			+ "[i]Rád néz.[/i]\n\nGáspár ma is azt hiszi, a kincsért mentek le. Ha egyszer elmondod neki az " \
+			+ "igazat, nem foglak megállítani. Megérdemli."},
+	{"id": "mine", "text": "Mi történt a hegyi ezüstbányával?", "trust": 3,
+		"answer": "[i]A király a gyűrűjét forgatja.[/i]\n\n" \
+			+ "A korona ezüstje mindig a hegyből jött. Apám idejében száz bányász dolgozott a tárnákban, és a " \
+			+ "kincstárban nem fért el a sok láda.\n\n" \
+			+ "Aztán a legmélyebb tárnában kopogást hallottak. A kő túloldaláról, lassan, egyenletesen. Azt " \
+			+ "hitték, egy másik csapat bont feléjük. Nem volt másik csapat.\n\n" \
+			+ "Egy hét múlva összeomlott az egész. Huszonhét ember maradt bent, és azóta senki sem dolgozik ott.\n\n" \
+			+ "[i]Elhalkul a hangja.[/i]\n\nHa arra jársz, ne menj be. Néha azt gondolom, nem a bányászok " \
+			+ "találták meg a Mélységet. A Mélység talált rá a bányára."},
+	{"id": "knights", "text": "Kik az elesett lovagok odalent?", "trust": 4,
+		"answer": "[i]A király keze megfeszül a trón karfáján.[/i]\n\n" \
+			+ "Láttad őket, ugye? A páncéljukon még ott a címerem. A hírnökeim mondták először, és nem hittem " \
+			+ "nekik. Aztán valaki felhozta az egyikük pajzsát.\n\n" \
+			+ "Kristóf pajzsa volt, a legfiatalabbé. Én adtam a kezébe a kapuban, és megígértem az anyjának, " \
+			+ "hogy hazajön.\n\n" \
+			+ "A Mélység nem engedi el a halottait. Felöltözteti őket, és ellenünk küldi.\n\n" \
+			+ "[i]A hangja most először remeg meg.[/i]\n\nHa odalent találkozol velük, ne habozz. Már nem ők " \
+			+ "azok. Adj nekik nyugalmat helyettem."},
+	{"id": "ring", "text": "Mit jelent a gyűrű, amit mindig forgatsz?", "trust": 5,
+		"answer": "[i]Leveszi az ujjáról, és feléd nyújtja. Vastag, kopott aranygyűrű, a belsejébe apró " \
+			+ "betűkkel nevek vannak vésve.[/i]\n\n" \
+			+ "Harminc név. Az indulásuk előtti éjjel véstem bele mindet, a saját kezemmel. Minden reggel " \
+			+ "végigolvasom őket, mielőtt bárkivel szólnék.\n\n" \
+			+ "[i]Megmutatja: a nevek többsége mellett egy apró kereszt.[/i]\n\n" \
+			+ "Huszonhét kereszt. Benedek, a zászlóvivő. Kristóf, a legfiatalabb. Ambrus, aki lovagolni " \
+			+ "tanított, amikor még herceg voltam. Mindegyikről tudnék mesélni egy estén át.\n\n" \
+			+ "[i]Visszahúzza az ujjára.[/i]\n\nAmikor a hét király elesett, azt hittem, végre leveszem. Nem " \
+			+ "ment. Talán majd ha a kapu is bezárul."},
+]
 
 const FIRST_GREETING := "[i]A trónterem végében, a magas, aranyozott trónon egy ősz hajú, koronás " \
 	+ "férfi ül. Fáradtnak tűnik, de a tekintete éles.[/i]\n\n" \
@@ -85,12 +138,21 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 		var first: Array[Dictionary] = [{"id": "why", "text": "Felség, miért hívatott?",
 			"on_choose": func() -> String: return _intro()}]
 		return first + letter
-	var list: Array[Dictionary] = [
-		{"id": "deep", "text": "Mi van a Mélység alján?", "answer": DEEP_STORY},
-	]
-	if Progress.npc_quest_state(SEVEN_QUEST) == "active":
-		list.append({"id": "seven", "text": "Legyőztem a hét szörnykirályt.",
-			"on_choose": func() -> String: return _report_seven()})
+	# Elöl a küldetések (jelentés / átadás / új feladat), utána a kérdések, a hét király után a négy új történet.
+	var list: Array[Dictionary] = []
+	list.append_array(letter)
+	match Progress.npc_quest_state(SEVEN_QUEST):
+		"active":
+			list.append({"id": "seven", "text": "Legyőztem a hét szörnykirályt.",
+				"on_choose": func() -> String: return _report_seven()})
+		"done":
+			match Progress.npc_quest_state(CHAOS_QUEST):
+				"":
+					list.append({"id": "next", "text": "Mi lesz most, felség?",
+						"on_choose": func() -> String: return _give_chaos_quest()})
+				"active":
+					list.append({"id": "chaos", "text": "Legyőztem a Káosz Urát.",
+						"on_choose": func() -> String: return _report_chaos()})
 	if Progress.npc_quest_state(TREASURY_QUEST) == "active":
 		list.append({"id": "treasury", "text": "Hoztam legendás tárgyat.",
 			"on_choose": func() -> String: return _give_legendary(inventory)})
@@ -104,7 +166,10 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 				"on_choose": func() -> String: return _betray()})
 			list.append({"id": "protect", "text": "Nem tudok róla semmit, felség.",
 				"on_choose": func() -> String: return _protect()})
-	return list + letter
+	list.append({"id": "deep", "text": "Mi van a Mélység alján?", "answer": DEEP_STORY})
+	if Progress.npc_quest_state(SEVEN_QUEST) == "done":
+		list.append_array(STORIES)
+	return list
 
 
 static func _royal_letter(inventory: Inventory) -> String:
@@ -160,6 +225,45 @@ static func _report_seven() -> String:
 		+ "[i]Int az egyik őrnek, aki egy bársonypárnán hoz valamit.[/i]\n\n" \
 		+ "Fogadd el ezt a királyi kincstárból: [b]%s[/b]. Megérdemled.\n\n" % item["name"] \
 		+ "[color=#7a4a10](A tárgy a tábori ládába került.)[/color]"
+
+
+## A hét király után: a kapu kinyílt, a Káosz Ura tartja nyitva (új küldetés).
+static func _give_chaos_quest() -> String:
+	Progress.set_npc_quest(CHAOS_QUEST, "active")
+	Progress.mark_asked(ID, "next")
+	Progress.save_game()
+	Audio.play("ui_open")
+	return "[i]A király az ablakhoz lép, és sokáig nézi a várost.[/i]\n\n" \
+		+ "Azt hittem, ezzel vége. Hogy ha a hét őr elesik, a kapu bezárul, és a sötétség visszahúzódik.\n\n" \
+		+ "Tévedtem. A tudósaim az éjjel felébresztettek: a kapu nem bezárult, hanem [b]kinyílt[/b]. Az őrök " \
+		+ "nemcsak a sötétséget hozták fel. Valamit odalent is tartottak.\n\n" \
+		+ "A legmélyebb szintekről fekete-lila, alaktalan dolgok törnek fel; a kalandorok Káoszivadéknak " \
+		+ "hívják őket. A Mélység legalján, a [b]negyvenedik emeleten[/b] pedig valami a kapuban ül, és nyitva " \
+		+ "tartja. A régi írások [b]Ürességfalónak[/b] nevezik. A Káosz Urának.\n\n" \
+		+ "[i]Feléd fordul.[/i]\n\nEgyszer már Gáspárt is erre kértem, és harmincból hárman jöttek vissza. " \
+		+ "Most téged kérlek. Győzd le, és a kapu bezárul. Örökre.\n\n" \
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Király fülön.)[/color]"
+
+
+static func _report_chaos() -> String:
+	if Bestiary.kills(Bestiary.CHAOS_LORD) <= 0:
+		Audio.play("ui_error")
+		return "[i]A király megrázza a fejét.[/i]\n\nA föld még mindig remeg a város alatt, kalandor. " \
+			+ "Ürességfaló él. A negyvenedik emeleten vár rád."
+	Progress.set_npc_quest(CHAOS_QUEST, "done")
+	Progress.mark_asked(ID, "chaos")
+	Progress.change_trust(ID, 30)
+	Progress.camp_gold += CHAOS_GOLD
+	Progress.save_game()
+	Audio.play("level_up")
+	return "[i]Mielőtt megszólalhatnál, a király feláll. Az ajtónál álló őrök kihúzzák magukat, mintha " \
+		+ "díszőrséget állnának.[/i]\n\n" \
+		+ "Tudom. Az éjjel elcsendesedett a föld. Tizenkét év óta először végigaludtam egy éjszakát.\n\n" \
+		+ "[i]Leveszi az ujjáról a kopott aranygyűrűt, sokáig nézi, aztán a trón karfájára teszi.[/i]\n\n" \
+		+ "A kapu bezárult. Harminc ember indult el, hogy ezt megtegye, és végül egyetlen kalandor fejezte be " \
+		+ "helyettük. Az ő nevüket nem felejtem el. A tiédet sem.\n\n" \
+		+ "Fogadd el ezt a korona hálájaként.\n\n" \
+		+ "[color=#7a4a10](+%d tábori arany)[/color]" % CHAOS_GOLD
 
 
 ## Legendás tárgy a táskából a kincstárnak: tábori arany a jutalom.
