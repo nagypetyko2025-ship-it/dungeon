@@ -128,7 +128,7 @@ func _ready() -> void:
 		GameState.display_initialized = true
 		if Audio.saved_fullscreen():
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-	Audio.music("dungeon")
+	Audio.music("epic")
 	GameCursor.apply()
 	var tile_set := _build_tile_set()
 	_floor_layer.tile_set = tile_set
@@ -384,7 +384,7 @@ func _on_boss_fight_started(boss: Node2D) -> void:
 
 
 func _on_boss_defeated(boss: Node2D) -> void:
-	Audio.music("dungeon")
+	Audio.music("epic")
 	_hud.call("hide_boss")
 	var room: Room = boss.get_parent().get_parent()
 	if room.final_boss:

@@ -7,6 +7,12 @@ Music (assets/audio/music) - all CC0 1.0 Universal:
   dungeon_ambience.ogg = "Loopable Dungeon Ambience" by JaggedStone - https://opengameart.org/content/loopable-dungeon-ambience
   menu_ambience.ogg = "Dungeon Ambience" by yd - https://opengameart.org/content/dungeon-ambience
   boss_battle.wav = "Boss Battle #2 [Symphonic Metal]" by nene - https://opengameart.org/node/84428
+  A tábor és a kazamata lejátszási listája (Audio.PLAYLIST_TRACKS), mind CC0 1.0 Universal:
+  lament_of_the_war.mp3 = "Laments of the War" by Cethiel - https://opengameart.org/content/laments-of-the-war
+  medieval_exploration.mp3 = "Medieval: Exploration" by RandomMind - https://opengameart.org/content/medieval-exploration
+  medieval_battle.mp3 = "Medieval: Battle" by RandomMind - https://opengameart.org/content/medieval-battle
+  rising_moon.mp3 = "Fantasy: Rising Moon" by RandomMind - https://opengameart.org/content/fantasy-rising-moon
+  jrpg_theme.ogg = "JRPG Trailer / Theme" by Juhani Junkala (SubspaceAudio) - https://opengameart.org/content/jrpg-trailer-theme
 
 anvil_1.wav, anvil_2.wav, anvil_3.wav: "Metal Impact Sounds" (clink1-3) by Brian MacIntosh, CC0 1.0,
   https://opengameart.org/content/metal-impact-sounds

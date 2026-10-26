@@ -60,6 +60,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   rövid), warbow (lassú, átütő nyíl: `PlayerArrow.pierce`, a Hurtbox `skips`-szel kérdezi), crossbow (`Player.WEAPON_TYPES`).
   Átütés stat (`Stats.pierce`, max `MAX_PIERCE` = 1): csak a legendás "Átütés" szintlépési kártya adja (íjjal, a
   Nyílzápornál 3× ritkább: `Upgrades.LEGENDARY` "weight"), a fegyver saját átütéséhez adódik.
+- Zene: `audio/audio.gd` (`Audio.music`): főmenü "menu" (halk ambient), tábor és kazamata "epic" = lejátszási lista
+  (`PLAYLIST_TRACKS`, 5 CC0 szám mp3/ogg-ban, keverve egymás után, ismétlés nélkül; számonként dB-igazítás kb. -20 dBFS-re,
+  mérve), főellenség "boss". Hangerő: Beállítások "Zene" csúszka (Music busz). Új szám: mérd meg a hangosságát.
 - HP bájital: `ui/potion_badge.gd` (`PotionBadge`, Q gomb; a kazamatában a HP-csík mellett, a táborban bal fent). Gyorstár nincs.
 - UI: minden ablak CanvasLayer `open()/close()`-zal, a `ui/menus.gd` kezeli (KEYS: I, Tab, M, J). Stílus: `UiStyle`, `MenuStyle`.
   Bezáró X: a Menus minden megnyíló ablakra kitesz egy `CloseButton`-t (`ui/close_button.gd`), az ablak jobb felső

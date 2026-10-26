@@ -1105,7 +1105,7 @@ func revive_from_net() -> void:
 	_visual.visible = true
 	_sprite.play("idle")
 	set_physics_process(true)
-	Audio.music("dungeon")
+	Audio.music("epic")
 	Audio.play("level_up")
 	FloatingText.spawn(get_parent(), global_position + Vector2(0, -60), "Feléledtél!", Color(0.6, 1, 0.6), 22)
 

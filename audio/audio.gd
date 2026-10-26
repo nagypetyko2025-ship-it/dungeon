@@ -3,7 +3,7 @@ extends Node
 ## Hangok és zene. Egyetlen példány él a SceneTree gyökerén (jelenetváltáskor
 ## sem tűnik el, így a zene sem szakad meg). Használat:
 ##   Audio.play("hit")            # effekt (több változatból véletlenül választ)
-##   Audio.music("dungeon")       # zene, áttűnéssel
+##   Audio.music("epic")          # zene, áttűnéssel ("epic": a tábor és a kazamata lejátszási listája)
 ## A hangerők és a teljes képernyő a user://settings.cfg-be mentődnek.
 
 const SFX_DIR := "res://assets/audio/sfx/"
@@ -27,6 +27,18 @@ const MUSIC_TRACKS := {
 	"dungeon": "res://assets/audio/music/dungeon_ambience.ogg",
 	"boss": "res://assets/audio/music/boss_battle.wav",
 }
+## A tábor és a kazamata zenéje: epikus számok egymás után (ha az egyik véget ér, jön a következő; a sorrend
+## keverve, ugyanaz nem jön kétszer egymás után). Mind CC0, lásd assets/audio/LICENSE.txt.
+## Szám -> hangerő-igazítás (dB): mind kb. -20 dBFS átlagra (mérve), hogy ne ugráljon a hangerő; a
+## főellenség zenéje (-17.5) kicsit hangosabb marad.
+const PLAYLIST := "epic"
+const PLAYLIST_TRACKS := {
+	"res://assets/audio/music/lament_of_the_war.mp3": -5.7,
+	"res://assets/audio/music/medieval_exploration.mp3": 3.0,
+	"res://assets/audio/music/medieval_battle.mp3": -3.6,
+	"res://assets/audio/music/rising_moon.mp3": -3.7,
+	"res://assets/audio/music/jrpg_theme.ogg": -7.9,
+}
 const MUSIC_FADE := 1.2
 const VOICES := 16
 const SETTINGS_PATH := "user://settings.cfg"
@@ -42,6 +54,9 @@ var _music_players: Array[AudioStreamPlayer] = []
 var _active_music := 0
 var _current_track := ""
 var _cache := {}
+## A lejátszási lista hátralévő számai (elfogyáskor újrakeverve) és az utoljára indított szám.
+var _queue: Array[String] = []
+var _last_song := ""
 
 
 ## Effekt lejátszása. `volume_db` hozzáadódik az alap-hangerőhöz.
@@ -80,6 +95,7 @@ func _init() -> void:
 		var player := AudioStreamPlayer.new()
 		player.bus = "Music"
 		player.volume_db = -80.0
+		player.finished.connect(_on_music_finished.bind(player))
 		add_child(player)
 		_music_players.append(player)
 	_load_settings()
@@ -126,20 +142,49 @@ func _switch_music(track: String) -> void:
 	fade.chain().tween_callback(old.stop)
 	if track.is_empty():
 		return
-	var stream := _load(MUSIC_TRACKS[track])
-	_make_looping(stream)
+	var stream: AudioStream
+	var target_db := 0.0
+	if track == PLAYLIST:
+		stream = _next_song()
+		target_db = PLAYLIST_TRACKS[_last_song]
+	else:
+		stream = _load(MUSIC_TRACKS[track])
+		_set_loop(stream, true)
 	new_player.stream = stream
 	new_player.volume_db = -40.0
 	new_player.play()
 	var fade_in := create_tween()
-	fade_in.tween_property(new_player, "volume_db", 0.0, MUSIC_FADE)
+	fade_in.tween_property(new_player, "volume_db", target_db, MUSIC_FADE)
 
 
-func _make_looping(stream: AudioStream) -> void:
-	if stream is AudioStreamOggVorbis:
-		stream.loop = true
+## A lejátszási lista következő száma (nem ismétlődik: a lista végén újrakeveri).
+func _next_song() -> AudioStream:
+	if _queue.is_empty():
+		_queue.assign(PLAYLIST_TRACKS.keys())
+		_queue.shuffle()
+		# Ugyanaz ne jöjjön kétszer egymás után (a keverés határán sem).
+		if _queue.size() > 1 and _queue[0] == _last_song:
+			_queue.append(_queue.pop_front())
+	_last_song = _queue.pop_front()
+	var stream := _load(_last_song)
+	_set_loop(stream, false)
+	return stream
+
+
+## Egy szám véget ért: ha a lejátszási lista szól, jön a következő (ugyanazon a lejátszón).
+func _on_music_finished(player: AudioStreamPlayer) -> void:
+	if _current_track != PLAYLIST or player != _music_players[_active_music]:
+		return
+	player.stream = _next_song()
+	player.volume_db = PLAYLIST_TRACKS[_last_song]
+	player.play()
+
+
+func _set_loop(stream: AudioStream, on: bool) -> void:
+	if stream is AudioStreamOggVorbis or stream is AudioStreamMP3:
+		stream.loop = on
 	elif stream is AudioStreamWAV:
-		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD if on else AudioStreamWAV.LOOP_DISABLED
 		stream.loop_begin = 0
 		stream.loop_end = int(stream.get_length() * stream.mix_rate)
 

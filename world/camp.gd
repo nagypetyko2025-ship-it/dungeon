@@ -159,7 +159,7 @@ func _ready() -> void:
 	Progress.load_game()
 	# Ha a futásban elérted a 30. emeletet, most "vissza is jöttél" (a királyi vár engedélye).
 	Castle.on_return_to_camp()
-	Audio.music("menu")
+	Audio.music("epic")
 	GameCursor.apply()
 	$CanvasModulate.color = EVENING
 	# A szabad ég alatt a lovag "lámpása" halványabb, hogy esti hangulata legyen.
