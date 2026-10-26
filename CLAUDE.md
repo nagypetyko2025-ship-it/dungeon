@@ -143,9 +143,15 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   `GameState.tutorial_dust`, a fejlesztés mindig sikerül), különleges szörnyek, főellenség (gyenge:
   `Room.TUTORIAL_BOSS_HEALTH`)). A vezető: `ui/tutorial_guide.gd` — feladat- és Enteres magyarázó lépések, a következő
   szoba ajtaja zárva, amíg a lecke nincs kész (`Room.set_gate`), sárga nyíl a célra, villogó keret a HUD-on, H = átugrás,
-  a játékos nem halhat meg (`Health.cannot_die`); a végén lapozható összefoglaló. Szövegek: `ui/tutorial_manual.gd`
-  (CHAPTERS a főmenüben, FINISH_PAGES a pálya végén, az irányítás a Beállítások fülön is). A karakterek történetét nem
-  árulja el. Teszt: robot, ami minden karakterrel végigjátssza (lépésenként elvégzi a feladatot).
+  a játékos nem halhat meg (`Health.cannot_die`). A pálya lépcsője a valódi TÁBORBA visz (GameState.tutorial marad):
+  ott a vezető (`setup_camp`, a tábor hozza létre) végigvisz a tábor dolgain (arany, kiképzősátor + vásárlás, láda +
+  kivétel, halál és biztonság, kovács, Szörnyek könyve, küldetések, vándorárus, lakók, út a városba, lépcső), a végén
+  rövid "kész" ablak (`TutorialManual.FINISH_TEXT`). Nyitott ablak idején a fenti pergamen alatta van: a képernyő
+  alján, az ablakok fölött egy sáv mutatja a teendőt röviden (lépésenként "short", ha a lépés saját ablaka ("window")
+  van nyitva; különben "csukd be ezt az ablakot"). Homokozó: gyakorlás alatt `Progress.save_game` nem ír, és a
+  főmenübe lépve (`Progress.discard_tutorial_changes`, a `begin_tutorial` óta) visszatöltődik a mentés. Szövegek:
+  `ui/tutorial_manual.gd` (CHAPTERS a főmenüben, az irányítás a Beállítások fülön is). A karakterek történetét nem
+  árulja el. Teszt: robot, ami minden karakterrel végigjátssza a pályát és a tábort (lépésenként elvégzi a feladatot).
 - Automatikus frissítés: `ui/updater.gd` (a főmenü teszi be, indításonként egyszer; headless és exportált játékban nem fut).
   GitHub compare API a helyi main-fej és az origin main között; ha a helyi mögötte van: felül az újdonságok, 6 mp múlva
   magától frissít (git-es mappában `git pull --ff-only`, de commitolatlan változásnál csak gombra; git nélküli mappában

@@ -112,6 +112,7 @@ func _record_run() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if GameState.tutorial:
 		GameState.tutorial = false
+		Progress.discard_tutorial_changes()
 		return
 	# A táborban csak pihenő közben van futás (amit így feladsz).
 	if get_parent().name != "Dungeon" and not GameState.on_break:

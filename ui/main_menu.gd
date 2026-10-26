@@ -49,6 +49,9 @@ const MENU_BUTTON_SIZE := Vector2(340, 54)
 
 
 func _ready() -> void:
+	# Ha a gyakorlásból jöttünk vissza (bárhogy), annak változásai nem maradnak meg.
+	GameState.tutorial = false
+	Progress.discard_tutorial_changes()
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	# Indításkor a mentett ablak-beállítás (alapból teljes képernyő); utána az F11-es választás megmarad.
@@ -360,7 +363,7 @@ func _show_panel(panel: String) -> void:
 
 ## Gyakorló pálya: külön pálya a jelenlegi karakterrel, semmi nem mentődik belőle.
 func _start_tutorial() -> void:
-	Progress.load_game()
+	Progress.begin_tutorial()
 	GameState.reset()
 	GameState.tutorial = true
 	get_tree().change_scene_to_file(DUNGEON_SCENE)

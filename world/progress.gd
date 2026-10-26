@@ -71,6 +71,9 @@ static var camp_inventory := {}
 ## karakter -> tábori felszerelése (az aktívé a fenti camp_inventory-ban is).
 static var _all_inventories := {}
 static var _loaded := false
+## Gyakorlás (GameState.tutorial): a gyakorló pálya és a tábori bemutató a betöltött állapoton játszik, de semmi
+## nem kerül lemezre (save_game ilyenkor nem ír), és a végén discard_tutorial_changes() visszatölti az eredetit.
+static var _in_tutorial := false
 
 
 static func has_save() -> bool:
@@ -148,6 +151,8 @@ static func load_game(force := false) -> void:
 
 
 static func save_game() -> void:
+	if GameState.tutorial:
+		return
 	_all_inventories[character] = camp_inventory
 	var config := ConfigFile.new()
 	config.set_value("camp", "gold", camp_gold)
@@ -215,6 +220,21 @@ static func reset_game() -> void:
 	deepest = 0
 	_activate(Characters.DEFAULT)
 	save_game()
+
+
+## A gyakorlás kezdete: ami innentől változik, az a végén eldobódik (lásd discard_tutorial_changes).
+static func begin_tutorial() -> void:
+	load_game()
+	_in_tutorial = true
+
+
+## A gyakorlás vége (a főmenübe lépve mindig): a gyakorlás alatti változások (tábori arany, fejlesztések, láda,
+## porok...) eldobódnak, az állapot újra a mentésből jön.
+static func discard_tutorial_changes() -> void:
+	if not _in_tutorial:
+		return
+	_in_tutorial = false
+	load_game(true)
 
 
 ## Ennyi porod van ebből a ritkaságból (lásd Smithing).

@@ -291,6 +291,12 @@ func _ready() -> void:
 		_setup_break()
 	_player.get_node("Camera2D").reset_smoothing()
 	_show_title()
+	# Gyakorlás: a gyakorló pálya után a tábori bemutató (lásd TutorialGuide.setup_camp).
+	if GameState.tutorial:
+		var guide := TutorialGuide.new()
+		guide.name = "TutorialGuide"
+		add_child(guide)
+		guide.call("setup_camp", self)
 	# Közös játékban a többiek is itt járnak a táborban (lásd NetAvatars).
 	if NetLobby.is_playing(get_tree()):
 		var avatars := NetAvatars.new()
@@ -1347,6 +1353,12 @@ func cheat_select_character(id: String) -> bool:
 
 
 func _enter_dungeon(start_depth := 1, cheat := false) -> void:
+	# A tábori bemutató (gyakorlás) a lépcsőnél ér véget.
+	if GameState.tutorial:
+		var guide := get_node_or_null("TutorialGuide")
+		if guide != null:
+			guide.call("finish")
+		return
 	# Közös játékban a gazda indítja a lejutást, és a táborban lévők együtt mennek le
 	# (NetLobby._descend → enter_dungeon_now).
 	if NetLobby.is_playing(get_tree()) and not cheat:

@@ -1,6 +1,6 @@
 class_name TutorialManual
-## A játék kézikönyve: a főmenü Tutorial ablakában fejezetenként olvasható (CHAPTERS), a gyakorló pálya végén
-## pedig lapozható összefoglaló (FINISH_PAGES) arról, ami a pályára nem fért fel. A karakterek és a lakók
+## A játék kézikönyve: a főmenü Tutorial ablakában fejezetenként olvasható (CHAPTERS); a gyakorlás végén egy rövid
+## összefoglaló (FINISH_TEXT). A karakterek és a lakók
 ## történetéből szándékosan nem árul el semmit: csak azt, ami a játékhoz kell.
 
 const CONTROLS := "[b]W A S D[/b] (vagy a nyilak) — mozgás\n" \
@@ -124,13 +124,12 @@ const CHAPTERS := [
 	["Közös játék", MULTIPLAYER],
 ]
 
-## A gyakorló pálya végén: ami a pályára nem fért fel.
-const FINISH_PAGES := [
-	["A tábor", CAMP],
-	["Halál és biztonság", DEATH],
-	["A kovács", SMITH],
-	["Lakók, küldetések, karakterek", PEOPLE],
-	["Mélyebben", DUNGEON],
-	["Közös játék", MULTIPLAYER],
-	["Billentyűk", CONTROLS],
-]
+## A gyakorlás legvégén (a tábori bemutató után): rövid, nem kell sokat olvasni.
+const FINISH_TEXT := "Ügyes voltál, most már mindent tudsz, ami az induláshoz kell!\n\n" \
+	+ "[b]•[/b] A tábor lépcsőjénél kezdesz; minden 3. emeleten főellenség vár, utána kimehetsz pihenni.\n" \
+	+ "[b]•[/b] Halálkor elveszted, ami nálad van: a legjobb tárgyakat küldd fel (tárgylift, pihenő).\n" \
+	+ "[b]•[/b] A tábori aranyból a kiképzősátorban erősödsz; a kovácsnál a tárgyaidat fejleszted.\n" \
+	+ "[b]•[/b] Beszélgess a lakókkal: feladatokat adnak, és új karakterek csatlakozhatnak hozzád.\n" \
+	+ "[b]•[/b] Barátokkal a főmenü [b]Közös játék[/b] gombjával játszhattok (az elesett társat E-t nyomva tartva " \
+	+ "felállítod).\n\n" \
+	+ "Ha valamit elfelejtenél: a főmenü [b]Tutorial[/b] ablakában fejezetenként mindent megtalálsz. Sok sikert a mélyben!"

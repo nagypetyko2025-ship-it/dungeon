@@ -23,7 +23,7 @@ func _ready() -> void:
 	_start.pressed.connect(start_requested.emit)
 	box.add_child(_start)
 	var hint := Label.new()
-	hint.text = "Egy külön pálya, ami lépésről lépésre végigvezet mindenen. Itt nem halhatsz meg, és semmi nem mentődik."
+	hint.text = "Gyakorló pálya, utána a tábor bemutatója, lépésről lépésre. Itt nem halhatsz meg, és semmi nem mentődik."
 	hint.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
 	hint.add_theme_font_size_override("font_size", 16)
 	hint.add_theme_color_override("font_color", MenuStyle.PARCHMENT)
