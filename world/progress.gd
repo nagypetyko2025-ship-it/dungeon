@@ -71,8 +71,9 @@ static var camp_inventory := {}
 ## karakter -> tábori felszerelése (az aktívé a fenti camp_inventory-ban is).
 static var _all_inventories := {}
 static var _loaded := false
-## Gyakorlás (GameState.tutorial): a gyakorló pálya és a tábori bemutató a betöltött állapoton játszik, de semmi
-## nem kerül lemezre (save_game ilyenkor nem ír), és a végén discard_tutorial_changes() visszatölti az eredetit.
+## Gyakorlás (GameState.tutorial): a gyakorló pálya és a tábori bemutató tiszta lappal (mint egy új játék) játszik,
+## csak a memóriában: semmi nem kerül lemezre (save_game ilyenkor nem ír), és a végén discard_tutorial_changes()
+## visszatölti a valódi mentést.
 static var _in_tutorial := false
 
 
@@ -85,19 +86,8 @@ static func load_game(force := false) -> void:
 	if _loaded and not force:
 		return
 	_loaded = true
-	camp_gold = 0
 	character = Characters.DEFAULT
-	upgrades = {}
-	_all_inventories = {}
-	stash = []
-	quest_progress = {}
-	quests_done = []
-	trust = {}
-	asked = {}
-	npc_quests = {}
-	kills = {}
-	dust = {}
-	deepest = 0
+	_clear()
 	var config := ConfigFile.new()
 	if config.load(path()) == OK:
 		camp_gold = int(config.get_value("camp", "gold", 0))
@@ -206,6 +196,13 @@ static func mark_asked(npc_id: String, topic: String) -> void:
 ## Új játék: minden tábori haladás törlődik.
 static func reset_game() -> void:
 	_loaded = true
+	_clear()
+	_activate(Characters.DEFAULT)
+	save_game()
+
+
+## Üres tábori haladás (a karakter marad): nincs arany, fejlesztés, felszerelés, láda, küldetés, bizalom, por...
+static func _clear() -> void:
 	camp_gold = 0
 	upgrades = {}
 	_all_inventories = {}
@@ -218,14 +215,15 @@ static func reset_game() -> void:
 	kills = {}
 	dust = {}
 	deepest = 0
-	_activate(Characters.DEFAULT)
-	save_game()
 
 
-## A gyakorlás kezdete: ami innentől változik, az a végén eldobódik (lásd discard_tutorial_changes).
+## A gyakorlás kezdete: tiszta lappal, mint egy új játék (a meglévő mentés aranya, fejlesztései, tárgyai nem
+## látszanak, és nem is segítenek), csak a memóriában. A végén discard_tutorial_changes() visszatölti a mentést.
 static func begin_tutorial() -> void:
 	load_game()
 	_in_tutorial = true
+	_clear()
+	_activate(character)
 
 
 ## A gyakorlás vége (a főmenübe lépve mindig): a gyakorlás alatti változások (tábori arany, fejlesztések, láda,

@@ -148,8 +148,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   kivétel, halál és biztonság, kovács, Szörnyek könyve, küldetések, vándorárus, lakók, út a városba, lépcső), a végén
   rövid "kész" ablak (`TutorialManual.FINISH_TEXT`). Nyitott ablak idején a fenti pergamen alatta van: a képernyő
   alján, az ablakok fölött egy sáv mutatja a teendőt röviden (lépésenként "short", ha a lépés saját ablaka ("window")
-  van nyitva; különben "csukd be ezt az ablakot"). Homokozó: gyakorlás alatt `Progress.save_game` nem ír, és a
-  főmenübe lépve (`Progress.discard_tutorial_changes`, a `begin_tutorial` óta) visszatöltődik a mentés. Szövegek:
+  van nyitva; különben "csukd be ezt az ablakot"). Homokozó: a gyakorlás tiszta lappal indul (`Progress.begin_tutorial`:
+  mint egy új játék, csak a memóriában; a mentés arany/fejlesztés/tárgy/küldetés stb. nem látszik), közben
+  `Progress.save_game` nem ír, és a főmenübe lépve (`Progress.discard_tutorial_changes`) visszatöltődik a mentés. Szövegek:
   `ui/tutorial_manual.gd` (CHAPTERS a főmenüben, az irányítás a Beállítások fülön is). A karakterek történetét nem
   árulja el. Teszt: robot, ami minden karakterrel végigjátssza a pályát és a tábort (lépésenként elvégzi a feladatot).
 - Automatikus frissítés: `ui/updater.gd` (a főmenü teszi be, indításonként egyszer; headless és exportált játékban nem fut).

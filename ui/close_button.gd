@@ -29,8 +29,8 @@ static func attach(to_menu: Node, on_press: Callable) -> CloseButton:
 	return button
 
 
-## Az ablak kerete: a `close_anchor()` (ha van), a Control ablak maga, vagy a legnagyobb látható panel benne.
-## Keret nélküli ablaknál (pl. a szünet menü) a legnagyobb látható elem: az egész képernyő.
+## Az ablak kerete: a `close_anchor()` (ha van), a Control ablak maga, vagy a legnagyobb látható panel benne
+## (ami nem az egész képernyős háttér). Keret nélküli ablaknál (pl. a szünet menü) a legnagyobb látható elem: az egész képernyő.
 static func find_window(of_menu: Node) -> Control:
 	if of_menu.has_method("close_anchor"):
 		return of_menu.call("close_anchor")
@@ -52,7 +52,9 @@ static func find_window(of_menu: Node) -> Control:
 			largest_area = area
 		if not (control is PanelContainer or control is Panel or control is NinePatchRect or control is TextureRect):
 			continue
-		if rect.size.x >= screen.x * 0.95 and rect.size.y >= screen.y * 0.95:
+		# Csak a tényleg az egész képernyőt kitöltő háttér nem keret: egy nagy ablak 16:9-es képernyőn
+		# (1280x720) majdnem akkora lehet, mint a képernyő (pl. a kiképzősátor), az még keret.
+		if rect.size.x >= screen.x - 1.0 and rect.size.y >= screen.y - 1.0:
 			continue
 		if area > best_area:
 			best = control

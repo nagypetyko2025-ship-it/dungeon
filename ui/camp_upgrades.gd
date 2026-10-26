@@ -10,6 +10,7 @@ const PIP_OFF := Color(0.42, 0.28, 0.16, 0.35)
 var _gold_label: Label
 var _rows: GridContainer
 var _message: Label
+var _window: PanelContainer
 
 
 func _ready() -> void:
@@ -29,6 +30,11 @@ func close() -> void:
 	visible = false
 
 
+## A bezáró X ennek a jobb felső sarkába kerül (CloseButton).
+func close_anchor() -> Control:
+	return _window
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("interact"):
 		get_viewport().set_input_as_handled()
@@ -44,13 +50,13 @@ func _build() -> void:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(center)
-	var window := PanelContainer.new()
-	window.add_theme_stylebox_override("panel", UiStyle.decorated_panel())
-	window.custom_minimum_size = Vector2(1180, 0)
-	center.add_child(window)
+	_window = PanelContainer.new()
+	_window.add_theme_stylebox_override("panel", UiStyle.decorated_panel())
+	_window.custom_minimum_size = Vector2(1180, 0)
+	center.add_child(_window)
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 8)
-	window.add_child(root)
+	_window.add_child(root)
 	root.add_child(UiStyle.title_bar("Kiképzősátor"))
 	# Egy sorban: a tábori kincs, és hogy mit mutat a kártya (szintenkénti érték, a következő szint ára).
 	var gold_row := HBoxContainer.new()
