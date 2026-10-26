@@ -19,6 +19,13 @@ var _pages: Array[VBoxContainer] = []
 var _found: Label
 var _prev: Button
 var _next: Button
+## Az egész elrendezés (cím, fülek, könyv): az X ennek a jobb felső sarkába kerül, a cím mellé.
+var _window: Control
+
+
+## A bezáró X helye (lásd CloseButton): a könyv lapjain nem takar el semmit.
+func close_anchor() -> Control:
+	return _window
 
 
 func _ready() -> void:
@@ -87,6 +94,7 @@ func _build() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 10)
 	center.add_child(root)
+	_window = root
 	root.add_child(MenuStyle.title_label("Szörnyek könyve", 44, MenuStyle.GOLD))
 	# Kategória-fülek két sorban.
 	var tabs := GridContainer.new()

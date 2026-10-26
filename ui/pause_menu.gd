@@ -10,6 +10,8 @@ const QUIT_GOLD_RATIO := 0.4
 var _buttons: VBoxContainer
 var _settings: SettingsPanel
 var _settings_button: Button
+## A cím és a gombok oszlopa: az X ennek a jobb felső sarkába kerül (lásd CloseButton).
+var _stack: VBoxContainer
 
 
 func _ready() -> void:
@@ -27,6 +29,7 @@ func _ready() -> void:
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 22)
 	center.add_child(stack)
+	_stack = stack
 	stack.add_child(MenuStyle.title_label("Szünet", 96, MenuStyle.GOLD))
 
 	_buttons = VBoxContainer.new()
@@ -60,6 +63,10 @@ func _ready() -> void:
 	_settings.visible = false
 	_settings.closed.connect(_show_settings.bind(false))
 	stack.add_child(_settings)
+
+
+func close_anchor() -> Control:
+	return _stack
 
 
 func _add_button(text: String, action: Callable) -> Button:

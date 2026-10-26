@@ -5,6 +5,7 @@ extends Node
 ## átvált), és amíg valamelyik nyitva van, megáll a játék (közös játékban nem áll meg, csak a karakter
 ## nem irányítható: GamePause).
 ## Szintlépés vagy halál közben (amikor már más állította meg a játékot) nem nyílik.
+## A nyitott ablak jobb felső sarkában egy X is bezárja (CloseButton).
 
 ## Gomb -> a kezelt ablak útvonala (a Dungeon jelenetben).
 const KEYS := {
@@ -18,6 +19,7 @@ const KEYS := {
 const PAUSE_MENU := "../PauseMenu"
 
 var _open: Node = null
+var _close_x: CloseButton
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -78,6 +80,8 @@ func _toggle(menu: Node) -> void:
 		_open.call("close")
 	_open = menu
 	menu.call("open")
+	_remove_close_x()
+	_close_x = CloseButton.attach(menu, close_current)
 	GamePause.set_paused(get_tree(), true)
 	Audio.play("ui_open")
 
@@ -86,4 +90,11 @@ func _close() -> void:
 	Audio.play("ui_close")
 	_open.call("close")
 	_open = null
+	_remove_close_x()
 	GamePause.set_paused(get_tree(), false)
+
+
+func _remove_close_x() -> void:
+	if is_instance_valid(_close_x):
+		_close_x.queue_free()
+	_close_x = null

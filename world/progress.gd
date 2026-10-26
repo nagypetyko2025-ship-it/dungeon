@@ -60,6 +60,8 @@ static var asked := {}
 static var npc_quests := {}
 ## Szörnyek könyve (Bestiary): szörny -> hányat öltél meg belőle (minden futásból összesen).
 static var kills := {}
+## A kovács porai (Smithing): ritkaság -> darab (szétszedéssel jön, fejlesztésre megy el).
+static var dust := {}
 ## A legmélyebb emelet, ahova valaha lejutottál (csalás és gyakorló pálya nélkül). Ha egy küldetés egy
 ## emeletre küld, és már jártál ott, azonnal mondhatod, hogy megvolt (lásd reached_depth).
 static var deepest := 0
@@ -91,6 +93,7 @@ static func load_game(force := false) -> void:
 	asked = {}
 	npc_quests = {}
 	kills = {}
+	dust = {}
 	deepest = 0
 	var config := ConfigFile.new()
 	if config.load(path()) == OK:
@@ -132,6 +135,9 @@ static func load_game(force := false) -> void:
 		var saved_kills: Variant = config.get_value("camp", "kills", {})
 		if saved_kills is Dictionary:
 			kills = saved_kills
+		var saved_dust: Variant = config.get_value("camp", "dust", {})
+		if saved_dust is Dictionary:
+			dust = saved_dust
 		deepest = int(config.get_value("camp", "deepest", -1))
 	# Régebbi mentés: az eredménytábla legjobb futásából.
 	if deepest < 0:
@@ -155,6 +161,7 @@ static func save_game() -> void:
 	config.set_value("camp", "asked", asked)
 	config.set_value("camp", "npc_quests", npc_quests)
 	config.set_value("camp", "kills", kills)
+	config.set_value("camp", "dust", dust)
 	config.set_value("camp", "deepest", deepest)
 	config.save(path())
 
@@ -204,8 +211,20 @@ static func reset_game() -> void:
 	asked = {}
 	npc_quests = {}
 	kills = {}
+	dust = {}
 	deepest = 0
 	_activate(Characters.DEFAULT)
+	save_game()
+
+
+## Ennyi porod van ebből a ritkaságból (lásd Smithing).
+static func dust_of(rarity: String) -> int:
+	return int(dust.get(rarity, 0))
+
+
+## Por hozzáadása (negatívval elvétele); mentődik.
+static func add_dust(rarity: String, amount: int) -> void:
+	dust[rarity] = maxi(dust_of(rarity) + amount, 0)
 	save_game()
 
 

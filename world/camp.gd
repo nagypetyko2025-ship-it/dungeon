@@ -114,6 +114,9 @@ var _stash_position := Vector2.ZERO
 var _stash_panel: CanvasLayer
 var _merchant_panel: CanvasLayer
 var _npc_position := Vector2.ZERO
+## A kovács (E-re nyílik a műhelye: tárgyfejlesztés, szétszedés; lásd SmithPanel).
+var _smith_position := Vector2.ZERO
+var _smith_panel: SmithPanel
 ## A Szörnyek könyve (E-re nyílik az állványnál).
 var _bestiary_position := Vector2.ZERO
 var _bestiary_book: CanvasLayer
@@ -257,6 +260,9 @@ func _ready() -> void:
 	_merchant_panel = MERCHANT_PANEL.new()
 	_merchant_panel.name = "MerchantPanel"
 	add_child(_merchant_panel)
+	_smith_panel = SmithPanel.new()
+	_smith_panel.name = "SmithPanel"
+	add_child(_smith_panel)
 	# Beszélgetés a veteránnal (bizalom, kérdések: Dialogues).
 	_veteran_dialogue = DialoguePanel.new()
 	_veteran_dialogue.name = "VeteranDialogue"
@@ -584,12 +590,14 @@ func _build_camp() -> void:
 	_body(holder, Vector2(0, -6), Vector2(28, 12))
 
 
-## A kovács bódéja a tábor jobb alsó sarkában (lásd Smithy); egyelőre nem lehet vele beszélni.
+## A kovács bódéja a tábor jobb alsó sarkában (lásd Smithy); előtte állva E-re nyílik a műhelye.
 func _build_smithy() -> void:
 	var smithy := Smithy.new()
 	smithy.name = "Smithy"
 	smithy.tile = SMITHY_TILE
 	_entities.add_child(smithy)
+	# A kovács és az üllő előtt (a bódé alsó szélén).
+	_smith_position = _tile_center(SMITHY_TILE + Vector2i(1, 2)) + Vector2(16, 26)
 
 
 ## A tábor nyugati részén: sátor, előtte egy farönkön a sebesült veterán ül (kötés a
@@ -1219,8 +1227,12 @@ func _process(delta: float) -> void:
 	var near_veteran := _is_near_veteran()
 	var near_block := _player.global_position.distance_to(_road_block_position) < 90.0
 	var near_bestiary := _is_near_bestiary()
-	var any_near := near_stairs or near_tent or near_stash or near_npc or near_veteran or near_block or near_bestiary
-	if near_veteran:
+	var near_smith := _is_near_smith()
+	var any_near := near_stairs or near_tent or near_stash or near_npc or near_veteran or near_block or near_bestiary \
+		or near_smith
+	if near_smith:
+		_prompt.text = "[E] Kovács — tárgyfejlesztés, szétszedés"
+	elif near_veteran:
 		_prompt.text = "[E] Beszélgetés: %s" % Dialogues.VETERAN_NAME
 	elif near_bestiary:
 		_prompt.text = "[E] Szörnyek könyve"
@@ -1254,6 +1266,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		$Menus.open_menu(_bestiary_book)
 		return
+	# A kovács pihenő közben is dolgozik (akkor a futás felszerelésével).
+	if _is_near_smith():
+		get_viewport().set_input_as_handled()
+		Audio.play("anvil", -4.0)
+		$Menus.open_menu(_smith_panel)
+		return
 	var near_something := _is_near_stairs() or _is_near_tent() or _is_near_stash() or _is_near_npc()
 	if not near_something:
 		return
@@ -1282,6 +1300,10 @@ func _is_near_veteran() -> bool:
 
 func _is_near_bestiary() -> bool:
 	return is_instance_valid(_player) and _player.global_position.distance_to(_bestiary_position) < INTERACT_RANGE
+
+
+func _is_near_smith() -> bool:
+	return is_instance_valid(_player) and _player.global_position.distance_to(_smith_position) < INTERACT_RANGE
 
 
 func _is_near_npc() -> bool:

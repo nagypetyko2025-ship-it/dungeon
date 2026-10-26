@@ -60,6 +60,13 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Nyílzápornál 3× ritkább: `Upgrades.LEGENDARY` "weight"), a fegyver saját átütéséhez adódik.
 - HP bájital: `ui/potion_badge.gd` (`PotionBadge`, Q gomb; a kazamatában a HP-csík mellett, a táborban bal fent). Gyorstár nincs.
 - UI: minden ablak CanvasLayer `open()/close()`-zal, a `ui/menus.gd` kezeli (KEYS: I, Tab, M, J). Stílus: `UiStyle`, `MenuStyle`.
+  Bezáró X: a Menus minden megnyíló ablakra kitesz egy `CloseButton`-t (`ui/close_button.gd`), az ablak jobb felső
+  sarkába (a legnagyobb nem teljes képernyős panelhez igazodik; egy ablak `close_anchor()`-ral megadhatja, pl. a
+  Szörnyek könyve és a szünet menü).
+- Kovács (a tábor jobb alsó sarkában, `world/smithy.gd`): előtte E-re `ui/smith_panel.gd` (SmithPanel). Szabályok:
+  `items/smithing.gd` — fejlesztés a következő ritkaságba 4 porért abból a ritkaságból, 65% eséllyel (ha nem sikerül,
+  a por elvész; `Smithing.upgraded` a statokat a tartományukban ugyanott tartja), szétszedés: 1 (30%: 2) por a tárgy
+  ritkaságából. Porok: `Progress.dust` (ritkaság -> db, mentődik). Tárgycsere a helyén: `Inventory.replace`.
   Megállítás: `GamePause.set_paused(tree, on)` / `GamePause.active(tree)` (`ui/game_pause.gd`) a `get_tree().paused` helyett —
   egyjátékosban a fa áll meg, közös játékban semmi (szintlépés, halál, Esc-menü alatt sem), csak a karakter nem irányítható és a világ nem fogad E-t.
 - Nyugati tisztás: romos ház + tolvaj (`world/ruin.gd`, `world/thief.gd`), kút + Lőrinc (`world/stranger.gd`), a kút alja: `world/well_cave.gd`.

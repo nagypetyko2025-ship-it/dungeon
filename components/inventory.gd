@@ -66,6 +66,13 @@ func is_bag_full() -> bool:
 	return bag.find(null) == -1
 
 
+## Egy tárgy cseréje a helyén (pl. a kovács fejlesztése után): kind = "bag" (key = index) / "equip" (key = hely);
+## null-lal kiveszi.
+func replace(kind: String, key: Variant, item: Variant) -> void:
+	_set_item_at(kind, key, item)
+	changed.emit()
+
+
 ## A táska adott helyén lévő tárgyat felveszi a helyére; ami ott volt, a táskába kerül.
 func equip_from_bag(index: int) -> void:
 	var item = bag[index]

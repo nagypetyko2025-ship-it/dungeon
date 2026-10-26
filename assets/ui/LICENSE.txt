@@ -3,3 +3,4 @@ spell_bolt.png: ehhez a projekthez rajzolva (CC0). spell_fire.png: tűzgolyó, e
 spell_chain.png: "496 pixel art icons for medieval/fantasy RPG" (7Soul1, CC0, https://opengameart.org/node/39455) S_Thunder06 ikonja, kékre színezve.
 icon_lifesteal.png (I_Fang, pirosra színezve), icon_thorns.png (S_Earth04), icon_gold.png (I_GoldCoin), icon_xp.png (I_Book): "496 pixel art icons for medieval/fantasy RPG" (7Soul1, CC0, https://opengameart.org/node/39455).
 icon_pierce.png: átütés-ikon (célkorongon átfúródó nyíl), ehhez a projekthez rajzolva (CC0).
+dust_common.png, dust_rare.png, dust_epic.png, dust_legendary.png, dust_mythic.png: porkupac-ikonok a kovácshoz, ehhez a projekthez rajzolva (CC0).

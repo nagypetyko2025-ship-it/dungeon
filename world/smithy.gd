@@ -3,7 +3,7 @@ extends Node2D
 ## A tábori kovács kis bódéja (a tábor jobb alsó sarkában): csíkos ponyva két oszlopon,
 ## alatta lobogó kohó, üllő izzó vasdarabbal, mellette egy dézsa víz. A kovács (egy
 ## átszínezett törpe) folyamatosan kalapál: minden ütésnél szikra pattan és cseng az üllő.
-## Egyelőre nem lehet vele beszélni.
+## Előtte állva E-re nyílik a műhelye (a tábor kezeli, lásd SmithPanel).
 ## A tábor _entities rétegébe kerül (y-rendezés), a `tile` a bódé bal felső csempéje.
 
 const RPG: Texture2D = preload("res://assets/shop/kenney_rpg.png")
