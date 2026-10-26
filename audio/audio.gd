@@ -39,6 +39,18 @@ const PLAYLIST_TRACKS := {
 	"res://assets/audio/music/rising_moon.mp3": -3.7,
 	"res://assets/audio/music/jrpg_theme.ogg": -7.9,
 }
+## A játék közbeni zenék címe és szerzője: a bal alsó sarokban kiírja, mi szól éppen (lásd _show_now_playing;
+## a főmenü zenéjénél nem, ott a Tutorial gomb van).
+const MUSIC_TITLES := {
+	"res://assets/audio/music/boss_battle.wav": "Boss Battle #2 — nene",
+	"res://assets/audio/music/lament_of_the_war.mp3": "Laments of the War — Cethiel",
+	"res://assets/audio/music/medieval_exploration.mp3": "Medieval: Exploration — RandomMind",
+	"res://assets/audio/music/medieval_battle.mp3": "Medieval: Battle — RandomMind",
+	"res://assets/audio/music/rising_moon.mp3": "Fantasy: Rising Moon — RandomMind",
+	"res://assets/audio/music/jrpg_theme.ogg": "JRPG Theme — Juhani Junkala",
+}
+## Új szám után ennyi ideig élénk a felirat, utána halványabb.
+const NOW_PLAYING_BRIGHT := 6.0
 const MUSIC_FADE := 1.2
 const VOICES := 16
 const SETTINGS_PATH := "user://settings.cfg"
@@ -57,6 +69,11 @@ var _cache := {}
 ## A lejátszási lista hátralévő számai (elfogyáskor újrakeverve) és az utoljára indított szám.
 var _queue: Array[String] = []
 var _last_song := ""
+## Lejátszónként a futó áttűnés: újrahasználat előtt le kell állítani (különben egy korábbi elhalkítás
+## a végén leállítaná az új számot is, pl. ha gyorsan lépsz vissza a főmenüből a játékba).
+var _fades: Array[Tween] = [null, null]
+var _now_label: Label
+var _now_tween: Tween
 
 
 ## Effekt lejátszása. `volume_db` hozzáadódik az alap-hangerőhöz.
@@ -98,6 +115,7 @@ func _init() -> void:
 		player.finished.connect(_on_music_finished.bind(player))
 		add_child(player)
 		_music_players.append(player)
+	_build_now_playing()
 	_load_settings()
 
 
@@ -134,13 +152,12 @@ func _switch_music(track: String) -> void:
 	if track == _current_track:
 		return
 	_current_track = track
-	var old := _music_players[_active_music]
+	var old_index := _active_music
 	_active_music = 1 - _active_music
 	var new_player := _music_players[_active_music]
-	var fade := create_tween().set_parallel()
-	fade.tween_property(old, "volume_db", -80.0, MUSIC_FADE)
-	fade.chain().tween_callback(old.stop)
+	_fade(old_index, -80.0, true)
 	if track.is_empty():
+		_show_now_playing("")
 		return
 	var stream: AudioStream
 	var target_db := 0.0
@@ -153,8 +170,20 @@ func _switch_music(track: String) -> void:
 	new_player.stream = stream
 	new_player.volume_db = -40.0
 	new_player.play()
-	var fade_in := create_tween()
-	fade_in.tween_property(new_player, "volume_db", target_db, MUSIC_FADE)
+	_fade(_active_music, target_db, false)
+	_show_now_playing(stream.resource_path)
+
+
+## Áttűnés egy lejátszón (az előző, még futó áttűnését leállítja); `stop_after`: a végén elhallgat.
+func _fade(index: int, to_db: float, stop_after: bool) -> void:
+	if _fades[index] != null and _fades[index].is_valid():
+		_fades[index].kill()
+	var player := _music_players[index]
+	var tween := create_tween()
+	tween.tween_property(player, "volume_db", to_db, MUSIC_FADE)
+	if stop_after:
+		tween.tween_callback(player.stop)
+	_fades[index] = tween
 
 
 ## A lejátszási lista következő száma (nem ismétlődik: a lista végén újrakeveri).
@@ -178,6 +207,37 @@ func _on_music_finished(player: AudioStreamPlayer) -> void:
 	player.stream = _next_song()
 	player.volume_db = PLAYLIST_TRACKS[_last_song]
 	player.play()
+	_show_now_playing(_last_song)
+
+
+## A bal alsó sarokban: mi szól éppen (a HUD fölött, az ablakok alatt; minden jelenetben, mert az Audio megmarad).
+func _build_now_playing() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 6
+	add_child(layer)
+	_now_label = UiStyle.label("", 15, Color(0.95, 0.88, 0.7), true)
+	_now_label.anchor_top = 1.0
+	_now_label.anchor_bottom = 1.0
+	_now_label.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_now_label.offset_left = 16.0
+	# A kazamatában alul a teljes szélességű XP-sáv van: fölötte.
+	_now_label.offset_bottom = -42.0
+	_now_label.visible = false
+	layer.add_child(_now_label)
+
+
+## Új szám: a címe élénken megjelenik, pár mp múlva elhalványul (de kint marad). Üres: eltűnik.
+func _show_now_playing(path: String) -> void:
+	if _now_tween != null and _now_tween.is_valid():
+		_now_tween.kill()
+	_now_label.visible = MUSIC_TITLES.has(path)
+	if not _now_label.visible:
+		return
+	_now_label.text = "♪ " + str(MUSIC_TITLES[path])
+	_now_label.modulate.a = 1.0
+	_now_tween = create_tween()
+	_now_tween.tween_interval(NOW_PLAYING_BRIGHT)
+	_now_tween.tween_property(_now_label, "modulate:a", 0.5, 1.5)
 
 
 func _set_loop(stream: AudioStream, on: bool) -> void:

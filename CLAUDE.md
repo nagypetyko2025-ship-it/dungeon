@@ -63,6 +63,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Zene: `audio/audio.gd` (`Audio.music`): főmenü "menu" (halk ambient), tábor és kazamata "epic" = lejátszási lista
   (`PLAYLIST_TRACKS`, 5 CC0 szám mp3/ogg-ban, keverve egymás után, ismétlés nélkül; számonként dB-igazítás kb. -20 dBFS-re,
   mérve), főellenség "boss". Hangerő: Beállítások "Zene" csúszka (Music busz). Új szám: mérd meg a hangosságát.
+  Bal alul (az XP-sáv fölött) kiírja, mi szól (`MUSIC_TITLES`, a főmenüben nem). Áttűnés lejátszónként (`_fade`): a
+  régit le kell állítani újrahasználat előtt, különben egy elhalkítás vége az új számot is leállítja.
 - HP bájital: `ui/potion_badge.gd` (`PotionBadge`, Q gomb; a kazamatában a HP-csík mellett, a táborban bal fent). Gyorstár nincs.
 - UI: minden ablak CanvasLayer `open()/close()`-zal, a `ui/menus.gd` kezeli (KEYS: I, Tab, M, J). Stílus: `UiStyle`, `MenuStyle`.
   Bezáró X: a Menus minden megnyíló ablakra kitesz egy `CloseButton`-t (`ui/close_button.gd`), az ablak jobb felső
