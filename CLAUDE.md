@@ -110,7 +110,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Próbatétel (random kazamata): `world/challenge.gd` (`Challenge`). A bánya túlpartján a régi tárna (`Mine.DEEP_DOOR`,
   csak a híd után) → lyukas terem (`Mine.DEEP_ROOM`, x 640-től), a lépcsőnél E: `ui/challenge_panel.gd` (ajánlat / eredmény).
   1-20 emelet, 1-3 könnyítés (`BOONS`, 15) és 1-3 nehezítés (`BANES`, 15), ütköző hatás nem jön együtt, a súlyok
-  különbsége ≤ `MAX_IMBALANCE`; a nehézség (score) adja a jutalmat (epikus / legendás / ritkán mítikus esély). Valós
+  különbsége ≤ `MAX_IMBALANCE`; a nehézség (score → `DIFFICULTIES`, 6 fokozat) adja a jutalmat és a mítikus esélyt. Valós
   időben 10 percenként (és győzelem után) újrasorsolódik (`Progress.npc_quests` challenge_seed / challenge_until);
   csalómenü: "Új random kazamata". Futás közben `GameState.challenge`; a hatások `Challenge.mult/add/flag`-gel
   vannak bekötve (EnemyTypes.roll, Boss, dungeon szobák, Player arany/regen, bolt, bájital, ejtés). Szabályok: nincs

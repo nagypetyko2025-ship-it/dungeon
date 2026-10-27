@@ -9,8 +9,6 @@ const CAMP := "res://world/camp.tscn"
 const GOOD := Color(0.24, 0.5, 0.2)
 const BAD := Color(0.7, 0.14, 0.12)
 const GOLD := Color(0.6, 0.38, 0.05)
-const DIFFICULTY_COLORS := {"Könnyű": Color(0.24, 0.5, 0.2), "Közepes": Color(0.72, 0.4, 0.05),
-	"Nehéz": Color(0.7, 0.14, 0.12), "Nagyon nehéz": Color(0.55, 0.08, 0.3), "Brutális": Color(0.35, 0.05, 0.4)}
 
 var _window: PanelContainer
 var _body: VBoxContainer
@@ -118,8 +116,8 @@ func _fill_offer() -> void:
 	_body.add_child(UiStyle.title_bar("A Mélység próbája"))
 	_body.add_child(_line("Ez a kazamata %d emeletig tart: a %d. emelet lépcsője a cél." % [challenge["floors"],
 		challenge["floors"]], 18, UiStyle.INK))
-	_body.add_child(_line("Nehézség: %s" % challenge["difficulty"], 20,
-		DIFFICULTY_COLORS.get(challenge["difficulty"], UiStyle.INK)))
+	_body.add_child(_line("Nehézség: %s   %s  (%d / %d)" % [challenge["difficulty"], Challenge.difficulty_meter(challenge),
+		int(challenge.get("level", 0)) + 1, Challenge.DIFFICULTIES.size()], 20, Challenge.difficulty_color(challenge)))
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 24)
 	_body.add_child(columns)

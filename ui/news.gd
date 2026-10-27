@@ -4,6 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-27", "items": [
+		"A próbatétel nehézsége hatfokú (Nagyon könnyű – Brutális), és sokkal nagyobb eséllyel ad mítikus tárgyat "
+			+ "(a Brutálisnál 30%).",
 		"Próbatétel: random kazamata a bánya mélyén (1–20 emelet, könnyítések és nehezítések, biztos jutalom a végén; "
 			+ "10 percenként új).",
 		"A kocsmáros küldetésablaka már nem lóg ki a képből.",

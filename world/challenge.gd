@@ -17,6 +17,15 @@ const MAX_IMBALANCE := 3
 ## A tárolt próbatétel (Progress.npc_quests): a magja és hogy meddig érvényes (unix idő).
 const SEED_FLAG := "challenge_seed"
 const UNTIL_FLAG := "challenge_until"
+## A nehézségi fokozatok, alulról (a score szerint: "below" alatt ez): név, szín, jutalom, mítikus esély.
+const DIFFICULTIES: Array[Dictionary] = [
+	{"name": "Nagyon könnyű", "below": 3.0, "reward": "epic", "mythic": 0.0, "color": Color(0.16, 0.5, 0.48)},
+	{"name": "Könnyű", "below": 6.0, "reward": "epic", "mythic": 0.02, "color": Color(0.24, 0.5, 0.2)},
+	{"name": "Normál", "below": 10.0, "reward": "legendary", "mythic": 0.06, "color": Color(0.55, 0.45, 0.05)},
+	{"name": "Nehéz", "below": 14.0, "reward": "legendary", "mythic": 0.12, "color": Color(0.72, 0.4, 0.05)},
+	{"name": "Nagyon nehéz", "below": 19.0, "reward": "legendary", "mythic": 0.2, "color": Color(0.7, 0.14, 0.12)},
+	{"name": "Brutális", "below": 999.0, "reward": "legendary", "mythic": 0.3, "color": Color(0.45, 0.05, 0.35)},
+]
 
 ## Hatások: szorzók (enemy_count, enemy_health, enemy_damage, enemy_speed, xp, gold, shop_price, potion_heal,
 ## player_health, chest_chance, trap_count, boss_health, drop_chance, regen) és összeadandók (start_potions,
@@ -86,8 +95,8 @@ static func reroll() -> void:
 	Progress.save_game()
 
 
-## A magból a próbatétel: {"seed", "floors", "boons": [id], "banes": [id], "score", "difficulty", "reward",
-## "mythic_chance"}. A könnyítések és a nehezítések hatása nem ütközik (ugyanarra a hatásra csak az egyik
+## A magból a próbatétel: {"seed", "floors", "boons": [id], "banes": [id], "score", "level" (DIFFICULTIES
+## indexe), "difficulty", "reward", "mythic_chance"}. A könnyítések és a nehezítések hatása nem ütközik (ugyanarra a hatásra csak az egyik
 ## jöhet), és a súlyuk különbsége legfeljebb MAX_IMBALANCE.
 static func generate(seed_value: int) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
@@ -110,14 +119,12 @@ static func generate(seed_value: int) -> Dictionary:
 	# A nehézség: a hossz, a módosítók egyenlegével (egy-egy súlypont 8%).
 	var balance := _weight(BANES, banes) - _weight(BOONS, boons)
 	var score := floors * (1.0 + 0.08 * balance)
-	var reward := "epic"
-	var mythic := 0.0
-	if score >= 7.0:
-		reward = "legendary"
-	if score >= 14.0:
-		mythic = clampf(0.04 + (score - 14.0) * 0.015, 0.04, 0.15)
-	return {"seed": seed_value, "floors": floors, "boons": boons, "banes": banes, "score": score,
-		"difficulty": _difficulty_name(score), "reward": reward, "mythic_chance": mythic}
+	var level := 0
+	while score >= float(DIFFICULTIES[level]["below"]) and level < DIFFICULTIES.size() - 1:
+		level += 1
+	var difficulty: Dictionary = DIFFICULTIES[level]
+	return {"seed": seed_value, "floors": floors, "boons": boons, "banes": banes, "score": score, "level": level,
+		"difficulty": difficulty["name"], "reward": difficulty["reward"], "mythic_chance": difficulty["mythic"]}
 
 
 static func _pick(rng: RandomNumberGenerator, pool: Dictionary, count: int, blocked: Array) -> Array[String]:
@@ -145,16 +152,14 @@ static func _weight(pool: Dictionary, ids: Array[String]) -> int:
 	return total
 
 
-static func _difficulty_name(score: float) -> String:
-	if score < 4.0:
-		return "Könnyű"
-	if score < 8.0:
-		return "Közepes"
-	if score < 13.0:
-		return "Nehéz"
-	if score < 18.0:
-		return "Nagyon nehéz"
-	return "Brutális"
+## A nehézség színe és hatpontos jelzője ("●●●○○○").
+static func difficulty_color(challenge: Dictionary) -> Color:
+	return DIFFICULTIES[int(challenge.get("level", 0))]["color"]
+
+
+static func difficulty_meter(challenge: Dictionary) -> String:
+	var level := int(challenge.get("level", 0)) + 1
+	return "●".repeat(level) + "○".repeat(DIFFICULTIES.size() - level)
 
 
 ## A jutalom szövege: "legendás tárgy (5% eséllyel mítikus)".
