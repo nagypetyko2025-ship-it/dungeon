@@ -6,10 +6,18 @@ class_name Smithing
 ##     sikerül; ha nem, a por elvész, a tárgy marad. A statok ugyanannyira jók maradnak a tartományukban
 ##     (a ritkasággal együtt nőnek), az új extra stat a tartományából jön, a mélységi bónusz megmarad.
 ##   Szétszedés: a tárgy elvész, és a SAJÁT ritkaságának porából 1-et (DOUBLE_DUST_CHANCE eséllyel 2-t) adja.
+##   Mítikus tárgy: nem lép feljebb, hanem tovább fejleszthető (legfeljebb MYTHIC_MAX_UPGRADES-szor)
+##     MYTHIC_UPGRADE_COST mítikus porért, ugyanazzal az eséllyel: a statjai és az alapsebzése az eredeti
+##     MYTHIC_STAT_STEP-részével nőnek fejlesztésenként, a ritkasága marad, a neve mögé kiírja, hányszor fejlesztették
+##     ("Véróra (kétszer fejlesztett)"; "upgrades": a szám, "base_name": az eredeti név).
 
 const UPGRADE_COST := 4
 const UPGRADE_CHANCE := 0.65
 const DOUBLE_DUST_CHANCE := 0.3
+const MYTHIC_UPGRADE_COST := 3
+const MYTHIC_MAX_UPGRADES := 5
+const MYTHIC_STAT_STEP := 0.1
+const TIMES: Array[String] = ["", "egyszer", "kétszer", "háromszor", "négyszer", "ötször"]
 const DUST_ICONS := {
 	"common": preload("res://assets/ui/dust_common.png"),
 	"rare": preload("res://assets/ui/dust_rare.png"),
@@ -49,6 +57,21 @@ static func next_rarity(rarity: String) -> String:
 	return Items.RARITY_ORDER[index + 1] if index >= 0 and index + 1 < Items.RARITY_ORDER.size() else ""
 
 
+## A fejlesztéshez kellő por ritkasága: a következő ritkaságé (mítikusnál maga a mítikus por).
+static func upgrade_dust(item: Dictionary) -> String:
+	var rarity: String = item.get("rarity", "common")
+	return rarity if rarity == "mythic" else next_rarity(rarity)
+
+
+static func upgrade_cost(item: Dictionary) -> int:
+	return MYTHIC_UPGRADE_COST if item.get("rarity", "") == "mythic" else UPGRADE_COST
+
+
+## Hányszor fejlesztették mítikusként (0..MYTHIC_MAX_UPGRADES).
+static func upgrade_count(item: Dictionary) -> int:
+	return int(item.get("upgrades", 0))
+
+
 ## Miért nem fejleszthető ("" = fejleszthető; a porokat nem nézi).
 static func upgrade_block(item: Dictionary) -> String:
 	if item.get("quest", false) or item.get("story", false):
@@ -56,8 +79,12 @@ static func upgrade_block(item: Dictionary) -> String:
 	var definition: Dictionary = Items.DEFINITIONS.get(item.get("id", ""), {})
 	if definition.is_empty() or definition.get("unique", false):
 		return "Ez egyedi tárgy: nem fejleszthető."
+	if item.get("rarity", "common") == "mythic":
+		if upgrade_count(item) >= MYTHIC_MAX_UPGRADES:
+			return "Már %s fejlesztett: ennél jobb nem lehet." % TIMES[MYTHIC_MAX_UPGRADES]
+		return ""
 	if next_rarity(item.get("rarity", "common")).is_empty():
-		return "Már mítikus: ennél jobb nem lehet."
+		return "Ennél jobb nem lehet."
 	return ""
 
 
@@ -71,6 +98,34 @@ static func dismantle_block(item: Dictionary) -> String:
 ## Szétszedéskor ennyi port ad (1, vagy DOUBLE_DUST_CHANCE eséllyel 2).
 static func roll_dust() -> int:
 	return 2 if randf() < DOUBLE_DUST_CHANCE else 1
+
+
+## Mítikus fejlesztés (új példány): minden fejlesztés az EREDETI pozitív statok és alapsebzés MYTHIC_STAT_STEP-részét
+## adja hozzá (5 fejlesztés után másfélszeres; kerekítve, de sosem csökken); a hátrányok és a lövésenkénti nyílszám
+## maradnak. Az eredeti értékek az "unupgraded" kulcsban. A ritkaság marad, a név mögé kerül a szám.
+static func improved(item: Dictionary) -> Dictionary:
+	var result := item.duplicate(true)
+	var count := upgrade_count(item) + 1
+	result["upgrades"] = count
+	var base_name: String = item.get("base_name", item["name"])
+	result["base_name"] = base_name
+	result["name"] = "%s (%s fejlesztett)" % [base_name, TIMES[count]]
+	var original: Dictionary = item.get("unupgraded", {"stats": item.get("stats", {}).duplicate(),
+		"base_damage": item.get("base_damage", 0), "price": item.get("price", 0)})
+	result["unupgraded"] = original
+	var factor := 1.0 + MYTHIC_STAT_STEP * count
+	var stats: Dictionary = result.get("stats", {})
+	for stat: String in original["stats"]:
+		var value: float = original["stats"][stat]
+		if value <= 0.0 or stat == "multishot" or not stats.has(stat):
+			continue
+		var grown := snappedf(value * factor, 0.1) if stat == "health_regen" else float(roundi(value * factor))
+		stats[stat] = maxf(grown, float(stats[stat]))
+	result["stats"] = stats
+	if item.has("base_damage"):
+		result["base_damage"] = maxi(roundi(int(original["base_damage"]) * factor), int(item["base_damage"]))
+	result["price"] = roundi(float(original["price"]) * (1.0 + MYTHIC_STAT_STEP * 1.5 * count))
+	return result
 
 
 ## A tárgy következő ritkaságú változata (új példány; az eredetit nem módosítja).

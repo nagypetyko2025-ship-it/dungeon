@@ -4,6 +4,8 @@ class_name Doctor
 ## 1. Vérgömb: egy legendás talizmán, a vérmágiájával a hordágyon hozott sebesültet menti meg.
 ## 2. A tudós szeme: epikus talizmán, amivel a betegek bőre alá lát (a méreg és a rejtett sebek).
 ## 3. Fűrészpenge (fegyver): műtétekhez és önvédelemhez; utána három új történet (SAW_STORIES).
+## 4. A fekete csőrök: 11 pestisdoktor (a doktor régi rendtársai) a küldetés óta; utána két történet (BEAK_STORIES).
+## 5. Rozi köhögése: egy Főnixtoll (legendás talizmán) a hamujáért; utána két történet (PHOENIX_STORIES).
 
 const ID := "doctor"
 const NAME := "Kálmán doktor"
@@ -17,6 +19,44 @@ const EYE_GOLD := 220
 const SAW_QUEST := "doctor_saw"
 const SAW_ID := "sword_saw"
 const SAW_GOLD := 160
+const BEAKS_QUEST := "doctor_beaks"
+## Belső jelző (Progress.npc_quests): ennyi pestisdoktort ölt meg a küldetés elfogadásakor (szövegként).
+const BEAKS_BASE := "doctor_beaks_base"
+const BEAKS_TARGET := "plague_doctor"
+const BEAKS_GOAL := 11
+const BEAKS_GOLD := 300
+const PHOENIX_QUEST := "doctor_phoenix"
+const PHOENIX_ID := "trinket_phoenix"
+const PHOENIX_GOLD := 450
+## A fekete csőrök után: a rend és hogy miért maradt itt (a maszkos történet kislánya Rozi).
+const BEAK_STORIES: Array[Dictionary] = [
+	{"id": "order", "text": "Milyen volt a Fekete Csőr Rendje?", "trust": 4,
+		"answer": "[i]A doktor a maszk alatt elmosolyodik; hallani a hangján.[/i]\n\n" \
+			+ "Bolondok voltunk. Tizenkét orvos, aki azt hitte, hogy a halált meg lehet előzni, ha elég gyorsan " \
+			+ "érkezel. Lóháton jártuk a falvakat, ecetes szivacs a csőrben, levendula és mirha a maszk orrában, " \
+			+ "hogy ne érezzük a szagot.\n\nOrbán vezetett minket, a legöregebb. Azt mondta: a doktor nem a halál " \
+			+ "ellensége, csak a késleltetője. Akkor nem hittem neki. Most már igen."},
+	{"id": "stayed", "text": "Miért nem mentél le velük?", "trust": 5,
+		"answer": "[i]Rozi felé biccent, aki épp egy beteg párnáját igazítja.[/i]\n\n" \
+			+ "Emlékszel, meséltem a kislányról, akiért levettem a maszkot? Amikor a rend elindult lefelé, én lázban " \
+			+ "feküdtem mellette. Orbán megállt az ajtóban, és azt mondta: majd utánunk jössz, ha felkeltél.\n\n" \
+			+ "Mire felkeltem, ők már nem jöttek vissza. A kislány pedig itt maradt velem. Azóta Rozi nővér. Szerinte " \
+			+ "jól döntöttem. Én minden este eldöntöm, hogy elhiszem-e."},
+]
+## Rozi gyógyulása után.
+const PHOENIX_STORIES: Array[Dictionary] = [
+	{"id": "rozi", "text": "Mesélj Roziról!", "trust": 4,
+		"answer": "[i]A doktor az ablak felé néz, ahol Rozi dúdolva hajtogatja a kötéseket.[/i]\n\n" \
+			+ "Tizenkét éves volt, amikor elhoztam a faluból. Senkije nem maradt. Az első héten minden éjjel felkelt, " \
+			+ "és megszámolta a betegeket, hogy mind lélegzik-e. Most huszonnégy, és még mindig megszámolja őket.\n\n" \
+			+ "Szerintem jobb doktor lesz belőle, mint én. Igazam van. Csak még nem mondtam meg neki."},
+	{"id": "tamas", "text": "Mi lett Tamással, a hordágyas fiúval?", "trust": 3,
+		"answer": "[i]A doktor felnevet.[/i]\n\n" \
+			+ "Tamás? Két hete elment. Azt mondta, lemegy újra a kilencedikre, megkeresni a bukott lovagot, aki " \
+			+ "megsebezte. Kiabáltam vele, Rozi sírt. Három nap múlva visszajött, egy karcolás nélkül, a lovag " \
+			+ "sisakjával a hóna alatt.\n\nNekem ajándékozta. A polcon tartom, a régi maszkom mellett. Azt mondja, " \
+			+ "szerencsét hoz a kórháznak. Szerintem csak a port gyűjti."},
+]
 ## A Fűrészpenge után: három új történet (a régiek is maradnak; a beszélgetés lapozható).
 const SAW_STORIES: Array[Dictionary] = [
 	{"id": "surgery", "text": "Mire kellett neked a fűrészpenge?", "trust": 4,
@@ -61,6 +101,17 @@ const QUESTS := {
 			+ "táskádban legyen): műtétekhez és önvédelemhez is jó lesz.",
 		"reward": "%d tábori arany" % SAW_GOLD,
 		"doing": "vigyél a doktornak egy Fűrészpengét", "done": "a doktornak van fűrésze"},
+	BEAKS_QUEST: {"name": "A fekete csőrök",
+		"text": "Kálmán doktor felismerte a Mélység pestisdoktorait: a régi rendtársai, a Fekete Csőr Rendjének "
+			+ "orvosai, akik tizenkét éve lementek a dögvész forrását keresni. Adj nyugalmat [b]%d pestisdoktornak[/b] " % BEAKS_GOAL
+			+ "a kazamatában (a küldetés elfogadása óta).",
+		"reward": "%d tábori arany (és a doktor története)" % BEAKS_GOLD,
+		"doing": "adj nyugalmat a pestisdoktoroknak", "done": "a fekete csőrök megpihentek"},
+	PHOENIX_QUEST: {"name": "Rozi köhögése",
+		"text": "Rozi nővér hetek óta köhög: a Mélységből feláramló por a tüdejébe ült. Kálmán doktor szerint csak "
+			+ "egy [b]Főnixtoll[/b] (legendás talizmán, a táskádban legyen) hamuja égetheti ki belőle.",
+		"reward": "%d tábori arany (és Rozi hálája)" % PHOENIX_GOLD,
+		"doing": "vigyél a doktornak egy Főnixtollat", "done": "Rozi meggyógyult"},
 }
 
 const SMALL_TALK: Array[Dictionary] = [
@@ -108,6 +159,7 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 							list.append({"id": "saw", "text": "Hoztam egy Fűrészpengét.",
 								"on_choose": func() -> String: return _give_saw(inventory)})
 					"done":
+						list.append_array(_late_options(inventory))
 						list.append_array(SAW_STORIES)
 				list.append({"id": "seeing", "text": "Mit látsz a szemmel?",
 					"on_choose": func() -> String: return "[i]A doktor a maszkja elé emeli a szemet, és " \
@@ -133,6 +185,115 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 			continue
 		list.append(option)
 	return list
+
+
+## A Fűrészpenge után (elöl, a régi történetek előtt): a fekete csőrök (pestisdoktorok), utána két történet,
+## aztán Rozi köhögése (Főnixtoll), utána még két történet.
+static func _late_options(inventory: Inventory) -> Array[Dictionary]:
+	var list: Array[Dictionary] = []
+	match Progress.npc_quest_state(BEAKS_QUEST):
+		"":
+			list.append({"id": "more_beaks", "text": "Mi az a régi maszk a polcon?",
+				"on_choose": func() -> String: return _give_beaks_quest()})
+		"active":
+			if beaks_progress() >= BEAKS_GOAL:
+				list.append({"id": "beaks_done", "text": "Megnyugvást adtam a fekete csőröknek.",
+					"on_choose": func() -> String: return _finish_beaks()})
+			else:
+				list.append({"id": "beaks", "text": "Hány pestisdoktor van még hátra?",
+					"on_choose": func() -> String: return "[i]A doktor a polcon álló maszkra néz.[/i]\n\n" \
+						+ "Eddig %d. Még %d. Nem sürgetlek: ők már nem sietnek sehova." \
+						% [beaks_progress(), BEAKS_GOAL - beaks_progress()]})
+		"done":
+			match Progress.npc_quest_state(PHOENIX_QUEST):
+				"":
+					list.append({"id": "rozi_cough", "text": "Rozi sokat köhög mostanában. Mi baja?",
+						"on_choose": func() -> String: return _give_phoenix_quest()})
+				"active":
+					if _has(inventory, PHOENIX_ID):
+						list.append({"id": "phoenix", "text": "Hoztam egy Főnixtollat.",
+							"on_choose": func() -> String: return _give_phoenix(inventory)})
+				"done":
+					list.append_array(PHOENIX_STORIES)
+			list.append_array(BEAK_STORIES)
+	return list
+
+
+## A küldetés elfogadása óta megölt pestisdoktorok (legfeljebb a cél).
+static func beaks_progress() -> int:
+	var base := int(Progress.npc_quest_state(BEAKS_BASE))
+	return clampi(int(Progress.kills.get(BEAKS_TARGET, 0)) - base, 0, BEAKS_GOAL)
+
+
+## A J könyv "folyamatban" szövege (a pestisdoktoros küldetésnél a haladással).
+static func doing_text(id: String, fallback: String) -> String:
+	if id == BEAKS_QUEST:
+		return "%s: %d / %d" % [fallback, beaks_progress(), BEAKS_GOAL]
+	return fallback
+
+
+static func _give_beaks_quest() -> String:
+	Progress.set_npc_quest(BEAKS_QUEST, "active")
+	Progress.set_npc_quest(BEAKS_BASE, str(int(Progress.kills.get(BEAKS_TARGET, 0))))
+	Progress.mark_asked(ID, "more_beaks")
+	Progress.save_game()
+	Audio.play("ui_open")
+	return "[i]A doktor leveszi a polcról a régi, kopott csőrös maszkot, és sokáig forgatja a kezében.[/i]\n\n" \
+		+ "Nem csak a pestises falvakból hoztam a maszkot. Egy rendből. A Fekete Csőr Rendje: tizenkét orvos, " \
+		+ "akik faluról falura üldözték a dögvészt. Tizenkét éve, amikor megremegett a föld, a dögvész a Mélységből " \
+		+ "tört fel. Tizenegyen lementek a forrását keresni. A tizenkettedik én lettem volna.\n\n" \
+		+ "[i]A hangja megkeményedik.[/i]\n\nA kalandorok szerint odalent csőrös alakok járnak, és halálos ködöt " \
+		+ "fújnak, amikor elesnek. Nem tudom, melyik melyikük. De tizenegyen mentek le. Adj nyugalmat legalább " \
+		+ "[b]tizenegy pestisdoktornak[/b].\n\n" \
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Doktor fülön.)[/color]"
+
+
+static func _finish_beaks() -> String:
+	Progress.set_npc_quest(BEAKS_QUEST, "done")
+	Progress.mark_asked(ID, "beaks_done")
+	Progress.add_camp_gold(BEAKS_GOLD)
+	Progress.change_trust(ID, 20)
+	Progress.save_game()
+	Audio.play("level_up")
+	return "[i]A doktor tizenegy apró keresztet karcol a fa asztal szélébe, egyiket a másik után.[/i]\n\n" \
+		+ "Tizenegy. Ha a Mélységben van igazság, most már pihennek. Szilárd, Gedeon, a vén Orbán... mind.\n\n" \
+		+ "[i]Feléd fordul; a maszk lencséi mögött nem látszik a szeme.[/i]\n\nKöszönöm. Ezt nem lehet " \
+		+ "megfizetni, de azért fogadd el. [color=#7a4a10](+%d tábori arany)[/color]" % BEAKS_GOLD
+
+
+static func _give_phoenix_quest() -> String:
+	Progress.set_npc_quest(PHOENIX_QUEST, "active")
+	Progress.mark_asked(ID, "rozi_cough")
+	Progress.save_game()
+	Audio.play("ui_open")
+	return "[i]A maszk csőre Rozi felé fordul, aztán vissza feléd.[/i]\n\n" \
+		+ "Észrevetted. Hetek óta köhög, és vért is láttam a kendőjén. A lépcső aljáról feláramló por a tüdőbe ül, " \
+		+ "és ott marad. A kalandorok egy idő után kiköhögik. Rozi minden nap ott áll a hordágyak mellett, ahol a " \
+		+ "legtöbb por van.\n\n" \
+		+ "Egy régi könyvem szerint a [b]Főnixtoll[/b] hamuja kiégeti a port a tüdőből. Legendás talizmán, a Mélység " \
+		+ "mélyén terem, ha terem. Ha rátalálsz... ne add el. Hozd ide.\n\n" \
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Doktor fülön.)[/color]"
+
+
+static func _give_phoenix(inventory: Inventory) -> String:
+	for i in inventory.bag.size():
+		var item: Variant = inventory.bag[i]
+		if not (item is Dictionary and item.get("id", "") == PHOENIX_ID):
+			continue
+		inventory.take_from_bag(i)
+		Progress.set_npc_quest(PHOENIX_QUEST, "done")
+		Progress.mark_asked(ID, "phoenix")
+		Progress.add_camp_gold(PHOENIX_GOLD)
+		Progress.change_trust(ID, 25)
+		Progress.save_game()
+		Audio.play("level_up")
+		return "[i]A doktor egy cserépedényben elégeti a tollat. A lángja aranyszínű, és egy pillanatra az egész " \
+			+ "kórház megtelik meleg fénnyel. A hamut borba keveri, és Rozi kezébe adja.[/i]\n\n" \
+			+ "[i]Rozi grimaszol, megissza, köhög egy nagyot... aztán mély levegőt vesz. Egy hosszút, szabadot.[/i]" \
+			+ "\n\nRozi: „Már el is felejtettem, milyen ez.”\n\n" \
+			+ "[i]A doktor feléd fordul. Most hallod először nevetni.[/i]\n\n" \
+			+ "Köszönöm. Ezt sosem felejtem el. [color=#7a4a10](+%d tábori arany)[/color]" % PHOENIX_GOLD
+	return "Hm? Nem látom nálad a Főnixtollat."
 
 
 static func _has(inventory: Inventory, id: String) -> bool:

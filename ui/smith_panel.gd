@@ -182,6 +182,9 @@ func _dust_chip(rarity: String) -> PanelContainer:
 	chip.add_theme_stylebox_override("panel", style)
 	chip.tooltip_text = "%s: szétszedéssel kapod, a %s szintre fejlesztéshez kell (%d db)." % [
 		Smithing.dust_name(rarity), Items.RARITIES[rarity]["name"].to_lower(), Smithing.UPGRADE_COST]
+	if rarity == "mythic":
+		chip.tooltip_text += "\nA mítikus tárgyak további fejlesztéséhez is (%d db: +%d%% stat, legfeljebb %d-szor)." % [
+			Smithing.MYTHIC_UPGRADE_COST, roundi(Smithing.MYTHIC_STAT_STEP * 100.0), Smithing.MYTHIC_MAX_UPGRADES]
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	chip.add_child(row)
@@ -304,12 +307,17 @@ func _refresh() -> void:
 		_upgrade_note.text = block
 		_set_note_color(_upgrade_note, BAD_INK)
 	else:
-		var next := Smithing.next_rarity(item["rarity"])
-		var have := Smithing.dust_of(next)
-		_upgrade_button.disabled = have < Smithing.UPGRADE_COST
-		_upgrade_note.text = "→ %s: %d %s (van: %d)\n%d%% esély a sikerre" % [Items.RARITIES[next]["name"],
-			Smithing.UPGRADE_COST, Smithing.dust_name(next).to_lower(), have, roundi(Smithing.upgrade_chance() * 100.0)]
-		_set_note_color(_upgrade_note, BAD_INK if have < Smithing.UPGRADE_COST else UiStyle.INK_LIGHT)
+		var dust := Smithing.upgrade_dust(item)
+		var cost := Smithing.upgrade_cost(item)
+		var have := Smithing.dust_of(dust)
+		_upgrade_button.disabled = have < cost
+		# Mítikusnál nem lép feljebb: a statjai nőnek, és a neve mögé kerül, hányszor fejlesztették.
+		var target: String = Items.RARITIES[dust]["name"] if dust != item["rarity"] \
+			else "%s fejlesztett (+%d%% stat)" % [Smithing.TIMES[Smithing.upgrade_count(item) + 1].capitalize(),
+				roundi(Smithing.MYTHIC_STAT_STEP * 100.0)]
+		_upgrade_note.text = "→ %s: %d %s (van: %d)\n%d%% esély a sikerre" % [target, cost,
+			Smithing.dust_name(dust).to_lower(), have, roundi(Smithing.upgrade_chance() * 100.0)]
+		_set_note_color(_upgrade_note, BAD_INK if have < cost else UiStyle.INK_LIGHT)
 	block = Smithing.dismantle_block(item)
 	if block.is_empty() and _selected[0] == "equip":
 		block = "Rajtad van: nem olvaszthatod be. Előbb vedd le az [I] ablakban."
@@ -327,26 +335,31 @@ func _upgrade() -> void:
 	var item: Variant = _selected_item()
 	if item == null or not Smithing.upgrade_block(item).is_empty():
 		return
-	var next := Smithing.next_rarity(item["rarity"])
-	if Smithing.dust_of(next) < Smithing.UPGRADE_COST:
+	var dust := Smithing.upgrade_dust(item)
+	var cost := Smithing.upgrade_cost(item)
+	if Smithing.dust_of(dust) < cost:
 		Audio.play("ui_error")
 		return
-	Smithing.add_dust(next, -Smithing.UPGRADE_COST)
+	Smithing.add_dust(dust, -cost)
 	Audio.play("anvil", 2.0)
 	if randf() < Smithing.upgrade_chance():
-		var better := Smithing.upgraded(item)
+		var mythic: bool = item["rarity"] == "mythic"
+		var better := Smithing.improved(item) if mythic else Smithing.upgraded(item)
 		_inventory().replace(_selected[0], _selected[1], better)
 		Audio.play("level_up", -6.0)
 		_ring.flash(Items.rarity_color(better))
-		_say("Sikerült! %s mostantól %s." % [better["name"], Items.rarity_name(better).to_lower()], GOOD_INK)
+		if mythic:
+			_say("Sikerült! %s: a statjai nőttek." % better["name"], GOOD_INK)
+		else:
+			_say("Sikerült! %s mostantól %s." % [better["name"], Items.rarity_name(better).to_lower()], GOOD_INK)
 		_refresh()
 		_show_item(better)
 		upgraded.emit(better)
 	else:
 		Audio.play("door_lock", -4.0)
 		_ring.flash(Color(0.35, 0.3, 0.3))
-		_say("Nem sikerült... a %d %s elveszett, a tárgy megmaradt." % [Smithing.UPGRADE_COST,
-			Smithing.dust_name(next).to_lower()], BAD_INK)
+		_say("Nem sikerült... a %d %s elveszett, a tárgy megmaradt." % [cost,
+			Smithing.dust_name(dust).to_lower()], BAD_INK)
 		_refresh()
 
 

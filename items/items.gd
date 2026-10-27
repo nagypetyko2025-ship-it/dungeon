@@ -876,6 +876,10 @@ static func describe_bbcode(item: Dictionary) -> String:
 		lines.append("[color=#%s]%s[/color]" % [rarity_ink(item).to_html(false), rarity_name(item)])
 	if item.get("story", false):
 		lines.append("[color=#%s]Sztori tárgy: nem adható el[/color]" % SLOT_NOTE_INK.to_html(false))
+	if int(item.get("upgrades", 0)) > 0:
+		lines.append("[color=#%s]Fejlesztve: %d / %d (fejlesztésenként +%d%% stat)[/color]" % [
+			rarity_ink(item).to_html(false), item["upgrades"], Smithing.MYTHIC_MAX_UPGRADES,
+			roundi(Smithing.MYTHIC_STAT_STEP * 100.0)])
 	if item.get("depth", 1) > 1:
 		lines.append("[color=#%s]Mélységi áru (%d. emelet): +%d%% stat[/color]" % [SLOT_NOTE_INK.to_html(false),
 			item["depth"], roundi(STAT_PER_FLOOR * (item["depth"] - 1) * 100.0)])

@@ -73,7 +73,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Kovács (a tábor jobb alsó sarkában, `world/smithy.gd`): előtte E-re `ui/smith_panel.gd` (SmithPanel). Szabályok:
   `items/smithing.gd` — fejlesztés a következő ritkaságba 4 porért abból a ritkaságból, 65% eséllyel (ha nem sikerül,
   a por elvész; `Smithing.upgraded` a statokat a tartományukban ugyanott tartja), szétszedés: 1 (30%: 2) por a tárgy
-  ritkaságából (a rajtad lévő tárgyat nem lehet beolvasztani, csak fejleszteni). Porok: `Progress.dust` (ritkaság -> db,
+  ritkaságából (a rajtad lévő tárgyat nem lehet beolvasztani, csak fejleszteni). Mítikus tárgy: nem lép feljebb, hanem
+  `MYTHIC_UPGRADE_COST` (3) mítikus porért legfeljebb 5-ször fejleszthető (`Smithing.improved`): fejlesztésenként az eredeti
+  statok 10%-ával nő ("unupgraded" kulcs), a név mögé kerül: "(kétszer fejlesztett)" ("upgrades", "base_name"). Porok: `Progress.dust` (ritkaság -> db,
   mentődik; mindig a `Smithing.dust_of / add_dust`-on át, mert a gyakorló pályán külön porok vannak). Tárgycsere a
   helyén: `Inventory.replace`. A főellenség utáni pihenőnél (BossReturnPanel) is csak a táskából lehet felküldeni.
   Megállítás: `GamePause.set_paused(tree, on)` / `GamePause.active(tree)` (`ui/game_pause.gd`) a `get_tree().paused` helyett —
@@ -97,7 +99,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   (belső tér: `Mine.BOUNDS`, x 598-tól): alagút (sín, érces kocsi, támfák fáklyával), barlangterem, keresztben szakadék,
   a deszkahíd közepe leszakadt (a déli csonkra ráállhatsz, E: lenézel; a túlparton tovább megy a járat, egyelőre
   elérhetetlen). Csempék: `assets/props/mine_tiles.png` (16 px; a föld és a fal az Adventure Awaits csomagból).
-  A doktor kérdései és küldetései: `world/doctor.gd` (J könyv "Doktor" fül; 1.: Vérgömb, 2.: A tudós szeme, 3.: Fűrészpenge, utána 3 történet).
+  A doktor kérdései és küldetései: `world/doctor.gd` (J könyv "Doktor" fül; 1.: Vérgömb, 2.: A tudós szeme, 3.: Fűrészpenge, utána 3 történet;
+  4.: A fekete csőrök (11 pestisdoktor a küldetés óta, `BEAKS_BASE`), utána 2 történet; 5.: Rozi köhögése (Főnixtoll), utána 2 történet).
 - Kocsma (`world/town.gd`): a kocsmáros (Tóbiás) E-re beszélget (`BARKEEP_STORIES`: 3 történet + a szobák; a "munka"
   opció nyitja a küldetések ablakát). A hátsó fal jobb sarkában ajtó (`BACK_DOOR`) a szobák folyosójára (`CORRIDOR`,
   y 30-tól): fent 5 ajtó (`ROOMS`: kopogásra szöveg; 2: Puskás Döme, a robbantómester; 4: kiadó).
@@ -107,7 +110,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   a Káosz Urát a 40. emeleten, a Szörnyek könyve szerint; 3000 tábori arany), és 4 új történet (`King.STORIES`).
 - Szörnyek könyve: állvány a táborban (`BESTIARY_TILE`), adatok: `world/bestiary.gd`, ablak: `ui/bestiary_book.gd`;
   a megölt szörnyek száma `Progress.kills` (a `room.gd` írja, főellenség a saját nevével).
-- Általános küldetések nehézséggel (`Quests.TIERS`: easy / medium).
+- Általános küldetések (a kocsmárostól, `world/quests.gd`): 100 db nehézséggel (`Quests.TIERS`: easy / medium / hard).
 - NPC-beszélgetés: `ui/dialogue_panel.gd` (bizalom -100..+100, oldalanként 5 opció, lapozható ← →, 1-5 gomb), szövegek: `world/dialogues.gd`;
   bizalom és feltett kérdések: `Progress.trust` / `Progress.asked` (mentve).
 - Karakterek: `world/characters.gd` (lovag, íjász, Bence/"thief" a levél-küldetés után, Gáspár/"veteran" — utóbbi az "unlock" jelzővel, a 30. emelet
