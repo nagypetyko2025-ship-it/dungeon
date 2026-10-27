@@ -116,6 +116,9 @@ func _fill_offer() -> void:
 	if challenge.get("story", "") == "knocker":
 		_fill_story_offer()
 		return
+	if challenge.has("story"):
+		_fill_story_offer(challenge)
+		return
 	_body.add_child(UiStyle.title_bar("A Mélység próbája"))
 	_body.add_child(_line("Ez a kazamata %d emeletig tart: a %d. emelet lépcsője a cél." % [challenge["floors"],
 		challenge["floors"]], 18, UiStyle.INK))
@@ -146,13 +149,19 @@ func _fill_offer() -> void:
 	_process(0.0)
 
 
-## A régi tárnák (a kopogás titka): a kötélen le, 5 emelet, a végén a Kopogó; ugyanazok a szabályok.
-func _fill_story_offer() -> void:
-	_body.add_child(UiStyle.title_bar("A régi tárnák"))
-	_body.add_child(_line("A pókselyem kötél a sötétbe lóg. Lent a régi tárnák: %d emelet lefelé, és az utolsó alján " \
-		% _challenge["floors"] + "vár az, ami a brigád jelét kopogja.", 18, UiStyle.INK))
-	_body.add_child(_line("Jutalom, ha legyőzöd: A huszonhét lámpása (egyedi legendás talizmán) és a lent szerzett "
-		+ "aranyad.", 18, GOLD))
+## Történet-futás ajánlata: a régi tárnák (a kopogás titka: a kötélen le, a végén a Kopogó), vagy egy saját
+## szövegű futás (pl. a kripta, LakeCrypt: "title", "intro", "reward_text", "start_label"); ugyanazok a szabályok.
+func _fill_story_offer(story := {}) -> void:
+	if story.is_empty():
+		_body.add_child(UiStyle.title_bar("A régi tárnák"))
+		_body.add_child(_line("A pókselyem kötél a sötétbe lóg. Lent a régi tárnák: %d emelet lefelé, és az utolsó alján " \
+			% _challenge["floors"] + "vár az, ami a brigád jelét kopogja.", 18, UiStyle.INK))
+		_body.add_child(_line("Jutalom, ha legyőzöd: A huszonhét lámpása (egyedi legendás talizmán) és a lent szerzett "
+			+ "aranyad.", 18, GOLD))
+	else:
+		_body.add_child(UiStyle.title_bar(str(story.get("title", "Lefelé"))))
+		_body.add_child(_line(str(story.get("intro", "")), 18, UiStyle.INK))
+		_body.add_child(_line(str(story.get("reward_text", "")), 18, GOLD))
 	var rules := PanelContainer.new()
 	rules.add_theme_stylebox_override("panel", UiStyle.plain_panel())
 	_body.add_child(rules)
@@ -168,7 +177,7 @@ func _fill_story_offer() -> void:
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	buttons.add_theme_constant_override("separation", 16)
 	_body.add_child(buttons)
-	buttons.add_child(_button("Leereszkedek", _start))
+	buttons.add_child(_button(str(story.get("start_label", "Leereszkedek")), _start))
 	buttons.add_child(_button("Mégse", func() -> void: get_tree().current_scene.get_node("Menus").call("close_current")))
 
 

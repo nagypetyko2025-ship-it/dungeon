@@ -488,6 +488,11 @@ const DEFINITIONS := {
 	# Talizmánok
 	"trinket_lantern": {"name": "Koponyalámpás", "slot": "trinket", "rarity": "rare",
 		"stats": {"xp_bonus": [10, 15], "dodge": [2, 3]}},
+	# A tó titka jutalma (LakeCrypt): egyedi, nem esik, nem kapható.
+	"trinket_lake_pearl": {"name": "A tófenék gyöngye", "slot": "trinket", "rarity": "legendary", "unique": true,
+		"shop": false, "stats": {"health_regen": [1.5, 1.5], "dodge": [6, 6], "crit_chance": [6, 6], "max_health": [10, 10]},
+		"description": "Hideg, kékesfehér gyöngy a tó legaljáról. Negyven évig egy lámpás fényében aludt. Ha a fülédhez "
+			+ "tartod, halk vízcsobogást hallasz, és valaki messze dalol."},
 	# A kopogás titka jutalma (Knocking): egyedi, nem esik, nem kapható.
 	"trinket_miners_lamp": {"name": "A huszonhét lámpása", "slot": "trinket", "rarity": "legendary", "unique": true,
 		"shop": false, "stats": {"max_health": [15, 15], "defense": [6, 6], "gold_find": [20, 20], "xp_bonus": [10, 10]},

@@ -268,6 +268,27 @@ const TYPES: Array[Dictionary] = [
 		"rect": Rect2(0, 0, 20, 20), "run": true, "size": 0.9,
 		"health": [2, 3], "damage": [1, 1], "speed": [145, 165], "dodge": [35, 45],
 		"knockback": [140, 180], "resist": [0.0, 0.0], "xp": [1, 2], "min_depth": 1, "weight": 2},
+	# --- A Fagykő lakói (41-80. emelet, DungeonTheme): CC0 képekből jégre színezve. ---
+	# Jégszellem: eltűnik és máshol bukkan fel, az érintése fagyaszt ("Ghost monster", CC0, cián változat).
+	{"name": "frost_wraith", "abilities": ["teleport", "frost"], "sheet": "res://assets/enemies/frost_wraith.png",
+		"rect": Rect2(0, 0, 23, 32), "run": true, "size": 1.1,
+		"health": [70, 86], "damage": [10, 13], "speed": [105, 120], "dodge": [22, 30],
+		"knockback": [360, 420], "resist": [0.55, 0.65], "xp": [36, 42], "min_depth": 41, "max_depth": 80, "weight": 3},
+	# Jégpók: kicsi, nagyon gyors, cikázik, és a csípése fagyaszt (a kazamatapók képe átszínezve).
+	{"name": "ice_spider", "abilities": ["frost", "zigzag"], "sheet": "res://assets/enemies/ice_spider.png",
+		"rect": Rect2(0, 0, 12, 20), "run": true, "size": 1.7,
+		"health": [40, 50], "damage": [8, 10], "speed": [150, 170], "dodge": [30, 40],
+		"knockback": [260, 300], "resist": [0.3, 0.4], "xp": [28, 32], "min_depth": 41, "max_depth": 80, "weight": 3},
+	# Hógólem: lassú, nagyon szívós jégtömb; ha megsérül, dühbe gurul (a Lánggólem képe jégre színezve).
+	{"name": "snow_golem", "abilities": ["frost", "berserk"], "sheet": "res://assets/enemies/snow_golem.png",
+		"rect": Rect2(0, 0, 32, 32), "run": true, "size": 1.45,
+		"health": [150, 180], "damage": [14, 17], "speed": [60, 72], "dodge": [0, 5],
+		"knockback": [480, 540], "resist": [0.85, 0.95], "xp": [52, 60], "min_depth": 41, "max_depth": 80, "weight": 2},
+	# Fagyott lovag: a jégbe fagyott régi őrség; pajzsot von maga köré, és fagyaszt (a 0x72 lovag, jégkék árnyalattal).
+	{"name": "frozen_knight", "abilities": ["shield", "frost"], "rect": Rect2(128, 100, 16, 28), "run": true,
+		"size": 1.15, "tint": Color(0.55, 0.85, 1.35),
+		"health": [110, 130], "damage": [12, 15], "speed": [85, 98], "dodge": [10, 16],
+		"knockback": [420, 480], "resist": [0.75, 0.85], "xp": [44, 50], "min_depth": 44, "max_depth": 80, "weight": 2},
 	# Kazamatapók (bogár): kicsi, gyors, mérges.
 	{"name": "spider", "abilities": ["poison", "zigzag"], "sheet": "res://assets/enemies/spider.png",
 		"rect": Rect2(0, 0, 12, 20), "run": true, "size": 1.1,
@@ -431,7 +452,8 @@ static func pick(depth: int) -> Dictionary:
 	var available: Array[Dictionary] = []
 	var total := 0
 	for type in TYPES:
-		if type["min_depth"] <= depth:
+		# ("max_depth": csak eddig az emeletig jön, pl. a Fagykő lakói a 41-80. emeleten.)
+		if type["min_depth"] <= depth and int(type.get("max_depth", 9999)) >= depth:
 			available.append(type)
 			total += type["weight"]
 	var ticket := randi_range(1, total)

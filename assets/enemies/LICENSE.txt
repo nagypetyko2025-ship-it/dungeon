@@ -25,3 +25,6 @@ fire_ant.png, soldier_ant.png: "16x16 Ant Enemies" (ARoachIFoundOnMyPillow, CC0,
 blue_beetle.png: "Pixel Bug" (Umplix, CC0, https://opengameart.org/content/pixel-bug), a 3 kockás lapból (bad_boy_bug.png) a két szárnycsapás.
 hornet.png: "Flying Hornet/Wasp" (Nerveona, CC0, https://opengameart.org/content/flying-hornetwasp), a 2 kocka fehér háttér nélkül, felére kicsinyítve, tükrözve.
 scorpion.png, scorpion_king.png: "Scorpy Scorp - Side-Scroller Enemy" (madameberry, CC0, https://opengameart.org/content/scorpy-scorp-side-scroller-enemy), a 4 járó kocka tükrözve; a skorpió felére kicsinyítve, a Skorpiókirály teljes méretben, bíborra és aranyra színezve.
+frost_wraith.png: "Ghost monster" (ImogiaGames, CC0, https://opengameart.org/content/ghost-monster), a cián színváltozat kockái.
+ice_spider.png: a spider.png ("2D Spider Animated", CC0) jégkékre átszínezve.
+snow_golem.png: a fire_golem.png ("Fire Golem", teasloth, CC0) jégkékre-fehérre átszínezve.

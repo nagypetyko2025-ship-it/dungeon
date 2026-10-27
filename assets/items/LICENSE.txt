@@ -33,3 +33,4 @@ Mítikus tárgyak (sword_bloodmoon, spear_doom, axe_inferno, dagger_eclipse, mac
   bow_star, bow_feather, bow_frost, crossbow_void, helmet_shadow, chest_dragon, pants_knight, boots_wind, gloves_titan,
   ring_onyx, amulet_sunking, trinket_clock) mélypirosra színezve, piros izzással körbe.
 trinket_miners_lamp.png: A huszonhét lámpása — ehhez a projekthez rajzolva (pixel art bányászlámpa, 34×34), CC0.
+trinket_lake_pearl: a meglévő CC0 trinket_crystal ikon gyöngyházszínűre átszínezve.

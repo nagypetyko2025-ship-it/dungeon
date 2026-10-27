@@ -18,6 +18,12 @@ signal enraged
 
 ## A főellenségek emeletenként váltják egymást (3., 6., 9. ... emelet), aztán elölről.
 ## scale: a kisebb figurákat jobban felnagyítjuk; tint: színezés.
+## A Fagykő (41-80. emelet) úrnője a 60. emeleten: jéglehelet, jégnova, eltűnés, fagyos tócsák, jégszellemek;
+## az érintése fagyaszt (a 0x72 varázslónő, nagyban és jégkék árnyalattal).
+const FROST_QUEEN_DEPTH := 60
+const FROST_QUEEN := {"name": "Jégkirálynő", "rect": Rect2(128, 132, 16, 28), "scale": 3.4,
+	"tint": Color(0.6, 0.9, 1.5), "health": 180, "damage": 7, "speed": 70.0, "xp": 160,
+	"attacks": ["breath", "nova", "blink", "pools", "summon"], "minion": "frost_wraith", "abilities": ["frost"]}
 const BOSSES: Array[Dictionary] = [
 	{"name": "Ogrekirály", "rect": Rect2(16, 380, 32, 36), "health": 70, "damage": 3, "speed": 70.0,
 		"xp": 40, "attacks": ["slam", "charge", "summon"], "minion": "goblin"},
@@ -51,6 +57,7 @@ const BOSSES: Array[Dictionary] = [
 	{"name": "Nyálkakirály", "sheet": "res://assets/enemies/green_slime.png", "rect": Rect2(0, 0, 16, 16),
 		"scale": 5.5, "tint": Color(0.9, 1.1, 0.8), "health": 160, "damage": 6, "speed": 60.0,
 		"xp": 120, "attacks": ["slam", "pools", "summon"], "minion": "green_slime", "abilities": ["poison"]},
+	# (A 60. emeleten a sor helyett a Jégkirálynő jön: FROST_QUEEN.)
 	# --- A 36. emelet: a bogarak ura ---
 	{"name": "Skorpiókirály", "sheet": "res://assets/enemies/scorpion_king.png", "rect": Rect2(0, 0, 101, 69),
 		"scale": 0.9, "health": 170, "damage": 7, "speed": 75.0,
@@ -132,6 +139,9 @@ var _enraged := false
 ## `special`: egyedi főellenség (pl. a Kopogó, Knocking.BOSS) a soron következő helyett.
 func setup_boss(depth: int, special := {}) -> void:
 	_def = special if not special.is_empty() else BOSSES[(maxi(depth / 3, 1) - 1) % BOSSES.size()]
+	# A Fagykő úrnője a saját emeletén (a sor helyett).
+	if special.is_empty() and depth == FROST_QUEEN_DEPTH and not Challenge.active():
+		_def = FROST_QUEEN
 	boss_name = _def["name"]
 	_depth = depth
 	_type = {"name": "boss", "rect": _def["rect"], "run": true, "tint": _def.get("tint", Color.WHITE),

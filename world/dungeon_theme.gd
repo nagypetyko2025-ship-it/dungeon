@@ -46,6 +46,9 @@ static func _range(depth: int) -> Array:
 static func band(depth: int) -> int:
 	if GameState.tutorial:
 		return 0
+	# Az elárasztott kripta (LakeCrypt) a Fagykő kék kövével.
+	if Challenge.story() == "crypt":
+		return 3
 	return int(_range(depth)[2])
 
 

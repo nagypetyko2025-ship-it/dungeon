@@ -11,7 +11,7 @@ const WEREWOLF_SCRIPT := preload("res://enemies/werewolf_boss.gd")
 const KINGS := ["Ogrekirály", "Orkhadúr", "Gyíkkirály", "Démonúr", "Nekromanta-főpap", "Jégóriás", "Zombikirály"]
 const LORD := "Vérfarkas, a Mélység Ura"
 ## A 21. emelet utáni új főellenségek (24., 27., 30., 33., 36. emelet).
-const DEEP_BOSSES := ["Kalózkirály", "Lánggólem", "A Mélység Szeme", "Nyálkakirály", "Skorpiókirály"]
+const DEEP_BOSSES := ["Kalózkirály", "Lánggólem", "A Mélység Szeme", "Nyálkakirály", "Skorpiókirály", "Jégkirálynő"]
 ## A 40. emelet nagy főellensége.
 const CHAOS_LORD := "Ürességfaló, a Káosz Ura"
 const CHAOS_SCRIPT := preload("res://enemies/chaos_lord_boss.gd")
@@ -30,6 +30,7 @@ const CATEGORIES := [
 	["Sárkányok", ["fire_dragon", "frost_dragon", "gold_dragon", "shadow_dragon"]],
 	["Bogarak", ["fly", "spider", "fire_ant", "blue_beetle", "soldier_ant", "hornet", "scorpion"]],
 	["Káosz", ["chaos_spawn", "chaos_hound", "chaos_maw", "chaos_shard", "chaos_weaver"]],
+	["Fagyott lények", ["frost_wraith", "ice_spider", "snow_golem", "frozen_knight"]],
 	["Különös lények", ["mimic", "pumpkin_dude", "angel", "toadstool"]],
 	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES + [CHAOS_LORD]],
 ]
@@ -53,6 +54,10 @@ const ENTRIES := {
 	"orc_mage": ["Orkmágus", "Varázslövedékeket szór, pajzsot von maga köré, és gyógyítja a társait."],
 	"red_demon": ["Vörös démon", "Lángoló bőrű démon: a semmiből terem melletted, és halálakor szétrobban."],
 	"gold_dragon": ["Aranysárkány", "Kincseken alszik; ha eltalál, a te aranyadat is a halmára gyűjti."],
+	"frost_wraith": ["Jégszellem", "Cián fényű, lebegő lepel a Fagykő termeiből. Eltűnik, és a hátad mögött bukkan fel, az érintése pedig jéghideg: lelassít."],
+	"ice_spider": ["Jégpók", "Áttetsző, jégkék pók, ami a fagyott falakon fészkel. Villámgyorsan cikázik, és a csípése megdermeszti a tagjaidat."],
+	"snow_golem": ["Hógólem", "Összefagyott kő- és jégtömb, amit valami ősi hideg tart egyben. Lassú, de alig lehet megsebezni, és ha megsérül, dühbe gurul."],
+	"frozen_knight": ["Fagyott lovag", "A régi királyi őrség egyik lovagja, aki a Mélységben fagyott meg, és jégként kelt fel újra. Jégpajzsot von maga köré, a csapása dermeszt."],
 	"chaos_spawn": ["Káoszivadék", "Fekete-lila, folyton alakot váltó csápgomolyag egyetlen vörös szemmel. A Mélység legaljáról tör fel, ahol a világ szabályai már nem érvényesek: eltűnik, cikázik, és ha elpusztul, szétrobban."],
 	"chaos_hound": ["Káoszkopó", "Fekete-lila árnyékfenevad, a szeme ibolyán izzik. A 25. emelet alól tör fel: nekiront, a semmin át melletted terem, és minél jobban megsebzed, annál vadabb."],
 	"chaos_maw": ["Káosztorok", "Lebegő, féloldalas fekete tömeg, oldalán egy ferde, fogakkal szegett hasíték nyílik és csukódik. A 25. emelet alól tör fel: messziről a semmit köpi rád, megdermeszt, és ha közel érsz, egyszerre melletted terem."],
@@ -139,6 +144,8 @@ const ENTRIES := {
 		+ "és kisebb nyálkákat szül."],
 	"Skorpiókirály": ["Skorpiókirály", "A 36. emelet ura: bíbor páncélú, arany fullánkú óriásskorpió. " \
 		+ "Méregfröccsöt köp, mérges tócsákat hagy, nekiront, és a fiait hívja segítségül."],
+	"Jégkirálynő": ["Jégkirálynő", "A Fagykő úrnője a 60. emeleten. Jégleheletet fúj, fagyos tócsákat hagy, " \
+		+ "eltűnik és máshol bukkan fel, és jégszellemeket hív. Az érintése megdermeszt."],
 	"Ürességfaló, a Káosz Ura": ["Ürességfaló, a Káosz Ura", "A 40. emelet ura: fogas torkú csápgomolyag a " \
 		+ "valóság szélén túlról. Hasadékokat nyit a földön, lövedékörvényt szór, és ha félholtra vered, " \
 		+ "széthasad körülötte a világ."],

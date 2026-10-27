@@ -41,6 +41,30 @@ const STORIES: Array[Dictionary] = [
 			+ "aztán még eggyel. A gyanús boltos odalent is egyre jobb portékát tart, minél mélyebbre jutsz. " \
 			+ "A mélység megjutalmazza azt, aki kitart."},
 ]
+## A tó titka (LakeCrypt): a kis zár kulcsa a kalózoktól, aztán a kripta a sziget lépcsője alatt.
+const KEY_QUEST := "fisherman_key"
+const KEY_BASE := "fisherman_key_base"
+const KEY_GOAL := 8
+const PIRATES: Array[String] = ["pirate_grunt", "pirate_gunner", "pirate_captain"]
+const CRYPT_QUEST := "fisherman_crypt"
+const CRYPT_GOLD := 300
+## A kripta után: még három történet.
+const CRYPT_STORIES: Array[Dictionary] = [
+	{"id": "who_down", "text": "Kik voltak, akiket odalent hagytatok?", "trust": 4,
+		"answer": "[i]Sokáig hallgat, a zsinórt bámulja.[/i]\n\n" \
+			+ "Hatan. Benedek, a vezetőnk. Az ikrek, Márk és Máté. Öreg Jónás, aki dalolt, ha félt. Lili, aki " \
+			+ "jobban lőtt, mint mi öten együtt. És Kató, a feleségem.\n\nA kapu alatt valami felkelt, és a víz " \
+			+ "utánunk jött. Én voltam hátul a lámpával. Ezért élek."},
+	{"id": "lights_gone", "text": "Mik voltak a fények a tó fenekén?", "trust": 3,
+		"answer": "[i]A víz felé int.[/i]\n\n" \
+			+ "Lámpások. A mi lámpásaink. Negyven évig égtek odalent, mintha valaki vigyázott volna rájuk... vagy " \
+			+ "mintha valami csalinak használta volna őket. Most, hogy az az izé elesett, kialudtak.\n\n" \
+			+ "Szerintem így jobb. Végre sötétben pihenhetnek."},
+	{"id": "next", "text": "Mit fogsz most csinálni?", "trust": 3,
+		"answer": "[i]Elneveti magát, először, mióta ismered.[/i]\n\n" \
+			+ "Horgászni, fiam. Csak horgászni. Negyven évig vártam valamire ezen a parton. Most csak a halakra " \
+			+ "várok. Az sokkal könnyebb.\n\nÉs ha egyszer kifogom azt a nagyot, megsütöm, és meghívlak."},
+]
 ## A szigeten lévő lezárt lépcső (Lake.ISLAND_STAIRS): mindig rákérdezhetsz.
 const STAIRS_STORY := {"id": "island_stairs", "text": "Mi az a rácsos lépcső a szigeten?", "trust": 4,
 	"answer": "[i]Leengedi a botját, és sokáig nézi a szigetet.[/i]\n\n" \
@@ -63,6 +87,17 @@ const QUESTS := {
 			+ "leggyengébb fajtából több is van nálad, nem tud választani: vigyél kevesebb holmit.",
 		"reward": "%d tábori arany (és Ábel meséi)" % ITEM_GOLD,
 		"doing": "vigyél Ábelnek egy tárgyat a tóhoz", "done": "Ábel újra horgászik"},
+	KEY_QUEST: {"name": "A kis zár kulcsa",
+		"text": "A sziget lépcsőjének rácsán két zár van. A nagyot Ábel rozsdás kulcsa nyitja, a kicsihez a "
+			+ "kalózoktól kell kulcs: ők mindent elzárnak, és mindig van náluk egy csomó. Győzz le [b]%d kalózt[/b] " % KEY_GOAL
+			+ "a kazamatában (bármelyik fajtát), aztán menj vissza Ábelhez.",
+		"reward": "átkelés a szigetre",
+		"doing": "győzz le kalózokat a kazamatában", "done": "megvan a kis kulcs"},
+	CRYPT_QUEST: {"name": "Az elárasztott kripta",
+		"text": "Ábel csónakja a móló végén ringatózik: azzal átjutsz a szigetre. A rácsos lépcső alatt az "
+			+ "elárasztott kripta, a legalján az, ami a tó fényeit gyújtja. [b]Győzd le[/b], aztán meséld el Ábelnek.",
+		"reward": "A tófenék gyöngye (egyedi talizmán) és %d tábori arany" % CRYPT_GOLD,
+		"doing": "kelj át a csónakkal a szigetre, és menj le a lépcsőn", "done": "a tó elcsendesült"},
 }
 ## A tárgy átadása után: még három történet (a régiek is maradnak; a beszélgetés lapozható).
 const MORE_STORIES: Array[Dictionary] = [
@@ -167,11 +202,101 @@ func _options() -> Array[Dictionary]:
 					"on_choose": func() -> String: return "Bármilyen holmi, ami a Mélységből jött: egy rozsdás kard, " \
 						+ "egy kopott sisak, egy csorba gyűrű. A táskádban hozd, ne a ládában. Ha több is van " \
 						+ "nálad, a [b]leggyengébbet[/b] kérem; csak ne legyen belőle kettő egyforma."})
+	_lake_options(list)
 	list.append_array(STORIES)
 	list.append(STAIRS_STORY)
 	if Progress.npc_quest_state(ITEM_QUEST) == "done":
 		list.append_array(MORE_STORIES)
+	if Progress.npc_quest_state(CRYPT_QUEST) == "done":
+		list.append_array(CRYPT_STORIES)
 	return list
+
+
+# ---------------------------------------------------------------- a tó titka (lásd LakeCrypt)
+
+## Hány kalózt győztél le a kulcs-küldetés óta.
+static func key_progress() -> int:
+	var total := 0
+	for name: String in PIRATES:
+		total += int(Progress.kills.get(name, 0))
+	return mini(maxi(total - int(Progress.npc_quest_state(KEY_BASE)), 0), KEY_GOAL)
+
+
+## Átkelhetsz-e a csónakkal a szigetre (a kripta küldetése óta).
+static func can_cross() -> bool:
+	return Progress.npc_quest_state(CRYPT_QUEST) != ""
+
+
+## A tó titkának opciói (az átlagos tárgy küldetése után): a kis kulcs, a kripta, a hír.
+func _lake_options(list: Array[Dictionary]) -> void:
+	if Progress.npc_quest_state(ITEM_QUEST) != "done":
+		return
+	match Progress.npc_quest_state(KEY_QUEST):
+		"":
+			list.append({"id": "lake_key", "text": "Hogyan juthatnék le a sziget lépcsőjén?", "on_choose": _give_key_quest})
+		"active":
+			if key_progress() >= KEY_GOAL:
+				list.append({"id": "key_done", "text": "Elhoztam a kalózok kulcsait.", "on_choose": _finish_key})
+			else:
+				list.append({"id": "key_wait", "text": "Hol tartok a kalózokkal?",
+					"on_choose": func() -> String: return "Eddig %d kalózt győztél le a %d-ből. " % [key_progress(), KEY_GOAL] \
+						+ "A kis kulcs náluk lesz, fiam. A kalózok mindent elzárnak, a saját anyjukat is."})
+	match Progress.npc_quest_state(CRYPT_QUEST):
+		"active":
+			list.append({"id": "crossing", "text": "Hogyan jutok át a szigetre?",
+				"on_choose": func() -> String: return "A csónakom a móló végén ringatózik. Ülj bele, és evezz át " \
+					+ "(a móló végén [b][E][/b]). Visszafelé ugyanott vár, a sziget déli partján. És fiam... ha a " \
+					+ "rács mögül megint lélegzést hallasz, ne fordulj vissza."})
+		"slain":
+			list.append({"id": "crypt_done", "text": "Legyőztem a Tófenék Urát.", "on_choose": _finish_crypt})
+
+
+func _give_key_quest() -> String:
+	var total := 0
+	for name: String in PIRATES:
+		total += int(Progress.kills.get(name, 0))
+	Progress.set_npc_quest(KEY_BASE, str(total))
+	Progress.set_npc_quest(KEY_QUEST, "active")
+	Progress.mark_asked(ID, "lake_key")
+	Progress.save_game()
+	Audio.play("ui_open")
+	return "[i]Előveszi a zsebéből a rozsdás kulcsot, és a tenyerén forgatja.[/i]\n\n" \
+		+ "Ez a nagy zárat nyitja, ebben biztos vagyok. De a rácson van egy kicsi is, régi kalózlakat. Ilyet " \
+		+ "csak a kalózok hordanak, a kulcsát is ők: mindig egy egész csomó lóg az övükön.\n\n" \
+		+ "Győzz le néhányat odalent a kazamatában. Ha összegyűlt %d kalóz kulcscsomója, " % KEY_GOAL \
+		+ "lesz köztük, ami illik a kis zárba.\n\n[color=#7a4a10](Új küldetés a J könyvben, a Horgász fülön.)[/color]"
+
+
+func _finish_key() -> String:
+	Progress.set_npc_quest(KEY_QUEST, "done")
+	Progress.set_npc_quest(CRYPT_QUEST, "active")
+	Progress.mark_asked(ID, "key_done")
+	Progress.change_trust(ID, 15)
+	Progress.save_game()
+	Audio.play("level_up")
+	return "[i]Végigpróbálgatja a kulcsokat a kis kalózlakat rajzán, amit a homokba karcolt. A hetediknél " \
+		+ "elmosolyodik.[/i]\n\nEz az. Látod a csorbát a tollán? Pont ilyen a zár.\n\n" \
+		+ "[i]A kezedbe nyomja a két kulcsot, a nagyot és a kicsit.[/i]\n\n" \
+		+ "A csónakom a móló végén van. Evezz át a szigetre, és nyisd ki a rácsot. Én túl öreg vagyok már ahhoz, " \
+		+ "ami odalent vár. Te nem.\n\n[color=#7a4a10](Új küldetés: Az elárasztott kripta. A móló végén [E]: " \
+		+ "átkelés a szigetre.)[/color]"
+
+
+func _finish_crypt() -> String:
+	Progress.set_npc_quest(CRYPT_QUEST, "done")
+	Progress.mark_asked(ID, "crypt_done")
+	Progress.change_trust(ID, 30)
+	Progress.camp_gold += CRYPT_GOLD
+	Progress.save_game()
+	var camp := get_tree().current_scene
+	if camp.has_method("_update_gold"):
+		camp.call("_update_gold")
+	Audio.play("level_up")
+	return "[i]Ábel sokáig nézi a tavat. A víz sima, a fények eltűntek a mélyből.[/i]\n\n" \
+		+ "Elaludtak a fények. Negyven év után először látom a tó fenekét a hajnali napban.\n\n" \
+		+ "[i]Leteszi a botját, és megszorítja a kezed.[/i]\n\nKöszönöm, fiam. Ülj le mellém egyszer, és " \
+		+ "elmesélem, kik voltak azok, akiket odalent hagytunk.\n\n" \
+		+ "[color=#7a4a10](+%d tábori arany)[/color]" % CRYPT_GOLD
 
 
 func _give_quest() -> String:

@@ -155,8 +155,8 @@ func _ready() -> void:
 	var tutorial := GameState.tutorial
 	# A nagy főellenség emelete: a 20. (Vérfarkas) és a 40. (a Káosz Ura).
 	var chaos_floor := depth == CHAOS_DEPTH and not tutorial
-	# A régi tárnák (a kopogás titka, lásd Knocking) utolsó emelete: aréna a Kopogóval.
-	var knocker_floor := Challenge.story() == "knocker" and depth >= int(GameState.challenge["floors"])
+	# Történet-futás (a régi tárnák: Knocking, a kripta: LakeCrypt) utolsó emelete: aréna a saját főellenségével.
+	var knocker_floor := not Challenge.story().is_empty() and depth >= int(GameState.challenge["floors"])
 	var final_floor := (depth == FINAL_DEPTH or chaos_floor or knocker_floor) and not tutorial
 	var cells: Array[Vector2i] = []
 	if tutorial:
@@ -225,7 +225,7 @@ func _ready() -> void:
 			if cell == Vector2i.RIGHT:
 				room.has_boss = true
 				room.final_boss = true
-				room.lord = "knocker" if knocker_floor else ("chaos" if chaos_floor else "werewolf")
+				room.lord = Challenge.story() if knocker_floor else ("chaos" if chaos_floor else "werewolf")
 				room.enemy_count = 1
 		elif cell == shop_cell:
 			room.has_shop = true
@@ -429,7 +429,7 @@ func _on_final_boss_defeated(room: Room) -> void:
 	_victory_lord = room.lord
 	# A próbatételben a nagy főellenség után sincs portál: a lépcső visz tovább (az utolsó emeleten: győzelem).
 	if Challenge.active():
-		_hud.show_message("A Kopogó elhallgatott! A lépcső szabad: fel a kötélen." if room.lord == "knocker"
+		_hud.show_message(LakeCrypt.story_won_text(room.lord) if LakeCrypt.is_story_lord(room.lord)
 			else "A Mélység Ura legyőzve! A lépcső szabad.")
 		room.open_stairs.call_deferred(room.anchor + Vector2i(DEEPER_STAIRS_OFFSET, 0))
 		return
@@ -481,15 +481,14 @@ func _start_challenge_floor(depth: int, boss_floor: bool) -> void:
 			for i in levels:
 				xp += Experience.xp_for_level(experience.level + i)
 			experience.add.call_deferred(xp)
-		if Challenge.story() == "knocker":
-			_hud.show_message("A régi tárnák: %d emelet lefelé. Az utolsó alján vár, ami kopog." % floors)
+		if not Challenge.story().is_empty():
+			_hud.show_message(LakeCrypt.story_start_text(Challenge.story(), floors))
 		else:
 			_hud.show_message("Próbatétel: %d emelet, %s nehézség — sok szerencsét!" % [floors,
 				str(GameState.challenge["difficulty"]).to_lower()])
 		return
-	if Challenge.story() == "knocker":
-		_hud.show_message("A régi tárnák — %d. / %d emelet%s" % [depth, floors,
-			" — keletről kopogás hallatszik..." if depth >= floors else ""])
+	if not Challenge.story().is_empty():
+		_hud.show_message(LakeCrypt.story_floor_text(Challenge.story(), depth, floors))
 		return
 	_hud.show_message("Próbatétel — %d. / %d emelet%s" % [depth, floors, " — főellenség vár!" if boss_floor else ""])
 
@@ -503,8 +502,11 @@ func _challenge_won() -> void:
 	var item := {}
 	var gold := int(_player.get("gold"))
 	if not GameState.cheated:
-		# A régi tárnák jutalma a történeté (Knocking), a random próbatételé a nehézségéből.
-		item = Knocking.reward() if Challenge.story() == "knocker" else Challenge.roll_reward(challenge)
+		# A történet-futás jutalma a történeté (Knocking, LakeCrypt), a random próbatételé a nehézségéből.
+		if not Challenge.story().is_empty():
+			item = LakeCrypt.story_reward(Challenge.story())
+		else:
+			item = Challenge.roll_reward(challenge)
 		Progress.add_to_stash(item)
 		Progress.add_camp_gold(gold)
 		# A történet (a régi tárnák) nem a random próbatétel: az marad.

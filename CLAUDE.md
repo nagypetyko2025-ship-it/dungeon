@@ -95,6 +95,14 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Nyugati tisztás: romos ház + tolvaj (`world/ruin.gd`, `world/thief.gd`), kút + Lőrinc (`world/stranger.gd`), a kút alja: `world/well_cave.gd`.
 - A tábor jobb felső sarkából rejtett ösvény északra: `world/hidden_grave.gd` (tisztás: Borbás Márton sírja, elhalt fa
   Ilona kitűzött levelével, egyszer nyitható láda: 150 tábori arany, Görbe kés, Ismétlő számszeríj; jelző: hidden_grave_chest).
+- A tó titka: `world/lake_crypt.gd` (`LakeCrypt`). Ábel (`Fisherman`): az átlagos tárgy után KEY_QUEST (8 kalóz a küldetés óta,
+  `Progress.kills` bázissal), utána CRYPT_QUEST: a móló végén Ábel csónakja (`Lake`, E: átevezés; vissza a sziget déli
+  partjáról, `ISLAND_LANDING`), a rácsos lépcsőnél E: történet-futás ("story": "crypt", 4 emelet, Fagykő-kinézet,
+  a végén aréna a Tófenék Urával: `LakeCrypt.BOSS`); jutalom `trinket_lake_pearl`, Ábelnél +300 arany és 3 történet.
+  A történet-futások közös elosztója: `LakeCrypt.story_boss / story_reward / story_*_text` (a Dungeon, a Room és a
+  ChallengePanel már nem csak a "knocker"-t ismeri; új történetnél ide kell felvenni).
+- A Fagykő lakói (41-80.): frost_wraith, ice_spider, snow_golem, frozen_knight (`"max_depth"` az EnemyTypes-ban: eddig az
+  emeletig jön); a 60. emeleten `Boss.FROST_QUEEN` (Jégkirálynő) a sor helyett.
 - A város keleti rétjén tó (`world/lake.gd`: sziget lezárt, rácsos lépcsővel, móló), a partján az öreg horgász (`world/fisherman.gd`, sétál és horgászik; E: 3 történet, küldetés: a táska leggyengébb tárgya, döntetlennél "hozz kevesebbet" (fisherman_item), utána +3 történet).
 - Temető a kocsma alatt: `world/graveyard.gd`; mellette (keletre) a régi kápolna: `world/chapel.gd` (létra a harangtoronyba, kötél: harang, `bell.wav`). A sírásó (Vendel):
   `world/gravedigger.gd` (küldetései: 50 csontváz → Szent kereszt → 20 zombi → legendás talizmán, köztük 2-2 történet; utána

@@ -27,6 +27,13 @@ const INNER := {"se": Vector2i(0, 1), "sw": Vector2i(1, 1), "ne": Vector2i(0, 2)
 
 var _camp: Node2D
 var _water := {}
+var _player: Node2D
+var _prompt: Label
+var _panel: ChallengePanel
+var _busy := false
+## A sziget déli partja: itt köt ki Ábel csónakja (innen vissza a mólóhoz).
+const ISLAND_LANDING := Vector2i(116, 10)
+const RANGE := 50.0
 
 
 func setup(camp: Node2D) -> void:
@@ -171,4 +178,136 @@ func _build_island_stairs() -> void:
 	stairs.position = at
 	stairs.monitoring = false
 	add_child(stairs)
-	stairs.call("set_locked", true)
+	# A kripta legyőzése után a rács nyitva marad.
+	stairs.call("set_locked", not crypt_cleared())
+	_build_crossing()
+
+
+# ---------------------------------------------------------------- a tó titka (Ábel csónakja, a kripta)
+
+## A kripta ura legyőzve (LakeCrypt).
+static func crypt_cleared() -> bool:
+	return Progress.npc_quest_state(Fisherman.CRYPT_QUEST) in ["slain", "done"]
+
+
+func _pier_end() -> Vector2:
+	return (Vector2(pier_cells().back()) + Vector2(0.5, 0.5)) * TILE
+
+
+func _landing() -> Vector2:
+	return (Vector2(ISLAND_LANDING) + Vector2(0.5, 0.5)) * TILE
+
+
+## Ábel csónakja a móló végén (ha már átkelhetsz), és egy kikötött csónak a sziget déli partján.
+func _build_crossing() -> void:
+	_player = _camp.get_node("Entities/Player")
+	if Fisherman.can_cross():
+		_boat(_pier_end() + Vector2(30, 6))
+		_boat(_landing() + Vector2(-26, 22))
+	_panel = ChallengePanel.new()
+	_panel.name = "LakeChallengePanel"
+	_panel.visible = false
+	_camp.add_child.call_deferred(_panel)
+	var layer := CanvasLayer.new()
+	layer.layer = 5
+	add_child(layer)
+	_prompt = MenuStyle.title_label("", 32, MenuStyle.GOLD)
+	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_prompt.offset_top = -210
+	_prompt.offset_bottom = -160
+	_prompt.offset_left = -500
+	_prompt.offset_right = 500
+	_prompt.modulate.a = 0.0
+	layer.add_child(_prompt)
+
+
+## Kis fa csónak a vízen (rajzolva): barna test, két deszkapad, egy evező.
+func _boat(at: Vector2) -> void:
+	var hull := Polygon2D.new()
+	hull.polygon = PackedVector2Array([Vector2(-22, -6), Vector2(22, -6), Vector2(16, 6), Vector2(-16, 6)])
+	hull.color = Color(0.45, 0.28, 0.15)
+	hull.position = at
+	hull.z_index = -8
+	add_child(hull)
+	var inside := Polygon2D.new()
+	inside.polygon = PackedVector2Array([Vector2(-18, -4), Vector2(18, -4), Vector2(14, 3), Vector2(-14, 3)])
+	inside.color = Color(0.3, 0.18, 0.09)
+	hull.add_child(inside)
+	for x in [-7.0, 7.0]:
+		var seat := Line2D.new()
+		seat.points = PackedVector2Array([Vector2(x, -4), Vector2(x, 3)])
+		seat.width = 3.0
+		seat.default_color = Color(0.6, 0.4, 0.22)
+		hull.add_child(seat)
+	var oar := Line2D.new()
+	oar.points = PackedVector2Array([Vector2(-2, -2), Vector2(20, -12)])
+	oar.width = 2.0
+	oar.default_color = Color(0.7, 0.5, 0.28)
+	hull.add_child(oar)
+	var bob := hull.create_tween().set_loops()
+	bob.tween_property(hull, "position:y", at.y + 2.0, 1.4).set_trans(Tween.TRANS_SINE)
+	bob.tween_property(hull, "position:y", at.y, 1.4).set_trans(Tween.TRANS_SINE)
+
+
+## Merre áll a játékos: "boat" (a móló vége), "back" (a sziget partja), "stairs" (a rács), vagy "".
+func _focus() -> String:
+	if not is_instance_valid(_player) or _busy:
+		return ""
+	var at: Vector2 = _player.global_position
+	if Fisherman.can_cross() and at.distance_to(_pier_end()) < RANGE:
+		return "boat"
+	if at.distance_to(_landing()) < RANGE:
+		return "back"
+	if at.distance_to((Vector2(ISLAND_STAIRS) + Vector2(0.5, 1.2)) * TILE) < RANGE:
+		return "stairs"
+	return ""
+
+
+func _process(delta: float) -> void:
+	if _prompt == null:
+		return
+	var focus := _focus()
+	match focus:
+		"boat": _prompt.text = "[E] Átevezés a szigetre"
+		"back": _prompt.text = "[E] Visszaevezés a mólóhoz"
+		"stairs": _prompt.text = "[E] A rácsos lépcső"
+	var target := 1.0 if focus != "" and not GamePause.active(get_tree()) else 0.0
+	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("interact") or GamePause.active(get_tree()):
+		return
+	var focus := _focus()
+	if focus == "":
+		return
+	get_viewport().set_input_as_handled()
+	match focus:
+		"boat": _row(_landing())
+		"back": _row(_pier_end() + Vector2(0, 20))
+		"stairs": _use_stairs()
+
+
+## Átevezés (elsötétül, és a túlparton ér partot).
+func _row(to: Vector2) -> void:
+	_busy = true
+	Audio.play("footstep", -2.0)
+	_camp.call("teleport_player", to, Rect2(), Color.BLACK)
+	await get_tree().create_timer(0.7).timeout
+	_busy = false
+
+
+func _use_stairs() -> void:
+	var say := func(text: String) -> void: _camp.call("_toast", text)
+	if crypt_cleared():
+		say.call("A rács nyitva, a kripta elcsendesült. Odalent már csak a víz csobog.")
+		return
+	if Progress.npc_quest_state(Fisherman.CRYPT_QUEST) != "active":
+		Audio.play("door_lock", -6.0)
+		say.call("Két zár: egy nagy, rozsdás és egy kicsi, kalózlakat. A rács mögül hideg szél fúj, és mintha "
+			+ "valami lélegezne odalent. Öreg Ábel talán tud segíteni.")
+		return
+	Audio.play("ui_open")
+	var start := func(challenge: Dictionary) -> void: _camp.call("enter_challenge", challenge)
+	_panel.show_offer(LakeCrypt.run_challenge(), start)
+	_camp.get_node("Menus").call("open_menu", _panel)

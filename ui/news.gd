@@ -4,6 +4,10 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-27", "items": [
+		"A tó titka: Öreg Ábel új küldetéssora (a kis zár kulcsa a kalózoktól, átkelés a csónakkal a szigetre), "
+			+ "a sziget lépcsője alatt az elárasztott kripta (4 emelet), a legalján a Tófenék Ura; jutalom: "
+			+ "A tófenék gyöngye, és Ábel három új története.",
+		"A Fagykő lakói (41–80. emelet): jégszellem, jégpók, hógólem és fagyott lovag; a 60. emeleten a Jégkirálynő.",
 		"Új mélységi sorrend: a 21. emelettől a lila Káoszkő, a 41.-től az új Fagykő (jégkék kripta, cián fényű "
 			+ "repedések, fagyott kutak, hulló hópelyhek), a 81.-től a vöröses Vérkő.",
 		"A nagy térkép (M) jelmagyarázata már nem lóg ki az ablakból.",
