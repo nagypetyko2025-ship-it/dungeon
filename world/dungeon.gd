@@ -399,7 +399,10 @@ func _on_boss_fight_started(boss: Node2D) -> void:
 func _music_place() -> String:
 	if Challenge.active():
 		return "trial"
-	return ["dungeon", "depths", "abyss"][DungeonTheme.band(GameState.depth)]
+	# A zene a mélység szerint (nem a kinézet szerint): 1-20. kazamata, 21-40. mélység, 41.-től káosz.
+	if GameState.tutorial or GameState.depth < 21:
+		return "dungeon"
+	return "depths" if GameState.depth < 41 else "abyss"
 
 
 func _on_boss_defeated(boss: Node2D) -> void:

@@ -4,6 +4,9 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-27", "items": [
+		"Új mélységi sorrend: a 21. emelettől a lila Káoszkő, a 41.-től az új Fagykő (jégkék kripta, cián fényű "
+			+ "repedések, fagyott kutak, hulló hópelyhek), a 81.-től a vöröses Vérkő.",
+		"A nagy térkép (M) jelmagyarázata már nem lóg ki az ablakból.",
 		"Zeneválasztó a szünet menüben (Esc → ♪ Zene, jobb oldalt): bármelyik zenét lejátszhatod, kategóriákra "
 			+ "bontva (bárhol szóló, tábor, város, bánya, kazamata, mélység, káosz, próbatétel, egyéb).",
 		"Új kinézet a mélyben: a 21. emelettől Vérkő (vöröses kő, parázsló repedések, szálló hamu), a 41.-től Káoszkő "

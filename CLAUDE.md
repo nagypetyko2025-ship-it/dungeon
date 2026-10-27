@@ -38,11 +38,12 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   `world/ruin.gd`, benne a tolvaj rejtekszobája: `world/thief.gd`), `world/shop_interior.gd` bolt.
 - Félbehagyott futás: `world/run_save.gd` (a főellenség utáni pihenőnél kilépve a futás profilonként user://run*.cfg-be mentődik; a főmenü Folytatás gombja onnan indít; a kazamatába visszatéréskor / feladáskor / új játéknál törlődik; multiban nincs).
 - Állapot: `world/game_state.gd` (futás; `reset()`), `world/progress.gd` (mentett tábor: arany, láda, fejlesztések, küldetések; `deepest` = a valaha elért legmélyebb emelet, az emeletes küldetések ezt is nézik).
-- A mélység kinézete: `world/dungeon_theme.gd` (`DungeonTheme`): 1-20. a régi kő; 21-40. "Vérkő" (`assets/dungeon/depths_sheet.png`),
-  41.-től "Káoszkő" (`abyss_sheet.png`): a 0x72 lap bal felső 128x128-as része átszínezve (falak, padló izzó repedésekkel,
-  zászlók, kutak, oszlop), sávonként CanvasModulate (a sávon belül emeletről emeletre sötétebb, a 41. után a 100.-ig),
-  háttérszín, fáklyaláng és -fény, szálló hamu / lila szikrák (`add_motes`), izzó repedések a padlón (`add_rift`, RoomDecor),
-  több csont és vér. A szkript, ami a lapokat készítette, nincs a repóban.
+- A mélység kinézete: `world/dungeon_theme.gd` (`DungeonTheme`, `RANGES`): 1-20. a régi kő; 21-40. "Káoszkő"
+  (`abyss_sheet.png`), 41-80. "Fagykő" (`frost_sheet.png`, jégkék, hulló hó), 81.-től "Vérkő" (`depths_sheet.png`):
+  a 0x72 lap bal felső 128x128-as része átszínezve (falak, padló izzó repedésekkel, zászlók, kutak, oszlop). `band()` a
+  kinézet indexe (0 régi, 1 Vérkő, 2 Káoszkő, 3 Fagykő), sávonként CanvasModulate (a sávon belül emeletről emeletre sötétebb),
+  háttérszín, fáklyaláng és -fény, szálló részecskék (`add_motes`), izzó repedések a padlón (`add_rift`, RoomDecor),
+  több csont és vér. A zene a mélység szerint megy (`Dungeon._music_place`), nem a kinézet szerint.
 - Ellenségek útkeresése: `Dungeon.nav_path` (AStarGrid2D a padlón, oszlopok szilárdak), `Enemy._chase_direction`.
 - Ellenségek: `enemies/enemy_types.gd` (statok, 10. emeleti ugrás; a kikerülés a végén ×0.25, `DODGE_FACTOR`; Káosz kategória: chaos_spawn 16.-tól,
   chaos_hound 26.-tól, és a 25. emelet utáni saját rajzúak: chaos_maw (Káosztorok, lő) 26.-tól, chaos_shard

@@ -19,7 +19,9 @@ const STAIRS_COLOR := Color(0.15, 0.09, 0.06)
 const HATCH_COLOR := Color(0.97, 0.9, 0.55, 0.65)
 const HATCH_SPACING := 5.0
 const EXPANDED_SIZE := Vector2(760, 520)
-const LEGEND_HEIGHT := 36.0
+## A jelmagyarázat két sornak ad helyet (ha egy sorba nem fér el, a maradék a második sorba kerül).
+const LEGEND_HEIGHT := 56.0
+const LEGEND_LINE := 22.0
 const TITLE_SPACE := 40.0
 ## A játékos jele: a lovag első képkockája a sprite-lapon.
 const PLAYER_ICON := Rect2(128, 104, 16, 22)
@@ -188,11 +190,16 @@ func _draw_legend(rect: Rect2) -> void:
 		["Nincs kitakarítva", UNCLEARED_COLOR], ["Kitakarítva", CLEARED_COLOR],
 		["Bolt", SHOP_COLOR], ["Lift", LIFT_COLOR], ["Főellenség", BOSS_COLOR], ["Lépcső", STAIRS_COLOR], ["Ismeretlen", UNCLEARED_COLOR],
 	]
-	var y := rect.position.y + rect.size.y / 2.0 + 4.0
+	# Ha egy elem már nem fér el a sorban, új sorba kerül (a keretből nem lóghat ki).
+	var y := rect.position.y + 18.0
 	var x := rect.position.x + 4.0
 	for entry in entries:
 		var text: String = entry[0]
 		var color: Color = entry[1]
+		var width := 20.0 + font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		if x + width > rect.end.x and x > rect.position.x + 4.0:
+			x = rect.position.x + 4.0
+			y += LEGEND_LINE
 		if text == "Lépcső":
 			_draw_stairs(Vector2(x + 7, y - 4), 6.0)
 		else:
