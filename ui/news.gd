@@ -4,6 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-27", "items": [
+		"Zeneválasztó a szünet menüben (Esc → ♪ Zene, jobb oldalt): bármelyik zenét lejátszhatod, kategóriákra "
+			+ "bontva (bárhol szóló, tábor, város, bánya, kazamata, mélység, káosz, próbatétel, egyéb).",
 		"Új kinézet a mélyben: a 21. emelettől Vérkő (vöröses kő, parázsló repedések, szálló hamu), a 41.-től Káoszkő "
 			+ "(fekete-ibolya obszidián, lila lángú fáklyák) — emeletről emeletre egyre sötétebb.",
 		"Helyszínenként saját zene (tábor, város, bánya, kazamata, mélység, próbatétel), és pár szám mindenhol szól; "

@@ -73,6 +73,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Helyváltáskor a szóló szám marad, ha az új helyen is szólhat. A táborban a helyet `Camp.music_place(pozíció)` adja
   (fél mp-enként), a kazamatában `Dungeon._music_place()`; "epic" = az utoljára kért hely. `PLAYLIST_TRACKS`: 14 CC0
   szám hangereje (dB-igazítás kb. -20 dBFS-re, mérve). Hangerő: Beállítások "Zene" csúszka (Music busz). Új szám: mérd meg a hangosságát.
+  Zeneválasztó: a szünet menüben jobb oldalt "♪ Zene" (`ui/music_panel.gd`, `Audio.music_categories / play_song / current_song`): kategóriánként (bárhol szól, helyszínek, egyéb) bármelyik szám lejátszható; a végén a hely listája folytatódik.
   Bal alul (az XP-sáv fölött) kiírja, mi szól (`MUSIC_TITLES`, a főmenüben nem). Áttűnés lejátszónként (`_fade`): a
   régit le kell állítani újrahasználat előtt, különben egy elhalkítás vége az új számot is leállítja.
 - HP bájital: `ui/potion_badge.gd` (`PotionBadge`, Q gomb; a kazamatában a HP-csík mellett, a táborban bal fent). Gyorstár nincs.

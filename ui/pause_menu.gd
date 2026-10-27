@@ -10,6 +10,8 @@ const QUIT_GOLD_RATIO := 0.4
 var _buttons: VBoxContainer
 var _settings: SettingsPanel
 var _settings_button: Button
+var _music_button: Button
+var _music: MusicPanel
 ## A cím és a gombok oszlopa: az X ennek a jobb felső sarkába kerül (lásd CloseButton).
 var _stack: VBoxContainer
 
@@ -63,6 +65,39 @@ func _ready() -> void:
 	_settings.visible = false
 	_settings.closed.connect(_show_settings.bind(false))
 	stack.add_child(_settings)
+	_build_music()
+
+
+## Jobb oldalt a "♪ Zene" gomb; rákattintva mellette nyílik a zeneválasztó (MusicPanel).
+func _build_music() -> void:
+	var side := VBoxContainer.new()
+	side.anchor_left = 1.0
+	side.anchor_right = 1.0
+	side.anchor_top = 0.5
+	side.anchor_bottom = 0.5
+	side.offset_left = -430
+	side.offset_right = -16
+	side.offset_top = -300
+	side.offset_bottom = 300
+	side.alignment = BoxContainer.ALIGNMENT_BEGIN
+	side.add_theme_constant_override("separation", 10)
+	add_child(side)
+	_music_button = MenuStyle.button("♪ Zene")
+	_music_button.custom_minimum_size = Vector2(170, 48)
+	_music_button.add_theme_font_size_override("font_size", 22)
+	_music_button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_music_button.pressed.connect(func() -> void: _show_music(not _music.visible))
+	side.add_child(_music_button)
+	_music = MusicPanel.new()
+	_music.visible = false
+	_music.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_music.closed.connect(_show_music.bind(false))
+	side.add_child(_music)
+
+
+func _show_music(open_music: bool) -> void:
+	_music.visible = open_music
+	_music_button.text = "♪ Zene ✕" if open_music else "♪ Zene"
 
 
 func close_anchor() -> Control:
@@ -79,6 +114,7 @@ func _add_button(text: String, action: Callable) -> Button:
 
 func open() -> void:
 	_show_settings(false)
+	_show_music(false)
 	visible = true
 	_buttons.get_child(0).grab_focus()
 
@@ -89,6 +125,9 @@ func close() -> void:
 
 ## Esc: ha a beállítások látszanak, csak oda lép vissza (igaz = lekezelte).
 func handle_escape() -> bool:
+	if _music.visible:
+		_show_music(false)
+		return true
 	if _settings.visible:
 		_show_settings(false)
 		return true

@@ -127,6 +127,61 @@ static func settings() -> Audio:
 	return _node()
 
 
+## A zeneválasztó (szünet menü, MusicPanel) kategóriái: [cím, [számok]] — elöl a mindenhol szólók,
+## aztán a helyszínek saját számai, a végén az egyéb zenék (főmenü, főellenség...).
+const PLACE_NAMES := {
+	"camp": "Tábor", "town": "Város", "cave": "Bánya és kút", "dungeon": "Kazamata (1–20. emelet)",
+	"depths": "Mélység (21–40. emelet)", "abyss": "Káosz (41. emelettől)", "trial": "Próbatétel",
+}
+
+
+static func music_categories() -> Array:
+	var categories: Array = [["Bárhol szól", GENERAL_TRACKS.duplicate()]]
+	for place: String in PLACE_TRACKS:
+		var own: Array = []
+		for song: String in PLACE_TRACKS[place]:
+			if not GENERAL_TRACKS.has(song):
+				own.append(song)
+		categories.append([PLACE_NAMES.get(place, place), own])
+	categories.append(["Egyéb", MUSIC_TRACKS.values()])
+	return categories
+
+
+## Egy szám címe (szerző); ha nincs, a fájl neve.
+static func song_title(path: String) -> String:
+	return str(MUSIC_TITLES.get(path, path.get_file().get_basename().replace("_", " ").capitalize()))
+
+
+## A most szóló szám (útvonal), vagy "".
+static func current_song() -> String:
+	var node := _node()
+	if node._music_players[node._active_music].playing:
+		return str(node._music_players[node._active_music].stream.resource_path)
+	return ""
+
+
+## Egy kiválasztott szám azonnali lejátszása (áttűnéssel); ha véget ér, a helyszín lejátszási listája folytatódik.
+static func play_song(path: String) -> void:
+	_node().call_deferred("_play_song", path)
+
+
+func _play_song(path: String) -> void:
+	var old_index := _active_music
+	_active_music = 1 - _active_music
+	var new_player := _music_players[_active_music]
+	_fade(old_index, -80.0, true)
+	var stream := _load(path)
+	_set_loop(stream, false)
+	_last_song = path
+	# A végén a lejátszási lista jön (a főmenüben / főellenségnél is az utolsó helyszíné).
+	_current_track = _place
+	new_player.stream = stream
+	new_player.volume_db = -40.0
+	new_player.play()
+	_fade(_active_music, float(PLAYLIST_TRACKS.get(path, 0.0)), false)
+	_show_now_playing(path)
+
+
 static func _node() -> Audio:
 	if _instance == null or not is_instance_valid(_instance):
 		_instance = Audio.new()
