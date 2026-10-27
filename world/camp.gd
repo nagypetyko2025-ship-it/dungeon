@@ -222,6 +222,7 @@ func _ready() -> void:
 	add_child(mine)
 	mine.setup(self)
 	mine.build()
+	mine.message.connect(_toast)
 	# A tábor jobb felső sarkából rejtett ösvény vezet egy erdei sírhoz (HiddenGrave).
 	var hidden_grave := HiddenGrave.new()
 	hidden_grave.name = "HiddenGrave"

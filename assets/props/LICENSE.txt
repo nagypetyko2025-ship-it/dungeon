@@ -14,3 +14,6 @@ storage.png: 0-48 px: "16x16 boxes, crates, chests" (Kutejnikov, CC0, https://op
 pickaxe.png: "Pixel Pickaxe and Axe" (6666, CC0, https://opengameart.org/content/pixel-pickaxe-and-axe), a csákány.
 lift_gear.png: rozsdás fogaskerék 8 forgási képkockával (24x24), ehhez a projekthez rajzolva (pixel art, programmal raszterizálva), szabadon használható (CC0).
 mountain.png: a sziklacsempék az "Adventure Awaits Asset Pack 1.0" csomagból (Ishtar Pixels, CC0, https://opengameart.org/content/adventure-awaits-asset-pack-10), három teraszba rakva; a fű a Kenney RPG füvére színezve, a hó, a kiálló sziklák és az ácsolt bányabejárat sínnel ehhez a projekthez rajzolva (CC0).
+mine_tiles.png: a bánya belsejének csempéi. A föld és a sziklafal az "Adventure Awaits Asset Pack 1.0" (Ishtar Pixels, CC0,
+  https://opengameart.org/content/adventure-awaits-asset-pack-10) földes sziklafalából és talajából, barlangosra sötétítve;
+  a szakadék, a leszakadt deszkahíd, a hídoszlop és a bányatámfa ehhez a projekthez rajzolva (CC0).

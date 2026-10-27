@@ -6,6 +6,8 @@ extends Node2D
 ## a bejárattal szemben a pult a kocsmárossal, az asztalokon korsók és borosüvegek.
 ## A székeken ülnek a játszható karakterek (aki épp nem az aktív): odamész, E-t
 ## nyomsz, feláll és átveszed az irányítást, a mostani karaktered a saját helyére ül.
+## A kocsmárossal (Tóbiás) beszélgetni lehet (munka = küldetések, történetek, a kiadó szobák). A hátsó falon,
+## a sarokban ajtó: mögötte a szobák folyosója, fent sorban az öt szoba ajtaja (kopogni lehet; a négyes kiadó).
 ## (A tábor építi fel: setup(camp), a csempe-segédeit is a tábor adja.)
 
 signal message(text: String)
@@ -49,12 +51,60 @@ const DRINKS: Array[Vector2i] = [Vector2i(55, 14), Vector2i(55, 11), Vector2i(54
 const CANDLE := Vector2i(19, 7)
 const FIREPLACE := [Vector2i(54, 8), Vector2i(55, 8)]
 const SHELF_COLUMNS := [43, 44, 45, 46, 47, 48, 49, 50]
-## A kocsmáros (0x72 törpenő).
+## A kocsmáros (0x72 törpenő): Tóbiás. E-re beszélgetés: munka (a küldetések ablaka), történetek, a szobák.
 const BARKEEP := Rect2(128, 260, 16, 28)
-const BARKEEP_LINES: Array[String] = [
-	"Üdv a Mélységi kocsmában! Sör, bor, mesék... majd később.",
-	"Itt mindenki lement már egyszer. Kevesen jöttek vissza.",
-	"A törzsvendégeim? Ülnek a helyükön. Szólj nekik, ha kellenek.",
+const BARKEEP_ID := "barkeep"
+const BARKEEP_NAME := "Tóbiás, a kocsmáros"
+const BARKEEP_GREETING := "[i]A törpe kocsmáros egy korsót törölget, és fel sem néz.[/i]\n\n" \
+	+ "Üdv a Mélységi kocsmában! Sör, bor, mesék, szállás. Ha munkát keresel, nálam kezdd. Ha ágyat, " \
+	+ "hátul, a sarokban lévő ajtón túl vannak a szobák."
+const BARKEEP_STORIES: Array[Dictionary] = [
+	{"id": "history", "text": "Mióta van ez a kocsma?", "trust": 3,
+		"answer": "[i]Végigsimít a pulton, ami tele van bevésett nevekkel.[/i]\n\n" \
+			+ "A nagyapám építette, amikor még ezüstöt bányásztak a hegyben. Ezüstcsákány volt a neve, " \
+			+ "bányászkocsma: minden asztalnál egy brigád ült, és a pultba vésték annak a nevét, aki már nem jött " \
+			+ "fel a tárnából.\n\nAztán a bánya beomlott, alattunk megnyílt a Mélység, és a bányászok helyett " \
+			+ "jöttek a kalandorok. Átfestettem a cégért. A nevek a pultban maradtak, és most már a kalandoroké is " \
+			+ "ott van mellettük."},
+	{"id": "mimic", "text": "Mi volt a legfurcsább, ami itt történt?", "trust": 3,
+		"answer": "[i]Felnevet, és a pult alatt heverő seprűre bök.[/i]\n\n" \
+			+ "Egyszer egy kalandor felhozott egy szép, vasalt ládát, és egy hordó sörért akarta odaadni. Mire " \
+			+ "kinyitottuk, a láda megette a fél pultot, két széket és a kalandor bal csizmáját. Mimik volt.\n\n" \
+			+ "Azóta minden ládát, amit idehoznak, előbb megbökök ezzel a seprűvel. A kalandor egyébként azóta is " \
+			+ "fél csizmában jár. Azt mondja, szerencsét hoz."},
+	{"id": "toast", "text": "Kinek szól a teli korsó a pult végén?", "trust": 4,
+		"answer": "[i]Elkomolyodik, és a pult végén álló korsóra néz.[/i]\n\n" \
+			+ "Azoknak, akik lementek, és nem jöttek vissza. Minden este töltök egyet, a legjobbat a hordóból.\n\n" \
+			+ "Reggelre mindig üres. Senki nem látta, ki issza meg, és én nem kérdezem. Ha egyszer nem lesz " \
+			+ "üres... akkor talán már nincs odalent senki, aki szomjas."},
+	{"id": "rooms", "text": "Kik laknak a hátsó szobákban?", "trust": 2,
+		"answer": "[i]A hüvelykujjával a háta mögé, a sarokban lévő ajtóra bök.[/i]\n\n" \
+			+ "Hátul, a folyosón öt szoba van, azokat adom ki. Az egyesben egy vándorlantos lakik, aki fizetés " \
+			+ "helyett esténként játszik. A kettesben Puskás Döme, a robbantómester: ha horkolást hallasz és " \
+			+ "puskaporszagot érzel, az az ő ajtaja. A hármasban egy öregasszony, akit még sosem láttam kijönni. " \
+			+ "Az ötösben két testvér, akik minden reggel megesküsznek, hogy ma lemennek a Mélységbe.\n\n" \
+			+ "A négyes még kiadó. Ha egyszer eleged lesz a sátorból, szólj."},
+]
+## A hátsó ajtó a hátsó fal jobb sarkában (a kandalló és az oldalfal között): mögötte a szobák folyosója.
+const BACK_DOOR := Vector2i(218, 0)
+const DOOR_TILE := Vector2i(33, 1)
+## A szobák folyosója (messze mindentől): a padló 3 sor, fölötte a fal az öt szoba ajtajával, a déli falon
+## (jobbra) az ajtó vissza a kocsmába.
+const CORRIDOR := Rect2i(200, 30, 24, 3)
+const CORRIDOR_DOOR := Vector2i(221, 33)
+const CORRIDOR_LIGHT := Color(0.46, 0.38, 0.34)
+const ROOM_DOOR_COLUMNS: Array[int] = [202, 206, 210, 214, 218]
+## A szobák (balról jobbra): mi történik, ha kopogsz. A négyes kiadó (cetli az ajtón).
+const ROOMS: Array[Dictionary] = [
+	{"knock": "Halk lantszó szűrődik ki. Amikor kopogsz, abbamarad, aztán valaki dúdolni kezd: "
+		+ "„Foglalt, foglalt, foglalt a szoba...” Senki nem nyit ajtót."},
+	{"knock": "Bentről hangos horkolás hallatszik, és az ajtó alól puskaporszag szivárog. Itt alszik "
+		+ "Puskás Döme, a robbantómester. Hiába kopogsz, fel sem ébred."},
+	{"knock": "Csend. Aztán az ajtó mögül egy rekedt hang: „Nem veszek semmit!” A kulcslyukon át egy szem figyel."},
+	{"vacant": true, "knock": "Az ajtón cetli: „KIADÓ — érdeklődni a pultnál.” A kilincs nem enged: "
+		+ "a kulcs a kocsmárosnál van."},
+	{"knock": "Két hang vitatkozik bent arról, ki megy le holnap elsőnek a Mélységbe. Mindketten azt mondják, "
+		+ "hogy a másik. Észre sem veszik, hogy kopogtál."},
 ]
 
 ## A székek helye (világ-koordináta) és iránya: [pozíció, jobbra néz-e]. A karakterek
@@ -67,7 +117,8 @@ var _entities: Node2D
 var _seated := {}
 var _prompt: Label
 var _inside := false
-var _barkeep_line := 0
+var _in_corridor := false
+var _dialogue: DialoguePanel
 var _busy := false
 var _quest_panel: CanvasLayer
 var _quest_mark: Label
@@ -88,6 +139,18 @@ func setup(camp: Node2D) -> void:
 	_quest_panel = QUEST_PANEL.new()
 	_quest_panel.name = "QuestPanel"
 	camp.add_child.call_deferred(_quest_panel)
+	_dialogue = DialoguePanel.new()
+	_dialogue.name = "BarkeepDialogue"
+	_dialogue.npc_id = BARKEEP_ID
+	_dialogue.npc_name = BARKEEP_NAME
+	_dialogue.portrait = SpriteSheet.region(BARKEEP)
+	_dialogue.greeting = BARKEEP_GREETING
+	_dialogue.options_provider = func() -> Array[Dictionary]:
+		var list: Array[Dictionary] = [{"id": "work", "text": "Van munkád számomra? (küldetések)",
+			"on_choose": _open_quests}]
+		list.append_array(BARKEEP_STORIES)
+		return list
+	camp.add_child.call_deferred(_dialogue)
 
 
 ## A kocsma ajtaja előtti földút (a tábor rajzolja ki a többi földdel együtt).
@@ -178,8 +241,17 @@ func _build_interior() -> void:
 	for i in 2:
 		_tile(DOUBLE_DOOR[i], Vector2i(INTERIOR_DOOR.x + i, r.end.y), -8)
 	_solid(Rect2(Vector2(INTERIOR_DOOR.x, r.end.y + 1) * TILE, Vector2(2 * TILE, TILE)))
+	# A hátsó ajtó a polcok között (a felső polcsorban egy kis tábla).
+	_tile(DOOR_TILE, BACK_DOOR, -7)
+	var rooms_sign := UiStyle.label("Szobák", 13, Color(0.95, 0.85, 0.6), true)
+	rooms_sign.size = Vector2(TILE * 2, 16)
+	rooms_sign.position = Vector2(BACK_DOOR + Vector2i.UP) * TILE + Vector2(-TILE / 2.0, 10)
+	rooms_sign.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rooms_sign.z_index = -6
+	add_child(rooms_sign)
 	_build_bar()
 	_build_tables()
+	_build_corridor()
 
 
 ## A pult a bejárattal szemben (a hátsó fal előtt), mögötte a kocsmáros.
@@ -192,8 +264,8 @@ func _build_bar() -> void:
 	pieces.append(Rect2(7 * 17, 7 * 17, 16, 16))
 	for i in pieces.size():
 		var piece := _sprite(INDOOR, pieces[i], _center(Vector2i(x0 + i, y)), 0, _entities)
-		# Korsók a pulton.
-		if i in [1, 4, 7]:
+		# Korsók a pulton (a pult végén az, amit a kocsmáros minden este a lent maradtaknak tölt).
+		if i in [1, 4, 7, 9]:
 			_on_table(piece, DRINKS[i % DRINKS.size()], Vector2(0, -6), 0.8)
 	_solid(Rect2(Vector2(x0, y) * TILE, Vector2(pieces.size() * TILE, TILE)))
 	var barkeep := AnimatedSprite2D.new()
@@ -253,6 +325,86 @@ func _on_table(table: Sprite2D, coords: Vector2i, offset: Vector2, scale_factor:
 	sprite.position = offset
 	sprite.scale = Vector2.ONE * scale_factor
 	table.add_child(sprite)
+
+
+## A szobák folyosója: deszkapadló hosszú futószőnyeggel, fent deszkafal az öt szoba ajtajával (fölöttük
+## sárgaréz számtábla, a négyesen "KIADÓ" cetli), köztük fali fáklyák; jobbra lent az ajtó vissza a kocsmába.
+func _build_corridor() -> void:
+	var r := CORRIDOR
+	var top := r.position.y - 2
+	for x in range(r.position.x, r.end.x):
+		for y in range(r.position.y, r.end.y):
+			_tile(FLOOR_TILES[(x + y) % 2], Vector2i(x, y), -10).modulate = FLOOR_TINT.darkened(0.1)
+		_tile(WALL_BAND, Vector2i(x, top), -9).modulate = Color(0.8, 0.68, 0.58)
+		_tile(WALL_BOARDS, Vector2i(x, top + 1), -9).modulate = Color(0.8, 0.68, 0.58)
+	# Fölötte és körben sötét (a kamera szélén se látsszon a semmi).
+	var dark := ColorRect.new()
+	dark.color = Color(0.06, 0.04, 0.04)
+	dark.position = Vector2(r.position - Vector2i(2, 6)) * TILE
+	dark.size = Vector2(r.size + Vector2i(4, 4)) * TILE
+	dark.z_index = -11
+	add_child(dark)
+	# Futószőnyeg a folyosó közepén (vörös, arany szegéllyel).
+	var runner := ColorRect.new()
+	runner.color = Color(0.45, 0.12, 0.1)
+	runner.position = Vector2(r.position.x + 0.5, r.position.y + 1.2) * TILE
+	runner.size = Vector2(r.size.x - 1, 0.6) * TILE
+	runner.z_index = -9
+	add_child(runner)
+	for edge in [0.0, runner.size.y - 3.0]:
+		var trim := ColorRect.new()
+		trim.color = Color(0.78, 0.6, 0.26)
+		trim.position = runner.position + Vector2(0, edge)
+		trim.size = Vector2(runner.size.x, 3)
+		trim.z_index = -9
+		add_child(trim)
+	for i in ROOM_DOOR_COLUMNS.size():
+		var column := ROOM_DOOR_COLUMNS[i]
+		_tile(DOOR_TILE, Vector2i(column, top + 1), -8)
+		var plate := ColorRect.new()
+		plate.color = Color(0.75, 0.58, 0.22)
+		plate.size = Vector2(14, 12)
+		plate.position = _center(Vector2i(column, top)) + Vector2(-7, 4)
+		plate.z_index = -7
+		add_child(plate)
+		var number := UiStyle.label(str(i + 1), 11, Color(0.2, 0.12, 0.05))
+		number.size = plate.size
+		number.position = plate.position + Vector2(0, -2)
+		number.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		number.z_index = -6
+		add_child(number)
+		if ROOMS[i].get("vacant", false):
+			var note := ColorRect.new()
+			note.color = Color(0.92, 0.88, 0.76)
+			note.size = Vector2(36, 14)
+			note.position = _center(Vector2i(column, top + 1)) + Vector2(-18, -6)
+			note.rotation = deg_to_rad(-4)
+			note.z_index = -7
+			add_child(note)
+			var vacant := UiStyle.label("KIADÓ", 9, Color(0.5, 0.1, 0.08))
+			vacant.size = note.size
+			vacant.position = note.position + Vector2(0, 1)
+			vacant.rotation = note.rotation
+			vacant.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			vacant.z_index = -6
+			add_child(vacant)
+		# Fali fáklya a két ajtó között.
+		if i < ROOM_DOOR_COLUMNS.size() - 1:
+			var torch: Node2D = TORCH.instantiate()
+			torch.position = _center(Vector2i(column + 2, top)) + Vector2(0, 6)
+			add_child(torch)
+	# Az ajtó vissza a kocsmába (a déli falon), két cserepes növény és egy szék a fal mellett.
+	_tile(DOOR_TILE, CORRIDOR_DOOR, -8).modulate = Color(0.85, 0.78, 0.72)
+	_sprite(INDOOR, Rect2(16 * 17, 0, 16, 16), _center(Vector2i(r.position.x, r.position.y)) + Vector2(0, -6), 0, _entities)
+	_sprite(INDOOR, Rect2(17 * 17, 0, 16, 16), _center(Vector2i(r.end.x - 1, r.position.y)) + Vector2(0, -6), 0, _entities)
+	_tile(CHAIR_FACING_RIGHT, Vector2i(r.position.x + 1, r.end.y - 1), 0, _entities)
+	# Falak: fent a deszkafal, alul a déli fal (az ajtó kivételével), oldalt a két vég.
+	_solid(Rect2(Vector2(r.position.x, top) * TILE, Vector2(r.size.x * TILE, TILE * 1.6)))
+	_wall_rect(Rect2(Vector2(r.position.x, r.end.y) * TILE, Vector2((CORRIDOR_DOOR.x - r.position.x) * TILE, TILE)))
+	_wall_rect(Rect2(Vector2(CORRIDOR_DOOR.x + 1, r.end.y) * TILE, Vector2((r.end.x - CORRIDOR_DOOR.x - 1) * TILE, TILE)))
+	_solid(Rect2(Vector2(CORRIDOR_DOOR.x, r.end.y + 1) * TILE, Vector2(TILE, TILE)))
+	_wall_rect(Rect2(Vector2(r.position.x - 1, top) * TILE, Vector2(TILE, (r.size.y + 3) * TILE)))
+	_wall_rect(Rect2(Vector2(r.end.x, top) * TILE, Vector2(TILE, (r.size.y + 3) * TILE)))
 
 
 # ---------------------------------------------------------------- karakterek
@@ -360,14 +512,24 @@ func _focus() -> Array:
 	if not is_instance_valid(_player) or _busy:
 		return []
 	var at: Vector2 = _player.global_position
+	if _in_corridor:
+		if at.distance_to(_center(CORRIDOR_DOOR + Vector2i.UP)) < INTERACT_RANGE:
+			return ["corridor_exit", "[E] Vissza a kocsmába"]
+		for i in ROOM_DOOR_COLUMNS.size():
+			if at.distance_to(_center(Vector2i(ROOM_DOOR_COLUMNS[i], CORRIDOR.position.y))) < INTERACT_RANGE:
+				var vacant: bool = ROOMS[i].get("vacant", false)
+				return ["room_%d" % i, "[E] %d. szoba%s" % [i + 1, " (kiadó)" if vacant else ": kopogás"]]
+		return []
 	if not _inside:
 		if at.distance_to(door_position()) < INTERACT_RANGE:
 			return ["door", "[E] Belépés: Mélységi kocsma"]
 		return []
+	if at.distance_to(_center(BACK_DOOR + Vector2i.DOWN)) < INTERACT_RANGE:
+		return ["back_door", "[E] Hátsó ajtó: a szobák"]
 	if at.distance_to(_center(INTERIOR_DOOR) + Vector2(TILE / 2.0, TILE / 2.0)) < INTERACT_RANGE:
 		return ["exit", "[E] Kilépés a városba"]
 	if at.distance_to(get_meta("barkeep_position")) < INTERACT_RANGE + 10:
-		return ["barkeep", "[E] Küldetések (kocsmáros)"]
+		return ["barkeep", "[E] Beszélgetés: %s" % BARKEEP_NAME]
 	for id: String in _seated:
 		if at.distance_to(_seated[id].position) < INTERACT_RANGE:
 			return [id, "[E] %s" % Characters.data(id)["name"]]
@@ -466,12 +628,39 @@ func _unhandled_input(event: InputEvent) -> void:
 		"door": _enter()
 		"exit": _exit()
 		"barkeep":
-			# A kocsmáros küldetéseket ad (és itt lehet leadni őket).
 			Audio.play("ui_open")
-			message.emit("Kocsmáros: \"%s\"" % BARKEEP_LINES[_barkeep_line % BARKEEP_LINES.size()])
-			_barkeep_line += 1
-			_camp.get_node("Menus").call("open_menu", _quest_panel)
-		_: _switch_to(focus[0])
+			_camp.get_node("Menus").call("open_menu", _dialogue)
+		"back_door": _move_corridor(true)
+		"corridor_exit": _move_corridor(false)
+		_:
+			if str(focus[0]).begins_with("room_"):
+				Audio.play("door_lock", -6.0)
+				message.emit(ROOMS[int(str(focus[0]).trim_prefix("room_"))]["knock"])
+			else:
+				_switch_to(focus[0])
+
+
+## A kocsmáros "munka" válasza: a küldetések ablaka (a beszélgetés helyett; itt lehet leadni is őket).
+func _open_quests() -> String:
+	var menus := _camp.get_node("Menus")
+	menus.call("close_current")
+	menus.call_deferred("open_menu", _quest_panel)
+	return ""
+
+
+## Át a hátsó ajtón a szobák folyosójára (`into`), vagy onnan vissza a kocsmába.
+func _move_corridor(into: bool) -> void:
+	_busy = true
+	Audio.play("door_unlock", -4.0)
+	_in_corridor = into
+	if into:
+		var limits := Rect2(Vector2(CORRIDOR.position - Vector2i(1, 5)) * TILE, Vector2(CORRIDOR.size + Vector2i(2, 7)) * TILE)
+		_camp.call("teleport_player", _center(CORRIDOR_DOOR + Vector2i.UP), limits, CORRIDOR_LIGHT)
+	else:
+		var limits := Rect2(Vector2(INTERIOR.position - Vector2i(2, 3)) * TILE, Vector2(INTERIOR.size + Vector2i(4, 6)) * TILE)
+		_camp.call("teleport_player", _center(BACK_DOOR + Vector2i.DOWN) + Vector2(0, 10), limits, INTERIOR_LIGHT)
+	await get_tree().create_timer(0.6).timeout
+	_busy = false
 
 
 func _enter() -> void:

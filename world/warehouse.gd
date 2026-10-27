@@ -40,7 +40,8 @@ var _prompt: Label
 var _inside := false
 var _busy := false
 var _rng := RandomNumberGenerator.new()
-## A bányász (Kormos Gyula): alszik a széken, a közelében felriad, feláll, és felveszi a csákányát.
+## A bányász (Kormos Gyula): alszik a széken, a közelében felriad, feláll, és felveszi a csákányát. Kérdezhető a
+## robbantómesterről is (Puskás Döme: a kocsma hátsó szobáiban lakik, lásd Town.ROOMS).
 var _miner: Sprite2D
 var _miner_body: StaticBody2D
 var _pickaxe: Sprite2D
@@ -74,6 +75,14 @@ const MINER_STORIES: Array[Dictionary] = [
 			+ "Vendel, a sírásó táncolt, ami ijesztőbb, mint amilyennek hangzik. Bertalan meg bebizonyította, " \
 			+ "hogy egy fogaskerékből is lehet sört inni.\n\n" \
 			+ "Hogy én hogy kerültem ide? Arra már nem emlékszem. De a fejem szerint nagyon jól éreztem magam."},
+	{"id": "blaster", "text": "Ki az a robbantómester?", "trust": 3,
+		"answer": "[i]Felnevet, aztán a fejéhez kap, mert az fáj.[/i]
+
+" 			+ "Puskás Döme. Harminc évig ő robbantotta nekünk a tárnákat a hegyben, és mind a tíz ujja megvan még. " 			+ "Errefelé ez nagy szó.
+
+" 			+ "Mióta a bánya bezárt, a kocsmában lakik: Tóbiás, a kocsmáros hátul kiadja a szobákat, az egyikben " 			+ "ő alszik. Ha nem a pultnál ül, akkor ott horkol. Az ajtaján megismered: puskaporszag jön alóla.
+
+" 			+ "Ha kibontatnál valamit, ő a te embered. Csak előtte ne igyon."},
 ]
 
 

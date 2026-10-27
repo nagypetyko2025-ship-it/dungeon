@@ -85,16 +85,22 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Temető a kocsma alatt: `world/graveyard.gd`; mellette (keletre) a régi kápolna: `world/chapel.gd` (létra a harangtoronyba, kötél: harang, `bell.wav`). A sírásó (Vendel):
   `world/gravedigger.gd` (küldetései: 50 csontváz → Szent kereszt → 20 zombi → legendás talizmán, köztük 2-2 történet; utána
   a kocsmába költözik, játszható "gravedigger" karakter; J könyv: "Csontváz sírásó" fül).
-- A kórháztól jobbra a poros raktár: `world/warehouse.gd` (belül ládák, hordók, polcok, por, asztal székekkel; a széken alszik Kormos Gyula, a bányász: közel érve felriad, felveszi a csákányát, 3 történet).
+- A kórháztól jobbra a poros raktár: `world/warehouse.gd` (belül ládák, hordók, polcok, por, asztal székekkel; a széken alszik Kormos Gyula, a bányász: közel érve felriad, felveszi a csákányát, 3 történet + "Ki az a robbantómester?": Puskás Döme, a kocsma hátsó szobáiban lakik).
 - A kocsmától jobbra a kalandorok kórháza: `world/hospital.gd` (betegágyak, Kálmán doktor, Rozi nővér; a régi lakóház helyén).
 - Utak a városban: minden ház ajtajához földút vezet (a `path_tiles()` statikus függvényekből a tábor rajzolja ki);
   az egyajtós házakhoz (kórház, raktár) és a mólóhoz keskeny, 1 csempés ösvény (`Camp.NARROW`: vége, közepe,
   torkolat), a kápolnához a keleti oldala mellett le, a déli ajtajáig. Útjelző táblák (`Camp._branch_sign`):
   "Királyi palota" a vár útján, "Bánya" és "Tó" a leágazásoknál, "Város" a tábor keleti szélén.
 - Bánya: `world/mine.gd` — a raktár és a tó között félúton (2 oszlop) földút fel északra, az erdőn át egy tisztásig;
-  ott hegy (`assets/props/mountain.png`: három füves sziklaterasz, havas csúcs, ácsolt bányabejárat sínnel; egyelőre
-  díszlet). A tisztáson a kamera feljebb néz (`Mine.LOOK_UP`), különben a nagyítás miatt nem látszana a csúcs.
+  ott hegy (`assets/props/mountain.png`: három füves sziklaterasz, havas csúcs, ácsolt bányabejárat sínnel). A tisztáson
+  a kamera feljebb néz (`Mine.LOOK_UP`), különben a nagyítás miatt nem látszana a csúcs. A bejáratnál E-re be lehet menni
+  (belső tér: `Mine.BOUNDS`, x 598-tól): alagút (sín, érces kocsi, támfák fáklyával), barlangterem, keresztben szakadék,
+  a deszkahíd közepe leszakadt (a déli csonkra ráállhatsz, E: lenézel; a túlparton tovább megy a járat, egyelőre
+  elérhetetlen). Csempék: `assets/props/mine_tiles.png` (16 px; a föld és a fal az Adventure Awaits csomagból).
   A doktor kérdései és küldetései: `world/doctor.gd` (J könyv "Doktor" fül; 1.: Vérgömb, 2.: A tudós szeme, 3.: Fűrészpenge, utána 3 történet).
+- Kocsma (`world/town.gd`): a kocsmáros (Tóbiás) E-re beszélget (`BARKEEP_STORIES`: 3 történet + a szobák; a "munka"
+  opció nyitja a küldetések ablakát). A hátsó fal jobb sarkában ajtó (`BACK_DOOR`) a szobák folyosójára (`CORRIDOR`,
+  y 30-tól): fent 5 ajtó (`ROOMS`: kopogásra szöveg; 2: Puskás Döme, a robbantómester; 4: kiadó).
 - Város északi része: `world/castle.gd` ( út, királyi vár, őrök, trónterem; király: `world/king.gd`; a
   "Király" fül a J könyvben az első látogatás után; engedély: `deep_30` jelző, a 30. emelet után a táborban "done").
   A hét király jelentése után: "Mi lesz most, felség?" → új küldetés, a Káosz kapuja (`King.CHAOS_QUEST`: győzd le
