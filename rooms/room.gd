@@ -434,7 +434,12 @@ func _spawn_boss() -> void:
 	if net != null and net.is_client_mode():
 		return
 	var boss = boss_scene.instantiate()
-	if final_boss and lord == "chaos":
+	if final_boss and lord == "knocker":
+		# A Kopogó (a régi tárnák alján, lásd Knocking): a terem túlsó felén vár.
+		boss.setup_boss(depth, Knocking.BOSS)
+		boss.position = Vector2(rect.size.x * 0.25, 0) * TILE
+		boss.get_node("Health").died.connect(_on_enemy_died.bind(boss))
+	elif final_boss and lord == "chaos":
 		# A Káosz Ura is a terem túlsó (keleti) felén vár.
 		boss.set_script(CHAOS_LORD)
 		boss.setup_chaos(depth)
@@ -542,8 +547,10 @@ func _connect_center_stairs() -> void:
 
 ## Sok arany és egy biztosan legalább epikus tárgy (mítikusat csak a nagy főellenség dobhat, ritkán).
 func _drop_boss_loot(at: Vector2) -> void:
-	var total := (CHAOS_LORD_GOLD if lord == "chaos" else FINAL_BOSS_GOLD) if final_boss 		else BOSS_GOLD + depth * BOSS_GOLD_PER_DEPTH
-	var coins := (30 if lord == "chaos" else 20) if final_boss else 10
+	# A Kopogó (a régi tárnák alján) rendes főellenségnyi zsákmányt hagy, nem a nagy főellenségekét.
+	var lord_loot := final_boss and lord != "knocker"
+	var total := (CHAOS_LORD_GOLD if lord == "chaos" else FINAL_BOSS_GOLD) if lord_loot 		else BOSS_GOLD + depth * BOSS_GOLD_PER_DEPTH
+	var coins := (30 if lord == "chaos" else 20) if lord_loot else 10
 	for i in coins:
 		var coin = COIN.instantiate()
 		coin.value = total / coins + (total % coins if i == 0 else 0)
@@ -551,11 +558,11 @@ func _drop_boss_loot(at: Vector2) -> void:
 		_enemies.add_child(coin)
 	var drop = ITEM_DROP.instantiate()
 	drop.item = Items.random_item("legendary", BOSS_ITEM_MIN_RARITY, depth)
-	if final_boss and randf() < Items.MYTHIC_LORD_CHANCE:
+	if lord_loot and randf() < Items.MYTHIC_LORD_CHANCE:
 		drop.item = Items.random_item("mythic", "mythic", depth)
 	drop.position = at + Vector2(0, -20)
 	_enemies.add_child(drop)
-	if final_boss:
+	if lord_loot:
 		# A nagy főellenség (Vérfarkas, Káosz Ura) egy biztos legendás tárgyat is hagy.
 		var legendary = ITEM_DROP.instantiate()
 		legendary.item = Items.random_item("legendary", "legendary")

@@ -152,7 +152,9 @@ func _ready() -> void:
 	var tutorial := GameState.tutorial
 	# A nagy főellenség emelete: a 20. (Vérfarkas) és a 40. (a Káosz Ura).
 	var chaos_floor := depth == CHAOS_DEPTH and not tutorial
-	var final_floor := (depth == FINAL_DEPTH or chaos_floor) and not tutorial
+	# A régi tárnák (a kopogás titka, lásd Knocking) utolsó emelete: aréna a Kopogóval.
+	var knocker_floor := Challenge.story() == "knocker" and depth >= int(GameState.challenge["floors"])
+	var final_floor := (depth == FINAL_DEPTH or chaos_floor or knocker_floor) and not tutorial
 	var cells: Array[Vector2i] = []
 	if tutorial:
 		cells = TUTORIAL_CELLS.duplicate()
@@ -215,12 +217,12 @@ func _ready() -> void:
 		if final_floor:
 			# A nagy főellenség terme: nyitott aréna, se csapda, se láda. A 20. emeleten mindkét
 			# szobában Gáspár elesett embereinek csontvázai fekszenek (a teremben a legtöbb).
-			if not chaos_floor:
+			if not chaos_floor and not knocker_floor:
 				room.fallen_guards = FINAL_ARENA_GUARDS if cell == Vector2i.RIGHT else FINAL_START_GUARDS
 			if cell == Vector2i.RIGHT:
 				room.has_boss = true
 				room.final_boss = true
-				room.lord = "chaos" if chaos_floor else "werewolf"
+				room.lord = "knocker" if knocker_floor else ("chaos" if chaos_floor else "werewolf")
 				room.enemy_count = 1
 		elif cell == shop_cell:
 			room.has_shop = true
@@ -319,7 +321,7 @@ func _ready() -> void:
 			Progress.save_game()
 		if chaos_floor:
 			_hud.show_message("%d. emelet — keleten a Káosz Ura vár! Itt már a valóság is széthullik." % depth)
-		elif final_floor and Progress.character == "veteran":
+		elif final_floor and Progress.character == "veteran" and not knocker_floor:
 			# Gáspár visszatér oda, ahol az emberei elestek.
 			_hud.show_message("Gáspár: „Visszatértem, barátaim!”")
 			FloatingText.spawn(_entities, _player.global_position + Vector2(0, -60), "Visszatértem, barátaim!",
@@ -414,7 +416,8 @@ func _on_final_boss_defeated(room: Room) -> void:
 	_victory_lord = room.lord
 	# A próbatételben a nagy főellenség után sincs portál: a lépcső visz tovább (az utolsó emeleten: győzelem).
 	if Challenge.active():
-		_hud.show_message("A Mélység Ura legyőzve! A lépcső szabad.")
+		_hud.show_message("A Kopogó elhallgatott! A lépcső szabad: fel a kötélen." if room.lord == "knocker"
+			else "A Mélység Ura legyőzve! A lépcső szabad.")
 		room.open_stairs.call_deferred(room.anchor + Vector2i(DEEPER_STAIRS_OFFSET, 0))
 		return
 	if room.lord == "chaos":
@@ -465,8 +468,15 @@ func _start_challenge_floor(depth: int, boss_floor: bool) -> void:
 			for i in levels:
 				xp += Experience.xp_for_level(experience.level + i)
 			experience.add.call_deferred(xp)
-		_hud.show_message("Próbatétel: %d emelet, %s nehézség — sok szerencsét!" % [floors,
-			str(GameState.challenge["difficulty"]).to_lower()])
+		if Challenge.story() == "knocker":
+			_hud.show_message("A régi tárnák: %d emelet lefelé. Az utolsó alján vár, ami kopog." % floors)
+		else:
+			_hud.show_message("Próbatétel: %d emelet, %s nehézség — sok szerencsét!" % [floors,
+				str(GameState.challenge["difficulty"]).to_lower()])
+		return
+	if Challenge.story() == "knocker":
+		_hud.show_message("A régi tárnák — %d. / %d emelet%s" % [depth, floors,
+			" — keletről kopogás hallatszik..." if depth >= floors else ""])
 		return
 	_hud.show_message("Próbatétel — %d. / %d emelet%s" % [depth, floors, " — főellenség vár!" if boss_floor else ""])
 
@@ -480,10 +490,13 @@ func _challenge_won() -> void:
 	var item := {}
 	var gold := int(_player.get("gold"))
 	if not GameState.cheated:
-		item = Challenge.roll_reward(challenge)
+		# A régi tárnák jutalma a történeté (Knocking), a random próbatételé a nehézségéből.
+		item = Knocking.reward() if Challenge.story() == "knocker" else Challenge.roll_reward(challenge)
 		Progress.add_to_stash(item)
 		Progress.add_camp_gold(gold)
-		Challenge.reroll()
+		# A történet (a régi tárnák) nem a random próbatétel: az marad.
+		if Challenge.story().is_empty():
+			Challenge.reroll()
 	else:
 		gold = 0
 	var panel := ChallengePanel.new()

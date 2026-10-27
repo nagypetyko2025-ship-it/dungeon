@@ -67,7 +67,7 @@ func setup_chaos(depth: int) -> void:
 	}
 
 
-func setup_boss(depth: int) -> void:
+func setup_boss(depth: int, _special := {}) -> void:
 	setup_chaos(depth)
 
 

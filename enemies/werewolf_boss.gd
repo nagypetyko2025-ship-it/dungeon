@@ -63,7 +63,7 @@ func setup_werewolf(depth: int) -> void:
 	}
 
 
-func setup_boss(depth: int) -> void:
+func setup_boss(depth: int, _special := {}) -> void:
 	setup_werewolf(depth)
 
 

@@ -75,7 +75,7 @@ func show_result(challenge: Dictionary, item: Dictionary, gold: int) -> void:
 
 
 func _process(_delta: float) -> void:
-	if not visible or not _offer:
+	if not visible or not _offer or _challenge.has("story"):
 		return
 	var left := Challenge.seconds_left()
 	# Lejárt: már egy új próbatétel vár.
@@ -113,6 +113,9 @@ func _build() -> void:
 func _fill_offer() -> void:
 	_clear()
 	var challenge := _challenge
+	if challenge.get("story", "") == "knocker":
+		_fill_story_offer()
+		return
 	_body.add_child(UiStyle.title_bar("A Mélység próbája"))
 	_body.add_child(_line("Ez a kazamata %d emeletig tart: a %d. emelet lépcsője a cél." % [challenge["floors"],
 		challenge["floors"]], 18, UiStyle.INK))
@@ -141,6 +144,32 @@ func _fill_offer() -> void:
 	buttons.add_child(_button("Lemegyek", _start))
 	buttons.add_child(_button("Mégse", func() -> void: get_tree().current_scene.get_node("Menus").call("close_current")))
 	_process(0.0)
+
+
+## A régi tárnák (a kopogás titka): a kötélen le, 5 emelet, a végén a Kopogó; ugyanazok a szabályok.
+func _fill_story_offer() -> void:
+	_body.add_child(UiStyle.title_bar("A régi tárnák"))
+	_body.add_child(_line("A pókselyem kötél a sötétbe lóg. Lent a régi tárnák: %d emelet lefelé, és az utolsó alján " \
+		% _challenge["floors"] + "vár az, ami a brigád jelét kopogja.", 18, UiStyle.INK))
+	_body.add_child(_line("Jutalom, ha legyőzöd: A huszonhét lámpása (egyedi legendás talizmán) és a lent szerzett "
+		+ "aranyad.", 18, GOLD))
+	var rules := PanelContainer.new()
+	rules.add_theme_stylebox_override("panel", UiStyle.plain_panel())
+	_body.add_child(rules)
+	rules.add_child(_line("• Innen nem lehet felküldeni tárgyat: nincs tárgylift, és nincs pihenő a táborban.\n"
+		+ "• Amit leviszel vagy lent kapsz, az lent marad (a felszerelésed is!). Amit nem akarsz elveszíteni, "
+		+ "tedd előtte a tábori ládába.\n"
+		+ "• Az arany csak akkor jön fel veled, ha nyersz (akkor az egésze). Ha meghalsz, újra lemehetsz.", 15,
+		UiStyle.INK_LIGHT))
+	_timer_label = _line("", 1, UiStyle.INK_LIGHT)
+	_timer_label.visible = false
+	_body.add_child(_timer_label)
+	var buttons := HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	buttons.add_theme_constant_override("separation", 16)
+	_body.add_child(buttons)
+	buttons.add_child(_button("Leereszkedek", _start))
+	buttons.add_child(_button("Mégse", func() -> void: get_tree().current_scene.get_node("Menus").call("close_current")))
 
 
 func _modifier_column(title: String, ids: Array, pool: Dictionary, color: Color, mark: String) -> VBoxContainer:

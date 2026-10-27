@@ -116,6 +116,13 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   vannak bekötve (EnemyTypes.roll, Boss, dungeon szobák, Player arany/regen, bolt, bájital, ejtés). Szabályok: nincs
   tárgylift és pihenő-portál, a levitt és lent szerzett tárgyak lent maradnak, arany csak győzelemkor (100%), az
   eredménytáblába és az emelet-küldetésekbe nem számít; győzelem = az utolsó emelet lépcsője (`Dungeon._challenge_won`).
+- A kopogás titka: `world/knocking.gd` (`Knocking`, J könyv "Bányász" fül; Döme hídja után Kormos Gyulától).
+  1. A lyuk hangja: a lyukas teremben a lyuk keleti szélén fülelni (`Mine.DEEP_LISTEN`), a brigád jele szól.
+  2. Pókselyem kötél: 12 kazamatapók a küldetés óta. 3. A Kopogó: a lyuk nyugati szélén a kötél (`Mine.DEEP_ROPE`),
+  a régi tárnák = 5 emeletes próbatétel (`GameState.challenge` "story": "knocker", `Challenge.story()`), az utolsó
+  emelet aréna (`room.lord` "knocker"), a főellenség `Knocking.BOSS` (`Boss.setup_boss(depth, special)`, kép:
+  `assets/enemies/knocker.png`). Jutalom: A huszonhét lámpása (`trinket_miners_lamp`, egyedi). Utána Gyula a bányában
+  áll (`Knocking.moved()`), a raktárból eltűnik. A történet a 100. emeletig fog tartani (a 40. után nincs ünnepség).
 - Főmenü "Újdonságok" (jobb oldalt): `ui/news.gd` (`News.ENTRIES`, a legújabb felül). Minden változtatásnál írj
   bele egy rövid, játékosnak szóló sort a mai dátum alá.
 - Puskás Döme, a robbantómester: `world/blaster.gd` (J könyv "Robbantómester" fül). Első kopogásra kijön, a kettes ajtó

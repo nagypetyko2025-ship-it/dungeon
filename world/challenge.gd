@@ -184,6 +184,11 @@ static func active() -> bool:
 	return not GameState.challenge.is_empty()
 
 
+## Történet-futás (pl. "knocker": a régi tárnák, lásd Knocking), "" = random próbatétel vagy rendes futás.
+static func story() -> String:
+	return str(GameState.challenge.get("story", ""))
+
+
 static func _effects() -> Array[Dictionary]:
 	var list: Array[Dictionary] = []
 	for id: String in GameState.challenge.get("boons", []):

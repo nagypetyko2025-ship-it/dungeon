@@ -13,7 +13,7 @@ const PAGE_SIZE := Vector2(400, 400)
 ## 2 = a tolvaj küldetései (Thief), 3 = a király küldetései (Castle; csak a vár kapujánál
 ## tett első látogatás után látszik).
 const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király", "Kutas idegen", "Csontváz sírásó", "Doktor",
-	"Mérnök", "Horgász", "Robbantómester"]
+	"Mérnök", "Horgász", "Robbantómester", "Bányász"]
 const KING_TAB := 3
 ## 4 = a kútba esett idegen küldetései (Stranger).
 const WELL_TAB := 4
@@ -27,6 +27,8 @@ const ENGINEER_TAB := 7
 const FISHER_TAB := 8
 ## 9 = Puskás Döme, a robbantómester küldetései (Blaster).
 const BLASTER_TAB := 9
+## 10 = Kormos Gyula, a bányász küldetései (Knocking).
+const MINER_TAB := 10
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 ## Az általános fül szűrői: [kulcs, felirat].
 const STATUS_FILTERS := [["all", "Mind"], ["ready", "Leadható"], ["active", "Folyamatban"], ["done", "Teljesítve"]]
@@ -81,6 +83,7 @@ func _npc_quests() -> Dictionary:
 		ENGINEER_TAB: return Engineer.QUESTS
 		FISHER_TAB: return Fisherman.QUESTS
 		BLASTER_TAB: return Blaster.QUESTS
+		MINER_TAB: return Knocking.QUESTS
 	return Dialogues.VETERAN_QUESTS
 
 
@@ -94,6 +97,7 @@ func _npc_name() -> String:
 		ENGINEER_TAB: return Engineer.NAME
 		FISHER_TAB: return Fisherman.NAME
 		BLASTER_TAB: return Blaster.NAME
+		MINER_TAB: return Knocking.NAME
 	return Dialogues.VETERAN_NAME
 
 
@@ -227,8 +231,8 @@ func _build() -> void:
 	root.add_child(tabs)
 	for i in TAB_NAMES.size():
 		var tab := MenuStyle.button(TAB_NAMES[i])
-		tab.custom_minimum_size = Vector2(118, 44)
-		tab.add_theme_font_size_override("font_size", 13)
+		tab.custom_minimum_size = Vector2(108, 44)
+		tab.add_theme_font_size_override("font_size", 12)
 		tab.focus_mode = Control.FOCUS_NONE
 		tab.modulate = Color.WHITE if i == 0 else Color(0.6, 0.55, 0.5)
 		tab.pressed.connect(_set_tab.bind(i))
@@ -355,6 +359,9 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 				+ "A város keleti rétjén, a tó partján horgászik. Kérdezd meg, segíthetsz-e neki."
 		elif _tab == 0 and _ids.is_empty() and index == 0:
 			empty_text = "Ebben a szűrésben nincs küldetés."
+		elif _tab == MINER_TAB and _ids.is_empty() and index == 0:
+			empty_text = "Kormos Gyula, a bányász még nem kért tőled semmit.\n\n" \
+				+ "A poros raktárban alszik, a kórháztól jobbra. Ha átjutottál a bánya szakadékán, mondd el neki."
 		elif _tab == BLASTER_TAB and _ids.is_empty() and index == 0:
 			empty_text = "Puskás Döme még nem kért tőled semmit.\n\n" \
 				+ "A kocsma hátsó folyosóján lakik, a kettes szobában. Kopogj be hozzá."
@@ -473,6 +480,8 @@ func _fill_npc_page(page: VBoxContainer, id: String) -> void:
 		doing = Doctor.doing_text(id, doing)
 	elif _tab == BLASTER_TAB:
 		doing = Blaster.doing_text(id, doing)
+	elif _tab == MINER_TAB:
+		doing = Knocking.doing_text(id, doing)
 	var state := UiStyle.label(("✔ TELJESÍTVE — " + quest["done"]) if done else ("★ FOLYAMATBAN — " + doing),
 		19, Color(0.24, 0.5, 0.2) if done else Color(0.6, 0.3, 0.05))
 	state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

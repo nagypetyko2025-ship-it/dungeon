@@ -488,6 +488,11 @@ const DEFINITIONS := {
 	# Talizmánok
 	"trinket_lantern": {"name": "Koponyalámpás", "slot": "trinket", "rarity": "rare",
 		"stats": {"xp_bonus": [10, 15], "dodge": [2, 3]}},
+	# A kopogás titka jutalma (Knocking): egyedi, nem esik, nem kapható.
+	"trinket_miners_lamp": {"name": "A huszonhét lámpása", "slot": "trinket", "rarity": "legendary", "unique": true,
+		"shop": false, "stats": {"max_health": [15, 15], "defense": [6, 6], "gold_find": [20, 20], "xp_bonus": [10, 10]},
+		"description": "Huszonhét bányászlámpa üvegéből olvasztott talizmán. Halványan világít, és ha nagyon csendben "
+			+ "vagy, néha kopogást hallasz belőle. Barátságosat."},
 	"trinket_orb": {"name": "Vérgömb", "slot": "trinket", "rarity": "legendary",
 		"stats": {"damage_percent": [8, 12], "crit_chance": [5, 8], "lifesteal": [4, 6]}},
 	# Mítikus tárgyak: fajtánként / helyenként egy, a legendásoknál ritkábbak és erősebbek (piros ikon, izzással).

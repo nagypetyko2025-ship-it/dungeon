@@ -12,6 +12,8 @@ extends Node2D
 ## egyelőre nincs semmi).
 ## A túlsó falban az ácsolt régi tárna (E-re be): mögötte egy terem hatalmas lyukkal, a szélétől lépcső vezet le a
 ## sötétbe. A lépcsőnél E-re a próbatétel ablaka (lásd Challenge, ChallengePanel): onnan indul a véletlen kazamata.
+## A kopogás titka (Knocking): a lyuk keleti szélén fülelni lehet (a brigád jele szól a mélyből), a nyugati szélén a
+## pókselyem kötél (a Kopogó-küldetés alatt): azon le a régi tárnákba. A Kopogó után Gyula itt áll, a lyuk mellett.
 ## Csempék: assets/props/mine_tiles.png (a föld és a sziklafal az "Adventure Awaits" csomagból, barlangosra
 ## sötétítve; a szakadék, a híd, az oszlop és a támfa ehhez rajzolva), sín, kocsi, kövek: Kenney RPG.
 ## (A tábor építi fel: setup(camp) + build(); az utat a tábor rajzolja ki a többi földdel, a tisztás szélén a fasort
@@ -97,6 +99,10 @@ const DEEP_STAIRS_COLUMN := 646
 const DEEP_EXIT := Vector2i(647, 10)
 const DEEP_BOUNDS := Rect2i(636, -5, 22, 18)
 const DEEP_LIGHT := Color(0.24, 0.22, 0.28)
+## A lyuk keleti szélén itt lehet fülelni, a nyugatin lóg a kötél; Gyula helye a Kopogó után.
+const DEEP_LISTEN := Vector2(DEEP_HOLE.end.x + 0.6, DEEP_HOLE.position.y + 2.0) * TILE
+const DEEP_ROPE := Vector2(DEEP_HOLE.position.x - 0.5, DEEP_HOLE.position.y + 2.0) * TILE
+const GYULA_SPOT := Vector2(DEEP_ROOM.position.x + 1.6, DEEP_ROOM.position.y + 7.6) * TILE
 
 var _camp: Node2D
 var _player: Node2D
@@ -118,6 +124,9 @@ var _dome_dialogue: DialoguePanel
 var _flash: ColorRect
 var _in_deep := false
 var _challenge_panel: ChallengePanel
+var _rope: Node2D
+var _gyula: Node2D
+var _gyula_dialogue: DialoguePanel
 ## A kamera rázása (pixel, csökken).
 var _shake := 0.0
 
@@ -133,6 +142,18 @@ func setup(camp: Node2D) -> void:
 	_dome_dialogue.portrait = Blaster.portrait()
 	_dome_dialogue.options_provider = func() -> Array[Dictionary]: return Blaster.options("mine", _blast_option)
 	camp.add_child.call_deferred(_dome_dialogue)
+	_gyula_dialogue = DialoguePanel.new()
+	_gyula_dialogue.name = "MineMinerDialogue"
+	_gyula_dialogue.npc_id = Warehouse.MINER_ID
+	_gyula_dialogue.npc_name = Knocking.NAME
+	var face := AtlasTexture.new()
+	face.atlas = Warehouse.MINER_SHEET
+	face.region = Rect2(0, 0, 16, 16)
+	_gyula_dialogue.portrait = face
+	_gyula_dialogue.greeting = "[i]Gyula a lyuk szélén ül, a csákányát a térdén tartja.[/i]\n\n" \
+		+ "Csend van odalent. Tizenkét év után először. Furcsa, de jó."
+	_gyula_dialogue.options_provider = func() -> Array[Dictionary]: return Knocking.options()
+	camp.add_child.call_deferred(_gyula_dialogue)
 	_challenge_panel = ChallengePanel.new()
 	_challenge_panel.name = "ChallengePanel"
 	_challenge_panel.visible = false
@@ -202,6 +223,9 @@ func _process(delta: float) -> void:
 	(_player.get_node("Camera2D") as Camera2D).offset = Vector2(jitter.x, -LOOK_UP * look + jitter.y)
 	if _dome:
 		_dome.visible = Blaster.at_mine()
+	if _rope:
+		_rope.visible = Knocking.rope_hangs()
+		_gyula.visible = Knocking.moved()
 	var focus := _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]
@@ -455,6 +479,12 @@ func _focus() -> Array:
 	if _in_deep:
 		if at.distance_to(_center(DEEP_EXIT + Vector2i.UP)) < INTERACT_RANGE:
 			return ["deep_exit", "[E] Vissza a szakadékhoz"]
+		if _gyula.visible and at.distance_to(GYULA_SPOT) < INTERACT_RANGE:
+			return ["miner", "[E] Beszélgetés: %s" % Knocking.NAME]
+		if Knocking.rope_ready() and at.distance_to(DEEP_ROPE) < INTERACT_RANGE + 8:
+			return ["rope", "[E] Leereszkedni a kötélen (a régi tárnák)"]
+		if at.distance_to(DEEP_LISTEN) < INTERACT_RANGE + 8:
+			return ["listen", "[E] Fülelsz a lyuk szélén"]
 		if at.distance_to(Vector2(DEEP_STAIRS_COLUMN + 1, DEEP_HOLE.end.y + 0.6) * TILE) < INTERACT_RANGE + 8:
 			return ["challenge", "[E] Lemenni a lyukba (próbatétel)"]
 		return []
@@ -486,6 +516,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		"deep_enter": _move_deep(true)
 		"deep_exit": _move_deep(false)
 		"challenge": _offer_challenge()
+		"listen":
+			var heard := Knocking.listen()
+			message.emit(heard)
+			if heard == Knocking.LISTEN_TEXT:
+				_knock_sounds()
+		"rope":
+			Audio.play("ui_open")
+			var start := func(challenge: Dictionary) -> void: _camp.call("enter_challenge", challenge)
+			_challenge_panel.show_offer(Knocking.run_challenge(), start)
+			_camp.get_node("Menus").call("open_menu", _challenge_panel)
+		"miner":
+			Audio.play("ui_open")
+			_camp.get_node("Menus").call("open_menu", _gyula_dialogue)
 		"dome":
 			Audio.play("ui_open")
 			_dome_dialogue.greeting = Blaster.greeting("mine")
@@ -735,6 +778,50 @@ func _build_deep_room() -> void:
 	for tile in [Vector2i(r.position.x, r.end.y - 1), Vector2i(r.end.x - 1, r.end.y - 2), Vector2i(r.position.x + 1, 2)]:
 		_prop(_rpg_region(ROCKS[_rng.randi() % ROCKS.size()]), _center(tile), Vector2(24, 12)).modulate = Color(0.55, 0.52, 0.55)
 	_light(Vector2(DEEP_STAIRS_COLUMN + 1, DEEP_HOLE.end.y) * TILE, Color(0.55, 0.45, 0.8), 2.0, 0.6)
+	_build_knocking()
+
+
+## A lyuk kopogása: három hosszú, két rövid (a brigád jele).
+func _knock_sounds() -> void:
+	for wait in [0.4, 0.55, 0.55, 0.55, 0.22]:
+		await get_tree().create_timer(wait).timeout
+		Audio.play("door_lock", -10.0, 0.02)
+
+
+## A pókselyem kötél (a lyuk nyugati szélén, egy cölöphöz kötve, lelóg a sötétbe) és Gyula (a Kopogó után).
+func _build_knocking() -> void:
+	_rope = Node2D.new()
+	add_child(_rope)
+	_sprite(TILES, _region(POST), DEEP_ROPE + Vector2(-8, -6), -7, _rope)
+	var rope := Line2D.new()
+	rope.width = 3.0
+	rope.default_color = Color(0.9, 0.88, 0.8)
+	rope.gradient = Gradient.new()
+	rope.gradient.set_color(0, Color(0.92, 0.9, 0.82))
+	rope.gradient.set_color(1, Color(0.92, 0.9, 0.82, 0.0))
+	for i in 8:
+		rope.add_point(DEEP_ROPE + Vector2(-2 + i * 4.0 + sin(i * 0.9) * 2.0, -4 + i * 9.0))
+	rope.z_index = -7
+	_rope.add_child(rope)
+	_rope.visible = Knocking.rope_hangs()
+	_gyula = Node2D.new()
+	_gyula.position = GYULA_SPOT
+	_entities.add_child(_gyula)
+	var body := Sprite2D.new()
+	var atlas := AtlasTexture.new()
+	atlas.atlas = Warehouse.MINER_SHEET
+	atlas.region = Rect2(0, 0, 16, 16)
+	body.texture = atlas
+	body.scale = Vector2(2, 2)
+	body.offset = Vector2(0, -8)
+	_gyula.add_child(body)
+	var pickaxe := Sprite2D.new()
+	pickaxe.texture = Warehouse.PICKAXE
+	pickaxe.scale = Vector2(0.6, 0.6)
+	pickaxe.rotation = deg_to_rad(20)
+	pickaxe.position = Vector2(14, -16)
+	_gyula.add_child(pickaxe)
+	_gyula.visible = Knocking.moved()
 
 
 ## Be a régi tárnába (a lyukas terembe), vagy onnan vissza a szakadék túlsó partjára.

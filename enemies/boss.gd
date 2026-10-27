@@ -125,8 +125,9 @@ var _enraged := false
 
 
 ## A főellenség beállítása a fába kerülés előtt.
-func setup_boss(depth: int) -> void:
-	_def = BOSSES[(maxi(depth / 3, 1) - 1) % BOSSES.size()]
+## `special`: egyedi főellenség (pl. a Kopogó, Knocking.BOSS) a soron következő helyett.
+func setup_boss(depth: int, special := {}) -> void:
+	_def = special if not special.is_empty() else BOSSES[(maxi(depth / 3, 1) - 1) % BOSSES.size()]
 	boss_name = _def["name"]
 	_depth = depth
 	_type = {"name": "boss", "rect": _def["rect"], "run": true, "tint": _def.get("tint", Color.WHITE),

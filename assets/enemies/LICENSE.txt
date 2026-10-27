@@ -20,3 +20,4 @@ blood_wraith.png: "Ghost monster" (ImogiaGames, Balmer szellemének remixe, CC0,
 chaos_lord.png: "Top-down Tentacle Creature" (Sean Noonan, CC0, https://opengameart.org/content/top-down-tentacle-creature), a fogas változat (monster_flesh_teeth_sheet) 8 kockája 62 px-re kicsinyítve, a lila test fekete-lilára sötétítve, ibolya peremfénnyel.
 chaos_hound.png: "Shadow monster" (Game2rise, CC0, https://opengameart.org/content/shadow-monster), a vicsorgás 4 és a futás 4 kockája 56 px szélesre kicsinyítve, fekete-lilára színezve, ibolya peremfénnyel és szemmel.
 chaos_maw.png, chaos_shard.png, chaos_weaver.png: Káosztorok, Hasadékszilánk, Káoszszövő — ehhez a projekthez rajzolva (pixel art, a meglévő káoszlények színeivel), CC0. 8 kocka: 4 álló, 4 futás.
+knocker.png: A Kopogó (a régi tárnák főellensége) — ehhez a projekthez rajzolva (pixel art: kőből és bányafából összeállt alak, izzó érc-szemekkel, csákánnyal), CC0. 8 kocka (46×46): 4 álló, 4 futás.

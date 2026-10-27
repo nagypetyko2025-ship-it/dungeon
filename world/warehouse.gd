@@ -276,7 +276,10 @@ func _build_miner(chair: Vector2i) -> void:
 	face.atlas = MINER_SHEET
 	face.region = Rect2(0, 0, 16, 16)
 	_dialogue.portrait = face
-	_dialogue.options = MINER_STORIES.duplicate()
+	_dialogue.options_provider = func() -> Array[Dictionary]:
+		var list := Knocking.options()
+		list.append_array(MINER_STORIES)
+		return list
 	_camp.add_child.call_deferred(_dialogue)
 
 
@@ -381,7 +384,7 @@ func _focus() -> Array:
 		return []
 	if at.distance_to(_center(INTERIOR_DOOR) + Vector2(TILE / 2.0, TILE / 2.0)) < INTERACT_RANGE:
 		return ["leave", "[E] Kilépés a szabadba"]
-	if _miner_awake and _near_miner(TALK_RANGE):
+	if _miner_awake and _near_miner(TALK_RANGE) and not Knocking.moved():
 		return ["talk", "[E] Beszélgetés: %s" % MINER_NAME]
 	return []
 
@@ -392,9 +395,15 @@ func _process(delta: float) -> void:
 		_prompt.text = focus[1]
 	var target := 1.0 if not focus.is_empty() and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
+	# A Kopogó után Gyula a bányában van (lásd Knocking): itt már nincs.
+	if is_instance_valid(_miner) and Knocking.moved() and _miner.visible:
+		_miner.visible = false
+		_pickaxe.visible = false
+		if is_instance_valid(_zzz):
+			_zzz.visible = false
 	# Gyula: alvás közben lassan szuszog; ha a közelébe mész, felriad.
 	_time += delta
-	if is_instance_valid(_miner) and not _miner_awake:
+	if is_instance_valid(_miner) and not _miner_awake and not Knocking.moved():
 		_miner.scale = Vector2(2.0, 2.0 + sin(_time * 2.0) * 0.06)
 		if _near_miner(WAKE_RANGE) and not GamePause.active(get_tree()) and not _busy:
 			_wake_miner()
