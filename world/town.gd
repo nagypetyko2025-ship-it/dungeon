@@ -683,7 +683,7 @@ func _focus() -> Array:
 
 
 func _process(delta: float) -> void:
-	_dome.visible = Blaster.met() and not Blaster.at_mine()
+	_dome.visible = Blaster.met() and not Blaster.away()
 	# Bence (a volt tolvaj) a levél után, Lőrinc a királynak vitt levél után ideköltözik:
 	# leül a helyére, és onnantól játszható.
 	for id: String in ["thief", "wizard", "gravedigger"]:
@@ -813,7 +813,7 @@ func _knock(index: int) -> void:
 		_dome.visible = true
 		message.emit(Blaster.WAKE_TEXT)
 		return
-	if index == Blaster.ROOM and Blaster.at_mine():
+	if index == Blaster.ROOM and Blaster.away():
 		message.emit("A szoba üres, az ajtón cetli: „A bányában vagyok. Ne gyere utánam, ha nem hívtalak. D.”")
 		return
 	message.emit(ROOMS[index]["knock"])

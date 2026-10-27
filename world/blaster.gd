@@ -25,6 +25,12 @@ const FUSE_TARGET := "pirate_gunner"
 const FUSE_GOAL := 5
 const FUSE_GOLD := 150
 const BLAST_QUEST := "blaster_blast"
+## A kút alatti beomlott járat (a híd után): tűzhangya-mirigy a gyújtáshoz, aztán Döme a kút aljára megy, és ott
+## felrobbantja a törmeléket (WellCave). "ready": a kút alján vár, "done": a járat nyitva (Lőrinc régi műhelye).
+const WELL_QUEST := "blaster_well"
+const WELL_BASE := "blaster_well_base"
+const WELL_TARGET := "fire_ant"
+const WELL_GOAL := 6
 
 const QUESTS := {
 	POWDER_QUEST: {"name": "Goblinpor",
@@ -43,6 +49,12 @@ const QUESTS := {
 			+ "fal sziklaorrát: ha jól számolt, a szikla pont beékelődik oda, ahol a híd leszakadt.",
 		"reward": "átjárás a szakadék túlsó partjára", "doing": "menj a bányába, Döméhez",
 		"done": "a szakadék fölött újra van híd"},
+	WELL_QUEST: {"name": "A kút alatti járat",
+		"text": "A kút alján, Lőrinc régi barlangjában egy beomlott járat vezet kelet felé. Döme felrobbantaná, de a "
+			+ "nedves barlangban a kanóc nem gyullad: tűzhangya-mirigy kell a gyújtáshoz. Győzz le [b]%d tűzhangyát[/b] " % WELL_GOAL
+			+ "(a küldetés elfogadása óta), aztán szólj Döménak a bányában. Utána a kút alján vár, a törmeléknél.",
+		"reward": "átjárás a beomlott járaton", "doing": "győzz le tűzhangyákat",
+		"done": "a kút alatti járat nyitva"},
 }
 
 ## Első kopogásra (a folyosón, felirat).
@@ -54,6 +66,8 @@ const MINE_GREETING := "[i]Döme a szakadék szélén guggol, és fél szemmel a
 	+ "Na, megjöttél. Ott, az a sziklaorr a híd csonkja fölött. Ha szólok, menj hátra."
 const DONE_GREETING := "[i]Döme elégedetten nézi a beékelődött sziklát és a frissen lerakott deszkákat.[/i]\n\n" \
 	+ "Ugye mondtam? Hogy a túloldalon mi vár, azt nem tudom. Azt viszont igen, hogy most már át lehet menni."
+const WELL_GREETING := "[i]Döme a törmelékkupac mellett térdel, és a fülét a kőhöz szorítja.[/i]\n\n" \
+	+ "Hallod? Fütyül mögötte a szél. Üreg van ott, nem is kicsi. Ha szólsz, gyújtok. Te meg addig menj a létra alá."
 const STORIES: Array[Dictionary] = [
 	{"id": "who", "text": "Ki vagy te?", "trust": 3,
 		"answer": "Puskás Döme. Robbantómester, harminc évig a hegyi ezüstbányában. Mind a tíz ujjam megvan, mind " \
@@ -77,9 +91,23 @@ static func met() -> bool:
 	return Progress.npc_quest_state(MET_FLAG) == "done"
 
 
-## A bányában vár (vagy már ott dolgozik): a folyosón nincs.
-static func at_mine() -> bool:
+## Nincs otthon (a bányában vagy a kút alján dolgozik): a folyosón nincs.
+static func away() -> bool:
 	return Progress.npc_quest_state(BLAST_QUEST) != ""
+
+
+## A bányában vár (vagy már ott dolgozik).
+static func at_mine() -> bool:
+	return away() and not at_well()
+
+
+## A kút alján vár a törmeléknél (WellCave), amíg fel nem robbantja a járatot.
+static func at_well() -> bool:
+	return Progress.npc_quest_state(WELL_QUEST) == "ready"
+
+
+static func well_open() -> bool:
+	return Progress.npc_quest_state(WELL_QUEST) == "done"
 
 
 static func bridge_fixed() -> bool:
@@ -101,6 +129,8 @@ static func wake() -> void:
 
 ## A beszélgetés köszöntése a hely szerint ("room" = a folyosón, "mine" = a szakadéknál).
 static func greeting(place: String) -> String:
+	if place == "well":
+		return WELL_GREETING
 	if place == "mine":
 		return DONE_GREETING if bridge_fixed() else MINE_GREETING
 	return GREETING
@@ -110,9 +140,28 @@ static func greeting(place: String) -> String:
 ## robbantás indítása (a Mine adja; a válasz után zárja a beszélgetést és lejátssza).
 static func options(place: String, blast: Callable = Callable()) -> Array[Dictionary]:
 	var list: Array[Dictionary] = []
+	if place == "well":
+		if at_well() and blast.is_valid():
+			list.append({"id": "well_blast", "text": "Robbants!", "on_choose": blast})
+		list.append_array(STORIES)
+		return list
 	if place == "mine":
 		if Progress.npc_quest_state(BLAST_QUEST) == "active" and blast.is_valid():
 			list.append({"id": "blast", "text": "Robbants!", "on_choose": blast})
+		if bridge_fixed() and Stranger.is_rescued():
+			match Progress.npc_quest_state(WELL_QUEST):
+				"":
+					list.append({"id": "well", "text": "A kút alján is van egy beomlott járat...",
+						"on_choose": func() -> String: return _give_well_quest()})
+				"active":
+					if kills_since(WELL_TARGET, WELL_BASE, WELL_GOAL) >= WELL_GOAL:
+						list.append({"id": "well_ready", "text": "Megvannak a tűzhangya-mirigyek.",
+							"on_choose": func() -> String: return _finish_well_glands()})
+					else:
+						list.append({"id": "well_count", "text": "Mennyi tűzhangya kell még?",
+							"on_choose": func() -> String: return "Eddig %d mirigy. Még %d tűzhangya." % [
+								kills_since(WELL_TARGET, WELL_BASE, WELL_GOAL),
+								WELL_GOAL - kills_since(WELL_TARGET, WELL_BASE, WELL_GOAL)]})
 		list.append_array(STORIES)
 		return list
 	match Progress.npc_quest_state(POWDER_QUEST):
@@ -164,7 +213,34 @@ static func doing_text(id: String, fallback: String) -> String:
 		return "%s: %d / %d" % [fallback, kills_since(POWDER_TARGET, POWDER_BASE, POWDER_GOAL), POWDER_GOAL]
 	if id == FUSE_QUEST:
 		return "%s: %d / %d" % [fallback, kills_since(FUSE_TARGET, FUSE_BASE, FUSE_GOAL), FUSE_GOAL]
+	if id == WELL_QUEST:
+		if at_well():
+			return "Döme a kút alján vár, a törmeléknél"
+		return "%s: %d / %d" % [fallback, kills_since(WELL_TARGET, WELL_BASE, WELL_GOAL), WELL_GOAL]
 	return fallback
+
+
+static func _give_well_quest() -> String:
+	Progress.set_npc_quest(WELL_QUEST, "active")
+	Progress.set_npc_quest(WELL_BASE, str(int(Progress.kills.get(WELL_TARGET, 0))))
+	Progress.mark_asked(ID, "well")
+	Audio.play("ui_open")
+	return "[i]Döme felkapja a fejét.[/i]\n\n" \
+		+ "A kút alatt? Ahol az a varázsló fiú majdnem éhen halt? Hallottam róla, Tóbiás mindenkinek elmesélte. " \
+		+ "Ha hideg szél fúj a törmelék mögül, akkor ott üreg van, nem tömör kő. Azt meg lehet nyitni.\n\n" \
+		+ "Csak az a baj, hogy lent csöpög a víz, a nedves kőben a kanóc kialszik. Kell valami, ami vizesen is ég. " \
+		+ "A tűzhangyák potrohában van egy mirigy: ha szétnyomod, magától lángra kap. Hozz [b]%d tűzhangyától[/b] " \
+		% WELL_GOAL + "mirigyet, aztán szólj. Itt leszek."
+
+
+static func _finish_well_glands() -> String:
+	Progress.set_npc_quest(WELL_QUEST, "ready")
+	Progress.mark_asked(ID, "well_ready")
+	Progress.change_trust(ID, 10)
+	Audio.play("ui_open")
+	return "[i]Döme óvatosan, két ujjal veszi el a parázsló mirigyeket, és egy agyagbögrébe teszi őket.[/i]\n\n" \
+		+ "Na, ezek még a víz alatt is égnének. Megyek a kúthoz. Ne félj, a létrát nem robbantom fel. Valószínűleg.\n\n" \
+		+ "[color=#7a4a10](Döme a kút aljára ment: a beomlott járatnál vár.)[/color]"
 
 
 static func _give_powder_quest() -> String:

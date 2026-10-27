@@ -148,8 +148,11 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   bele egy rövid, játékosnak szóló sort a mai dátum alá.
 - Puskás Döme, a robbantómester: `world/blaster.gd` (J könyv "Robbantómester" fül). Első kopogásra kijön, a kettes ajtó
   előtt áll; küldetései: Goblinpor (8 robbanó goblin), Lassú kanóc (5 kalózpuskás), Híd a szakadék fölött (a bányába megy,
-  ott E: robbantás, `Mine._blast`: a szikla beékelődik, deszka rá; `Blaster.bridge_fixed()` után a túlpart járható,
-  ott egyelőre nincs semmi).
+  ott E: robbantás, `Mine._blast`: a szikla beékelődik, deszka rá; `Blaster.bridge_fixed()` után a túlpart járható).
+  A híd és Lőrinc megmentése után a bányában: `WELL_QUEST` (6 tűzhangya a küldetés óta) → "ready": Döme a kút alján vár
+  (`Blaster.at_well()`, `away()` = nincs a folyosón), ott "Robbants!" → `WellCave._blast` → "done" (`well_open()`):
+  `WellCave.TUNNEL` + `WORKSHOP` (Lőrinc régi műhelye: jegyzetek, láda `CHEST_FLAG`: `trinket_lorinc_compass` + 250 arany,
+  lezárt rácsos lépcső `GRATE_TILE` — a későbbi folytatásnak), `OPEN_BOUNDS`; Lőrincnél `Stranger.WELL_STORIES`.
 - Város északi része: `world/castle.gd` ( út, királyi vár, őrök, trónterem; király: `world/king.gd`; a
   "Király" fül a J könyvben az első látogatás után; engedély: `deep_30` jelző, a 30. emelet után a táborban "done").
   A hét király jelentése után: "Mi lesz most, felség?" → új küldetés, a Káosz kapuja (`King.CHAOS_QUEST`: győzd le

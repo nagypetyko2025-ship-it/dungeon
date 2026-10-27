@@ -58,6 +58,23 @@ const TAVERN_FLAG := "lorinc_tavern"
 ## A második kérés (a megmentése után): egy epikus talizmán, mert varázsló.
 const TALISMAN_QUEST := "well_talisman"
 const TALISMAN_GOLD := 200
+## A kút alatti járat felrobbantása után (Blaster.WELL_QUEST, WellCave): a régi műhelyéről.
+const WELL_STORIES: Array[Dictionary] = [
+	{"id": "workshop", "text": "Megtaláltam a műhelyedet a kút alatt.", "trust": 4,
+		"answer": "[i]Lőrinc elsápad, aztán felnevet.[/i]\n\n" \
+			+ "Szóval Döme tényleg felrobbantotta! Tóbiás mondta, hogy odalent dörgött, de azt hittem, megint a " \
+			+ "hordói.\n\nIgen, az az enyém volt. Mielőtt a kútba estem, hetekig ott dolgoztam. Királyi térképész " \
+			+ "voltam, mielőtt varázsló lettem. Vagyis közben. Az ember sok mindent csinál, ha senki nem figyel rá."},
+	{"id": "compass", "text": "Mi ez az iránytű?", "trust": 3,
+		"answer": "Az apámé volt. Nem északra mutat, hanem lefelé: a legközelebbi lépcső felé. Apám azt mondta, " \
+			+ "a Mélységben észak nem számít, csak az, merre van a kijárat. Vagy a bejárat. Attól függ, melyik irányba " \
+			+ "mész.\n\nTartsd meg. Nekem már nincs rá szükségem. Én már tudom, merre van lefelé. Egyszer leestem."},
+	{"id": "grate", "text": "Mi van a rácsos lépcső mögött?", "trust": 5,
+		"answer": "[i]Sokáig hallgat.[/i]\n\n" \
+			+ "Nem tudom. Azt hiszem, a legrégebbi út le. Régebbi a tábor lépcsőjénél, régebbi a bányánál. A rácsot " \
+			+ "nem én tettem oda, és nem is a király emberei.\n\nValaki olajozza a zárat. Láttam a friss olajcseppeket. " \
+			+ "És néha, ha az ember elég sokáig ül csendben odalent, kopogást hall. Nem a kőből. Az ajtó túloldaláról."},
+]
 
 
 ## A neve: "???", amíg meg nem kérdezed.
@@ -97,6 +114,8 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 			"active":
 				list.append({"id": "phoenix", "text": "Hoztam egy Főnixtollat.",
 					"on_choose": func() -> String: return _give_phoenix(inventory)})
+	if is_rescued() and Blaster.well_open():
+		list.append_array(WELL_STORIES)
 	match Progress.npc_quest_state(ROYAL_LETTER_QUEST):
 		"active":
 			list.append({"id": "lost_royal_letter", "text": "Elvesztettem a levelet...",

@@ -493,6 +493,11 @@ const DEFINITIONS := {
 		"shop": false, "stats": {"health_regen": [1.5, 1.5], "dodge": [6, 6], "crit_chance": [6, 6], "max_health": [10, 10]},
 		"description": "Hideg, kékesfehér gyöngy a tó legaljáról. Negyven évig egy lámpás fényében aludt. Ha a fülédhez "
 			+ "tartod, halk vízcsobogást hallasz, és valaki messze dalol."},
+	# A kút alatti járat jutalma (WellCave, Lőrinc régi műhelye): egyedi, nem esik, nem kapható.
+	"trinket_lorinc_compass": {"name": "Lőrinc iránytűje", "slot": "trinket", "rarity": "legendary", "unique": true,
+		"shop": false, "stats": {"move_speed": [8, 8], "xp_bonus": [12, 12], "accuracy": [8, 8], "dodge": [4, 4]},
+		"description": "Sárgaréz iránytű, a fedelébe karcolva: \"L. — a Mélység felé\". A tűje nem északra mutat, "
+			+ "hanem mindig lefelé, a legközelebbi lépcső irányába."},
 	# A kopogás titka jutalma (Knocking): egyedi, nem esik, nem kapható.
 	"trinket_miners_lamp": {"name": "A huszonhét lámpása", "slot": "trinket", "rarity": "legendary", "unique": true,
 		"shop": false, "stats": {"max_health": [15, 15], "defense": [6, 6], "gold_find": [20, 20], "xp_bonus": [10, 10]},

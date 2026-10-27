@@ -4,6 +4,9 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-27", "items": [
+		"A kút alatti járat: Döme új küldetése (tűzhangya-mirigyek), aztán a kút alján felrobbantja a törmeléket; "
+			+ "mögötte Lőrinc régi műhelye (jegyzetek, láda: Lőrinc iránytűje), egy rejtélyes rácsos lépcső, és "
+			+ "Lőrinc három új története.",
 		"Ábel csónakja új képet kapott, és a tó déli részén, a móló mellett ring; átkeléskor beszállsz, a csónak "
 			+ "átevez a szigetre, ott kiszállsz (és ugyanígy vissza).",
 		"A tó titka: Öreg Ábel új küldetéssora (a kis zár kulcsa a kalózoktól, átkelés a csónakkal a szigetre), "
