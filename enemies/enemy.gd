@@ -650,7 +650,7 @@ func _on_died() -> void:
 		_drop_xp.call_deferred(stats["xp"])
 		if _type.has("gold"):
 			_drop_gold.call_deferred()
-		if randf() < ITEM_DROP_CHANCE:
+		if randf() < ITEM_DROP_CHANCE * Challenge.mult("drop_chance"):
 			_drop_item.call_deferred()
 	_abilities.on_died()
 	var tween := create_tween()

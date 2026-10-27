@@ -52,7 +52,7 @@ func setup_werewolf(depth: int) -> void:
 	_depth = depth
 	_type = {"name": "werewolf", "rect": WEREWOLF["rect"], "sheet": SHEET, "run": true}
 	stats = {
-		"health": roundi(WEREWOLF["health"] * LORD_HEALTH),
+		"health": roundi(WEREWOLF["health"] * LORD_HEALTH * Challenge.mult("boss_health")),
 		"damage": roundi(WEREWOLF["damage"] * LORD_DAMAGE),
 		"speed": WEREWOLF["speed"],
 		"dodge": 0,

@@ -164,6 +164,11 @@ func setup_boss(depth: int) -> void:
 	if later > 0:
 		stats["health"] = roundi(stats["health"] * pow(LATER_BOSS_GROWTH, later))
 		stats["damage"] = roundi(stats["damage"] * (1.0 + LATER_BOSS_DAMAGE_STEP * later))
+	# Próbatétel (lásd Challenge): a főellenség élete, a szörnyek sebzése és a tapasztalat szorzója.
+	if Challenge.active():
+		stats["health"] = maxi(1, roundi(stats["health"] * Challenge.mult("boss_health")))
+		stats["damage"] = maxi(1, roundi(stats["damage"] * Challenge.mult("enemy_damage")))
+		stats["xp"] = maxi(1, roundi(stats["xp"] * Challenge.mult("xp")))
 
 
 ## A kis főellenségnek csak a teste közepe sebez (a kép alsó-középső része).

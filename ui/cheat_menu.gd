@@ -127,9 +127,17 @@ func _build() -> void:
 	_god_button = MenuStyle.button("")
 	_god_button.pressed.connect(_toggle_god_mode)
 	_menu_box.add_child(_god_button)
-	var items := MenuStyle.button("Tárgyak a táskába")
+	var extras := GridContainer.new()
+	extras.columns = 2
+	extras.add_theme_constant_override("h_separation", 10)
+	_menu_box.add_child(extras)
+	var items := _small_button("Tárgyak a táskába", CHARACTER_BUTTON_SIZE, 18)
 	items.pressed.connect(_show_items_page.bind(true))
-	_menu_box.add_child(items)
+	extras.add_child(items)
+	# A bánya mélyén lévő random kazamata (próbatétel, lásd Challenge) újrasorsolása.
+	var reroll := _small_button("Új random kazamata", CHARACTER_BUTTON_SIZE, 18)
+	reroll.pressed.connect(_reroll_challenge)
+	extras.add_child(reroll)
 	_menu_box.add_child(_text("Karakter (csak a táborban):", 18, MenuStyle.PARCHMENT))
 	var grid := GridContainer.new()
 	grid.columns = 2
@@ -321,6 +329,14 @@ func _teleport_typed() -> void:
 		return
 	_depth_input.release_focus()
 	_teleport(int(text))
+
+
+func _reroll_challenge() -> void:
+	Challenge.reroll()
+	var challenge := Challenge.current()
+	Audio.play("ui_click")
+	_status.text = "Új random kazamata: %d emelet, %s (jutalom: %s)." % [challenge["floors"], challenge["difficulty"],
+		Challenge.reward_text(challenge)]
 
 
 func _toggle_god_mode() -> void:

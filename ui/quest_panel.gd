@@ -45,7 +45,7 @@ func _build() -> void:
 	add_child(center)
 	var window := PanelContainer.new()
 	window.add_theme_stylebox_override("panel", UiStyle.decorated_panel())
-	window.custom_minimum_size = Vector2(980, 0)
+	window.custom_minimum_size = Vector2(1000, 0)
 	center.add_child(window)
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 10)
@@ -143,9 +143,13 @@ func _make_row(id: String) -> PanelContainer:
 	name_box.add_child(UiStyle.label(tier["name"], 13, tier["color"] if not done else Color(0.4, 0.35, 0.3, 0.6)))
 	var text := UiStyle.label(definition["text"], 15, UiStyle.INK_LIGHT if not done else Color(0.4, 0.35, 0.3, 0.6))
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# A hosszú leírás sortöréssel (különben szélesebbre nyomná az ablakot a képernyőnél).
+	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text.custom_minimum_size.x = 200
 	row.add_child(text)
 	var reward := UiStyle.label(Quests.reward_text(id), 14, Color(0.6, 0.38, 0.05) if not done else Color(0.4, 0.35, 0.3, 0.6))
 	reward.custom_minimum_size.x = 250
+	reward.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(reward)
 	if done:
 		row.add_child(_status_label("✔ Átvéve", DONE_COLOR))

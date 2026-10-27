@@ -107,6 +107,17 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   A négyes kibérelhető a kocsmárostól (`ROOM_PRICE` 500 tábori arany, egyszer; `ROOM_FLAG`): belül (`MY_ROOM`, y 40-től)
   ágy (alvás → `RESTED_FLAG`, a következő futás elején +1 HP-bájital: `Town.take_rest_bonus`, a Camp `_enter_dungeon_now`-ja),
   láda (a tábori láda ablaka), trófeafal (`Town.trophies()`: 13 főellenség, a le nem győzöttek sötét árnyékként).
+- Próbatétel (random kazamata): `world/challenge.gd` (`Challenge`). A bánya túlpartján a régi tárna (`Mine.DEEP_DOOR`,
+  csak a híd után) → lyukas terem (`Mine.DEEP_ROOM`, x 640-től), a lépcsőnél E: `ui/challenge_panel.gd` (ajánlat / eredmény).
+  1-20 emelet, 1-3 könnyítés (`BOONS`, 15) és 1-3 nehezítés (`BANES`, 15), ütköző hatás nem jön együtt, a súlyok
+  különbsége ≤ `MAX_IMBALANCE`; a nehézség (score) adja a jutalmat (epikus / legendás / ritkán mítikus esély). Valós
+  időben 10 percenként (és győzelem után) újrasorsolódik (`Progress.npc_quests` challenge_seed / challenge_until);
+  csalómenü: "Új random kazamata". Futás közben `GameState.challenge`; a hatások `Challenge.mult/add/flag`-gel
+  vannak bekötve (EnemyTypes.roll, Boss, dungeon szobák, Player arany/regen, bolt, bájital, ejtés). Szabályok: nincs
+  tárgylift és pihenő-portál, a levitt és lent szerzett tárgyak lent maradnak, arany csak győzelemkor (100%), az
+  eredménytáblába és az emelet-küldetésekbe nem számít; győzelem = az utolsó emelet lépcsője (`Dungeon._challenge_won`).
+- Főmenü "Újdonságok" (jobb oldalt): `ui/news.gd` (`News.ENTRIES`, a legújabb felül). Minden változtatásnál írj
+  bele egy rövid, játékosnak szóló sort a mai dátum alá.
 - Puskás Döme, a robbantómester: `world/blaster.gd` (J könyv "Robbantómester" fül). Első kopogásra kijön, a kettes ajtó
   előtt áll; küldetései: Goblinpor (8 robbanó goblin), Lassú kanóc (5 kalózpuskás), Híd a szakadék fölött (a bányába megy,
   ott E: robbantás, `Mine._blast`: a szikla beékelődik, deszka rá; `Blaster.bridge_fixed()` után a túlpart járható,

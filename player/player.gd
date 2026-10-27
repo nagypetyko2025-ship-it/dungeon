@@ -206,7 +206,7 @@ func _apply_stats() -> void:
 	_sword_hitbox.crit_chance = 1.0 if _backstab_left > 0.0 else _stats.crit_chance / 100.0
 	_sword_hitbox.crit_multiplier = weapon_crit_multiplier()
 	_health.set_max_health(_stats.max_health)
-	_health.regen_per_second = _stats.health_regen
+	_health.regen_per_second = _stats.health_regen * Challenge.mult("regen")
 	_health.dodge_chance = _stats.dodge / 100.0
 	_update_sword_geometry()
 
@@ -372,7 +372,8 @@ func set_gold_from_net(total: int) -> void:
 
 ## Felszedett arany (érme): az aranykereső tárgyak szerint több.
 func pick_up_gold(amount: int) -> void:
-	var total := roundi(amount * (1.0 + _stats.special("gold_find") / 100.0 + Characters.bonus("gold_bonus")))
+	var total := roundi(amount * (1.0 + _stats.special("gold_find") / 100.0 + Characters.bonus("gold_bonus"))
+		* Challenge.mult("gold"))
 	add_gold(total)
 	Quests.notify("gold", total)
 

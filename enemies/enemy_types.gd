@@ -420,6 +420,8 @@ static func pick(depth: int) -> Dictionary:
 ## plusz az emelet szerinti erősödés. `power` 0..1: mennyire "jó" a dobás
 ## (ettől függ kicsit a mérete is).
 static func roll(type: Dictionary, depth: int) -> Dictionary:
+	# Próbatétel: "Mélyről jöttek" (a szörnyek mélyebbről valók).
+	depth = maxi(1, depth + int(Challenge.add("depth_offset")))
 	var level := depth - 1
 	var health_roll := _roll_int(type["health"])
 	var speed_bonus := minf(SPEED_PER_DEPTH * level, MAX_SPEED_BONUS)
@@ -444,6 +446,12 @@ static func roll(type: Dictionary, depth: int) -> Dictionary:
 			stats[key] = randf_range(type[key][0], type[key][1])
 		stats["fire_interval"] /= 1.0 + minf(FIRE_RATE_PER_DEPTH * level, MAX_FIRE_RATE_BONUS)
 		stats["arrow_speed"] *= 1.0 + speed_bonus / 2.0
+	# Próbatétel (lásd Challenge): a módosítók szorzói.
+	if Challenge.active():
+		stats["health"] = maxi(1, roundi(stats["health"] * Challenge.mult("enemy_health")))
+		stats["damage"] = maxi(1, roundi(stats["damage"] * Challenge.mult("enemy_damage")))
+		stats["speed"] = stats["speed"] * Challenge.mult("enemy_speed")
+		stats["xp"] = maxi(1, roundi(stats["xp"] * Challenge.mult("xp")))
 	var health_range: Array = type["health"]
 	stats["power"] = 0.5 if health_range[0] == health_range[1] \
 		else inverse_lerp(health_range[0], health_range[1], health_roll)

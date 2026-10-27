@@ -10,6 +10,8 @@ extends Node2D
 ## Puskás Döme (lásd Blaster) a küldetései után itt vár a szakadéknál: E-re felrobbantja a túlsó fal sziklaorrát,
 ## ami beékelődik a leszakadt rész helyére, rá deszkát fektet, és onnantól át lehet menni a túlsó partra (ott
 ## egyelőre nincs semmi).
+## A túlsó falban az ácsolt régi tárna (E-re be): mögötte egy terem hatalmas lyukkal, a szélétől lépcső vezet le a
+## sötétbe. A lépcsőnél E-re a próbatétel ablaka (lásd Challenge, ChallengePanel): onnan indul a véletlen kazamata.
 ## Csempék: assets/props/mine_tiles.png (a föld és a sziklafal az "Adventure Awaits" csomagból, barlangosra
 ## sötétítve; a szakadék, a híd, az oszlop és a támfa ehhez rajzolva), sín, kocsi, kövek: Kenney RPG.
 ## (A tábor építi fel: setup(camp) + build(); az utat a tábor rajzolja ki a többi földdel, a tisztás szélén a fasort
@@ -86,6 +88,15 @@ const ROCKS: Array[Vector2i] = [Vector2i(54, 19), Vector2i(55, 19), Vector2i(56,
 const BOULDER := Vector2i(55, 21)
 ## Döme helye a parton, a híd bal oldalán.
 const DOME_SPOT := Vector2(608.6, 10.4) * TILE
+## A régi tárna bejárata a túlsó falban (a híd fölött): a túlsó parton előtte állva E.
+const DEEP_DOOR := Vector2(BRIDGE_COLUMN + 1, CAVERN.position.y + 0.7) * TILE
+## A lyukas terem (messze mindentől): középen a lyuk, a déli szélétől lépcső le; a déli falon az ajtó vissza.
+const DEEP_ROOM := Rect2i(640, 0, 14, 10)
+const DEEP_HOLE := Rect2i(643, 1, 8, 5)
+const DEEP_STAIRS_COLUMN := 646
+const DEEP_EXIT := Vector2i(647, 10)
+const DEEP_BOUNDS := Rect2i(636, -5, 22, 18)
+const DEEP_LIGHT := Color(0.24, 0.22, 0.28)
 
 var _camp: Node2D
 var _player: Node2D
@@ -105,6 +116,8 @@ var _gate: StaticBody2D
 var _dome: AnimatedSprite2D
 var _dome_dialogue: DialoguePanel
 var _flash: ColorRect
+var _in_deep := false
+var _challenge_panel: ChallengePanel
 ## A kamera rázása (pixel, csökken).
 var _shake := 0.0
 
@@ -120,6 +133,10 @@ func setup(camp: Node2D) -> void:
 	_dome_dialogue.portrait = Blaster.portrait()
 	_dome_dialogue.options_provider = func() -> Array[Dictionary]: return Blaster.options("mine", _blast_option)
 	camp.add_child.call_deferred(_dome_dialogue)
+	_challenge_panel = ChallengePanel.new()
+	_challenge_panel.name = "ChallengePanel"
+	_challenge_panel.visible = false
+	camp.add_child.call_deferred(_challenge_panel)
 
 
 ## Az út csempéi (a tábor rajzolja ki a többi földdel): a városi úttól fel, a hegy lábáig (a bejárat elé).
@@ -236,6 +253,7 @@ func _build_interior() -> void:
 	_dome.visible = Blaster.at_mine()
 	_entities.add_child(_dome)
 	_apply_bridge_state()
+	_build_deep_room()
 
 
 ## Egy csempe a belső térben: part / alagút (föld, a szakadék szélén omladozó perem), a túlsó perem, a szakadék
@@ -434,6 +452,14 @@ func _focus() -> Array:
 		if at.distance_to(ENTRANCE) < INTERACT_RANGE:
 			return ["enter", "[E] Belépés: bánya"]
 		return []
+	if _in_deep:
+		if at.distance_to(_center(DEEP_EXIT + Vector2i.UP)) < INTERACT_RANGE:
+			return ["deep_exit", "[E] Vissza a szakadékhoz"]
+		if at.distance_to(Vector2(DEEP_STAIRS_COLUMN + 1, DEEP_HOLE.end.y + 0.6) * TILE) < INTERACT_RANGE + 8:
+			return ["challenge", "[E] Lemenni a lyukba (próbatétel)"]
+		return []
+	if Blaster.bridge_fixed() and at.distance_to(DEEP_DOOR) < INTERACT_RANGE:
+		return ["deep_enter", "[E] Belépés: a régi tárna"]
 	if at.distance_to(_exit_point()) < INTERACT_RANGE:
 		return ["exit", "[E] Kilépés a bányából"]
 	if _dome.visible and at.distance_to(_dome.position) < INTERACT_RANGE:
@@ -457,6 +483,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	match focus[0]:
 		"enter": _move(true, _exit_point() + Vector2(0, -TILE))
 		"exit": _move(false, ENTRANCE + Vector2(0, 30))
+		"deep_enter": _move_deep(true)
+		"deep_exit": _move_deep(false)
+		"challenge": _offer_challenge()
 		"dome":
 			Audio.play("ui_open")
 			_dome_dialogue.greeting = Blaster.greeting("mine")
@@ -618,6 +647,121 @@ func _debris(at: Vector2, count: int) -> void:
 		tween.tween_property(piece, "position", target, randf_range(0.5, 0.9)).set_ease(Tween.EASE_OUT)
 		tween.tween_property(piece, "modulate:a", 0.0, 1.0).set_delay(0.3)
 		tween.chain().tween_callback(piece.queue_free)
+
+
+## A lyukas terem: barlangpadló, északon sziklafal fáklyákkal és a felirattal, középen a hatalmas lyuk (a túlsó
+## fala a mélybe vész), a déli szélétől kőlépcső vezet le a sötétbe, két oldalt kötélkorlát-oszlop. Délen az
+## ácsolt ajtó vissza a szakadékhoz.
+func _build_deep_room() -> void:
+	var r := DEEP_ROOM
+	var floor_tiles := {}
+	for x in range(r.position.x, r.end.x):
+		for y in range(r.position.y, r.end.y):
+			if not DEEP_HOLE.has_point(Vector2i(x, y)):
+				floor_tiles[Vector2i(x, y)] = true
+	var dark := ColorRect.new()
+	dark.color = Color(0.06, 0.05, 0.06)
+	dark.position = Vector2(DEEP_BOUNDS.position - Vector2i(4, 4)) * TILE
+	dark.size = Vector2(DEEP_BOUNDS.size + Vector2i(8, 8)) * TILE
+	dark.z_index = -11
+	add_child(dark)
+	for x in range(r.position.x - 1, r.end.x + 1):
+		for y in range(r.position.y - 3, r.end.y + 1):
+			var tile := Vector2i(x, y)
+			var inside := x >= r.position.x and x < r.end.x
+			var coords := MASS
+			if DEEP_HOLE.has_point(tile):
+				var row := y - DEEP_HOLE.position.y
+				coords = PIT_TOP if row == 0 else (PIT_FACE[row - 1] if row < 3 else PIT_VOID)
+			elif floor_tiles.has(tile):
+				coords = WALL_FOOT if y == r.position.y else (PIT_LIP if y == DEEP_HOLE.end.y \
+					and x >= DEEP_HOLE.position.x and x < DEEP_HOLE.end.x else FLOORS[_rng.randi() % FLOORS.size()])
+			elif inside and y == r.position.y - 1:
+				coords = WALL_FACE
+			elif inside and y == r.position.y - 2:
+				coords = WALL_TOP
+			elif x == r.position.x - 1 and y >= r.position.y - 2:
+				coords = RIM_RIGHT
+			elif x == r.end.x and y >= r.position.y - 2:
+				coords = RIM_LEFT
+			elif inside and y == r.end.y:
+				coords = RIM_TOP
+			_tile(coords, tile, -10)
+			if floor_tiles.has(tile) or tile == DEEP_EXIT:
+				continue
+			var near := false
+			for dx in range(-1, 2):
+				for dy in range(-1, 2):
+					near = near or floor_tiles.has(tile + Vector2i(dx, dy))
+			if near:
+				_solid(Rect2(Vector2(tile) * TILE, Vector2(TILE, TILE)))
+	# Az ajtó vissza (a déli falban): sötét nyílás ácsolattal; mögötte ütköző.
+	var door := ColorRect.new()
+	door.color = Color(0.02, 0.015, 0.03)
+	door.position = Vector2(DEEP_EXIT) * TILE + Vector2(4, 0)
+	door.size = Vector2(TILE - 8, TILE)
+	door.z_index = -9
+	add_child(door)
+	_solid(Rect2(Vector2(DEEP_EXIT + Vector2i.DOWN) * TILE, Vector2(TILE, TILE)))
+	# A lépcső: a lyuk déli szélétől fokonként lefelé (északra), egyre sötétebb és keskenyebb.
+	var left := DEEP_STAIRS_COLUMN * TILE
+	for i in 6:
+		var step := ColorRect.new()
+		var inset := i * 3.0
+		step.position = Vector2(left + inset, DEEP_HOLE.end.y * TILE - (i + 1) * 17.0)
+		step.size = Vector2(2 * TILE - inset * 2, 13)
+		step.color = Color(0.52, 0.47, 0.44).darkened(0.16 * i)
+		step.z_index = -8
+		add_child(step)
+		var riser := ColorRect.new()
+		riser.position = step.position + Vector2(0, step.size.y)
+		riser.size = Vector2(step.size.x, 4)
+		riser.color = Color(0.2, 0.17, 0.17).darkened(0.16 * i)
+		riser.z_index = -8
+		add_child(riser)
+	for x: float in [left - 4.0, left + 2 * TILE + 4.0]:
+		_sprite(TILES, _region(POST), Vector2(x, (DEEP_HOLE.end.y + 0.2) * TILE), 0, _entities).offset.y = -6
+	# Fáklyák és felirat a sziklafalon, kövek a sarkokban.
+	for x in [r.position.x + 1, r.end.x - 2]:
+		var torch: Node2D = TORCH.instantiate()
+		torch.position = _center(Vector2i(x, r.position.y - 1)) + Vector2(0, 2)
+		add_child(torch)
+	var plaque := UiStyle.label("A MÉLYSÉG PRÓBÁJA", 15, Color(0.9, 0.75, 0.5), true)
+	plaque.size = Vector2(8 * TILE, 20)
+	plaque.position = Vector2(r.position.x + 3, r.position.y - 1.75) * TILE
+	plaque.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	plaque.z_index = -7
+	add_child(plaque)
+	for tile in [Vector2i(r.position.x, r.end.y - 1), Vector2i(r.end.x - 1, r.end.y - 2), Vector2i(r.position.x + 1, 2)]:
+		_prop(_rpg_region(ROCKS[_rng.randi() % ROCKS.size()]), _center(tile), Vector2(24, 12)).modulate = Color(0.55, 0.52, 0.55)
+	_light(Vector2(DEEP_STAIRS_COLUMN + 1, DEEP_HOLE.end.y) * TILE, Color(0.55, 0.45, 0.8), 2.0, 0.6)
+
+
+## Be a régi tárnába (a lyukas terembe), vagy onnan vissza a szakadék túlsó partjára.
+func _move_deep(into: bool) -> void:
+	_busy = true
+	_in_deep = into
+	Audio.play("door_unlock", -6.0)
+	if into:
+		var limits := Rect2(Vector2(DEEP_BOUNDS.position) * TILE, Vector2(DEEP_BOUNDS.size) * TILE)
+		_camp.call("teleport_player", _center(DEEP_EXIT + Vector2i.UP), limits, DEEP_LIGHT)
+	else:
+		var limits := Rect2(Vector2(BOUNDS.position) * TILE, Vector2(BOUNDS.size) * TILE)
+		_camp.call("teleport_player", DEEP_DOOR + Vector2(0, 14), limits, MINE_LIGHT)
+	await get_tree().create_timer(0.6).timeout
+	_busy = false
+
+
+## A lyuk lépcsőjénél: a próbatétel ablaka (közös játékban nem érhető el).
+func _offer_challenge() -> void:
+	if NetLobby.is_playing(get_tree()):
+		Audio.play("ui_error")
+		message.emit("Közös játékban a próbatétel nem érhető el.")
+		return
+	Audio.play("ui_open")
+	var start := func(challenge: Dictionary) -> void: _camp.call("enter_challenge", challenge)
+	_challenge_panel.show_offer(Challenge.current(), start)
+	_camp.get_node("Menus").call("open_menu", _challenge_panel)
 
 
 func _move(inside: bool, at: Vector2) -> void:

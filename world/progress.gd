@@ -301,6 +301,9 @@ static func rescue_gold(gold: int, ratio: float) -> int:
 	if GameState.gold_rescued:
 		return 0
 	GameState.gold_rescued = true
+	# A próbatételből az arany csak győzelemkor jön fel (lásd Dungeon._challenge_won).
+	if Challenge.active():
+		return 0
 	# Csalt futásból nem kerül arany a táborba.
 	if GameState.cheated:
 		return 0

@@ -48,6 +48,9 @@ static func submit_run(player: Node) -> int:
 	if GameState.run_recorded or player == null:
 		return 0
 	GameState.run_recorded = true
+	# A próbatétel nem kerül az eredmények közé.
+	if Challenge.active():
+		return 0
 	# Csalt futás nem kerül az eredmények közé.
 	if GameState.cheated:
 		return 0

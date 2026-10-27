@@ -55,6 +55,8 @@ func show_for(player: Node) -> void:
 		_restart.text = "Újra a gyakorlás (R)"
 	elif GameState.cheated:
 		_stats_label.text += "\n\nCsalt futás: semmi nem mentődött belőle."
+	elif Challenge.active():
+		_stats_label.text += "\n\nA próbatétel elbukott: a tárgyaid és az aranyad lent maradtak."
 	else:
 		var rescued := Progress.rescue_gold(int(player.get("gold")), DEATH_GOLD_RATIO)
 		_stats_label.text += "\n\nA pénzed %d%%-a (%d arany) a táborba került." % [roundi(DEATH_GOLD_RATIO * 100), rescued]

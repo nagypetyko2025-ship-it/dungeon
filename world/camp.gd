@@ -1462,7 +1462,13 @@ func enter_dungeon_now(start_depth: int) -> void:
 		_enter_dungeon_now(start_depth, false)
 
 
-func _enter_dungeon_now(start_depth: int, cheat: bool) -> void:
+## A próbatétel indítása (a bánya mélyén, a lyuk lépcsőjénél; lásd Mine és ChallengePanel).
+func enter_challenge(challenge: Dictionary) -> void:
+	if not _leaving:
+		_enter_dungeon_now(1, false, challenge)
+
+
+func _enter_dungeon_now(start_depth: int, cheat: bool, challenge := {}) -> void:
 	_leaving = true
 	# A nyitott ablakok (táska, könyv...) bezárulnak, és a játék sem marad megállítva.
 	get_node("Menus").call("close_current")
@@ -1473,6 +1479,7 @@ func _enter_dungeon_now(start_depth: int, cheat: bool) -> void:
 	await tween.finished
 	GameState.reset()
 	GameState.depth = start_depth
+	GameState.challenge = challenge.duplicate(true)
 	if cheat:
 		GameState.cheated = true
 	else:

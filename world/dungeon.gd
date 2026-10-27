@@ -238,7 +238,11 @@ func _ready() -> void:
 			else:
 				room.enemy_count = mini(2 + distance / 2 + depth - 1, max_enemies_per_room)
 			room.trap_count = randi_range(1, mini(2 + depth / 2, 4))
-			room.has_chest = randf() < CHEST_CHANCE
+			room.has_chest = randf() < CHEST_CHANCE * Challenge.mult("chest_chance")
+			# Próbatétel: kevesebb / több szörny és csapda.
+			if Challenge.active():
+				room.enemy_count = maxi(1, roundi(room.enemy_count * Challenge.mult("enemy_count")))
+				room.trap_count = roundi(room.trap_count * Challenge.mult("trap_count"))
 		room.has_stairs = cell == stairs_cell and not boss_floor and not final_floor
 		if tutorial:
 			var plan: Dictionary = TUTORIAL_ROOMS[TUTORIAL_CELLS.find(cell)]
@@ -275,9 +279,10 @@ func _ready() -> void:
 	rooms.assign(_rooms.get_children())
 	_hud.call("setup_map", rooms, _player, _cell)
 	_prebuild_nav.call_deferred()
-	# Küldetés: elért emelet (a gyakorló pályán nem számít).
-	Quests.notify("floor", depth)
-	if not tutorial and not GameState.cheated:
+	# Küldetés: elért emelet (a gyakorló pályán és a próbatételben nem számít).
+	if not Challenge.active():
+		Quests.notify("floor", depth)
+	if not tutorial and not GameState.cheated and not Challenge.active():
 		Progress.reached_depth(depth)
 	add_child(QuestTracker.new())
 	add_child(PotionBadge.new())
@@ -331,6 +336,8 @@ func _ready() -> void:
 			_hud.show_message("%d. emelet — a szörnyek ismét megerősödtek, a termek is hatalmasak!" % depth)
 		else:
 			_hud.show_message(("%d. emelet — főellenség vár!" if boss_floor else "%d. emelet") % depth)
+	if Challenge.active():
+		_start_challenge_floor(depth, boss_floor or final_floor)
 
 
 ## Pihenőre a táborba (a főellenség után, lásd BossReturnPanel): amit a visszatéréshez meg kell
@@ -390,6 +397,10 @@ func _on_boss_defeated(boss: Node2D) -> void:
 	if room.final_boss:
 		_on_final_boss_defeated(room)
 		return
+	# A próbatételből nincs pihenő a táborban (nincs portál).
+	if Challenge.active():
+		_hud.show_message("%s legyőzve! A lépcső szabad." % boss.get("boss_name"))
+		return
 	_hud.show_message("%s legyőzve! A lépcső szabad, és megnyílt a kék portál a táborba." % boss.get("boss_name"))
 	# Visszaút-portál a teremben (a fülkével ellentétes oldalon, hogy ne takarja a lépcsőt).
 	var portal: Node2D = RETURN_PORTAL.new()
@@ -401,6 +412,11 @@ func _on_boss_defeated(boss: Node2D) -> void:
 ## győzelmi ablakot nyitja (2 tárgy, a pénz 100%-a, aztán a táborba).
 func _on_final_boss_defeated(room: Room) -> void:
 	_victory_lord = room.lord
+	# A próbatételben a nagy főellenség után sincs portál: a lépcső visz tovább (az utolsó emeleten: győzelem).
+	if Challenge.active():
+		_hud.show_message("A Mélység Ura legyőzve! A lépcső szabad.")
+		room.open_stairs.call_deferred(room.anchor + Vector2i(DEEPER_STAIRS_OFFSET, 0))
+		return
 	if room.lord == "chaos":
 		_hud.show_message("A Káosz Ura elesett! Portál a táborba — vagy a lépcsőn tovább a mélybe.")
 		var chaos_portal: Node2D = RETURN_PORTAL.new()
@@ -423,6 +439,58 @@ func _on_final_boss_defeated(room: Room) -> void:
 	# A farkas mögött mindig lépcső nyílik lefelé: hazamehetsz a portálon, vagy folytathatod a futást.
 	room.open_stairs.call_deferred(room.anchor + Vector2i(DEEPER_STAIRS_OFFSET, 0))
 	_hud.show_message("A Mélység Ura legyőzve! Portál a táborba — vagy a lépcsőn tovább a mélybe.")
+
+
+## A próbatétel emeletének kezdete: az első emeleten a módosítók a játékosra (élet, sebzés, regeneráció, bájitalok,
+## szintek), a sötétség minden emeleten; felirat a haladással.
+func _start_challenge_floor(depth: int, boss_floor: bool) -> void:
+	var floors := int(GameState.challenge["floors"])
+	if Challenge.flag("darkness"):
+		var darkness := get_node("CanvasModulate") as CanvasModulate
+		darkness.color = darkness.color.darkened(0.45)
+	if not GameState.challenge.get("applied", false):
+		GameState.challenge["applied"] = true
+		var stats: Stats = _player.get_node("Stats")
+		stats.base_max_health = maxf(1.0, roundf(stats.base_max_health * Challenge.mult("player_health")))
+		stats.base_damage_percent += Challenge.add("player_damage")
+		stats.base_health_regen += Challenge.add("regen_add")
+		var health: Health = _player.get_node("Health")
+		health.current = health.max_health
+		health.changed.emit(health.current, health.max_health)
+		GameState.potions += int(Challenge.add("start_potions"))
+		var levels := int(Challenge.add("start_levels"))
+		if levels > 0:
+			var experience: Experience = _player.get_node("Experience")
+			var xp := 0
+			for i in levels:
+				xp += Experience.xp_for_level(experience.level + i)
+			experience.add.call_deferred(xp)
+		_hud.show_message("Próbatétel: %d emelet, %s nehézség — sok szerencsét!" % [floors,
+			str(GameState.challenge["difficulty"]).to_lower()])
+		return
+	_hud.show_message("Próbatétel — %d. / %d emelet%s" % [depth, floors, " — főellenség vár!" if boss_floor else ""])
+
+
+## A próbatétel utolsó emeletének lépcsője: a jutalom (tárgy a tábori ládába, az arany 100%-a a táborba), a lent
+## szerzett tárgyak lent maradnak; új próbatétel sorsolódik; vissza a táborba (az eredményablak gombjával).
+func _challenge_won() -> void:
+	if get_node_or_null("ChallengePanel") != null:
+		return
+	var challenge := GameState.challenge
+	var item := {}
+	var gold := int(_player.get("gold"))
+	if not GameState.cheated:
+		item = Challenge.roll_reward(challenge)
+		Progress.add_to_stash(item)
+		Progress.add_camp_gold(gold)
+		Challenge.reroll()
+	else:
+		gold = 0
+	var panel := ChallengePanel.new()
+	panel.name = "ChallengePanel"
+	add_child(panel)
+	panel.show_result(challenge, item, gold)
+	get_node("Menus").call("open_menu", panel)
 
 
 func _open_victory_panel() -> void:
@@ -545,6 +613,10 @@ func _go_deeper() -> void:
 	# A gyakorló pálya végén a lépcső befejezi a gyakorlást.
 	if GameState.tutorial:
 		get_node("TutorialGuide").call("finish")
+		return
+	# A próbatétel utolsó emeletének lépcsője: győzelem.
+	if Challenge.active() and GameState.depth >= int(GameState.challenge["floors"]):
+		_challenge_won()
 		return
 	# Közös játékban a lépcsőn megvárod a társaidat: ha minden élő játékos ráállt, a gazda viszi
 	# tovább a csapatot (NetEnemies._watch_team). Ha a gazda nincs itt, egyedül mész tovább.

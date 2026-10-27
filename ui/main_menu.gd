@@ -34,6 +34,8 @@ var _tutorial_button: Button
 var _tutorial_extras: Array = []
 ## A profilválasztó (jobb alul): Profil 1-3, lásd Profiles.
 var _profiles_box: VBoxContainer
+## Újdonságok (jobb oldalt, lásd News).
+var _news: PanelContainer
 
 const TUTORIAL := "tutorial"
 const DUNGEON_SCENE := "res://world/dungeon.tscn"
@@ -71,6 +73,7 @@ func _ready() -> void:
 	_build_settings()
 	_build_footer()
 	_build_profiles()
+	_build_news()
 	_buttons.get_child(0).grab_focus()
 	# Van-e újabb változat a GitHubon (indításonként egyszer; ha van, magától frissít, lásd Updater).
 	add_child(Updater.new())
@@ -289,6 +292,33 @@ func _build_footer() -> void:
 	add_child(footer)
 
 
+## Újdonságok a jobb oldalon (a cím alatt, a profilválasztó fölött): görgethető lista, a legújabb felül (News).
+func _build_news() -> void:
+	_news = PanelContainer.new()
+	_news.add_theme_stylebox_override("panel", MenuStyle.box(MenuStyle.MENU_PANEL, 18, 20))
+	_place(_news, Vector2(1.0, 0.5), Vector2(-410, -96), Vector2(390, 300))
+	add_child(_news)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	_news.add_child(box)
+	box.add_child(MenuStyle.title_label("Újdonságok", 30, MenuStyle.GOLD))
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(350, 230)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(scroll)
+	var text := RichTextLabel.new()
+	text.bbcode_enabled = true
+	text.fit_content = true
+	text.scroll_active = false
+	text.custom_minimum_size.x = 340
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text.add_theme_color_override("default_color", MenuStyle.PARCHMENT)
+	text.add_theme_font_size_override("normal_font_size", 14)
+	text.add_theme_font_size_override("bold_font_size", 15)
+	text.text = News.bbcode()
+	scroll.add_child(text)
+
+
 ## Profilválasztó a jobb alsó sarokban: ◄ előző / ► következő profil, középen a szám és egy
 ## rövid összefoglaló. Lapozáskor az a mentés töltődik be, és a menü újraépül (Folytatás / Új játék).
 func _build_profiles() -> void:
@@ -354,6 +384,7 @@ func _show_panel(panel: String) -> void:
 		part.modulate.a = 1.0 if panel.is_empty() else 0.0
 	_tutorial_button.visible = panel.is_empty()
 	_profiles_box.visible = panel.is_empty()
+	_news.visible = panel.is_empty()
 	# A nagy Tutorial ablak a címig ér: ilyenkor a cím is eltűnik.
 	_title.get_parent().modulate.a = 0.0 if panel == TUTORIAL else 1.0
 	if panel.is_empty():

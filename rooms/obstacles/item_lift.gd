@@ -83,6 +83,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("interact") or not _is_near() or GamePause.active(get_tree()):
 		return
 	get_viewport().set_input_as_handled()
+	# A próbatételből nem lehet felküldeni semmit.
+	if Challenge.active():
+		Audio.play("ui_error")
+		FloatingText.spawn(get_parent(), global_position + Vector2(0, -40), "A próbatételből nem lehet felküldeni tárgyat.",
+			Color(1, 0.6, 0.45), 18)
+		return
 	var scene := get_tree().current_scene
 	var panel := scene.get_node_or_null("ItemLiftPanel")
 	if panel == null:

@@ -89,7 +89,7 @@ func drink_potion() -> void:
 		_say(player, "Tele az életed", Color(0.85, 0.85, 0.8))
 		Audio.play("ui_error")
 		return
-	var amount := ceili(missing / 2.0)
+	var amount := maxi(1, ceili(missing / 2.0 * Challenge.mult("potion_heal")))
 	GameState.potions -= 1
 	health.heal(amount)
 	Audio.play("xp", 4.0, 0.15)

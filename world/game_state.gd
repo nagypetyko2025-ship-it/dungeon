@@ -48,6 +48,8 @@ static var merchant_stock: Array = []
 static var rerolls := 0
 ## HP bájitalok (Q-val iszod meg, lásd PotionBadge): a futáshoz tartoznak (boltban vehető, főellenség után jár).
 static var potions := 0
+## Próbatétel (a bánya mélyén, lásd Challenge): a futás ennek a szabályai szerint megy (üres = rendes futás).
+static var challenge := {}
 
 ## Gyakorló pálya (tutorial) megy: rögzített pálya, lépésről lépésre vezetés; semmi nem
 ## mentődik belőle (eredmény, tábori arany, tárgylift). A reset() nem törli, csak a kilépés.
@@ -111,5 +113,6 @@ static func reset() -> void:
 	merchant_stock = []
 	rerolls = 0
 	potions = 0
+	challenge = {}
 	tutorial_dust = {}
 	cheated = god_mode
