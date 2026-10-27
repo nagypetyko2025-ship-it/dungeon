@@ -8,6 +8,8 @@ extends Node2D
 ## nyomsz, feláll és átveszed az irányítást, a mostani karaktered a saját helyére ül.
 ## A kocsmárossal (Tóbiás) beszélgetni lehet (munka = küldetések, történetek, a kiadó szobák). A hátsó falon,
 ## a sarokban ajtó: mögötte a szobák folyosója, fent sorban az öt szoba ajtaja (kopogni lehet; a négyes kiadó).
+## A négyest a kocsmárostól kibérelheted (ROOM_PRICE tábori arany, egyszer): belül ágy (alvás után a következő
+## futást REST_POTIONS HP-bájitallal kezded), láda (a tábori ládád), trófeafal a legyőzött főellenségekkel.
 ## (A tábor építi fel: setup(camp), a csempe-segédeit is a tábor adja.)
 
 signal message(text: String)
@@ -106,6 +108,21 @@ const ROOMS: Array[Dictionary] = [
 	{"knock": "Két hang vitatkozik bent arról, ki megy le holnap elsőnek a Mélységbe. Mindketten azt mondják, "
 		+ "hogy a másik. Észre sem veszik, hogy kopogtál."},
 ]
+## A kiadó szoba (ROOMS indexe), ára, és a te szobád belseje (messze mindentől; a déli falon az ajtó).
+const VACANT_ROOM := 3
+const ROOM_PRICE := 500
+const ROOM_FLAG := "tavern_room"
+## Alvás után a következő futás elején (Camp) ennyi HP-bájitallal több (egyszer).
+const RESTED_FLAG := "tavern_rested"
+const REST_POTIONS := 1
+const MY_ROOM := Rect2i(200, 40, 11, 4)
+const MY_ROOM_DOOR := Vector2i(205, 44)
+const MY_ROOM_LIGHT := Color(0.5, 0.42, 0.38)
+## Kenney belső lap: franciaágy (két csempe, a fejtámla jobbra); 0x72: láda.
+const BED: Array[Vector2i] = [Vector2i(12, 0), Vector2i(12, 1)]
+const BED_TILE := Vector2i(209, 41)
+const CHEST := Rect2(304, 416, 16, 16)
+const CHEST_TILE := Vector2i(201, 41)
 
 ## A székek helye (világ-koordináta) és iránya: [pozíció, jobbra néz-e]. A karakterek
 ## a Characters.ALL "seat" indexe szerinti széken ülnek.
@@ -119,6 +136,12 @@ var _prompt: Label
 var _inside := false
 var _in_corridor := false
 var _dialogue: DialoguePanel
+## Puskás Döme (lásd Blaster): első kopogásra kijön, és a kettes szoba ajtaja előtt áll, amíg a bányába nem megy.
+var _dome: AnimatedSprite2D
+var _dome_dialogue: DialoguePanel
+var _in_room := false
+## A "KIADÓ" cetli a négyes ajtaján (a bérlés után eltűnik).
+var _vacant_note: Array[CanvasItem] = []
 var _busy := false
 var _quest_panel: CanvasLayer
 var _quest_mark: Label
@@ -148,9 +171,19 @@ func setup(camp: Node2D) -> void:
 	_dialogue.options_provider = func() -> Array[Dictionary]:
 		var list: Array[Dictionary] = [{"id": "work", "text": "Van munkád számomra? (küldetések)",
 			"on_choose": _open_quests}]
+		if not room_rented():
+			list.append({"id": "rent", "text": "Kivenném a négyes szobát (%d arany)." % ROOM_PRICE,
+				"on_choose": _rent_room})
 		list.append_array(BARKEEP_STORIES)
 		return list
 	camp.add_child.call_deferred(_dialogue)
+	_dome_dialogue = DialoguePanel.new()
+	_dome_dialogue.name = "BlasterDialogue"
+	_dome_dialogue.npc_id = Blaster.ID
+	_dome_dialogue.npc_name = Blaster.NAME
+	_dome_dialogue.portrait = Blaster.portrait()
+	_dome_dialogue.options_provider = func() -> Array[Dictionary]: return Blaster.options("room")
+	camp.add_child.call_deferred(_dome_dialogue)
 
 
 ## A kocsma ajtaja előtti földút (a tábor rajzolja ki a többi földdel együtt).
@@ -252,6 +285,7 @@ func _build_interior() -> void:
 	_build_bar()
 	_build_tables()
 	_build_corridor()
+	_build_my_room()
 
 
 ## A pult a bejárattal szemben (a hátsó fal előtt), mögötte a kocsmáros.
@@ -375,6 +409,7 @@ func _build_corridor() -> void:
 		add_child(number)
 		if ROOMS[i].get("vacant", false):
 			var note := ColorRect.new()
+			_vacant_note.append(note)
 			note.color = Color(0.92, 0.88, 0.76)
 			note.size = Vector2(36, 14)
 			note.position = _center(Vector2i(column, top + 1)) + Vector2(-18, -6)
@@ -388,11 +423,23 @@ func _build_corridor() -> void:
 			vacant.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vacant.z_index = -6
 			add_child(vacant)
+			_vacant_note.append(vacant)
+			for node in _vacant_note:
+				node.visible = not room_rented()
 		# Fali fáklya a két ajtó között.
 		if i < ROOM_DOOR_COLUMNS.size() - 1:
 			var torch: Node2D = TORCH.instantiate()
 			torch.position = _center(Vector2i(column + 2, top)) + Vector2(0, 6)
 			add_child(torch)
+	# Puskás Döme: a kettes szoba ajtaja mellett áll, ha már felébresztetted (és még nem ment a bányába).
+	_dome = AnimatedSprite2D.new()
+	_dome.sprite_frames = Blaster.frames()
+	_dome.scale = Vector2(2, 2)
+	_dome.offset.y = -Blaster.FIGURE.size.y / 2.0
+	_dome.position = Vector2(ROOM_DOOR_COLUMNS[Blaster.ROOM] + 1.3, r.position.y + 0.75) * TILE
+	_dome.play("idle")
+	_dome.visible = false
+	_entities.add_child(_dome)
 	# Az ajtó vissza a kocsmába (a déli falon), két cserepes növény és egy szék a fal mellett.
 	_tile(DOOR_TILE, CORRIDOR_DOOR, -8).modulate = Color(0.85, 0.78, 0.72)
 	_sprite(INDOOR, Rect2(16 * 17, 0, 16, 16), _center(Vector2i(r.position.x, r.position.y)) + Vector2(0, -6), 0, _entities)
@@ -403,6 +450,88 @@ func _build_corridor() -> void:
 	_wall_rect(Rect2(Vector2(r.position.x, r.end.y) * TILE, Vector2((CORRIDOR_DOOR.x - r.position.x) * TILE, TILE)))
 	_wall_rect(Rect2(Vector2(CORRIDOR_DOOR.x + 1, r.end.y) * TILE, Vector2((r.end.x - CORRIDOR_DOOR.x - 1) * TILE, TILE)))
 	_solid(Rect2(Vector2(CORRIDOR_DOOR.x, r.end.y + 1) * TILE, Vector2(TILE, TILE)))
+	_wall_rect(Rect2(Vector2(r.position.x - 1, top) * TILE, Vector2(TILE, (r.size.y + 3) * TILE)))
+	_wall_rect(Rect2(Vector2(r.end.x, top) * TILE, Vector2(TILE, (r.size.y + 3) * TILE)))
+
+
+## A te szobád (a kibérelt négyes): deszkapadló szőnyeggel, fent a trófeafal (a legyőzött főellenségek képe
+## keretben, a még le nem győzötteké sötét árnyék), jobbra az ágy, balra a láda, középen asztal gyertyával.
+func _build_my_room() -> void:
+	var r := MY_ROOM
+	var top := r.position.y - 2
+	for x in range(r.position.x, r.end.x):
+		for y in range(r.position.y, r.end.y):
+			_tile(FLOOR_TILES[(x + y) % 2], Vector2i(x, y), -10).modulate = FLOOR_TINT
+		_tile(WALL_BAND, Vector2i(x, top), -9).modulate = Color(0.78, 0.66, 0.56)
+		_tile(WALL_BOARDS, Vector2i(x, top + 1), -9).modulate = Color(0.78, 0.66, 0.56)
+	var dark := ColorRect.new()
+	dark.color = Color(0.06, 0.04, 0.04)
+	dark.position = Vector2(r.position - Vector2i(2, 6)) * TILE
+	dark.size = Vector2(r.size + Vector2i(4, 10)) * TILE
+	dark.z_index = -11
+	add_child(dark)
+	var rug := ColorRect.new()
+	rug.color = Color(0.32, 0.16, 0.28)
+	rug.position = Vector2(r.position.x + 3.3, r.position.y + 1.2) * TILE
+	rug.size = Vector2(4.4, 1.8) * TILE
+	rug.z_index = -9
+	add_child(rug)
+	var rug_trim := ReferenceRect.new()
+	rug_trim.border_color = Color(0.78, 0.6, 0.26)
+	rug_trim.border_width = 3.0
+	rug_trim.editor_only = false
+	rug_trim.position = rug.position + Vector2(4, 4)
+	rug_trim.size = rug.size - Vector2(8, 8)
+	rug_trim.z_index = -9
+	add_child(rug_trim)
+	# Trófeafal: keretek a felső falsávon.
+	var bosses := trophies()
+	var step := 25.0
+	var start := r.position.x * TILE + (r.size.x * TILE - step * bosses.size()) / 2.0
+	for i in bosses.size():
+		var frame := ColorRect.new()
+		frame.color = Color(0.36, 0.22, 0.1)
+		frame.size = Vector2(23, 23)
+		frame.position = Vector2(start + i * step, top * TILE + 10)
+		frame.z_index = -7
+		add_child(frame)
+		var inner := ColorRect.new()
+		inner.color = Color(0.16, 0.12, 0.1)
+		inner.size = Vector2(19, 19)
+		inner.position = frame.position + Vector2(2, 2)
+		inner.z_index = -7
+		add_child(inner)
+		var icon: Array = Bestiary.icon(bosses[i])
+		var picture := Sprite2D.new()
+		picture.texture = icon[0]
+		var biggest := maxf(picture.texture.get_size().x, picture.texture.get_size().y)
+		picture.scale = Vector2.ONE * 17.0 / biggest
+		picture.position = frame.position + frame.size / 2.0
+		picture.z_index = -6
+		picture.modulate = icon[1] if Bestiary.kills(bosses[i]) > 0 else Color(0, 0, 0, 0.55)
+		add_child(picture)
+	# Ágy (jobbra, a fejtámla a falnál), láda (balra), asztal gyertyával és székkel.
+	for i in BED.size():
+		_sprite(INDOOR, Rect2(Vector2(BED[i]) * 17.0, Vector2(16, 16)), _center(BED_TILE + Vector2i(0, i)), -8)
+	_solid(Rect2(Vector2(BED_TILE) * TILE + Vector2(2, 4), Vector2(TILE - 4, 2 * TILE - 8)))
+	_sprite(SpriteSheet.TEXTURE, CHEST, _center(CHEST_TILE), 0, _entities)
+	_solid(Rect2(Vector2(CHEST_TILE) * TILE + Vector2(4, 10), Vector2(TILE - 8, TILE - 14)))
+	var table_tile := Vector2i(r.position.x + 2, r.end.y - 1)
+	var table := _tile(TABLE, table_tile, 0, _entities)
+	_solid(Rect2(Vector2(table_tile) * TILE + Vector2(4, 8), Vector2(TILE - 8, TILE - 12)))
+	_on_table(table, CANDLE, Vector2(0, -8), 0.6)
+	_light(_center(table_tile) + Vector2(0, -16), Color(1, 0.75, 0.45), 1.2, 0.8)
+	_tile(CHAIR_FACING_LEFT, table_tile + Vector2i.RIGHT, 0, _entities).position.y -= 2
+	_light(_center(BED_TILE), Color(1, 0.8, 0.55), 1.4, 0.6)
+	var torch: Node2D = TORCH.instantiate()
+	torch.position = _center(Vector2i(r.position.x + 1, top + 1)) + Vector2(0, -2)
+	add_child(torch)
+	# Falak és az ajtó (a déli falon).
+	_tile(DOOR_TILE, MY_ROOM_DOOR, -8).modulate = Color(0.85, 0.78, 0.72)
+	_solid(Rect2(Vector2(r.position.x, top) * TILE, Vector2(r.size.x * TILE, TILE * 1.6)))
+	_wall_rect(Rect2(Vector2(r.position.x, r.end.y) * TILE, Vector2((MY_ROOM_DOOR.x - r.position.x) * TILE, TILE)))
+	_wall_rect(Rect2(Vector2(MY_ROOM_DOOR.x + 1, r.end.y) * TILE, Vector2((r.end.x - MY_ROOM_DOOR.x - 1) * TILE, TILE)))
+	_solid(Rect2(Vector2(MY_ROOM_DOOR.x, r.end.y + 1) * TILE, Vector2(TILE, TILE)))
 	_wall_rect(Rect2(Vector2(r.position.x - 1, top) * TILE, Vector2(TILE, (r.size.y + 3) * TILE)))
 	_wall_rect(Rect2(Vector2(r.end.x, top) * TILE, Vector2(TILE, (r.size.y + 3) * TILE)))
 
@@ -512,11 +641,28 @@ func _focus() -> Array:
 	if not is_instance_valid(_player) or _busy:
 		return []
 	var at: Vector2 = _player.global_position
+	if _in_room:
+		if at.distance_to(_center(MY_ROOM_DOOR + Vector2i.UP)) < INTERACT_RANGE:
+			return ["room_exit", "[E] Vissza a folyosóra"]
+		if at.distance_to(_center(BED_TILE) + Vector2(-TILE / 2.0, TILE / 2.0)) < INTERACT_RANGE + 10:
+			return ["bed", "[E] Alvás"]
+		if at.distance_to(_center(CHEST_TILE)) < INTERACT_RANGE:
+			return ["chest", "[E] Láda (a tábori ládád)"]
+		if at.y < (MY_ROOM.position.y + 1) * TILE:
+			return ["trophies", "[E] Trófeafal"]
+		return []
 	if _in_corridor:
 		if at.distance_to(_center(CORRIDOR_DOOR + Vector2i.UP)) < INTERACT_RANGE:
 			return ["corridor_exit", "[E] Vissza a kocsmába"]
+		if _dome.visible and at.distance_to(_dome.position) < INTERACT_RANGE:
+			return ["dome", "[E] Beszélgetés: %s" % Blaster.NAME]
 		for i in ROOM_DOOR_COLUMNS.size():
+			# Döme ajtaja előtt maga Döme áll (lásd fent).
+			if i == Blaster.ROOM and _dome.visible:
+				continue
 			if at.distance_to(_center(Vector2i(ROOM_DOOR_COLUMNS[i], CORRIDOR.position.y))) < INTERACT_RANGE:
+				if i == VACANT_ROOM and room_rented():
+					return ["my_room", "[E] %d. szoba: a te szobád" % (i + 1)]
 				var vacant: bool = ROOMS[i].get("vacant", false)
 				return ["room_%d" % i, "[E] %d. szoba%s" % [i + 1, " (kiadó)" if vacant else ": kopogás"]]
 		return []
@@ -537,6 +683,7 @@ func _focus() -> Array:
 
 
 func _process(delta: float) -> void:
+	_dome.visible = Blaster.met() and not Blaster.at_mine()
 	# Bence (a volt tolvaj) a levél után, Lőrinc a királynak vitt levél után ideköltözik:
 	# leül a helyére, és onnantól játszható.
 	for id: String in ["thief", "wizard", "gravedigger"]:
@@ -632,12 +779,117 @@ func _unhandled_input(event: InputEvent) -> void:
 			_camp.get_node("Menus").call("open_menu", _dialogue)
 		"back_door": _move_corridor(true)
 		"corridor_exit": _move_corridor(false)
+		"dome":
+			Audio.play("ui_open")
+			_dome_dialogue.greeting = Blaster.greeting("room")
+			_camp.get_node("Menus").call("open_menu", _dome_dialogue)
+		"my_room": _move_room(true)
+		"room_exit": _move_room(false)
+		"bed": _sleep()
+		"chest":
+			Audio.play("chest_open", -4.0)
+			_camp.get_node("Menus").call("open_menu", _camp.get_node("StashPanel"))
+		"trophies":
+			var beaten := 0
+			for boss: String in trophies():
+				if Bestiary.kills(boss) > 0:
+					beaten += 1
+			message.emit("Trófeafal: %d / %d főellenség emléke lóg a falon. Az üres keretek még várnak." % [beaten,
+				trophies().size()] if beaten < trophies().size() else "Trófeafal: mind a %d főellenség emléke a falon. " \
+				% trophies().size() + "Tóbiás szerint ilyet még nem látott.")
 		_:
 			if str(focus[0]).begins_with("room_"):
-				Audio.play("door_lock", -6.0)
-				message.emit(ROOMS[int(str(focus[0]).trim_prefix("room_"))]["knock"])
+				_knock(int(str(focus[0]).trim_prefix("room_")))
 			else:
 				_switch_to(focus[0])
+
+
+## Kopogás egy szoba ajtaján. Döme ajtaján először: felébred és kijön (onnantól az ajtaja előtt áll).
+func _knock(index: int) -> void:
+	Audio.play("door_lock", -6.0)
+	if index == Blaster.ROOM and not Blaster.met():
+		Blaster.wake()
+		Audio.play("boss_slam", -14.0)
+		_dome.visible = true
+		message.emit(Blaster.WAKE_TEXT)
+		return
+	if index == Blaster.ROOM and Blaster.at_mine():
+		message.emit("A szoba üres, az ajtón cetli: „A bányában vagyok. Ne gyere utánam, ha nem hívtalak. D.”")
+		return
+	message.emit(ROOMS[index]["knock"])
+
+
+static func room_rented() -> bool:
+	return Progress.npc_quest_state(ROOM_FLAG) == "done"
+
+
+## A trófeafal főellenségei: a hét király, a Vérfarkas, a mély főellenségek és a Káosz Ura.
+static func trophies() -> Array[String]:
+	var list: Array[String] = []
+	list.assign(Bestiary.KINGS + [Bestiary.LORD] + Bestiary.DEEP_BOSSES + [Bestiary.CHAOS_LORD])
+	return list
+
+
+## A futás elején (a Camp hívja): ha kipihented magad a szobádban, ennyi bájitallal több (egyszer).
+static func take_rest_bonus() -> int:
+	if Progress.npc_quest_state(RESTED_FLAG) != "rested":
+		return 0
+	Progress.set_npc_quest(RESTED_FLAG, "")
+	return REST_POTIONS
+
+
+## A kocsmáros: a négyes szoba kibérlése (egyszer, tábori aranyból).
+func _rent_room() -> String:
+	if Progress.camp_gold < ROOM_PRICE:
+		Audio.play("ui_error")
+		return "[i]Tóbiás végignéz rajtad.[/i]\n\nÖtszáz arany, kalandor. Előre. Nem alkuszom, és hitelbe sem adok, " \
+			+ "mióta Döme hitelbe lakik nálam."
+	Progress.camp_gold -= ROOM_PRICE
+	Progress.set_npc_quest(ROOM_FLAG, "done")
+	Progress.change_trust(BARKEEP_ID, 10)
+	Progress.mark_asked(BARKEEP_ID, "rent")
+	Progress.save_game()
+	Audio.play("coin")
+	for node in _vacant_note:
+		node.visible = false
+	return "[i]Tóbiás leakaszt egy kulcsot a pult mögötti szögről, és a tenyeredbe nyomja.[/i]\n\n" \
+		+ "A négyes a tiéd. Ágy, láda, és egy üres fal: oda akaszthatod, amit odalent legyőztél. A ládát " \
+		+ "összekötöttem a táboriddal; ne kérdezd, hogyan, Döme csinálta. Ugyanazt éred el benne.\n\n" \
+		+ "Ha kialszod magad egy rendes ágyban, másnap jobban mész lefelé. Ezt én mondom, aki harminc éve nem " \
+		+ "aludtam ki magam.\n\n[color=#7a4a10](-%d tábori arany. A szobád a hátsó folyosón, a négyes ajtó: " % ROOM_PRICE \
+		+ "alvás után a következő futást +%d HP-bájitallal kezded.)[/color]" % REST_POTIONS
+
+
+## Alvás a szobádban: rövid elsötétülés, és a következő futás elején REST_POTIONS bájital (egyszer).
+func _sleep() -> void:
+	if Progress.npc_quest_state(RESTED_FLAG) == "rested":
+		message.emit("Már kialudtad magad: a következő futást +%d HP-bájitallal kezded." % REST_POTIONS)
+		return
+	_busy = true
+	Progress.set_npc_quest(RESTED_FLAG, "rested")
+	var limits := Rect2(Vector2(MY_ROOM.position - Vector2i(1, 4)) * TILE, Vector2(MY_ROOM.size + Vector2i(2, 6)) * TILE)
+	_camp.call("teleport_player", _player.global_position, limits, MY_ROOM_LIGHT)
+	await get_tree().create_timer(0.6).timeout
+	Audio.play("level_up", -6.0)
+	message.emit("Kialudtad magad egy rendes ágyban. A következő futást +%d HP-bájitallal kezded." % REST_POTIONS)
+	_busy = false
+
+
+## A szobádba (`into`), vagy onnan vissza a folyosóra.
+func _move_room(into: bool) -> void:
+	_busy = true
+	Audio.play("door_unlock", -4.0)
+	_in_room = into
+	_in_corridor = not into
+	if into:
+		var limits := Rect2(Vector2(MY_ROOM.position - Vector2i(1, 4)) * TILE, Vector2(MY_ROOM.size + Vector2i(2, 6)) * TILE)
+		_camp.call("teleport_player", _center(MY_ROOM_DOOR + Vector2i.UP), limits, MY_ROOM_LIGHT)
+	else:
+		var limits := Rect2(Vector2(CORRIDOR.position - Vector2i(1, 5)) * TILE, Vector2(CORRIDOR.size + Vector2i(2, 7)) * TILE)
+		_camp.call("teleport_player", _center(Vector2i(ROOM_DOOR_COLUMNS[VACANT_ROOM], CORRIDOR.position.y)) + Vector2(0, 10),
+			limits, CORRIDOR_LIGHT)
+	await get_tree().create_timer(0.6).timeout
+	_busy = false
 
 
 ## A kocsmáros "munka" válasza: a küldetések ablaka (a beszélgetés helyett; itt lehet leadni is őket).

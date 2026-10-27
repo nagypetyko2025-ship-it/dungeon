@@ -1475,6 +1475,9 @@ func _enter_dungeon_now(start_depth: int, cheat: bool) -> void:
 	GameState.depth = start_depth
 	if cheat:
 		GameState.cheated = true
+	else:
+		# Ha kialudtad magad a kocsmai szobádban: extra bájital (egyszer).
+		GameState.potions += Town.take_rest_bonus()
 	# A nálad lévő felszereléssel szállsz le; az a táborból "elfogy" (a futásban veszhet el).
 	GameState.saved_inventory = _player.get_node("Inventory").save_data()
 	Progress.camp_inventory = {}

@@ -7,6 +7,9 @@ extends Node2D
 ## A bejáratnál E-re bemész: a belső tér messze a pályától van. Délről alagút (sín, bányakocsi, támfák, fáklyák)
 ## vezet egy nagy barlangterembe, amit keresztben sötét szakadék vág ketté. A régi deszkahíd közepe leszakadt:
 ## a déli csonkjára ráállhatsz és lenézhetsz, a túloldalon (a felborult kocsi mögött) tovább megy a járat.
+## Puskás Döme (lásd Blaster) a küldetései után itt vár a szakadéknál: E-re felrobbantja a túlsó fal sziklaorrát,
+## ami beékelődik a leszakadt rész helyére, rá deszkát fektet, és onnantól át lehet menni a túlsó partra (ott
+## egyelőre nincs semmi).
 ## Csempék: assets/props/mine_tiles.png (a föld és a sziklafal az "Adventure Awaits" csomagból, barlangosra
 ## sötétítve; a szakadék, a híd, az oszlop és a támfa ehhez rajzolva), sín, kocsi, kövek: Kenney RPG.
 ## (A tábor építi fel: setup(camp) + build(); az utat a tábor rajzolja ki a többi földdel, a tisztás szélén a fasort
@@ -79,6 +82,10 @@ const ORE_CART := Vector2i(51, 19)
 const GOLD_CART := Vector2i(49, 21)
 const ROCKS: Array[Vector2i] = [Vector2i(54, 19), Vector2i(55, 19), Vector2i(56, 19), Vector2i(54, 21),
 	Vector2i(55, 21), Vector2i(56, 21)]
+## A beékelődő szikla (Kenney szürke kő, 8x nagyítva: szélesebb a hídnál, hogy két oldalt kilátsszon).
+const BOULDER := Vector2i(55, 21)
+## Döme helye a parton, a híd bal oldalán.
+const DOME_SPOT := Vector2(608.6, 10.4) * TILE
 
 var _camp: Node2D
 var _player: Node2D
@@ -89,12 +96,30 @@ var _busy := false
 ## A belső tér járható csempéi (a part, az alagút és a híd déli csonkja).
 var _floor := {}
 var _rng := RandomNumberGenerator.new()
+## A leszakadt híd képei (a robbantás után eltűnnek) és a megjavítotté (akkor jelennek meg), a szikla, és a
+## javításig a túlpartot elzáró ütköző (a déli csonk vége előtt).
+var _broken_nodes: Array[CanvasItem] = []
+var _fixed_nodes: Array[CanvasItem] = []
+var _boulder: Sprite2D
+var _gate: StaticBody2D
+var _dome: AnimatedSprite2D
+var _dome_dialogue: DialoguePanel
+var _flash: ColorRect
+## A kamera rázása (pixel, csökken).
+var _shake := 0.0
 
 
 func setup(camp: Node2D) -> void:
 	_camp = camp
 	_entities = camp.get_node("Entities")
 	_player = camp.get_node("Entities/Player")
+	_dome_dialogue = DialoguePanel.new()
+	_dome_dialogue.name = "MineBlasterDialogue"
+	_dome_dialogue.npc_id = Blaster.ID
+	_dome_dialogue.npc_name = Blaster.NAME
+	_dome_dialogue.portrait = Blaster.portrait()
+	_dome_dialogue.options_provider = func() -> Array[Dictionary]: return Blaster.options("mine", _blast_option)
+	camp.add_child.call_deferred(_dome_dialogue)
 
 
 ## Az út csempéi (a tábor rajzolja ki a többi földdel): a városi úttól fel, a hegy lábáig (a bejárat elé).
@@ -153,7 +178,13 @@ func _process(delta: float) -> void:
 	var look := 0.0
 	if tile.x >= RECT.position.x and tile.x <= RECT.end.x:
 		look = clampf((-2.0 - tile.y) / (-2.0 - RECT.end.y + 2.0), 0.0, 1.0)
-	(_player.get_node("Camera2D") as Camera2D).offset.y = -LOOK_UP * look
+	var jitter := Vector2.ZERO
+	if _shake > 0.0:
+		jitter = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * _shake
+		_shake = move_toward(_shake, 0.0, delta * 30.0)
+	(_player.get_node("Camera2D") as Camera2D).offset = Vector2(jitter.x, -LOOK_UP * look + jitter.y)
+	if _dome:
+		_dome.visible = Blaster.at_mine()
 	var focus := _focus()
 	if not focus.is_empty():
 		_prompt.text = focus[1]
@@ -176,8 +207,13 @@ func _build_interior() -> void:
 	for x in range(TUNNEL.position.x, TUNNEL.end.x):
 		for y in range(TUNNEL.position.y, TUNNEL.end.y):
 			_floor[Vector2i(x, y)] = true
-	for y in [CHASM_BOTTOM - 1, CHASM_BOTTOM]:
+	# A híd (a javítás előtt a két csonk közti rész az ütköző mögött van) és a túlsó part is járható: a falak és a
+	# szakadék szélei így mindkét állapotban jók.
+	for y in range(CHASM_TOP, CHASM_BOTTOM + 1):
 		for x in [BRIDGE_COLUMN, BRIDGE_COLUMN + 1]:
+			_floor[Vector2i(x, y)] = true
+	for x in range(CAVERN.position.x, CAVERN.end.x):
+		for y in range(CAVERN.position.y, CHASM_TOP):
 			_floor[Vector2i(x, y)] = true
 	var dark := ColorRect.new()
 	dark.color = Color(0.06, 0.05, 0.06)
@@ -191,6 +227,15 @@ func _build_interior() -> void:
 	_build_bridge()
 	_build_tunnel()
 	_build_cavern_props()
+	_dome = AnimatedSprite2D.new()
+	_dome.sprite_frames = Blaster.frames()
+	_dome.scale = Vector2(2, 2)
+	_dome.offset.y = -Blaster.FIGURE.size.y / 2.0
+	_dome.position = DOME_SPOT
+	_dome.play("idle")
+	_dome.visible = Blaster.at_mine()
+	_entities.add_child(_dome)
+	_apply_bridge_state()
 
 
 ## Egy csempe a belső térben: part / alagút (föld, a szakadék szélén omladozó perem), a túlsó perem, a szakadék
@@ -237,14 +282,20 @@ func _open(tile: Vector2i) -> bool:
 
 ## A leszakadt deszkahíd: a túlsó parton két oszlop és egy csonk (a végéről kötél és deszka lóg a mélybe),
 ## az innenső parton két oszlop és a két soros déli csonk (rá lehet állni). Előtte figyelmeztető tábla.
+## A megjavított híd képei (a beékelődött szikla és a deszkák a résen) is itt készülnek, rejtve.
 func _build_bridge() -> void:
+	_boulder = _rpg(BOULDER, Vector2(BRIDGE_COLUMN + 1, CHASM_BOTTOM - 2) * TILE, -9)
+	_boulder.scale = Vector2(8, 8)
+	_fixed_nodes.append(_boulder)
 	for side in 2:
 		var column := BRIDGE_COLUMN + side
 		_tile(BRIDGE[side], Vector2i(column, CHASM_TOP), -8)
-		_tile(BRIDGE_BROKEN_DOWN[side], Vector2i(column, CHASM_TOP + 1), -8)
-		_tile(DANGLE[side], Vector2i(column, CHASM_TOP + 2), -8)
-		_tile(BRIDGE_BROKEN_UP[side], Vector2i(column, CHASM_BOTTOM - 1), -8)
+		_broken_nodes.append(_tile(BRIDGE_BROKEN_DOWN[side], Vector2i(column, CHASM_TOP + 1), -8))
+		_broken_nodes.append(_tile(DANGLE[side], Vector2i(column, CHASM_TOP + 2), -8))
+		_broken_nodes.append(_tile(BRIDGE_BROKEN_UP[side], Vector2i(column, CHASM_BOTTOM - 1), -8))
 		_tile(BRIDGE[side], Vector2i(column, CHASM_BOTTOM), -8)
+		for y in range(CHASM_TOP + 1, CHASM_BOTTOM):
+			_fixed_nodes.append(_tile(BRIDGE[side], Vector2i(column, y), -8))
 	var left := BRIDGE_COLUMN * TILE + 3.0
 	var right := (BRIDGE_COLUMN + 2) * TILE - 3.0
 	for x: float in [left, right]:
@@ -364,6 +415,15 @@ func _build_ui() -> void:
 	_prompt.offset_right = 500
 	_prompt.modulate.a = 0.0
 	layer.add_child(_prompt)
+	# A robbanás villanása (az egész képernyőn).
+	var flash_layer := CanvasLayer.new()
+	flash_layer.layer = 4
+	add_child(flash_layer)
+	_flash = ColorRect.new()
+	_flash.color = Color(1, 0.95, 0.85, 0.0)
+	_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flash_layer.add_child(_flash)
 
 
 func _focus() -> Array:
@@ -376,7 +436,9 @@ func _focus() -> Array:
 		return []
 	if at.distance_to(_exit_point()) < INTERACT_RANGE:
 		return ["exit", "[E] Kilépés a bányából"]
-	if at.distance_to(Vector2(BRIDGE_COLUMN + 1, CHASM_BOTTOM) * TILE) < INTERACT_RANGE:
+	if _dome.visible and at.distance_to(_dome.position) < INTERACT_RANGE:
+		return ["dome", "[E] Beszélgetés: %s" % Blaster.NAME]
+	if not Blaster.bridge_fixed() and at.distance_to(Vector2(BRIDGE_COLUMN + 1, CHASM_BOTTOM) * TILE) < INTERACT_RANGE:
 		return ["chasm", "[E] Lenézel a mélységbe"]
 	return []
 
@@ -395,11 +457,167 @@ func _unhandled_input(event: InputEvent) -> void:
 	match focus[0]:
 		"enter": _move(true, _exit_point() + Vector2(0, -TILE))
 		"exit": _move(false, ENTRANCE + Vector2(0, 30))
+		"dome":
+			Audio.play("ui_open")
+			_dome_dialogue.greeting = Blaster.greeting("mine")
+			_camp.get_node("Menus").call("open_menu", _dome_dialogue)
 		"chasm":
 			Audio.play("footstep", -4.0)
 			message.emit("A híd közepe leszakadt, alatta koromsötét. Ledobsz egy kavicsot: sokáig nem hallod, hogy "
 				+ "földet érne. A túloldalon tovább megy a járat... Puskás Döme, a robbantómester talán tudná, "
 				+ "hogyan lehet átjutni.")
+
+
+## A híd állapota szerint: a leszakadt vagy a megjavított képek, és a javításig a túlpartot elzáró ütköző.
+func _apply_bridge_state() -> void:
+	var fixed := Blaster.bridge_fixed()
+	for node in _broken_nodes:
+		node.visible = not fixed
+	for node in _fixed_nodes:
+		node.visible = fixed
+	if fixed and _gate:
+		_gate.queue_free()
+		_gate = null
+	elif not fixed and not _gate:
+		_gate = _solid(Rect2(Vector2(BRIDGE_COLUMN, CHASM_BOTTOM - 2) * TILE, Vector2(2, 1) * TILE))
+
+
+## Döme "Robbants!" válasza: a beszélgetés bezárul, és lejátszódik a robbantás.
+func _blast_option() -> String:
+	_camp.get_node("Menus").call("close_current")
+	_blast.call_deferred()
+	return ""
+
+
+## A robbantás: Döme a csonk végére megy, átdobja a dinamitot a túlsó fal sziklaorrára, visszaszalad; robbanás
+## (villanás, rázkódás, kőzápor), a sziklaorr lezuhan és beékelődik a résbe, Döme deszkát fektet rá. Utána a
+## túlpart járható.
+func _blast() -> void:
+	if _busy or Blaster.bridge_fixed():
+		return
+	_busy = true
+	var stub_end := Vector2(BRIDGE_COLUMN + 1, CHASM_BOTTOM - 0.6) * TILE
+	var rock_face := Vector2(BRIDGE_COLUMN + 1, CAVERN.position.y - 0.7) * TILE
+	_dome.play("run")
+	var walk := create_tween()
+	walk.tween_property(_dome, "position", stub_end + Vector2(0, 14), 0.8)
+	await walk.finished
+	_dome.play("idle")
+	# A dinamit ívben átrepül a túlsó falra.
+	var dynamite := _dynamite()
+	dynamite.position = _dome.position + Vector2(0, -30)
+	var from := dynamite.position
+	var throw := create_tween()
+	var arc := func(t: float) -> void:
+		dynamite.position = from.lerp(rock_face, t) + Vector2(0, -sin(t * PI) * 90.0)
+		dynamite.rotation = t * TAU * 1.5
+	throw.tween_method(arc, 0.0, 1.0, 0.7)
+	await throw.finished
+	FloatingText.spawn(_entities, _dome.position + Vector2(0, -60), "Fedezékbe!", Color(1, 0.8, 0.4), 22)
+	_dome.play("run")
+	_dome.flip_h = true
+	var back := create_tween()
+	back.tween_property(_dome, "position", DOME_SPOT, 0.9)
+	await get_tree().create_timer(1.4).timeout
+	_dome.play("idle")
+	_dome.flip_h = false
+	# Robbanás.
+	dynamite.queue_free()
+	Audio.play("boss_slam", 4.0, 0.0)
+	Audio.play("trap", 2.0)
+	Audio.play("boss_roar", -6.0, 0.0)
+	_shake = 16.0
+	_flash.color.a = 0.85
+	create_tween().tween_property(_flash, "color:a", 0.0, 0.5)
+	_debris(rock_face, 22)
+	await get_tree().create_timer(0.35).timeout
+	# A sziklaorr lezuhan, és beékelődik a résbe.
+	var rest := _boulder.position
+	_boulder.position = rock_face
+	_boulder.visible = true
+	var fall := create_tween()
+	fall.tween_property(_boulder, "position", rest, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	await fall.finished
+	Audio.play("boss_slam", 0.0)
+	_shake = 10.0
+	_debris(rest, 12)
+	await get_tree().create_timer(0.8).timeout
+	# Döme deszkát fektet a sziklára, soronként (a déli csonktól északra).
+	for node in _broken_nodes:
+		node.visible = false
+	_dome.play("run")
+	var to_bridge := create_tween()
+	to_bridge.tween_property(_dome, "position", stub_end + Vector2(0, 14), 0.6)
+	await to_bridge.finished
+	_dome.play("idle")
+	var planks := _fixed_nodes.duplicate()
+	planks.erase(_boulder)
+	# Soronként (mindkét fele egyszerre), délről észak felé.
+	planks.sort_custom(func(a: Node2D, b: Node2D) -> bool: return a.position.y > b.position.y)
+	for i in range(0, planks.size(), 2):
+		for node: CanvasItem in planks.slice(i, i + 2):
+			node.modulate.a = 0.0
+			node.visible = true
+			create_tween().tween_property(node, "modulate:a", 1.0, 0.2)
+		Audio.play("anvil", -6.0)
+		await get_tree().create_timer(0.35).timeout
+	Progress.set_npc_quest(Blaster.BLAST_QUEST, "done")
+	Progress.change_trust(Blaster.ID, 20)
+	_apply_bridge_state()
+	_dome.play("run")
+	var home := create_tween()
+	home.tween_property(_dome, "position", DOME_SPOT, 0.6)
+	await home.finished
+	_dome.play("idle")
+	Audio.play("level_up")
+	FloatingText.spawn(_entities, _dome.position + Vector2(0, -60), "Na, ugye!", Color(1, 0.85, 0.5), 22)
+	message.emit("A szikla beékelődött a résbe, Döme deszkát fektetett rá: a szakadék fölött újra van híd.")
+	_busy = false
+
+
+## A dinamitköteg (három vörös rúd, kanóc, szikrázó vég).
+func _dynamite() -> Node2D:
+	var bundle := Node2D.new()
+	bundle.z_index = 5
+	add_child(bundle)
+	for i in 3:
+		var stick := ColorRect.new()
+		stick.color = Color(0.75, 0.12, 0.1) if i != 1 else Color(0.85, 0.18, 0.12)
+		stick.size = Vector2(5, 14)
+		stick.position = Vector2(-8 + i * 5, -7)
+		bundle.add_child(stick)
+	var band := ColorRect.new()
+	band.color = Color(0.45, 0.3, 0.15)
+	band.size = Vector2(15, 3)
+	band.position = Vector2(-8, -1)
+	bundle.add_child(band)
+	var spark := ColorRect.new()
+	spark.color = Color(1, 0.9, 0.4)
+	spark.size = Vector2(4, 4)
+	spark.position = Vector2(-2, -12)
+	bundle.add_child(spark)
+	var blink := spark.create_tween().set_loops()
+	blink.tween_property(spark, "modulate:a", 0.2, 0.08)
+	blink.tween_property(spark, "modulate:a", 1.0, 0.08)
+	return bundle
+
+
+## Kőzápor és por egy pontból: szétrepülő kődarabok, amik leesnek és elhalványulnak.
+func _debris(at: Vector2, count: int) -> void:
+	for i in count:
+		var piece := ColorRect.new()
+		var size := randf_range(3, 8)
+		piece.size = Vector2(size, size)
+		piece.color = [Color(0.42, 0.36, 0.34), Color(0.3, 0.25, 0.24), Color(0.6, 0.55, 0.5, 0.7)][i % 3]
+		piece.position = at
+		piece.z_index = 4
+		add_child(piece)
+		var direction := Vector2.from_angle(randf() * TAU)
+		var target := at + direction * randf_range(30, 110) + Vector2(0, randf_range(20, 70))
+		var tween := piece.create_tween().set_parallel()
+		tween.tween_property(piece, "position", target, randf_range(0.5, 0.9)).set_ease(Tween.EASE_OUT)
+		tween.tween_property(piece, "modulate:a", 0.0, 1.0).set_delay(0.3)
+		tween.chain().tween_callback(piece.queue_free)
 
 
 func _move(inside: bool, at: Vector2) -> void:
@@ -466,7 +684,7 @@ func _prop(region: Rect2, at: Vector2, foot: Vector2, texture: Texture2D = RPG) 
 	return sprite
 
 
-func _solid(rect: Rect2) -> void:
+func _solid(rect: Rect2) -> StaticBody2D:
 	var body := StaticBody2D.new()
 	var shape := CollisionShape2D.new()
 	var box := RectangleShape2D.new()
@@ -475,6 +693,7 @@ func _solid(rect: Rect2) -> void:
 	body.position = rect.get_center()
 	body.add_child(shape)
 	add_child(body)
+	return body
 
 
 func _light(at: Vector2, color: Color, size: float, energy: float) -> void:

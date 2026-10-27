@@ -2,16 +2,18 @@ extends CanvasLayer
 ## Küldetések könyve (J): bőrkötéses, nyitott könyv, két pergamenlappal. Minden lapon egy
 ## küldetés (feladat, haladás, jutalom, állapot: folyamatban / kész / teljesítve).
 ## Lapozás: a nyilakkal, vagy A / D, ← / →. Az első kész vagy futó küldetésnél nyílik ki.
+## Az általános fülön szűrők: állapot (mind / leadható / folyamatban / teljesítve) és nehézség; ha van leadható
+## küldetés, a könyv rögtön a "Leadható" szűréssel nyílik.
 ## Megnyitását/bezárását a Menus kezeli (open()/close()).
 
 const LEATHER := Color(0.36, 0.18, 0.1)
 const LEATHER_DARK := Color(0.2, 0.09, 0.05)
-const PAGE_SIZE := Vector2(400, 420)
+const PAGE_SIZE := Vector2(400, 400)
 ## Fülek: 0 = általános küldetések (Quests), 1 = a veterán küldetései (Dialogues),
 ## 2 = a tolvaj küldetései (Thief), 3 = a király küldetései (Castle; csak a vár kapujánál
 ## tett első látogatás után látszik).
 const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király", "Kutas idegen", "Csontváz sírásó", "Doktor",
-	"Mérnök", "Horgász"]
+	"Mérnök", "Horgász", "Robbantómester"]
 const KING_TAB := 3
 ## 4 = a kútba esett idegen küldetései (Stranger).
 const WELL_TAB := 4
@@ -23,7 +25,12 @@ const DOCTOR_TAB := 6
 const ENGINEER_TAB := 7
 ## 8 = Öreg Ábel, a horgász küldetése (Fisherman).
 const FISHER_TAB := 8
+## 9 = Puskás Döme, a robbantómester küldetései (Blaster).
+const BLASTER_TAB := 9
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
+## Az általános fül szűrői: [kulcs, felirat].
+const STATUS_FILTERS := [["all", "Mind"], ["ready", "Leadható"], ["active", "Folyamatban"], ["done", "Teljesítve"]]
+const TIER_FILTERS := [["all", "Minden nehézség"], ["easy", "Könnyű"], ["medium", "Közepes"], ["hard", "Nehéz"]]
 
 var _ids: Array = []
 var _tab := 0
@@ -34,6 +41,11 @@ var _pages: Array[VBoxContainer] = []
 var _page_numbers: Array[Label] = []
 var _prev: Button
 var _next: Button
+var _status := "all"
+var _tier := "all"
+var _filter_row: HBoxContainer
+var _status_buttons: Array[Button] = []
+var _tier_buttons: Array[Button] = []
 
 
 func _ready() -> void:
@@ -44,10 +56,13 @@ func _ready() -> void:
 	_load_ids()
 
 
-## A fül lapjai: az általános küldetések mind; az NPC-kéből csak amit már kért.
+## A fül lapjai: az általános küldetések a szűrők szerint; az NPC-kéből csak amit már kért.
 func _load_ids() -> void:
 	if _tab == 0:
-		_ids = Quests.ALL.keys()
+		_ids = []
+		for id: String in Quests.ALL:
+			if _passes(id):
+				_ids.append(id)
 		return
 	_ids = []
 	for id: String in _npc_quests():
@@ -65,6 +80,7 @@ func _npc_quests() -> Dictionary:
 		DOCTOR_TAB: return Doctor.QUESTS
 		ENGINEER_TAB: return Engineer.QUESTS
 		FISHER_TAB: return Fisherman.QUESTS
+		BLASTER_TAB: return Blaster.QUESTS
 	return Dialogues.VETERAN_QUESTS
 
 
@@ -77,7 +93,52 @@ func _npc_name() -> String:
 		DOCTOR_TAB: return Doctor.NAME
 		ENGINEER_TAB: return Engineer.NAME
 		FISHER_TAB: return Fisherman.NAME
+		BLASTER_TAB: return Blaster.NAME
 	return Dialogues.VETERAN_NAME
+
+
+## Az általános küldetés átmegy-e a szűrőkön (állapot, nehézség).
+func _passes(id: String) -> bool:
+	var quest: Dictionary = Quests.ALL[id]
+	if _tier != "all" and quest.get("tier", "easy") != _tier:
+		return false
+	match _status:
+		"ready":
+			return Quests.is_complete(id)
+		"active":
+			return not Progress.quests_done.has(id) and not Quests.is_complete(id)
+		"done":
+			return Progress.quests_done.has(id)
+	return true
+
+
+func _set_status(status: String) -> void:
+	_status = status
+	_refilter()
+
+
+func _set_tier(tier: String) -> void:
+	_tier = tier
+	_refilter()
+
+
+func _refilter() -> void:
+	_load_ids()
+	_spread = 0
+	_update_filters()
+	Audio.play("ui_click")
+	_show_spread()
+
+
+## A kiválasztott szűrő világos, a többi halvány; a "Leadható" gombon a kész küldetések száma.
+func _update_filters() -> void:
+	_filter_row.visible = _tab == 0
+	for i in STATUS_FILTERS.size():
+		_status_buttons[i].modulate = Color.WHITE if STATUS_FILTERS[i][0] == _status else Color(0.6, 0.55, 0.5)
+	for i in TIER_FILTERS.size():
+		_tier_buttons[i].modulate = Color.WHITE if TIER_FILTERS[i][0] == _tier else Color(0.6, 0.55, 0.5)
+	var ready := Quests.ready_ids().size()
+	_status_buttons[1].text = "Leadható (%d)" % ready if ready > 0 else "Leadható"
 
 
 func _set_tab(tab: int) -> void:
@@ -86,6 +147,7 @@ func _set_tab(tab: int) -> void:
 		_tab_buttons[i].modulate = Color.WHITE if i == tab else Color(0.6, 0.55, 0.5)
 	_load_ids()
 	_spread = 0
+	_update_filters()
 	Audio.play("ui_click")
 	_show_spread()
 
@@ -95,7 +157,11 @@ func open() -> void:
 	_tab_buttons[KING_TAB].visible = Progress.npc_quest_state(Castle.PERMIT_QUEST) != ""
 	if _tab == KING_TAB and not _tab_buttons[KING_TAB].visible:
 		_set_tab(0)
+	# Ha van leadható küldetés, rögtön azokat mutatja.
+	if not Quests.ready_ids().is_empty():
+		_status = "ready"
 	_load_ids()
+	_update_filters()
 	if _tab != 0:
 		_spread = 0
 		_show_spread()
@@ -157,12 +223,12 @@ func _build() -> void:
 	# Fülek: általános / veterán.
 	var tabs := HBoxContainer.new()
 	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
-	tabs.add_theme_constant_override("separation", 6)
+	tabs.add_theme_constant_override("separation", 4)
 	root.add_child(tabs)
 	for i in TAB_NAMES.size():
 		var tab := MenuStyle.button(TAB_NAMES[i])
-		tab.custom_minimum_size = Vector2(128, 44)
-		tab.add_theme_font_size_override("font_size", 14)
+		tab.custom_minimum_size = Vector2(118, 44)
+		tab.add_theme_font_size_override("font_size", 13)
 		tab.focus_mode = Control.FOCUS_NONE
 		tab.modulate = Color.WHITE if i == 0 else Color(0.6, 0.55, 0.5)
 		tab.pressed.connect(_set_tab.bind(i))
@@ -170,6 +236,20 @@ func _build() -> void:
 		_tab_buttons.append(tab)
 
 	# A könyv: bőrborító, benne két lap, középen a gerinc.
+	# Szűrők (csak az általános fülön): állapot, nehézség.
+	_filter_row = HBoxContainer.new()
+	_filter_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_filter_row.add_theme_constant_override("separation", 4)
+	root.add_child(_filter_row)
+	for pair: Array in STATUS_FILTERS:
+		_status_buttons.append(_filter_button(pair[1], _set_status.bind(pair[0])))
+	var gap := Control.new()
+	gap.custom_minimum_size.x = 28
+	_filter_row.add_child(gap)
+	for pair: Array in TIER_FILTERS:
+		_tier_buttons.append(_filter_button(pair[1], _set_tier.bind(pair[0])))
+	_update_filters()
+
 	var cover := PanelContainer.new()
 	var leather := StyleBoxFlat.new()
 	leather.bg_color = LEATHER
@@ -231,6 +311,16 @@ func _build() -> void:
 	root.add_child(hint)
 
 
+func _filter_button(text: String, action: Callable) -> Button:
+	var button := MenuStyle.button(text)
+	button.custom_minimum_size = Vector2(96, 30)
+	button.add_theme_font_size_override("font_size", 13)
+	button.focus_mode = Control.FOCUS_NONE
+	button.pressed.connect(action)
+	_filter_row.add_child(button)
+	return button
+
+
 func _show_spread() -> void:
 	for side in 2:
 		var index := _spread + side
@@ -263,6 +353,11 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 		elif _tab == FISHER_TAB and _ids.is_empty() and index == 0:
 			empty_text = "Öreg Ábel még nem kért tőled semmit.\n\n" \
 				+ "A város keleti rétjén, a tó partján horgászik. Kérdezd meg, segíthetsz-e neki."
+		elif _tab == 0 and _ids.is_empty() and index == 0:
+			empty_text = "Ebben a szűrésben nincs küldetés."
+		elif _tab == BLASTER_TAB and _ids.is_empty() and index == 0:
+			empty_text = "Puskás Döme még nem kért tőled semmit.\n\n" \
+				+ "A kocsma hátsó folyosóján lakik, a kettes szobában. Kopogj be hozzá."
 		elif _tab == 2 and _ids.is_empty() and index == 0:
 			empty_text = "Még nem találkoztál a tolvajjal.\n\n" \
 				+ "Állítólag a sáros ösvény végén, egy romos házban rejtőzik valaki..."
@@ -376,6 +471,8 @@ func _fill_npc_page(page: VBoxContainer, id: String) -> void:
 		doing = Gravedigger.doing_text(id, doing)
 	elif _tab == DOCTOR_TAB:
 		doing = Doctor.doing_text(id, doing)
+	elif _tab == BLASTER_TAB:
+		doing = Blaster.doing_text(id, doing)
 	var state := UiStyle.label(("✔ TELJESÍTVE — " + quest["done"]) if done else ("★ FOLYAMATBAN — " + doing),
 		19, Color(0.24, 0.5, 0.2) if done else Color(0.6, 0.3, 0.05))
 	state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -98,12 +98,19 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   a kamera feljebb néz (`Mine.LOOK_UP`), különben a nagyítás miatt nem látszana a csúcs. A bejáratnál E-re be lehet menni
   (belső tér: `Mine.BOUNDS`, x 598-tól): alagút (sín, érces kocsi, támfák fáklyával), barlangterem, keresztben szakadék,
   a deszkahíd közepe leszakadt (a déli csonkra ráállhatsz, E: lenézel; a túlparton tovább megy a járat, egyelőre
-  elérhetetlen). Csempék: `assets/props/mine_tiles.png` (16 px; a föld és a fal az Adventure Awaits csomagból).
+  elérhetetlen, Döme robbantásáig). Csempék: `assets/props/mine_tiles.png` (16 px; a föld és a fal az Adventure Awaits csomagból).
   A doktor kérdései és küldetései: `world/doctor.gd` (J könyv "Doktor" fül; 1.: Vérgömb, 2.: A tudós szeme, 3.: Fűrészpenge, utána 3 történet;
   4.: A fekete csőrök (11 pestisdoktor a küldetés óta, `BEAKS_BASE`), utána 2 történet; 5.: Rozi köhögése (Főnixtoll), utána 2 történet).
 - Kocsma (`world/town.gd`): a kocsmáros (Tóbiás) E-re beszélget (`BARKEEP_STORIES`: 3 történet + a szobák; a "munka"
   opció nyitja a küldetések ablakát). A hátsó fal jobb sarkában ajtó (`BACK_DOOR`) a szobák folyosójára (`CORRIDOR`,
   y 30-tól): fent 5 ajtó (`ROOMS`: kopogásra szöveg; 2: Puskás Döme, a robbantómester; 4: kiadó).
+  A négyes kibérelhető a kocsmárostól (`ROOM_PRICE` 500 tábori arany, egyszer; `ROOM_FLAG`): belül (`MY_ROOM`, y 40-től)
+  ágy (alvás → `RESTED_FLAG`, a következő futás elején +1 HP-bájital: `Town.take_rest_bonus`, a Camp `_enter_dungeon_now`-ja),
+  láda (a tábori láda ablaka), trófeafal (`Town.trophies()`: 13 főellenség, a le nem győzöttek sötét árnyékként).
+- Puskás Döme, a robbantómester: `world/blaster.gd` (J könyv "Robbantómester" fül). Első kopogásra kijön, a kettes ajtó
+  előtt áll; küldetései: Goblinpor (8 robbanó goblin), Lassú kanóc (5 kalózpuskás), Híd a szakadék fölött (a bányába megy,
+  ott E: robbantás, `Mine._blast`: a szikla beékelődik, deszka rá; `Blaster.bridge_fixed()` után a túlpart járható,
+  ott egyelőre nincs semmi).
 - Város északi része: `world/castle.gd` ( út, királyi vár, őrök, trónterem; király: `world/king.gd`; a
   "Király" fül a J könyvben az első látogatás után; engedély: `deep_30` jelző, a 30. emelet után a táborban "done").
   A hét király jelentése után: "Mi lesz most, felség?" → új küldetés, a Káosz kapuja (`King.CHAOS_QUEST`: győzd le
@@ -111,6 +118,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Szörnyek könyve: állvány a táborban (`BESTIARY_TILE`), adatok: `world/bestiary.gd`, ablak: `ui/bestiary_book.gd`;
   a megölt szörnyek száma `Progress.kills` (a `room.gd` írja, főellenség a saját nevével).
 - Általános küldetések (a kocsmárostól, `world/quests.gd`): 100 db nehézséggel (`Quests.TIERS`: easy / medium / hard).
+  A J könyv általános fülén szűrők (állapot, nehézség); ha van leadható, azzal a szűréssel nyílik.
 - NPC-beszélgetés: `ui/dialogue_panel.gd` (bizalom -100..+100, oldalanként 5 opció, lapozható ← →, 1-5 gomb), szövegek: `world/dialogues.gd`;
   bizalom és feltett kérdések: `Progress.trust` / `Progress.asked` (mentve).
 - Karakterek: `world/characters.gd` (lovag, íjász, Bence/"thief" a levél-küldetés után, Gáspár/"veteran" — utóbbi az "unlock" jelzővel, a 30. emelet
