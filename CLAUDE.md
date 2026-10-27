@@ -96,8 +96,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - A tábor jobb felső sarkából rejtett ösvény északra: `world/hidden_grave.gd` (tisztás: Borbás Márton sírja, elhalt fa
   Ilona kitűzött levelével, egyszer nyitható láda: 150 tábori arany, Görbe kés, Ismétlő számszeríj; jelző: hidden_grave_chest).
 - A tó titka: `world/lake_crypt.gd` (`LakeCrypt`). Ábel (`Fisherman`): az átlagos tárgy után KEY_QUEST (8 kalóz a küldetés óta,
-  `Progress.kills` bázissal), utána CRYPT_QUEST: a móló végén Ábel csónakja (`Lake`, E: átevezés; vissza a sziget déli
-  partjáról, `ISLAND_LANDING`), a rácsos lépcsőnél E: történet-futás ("story": "crypt", 4 emelet, Fagykő-kinézet,
+  `Progress.kills` bázissal), utána CRYPT_QUEST: a tó déli részén, a móló mellett Ábel csónakja (`Lake`, `rowboat.png`;
+  a mólón a `BOARD_CELL`-nél E: beszáll, a csónak a `ROUTE` mentén átevez (`Lake._row`, a játékos fizikája közben ki van
+  kapcsolva), kiszáll az `ISLAND_LANDING`-re; vissza ugyanígy), a rácsos lépcsőnél E: történet-futás ("story": "crypt", 4 emelet, Fagykő-kinézet,
   a végén aréna a Tófenék Urával: `LakeCrypt.BOSS`); jutalom `trinket_lake_pearl`, Ábelnél +300 arany és 3 történet.
   A történet-futások közös elosztója: `LakeCrypt.story_boss / story_reward / story_*_text` (a Dungeon, a Room és a
   ChallengePanel már nem csak a "knocker"-t ismeri; új történetnél ide kell felvenni).

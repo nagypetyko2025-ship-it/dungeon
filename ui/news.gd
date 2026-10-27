@@ -4,6 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-27", "items": [
+		"Ábel csónakja új képet kapott, és a tó déli részén, a móló mellett ring; átkeléskor beszállsz, a csónak "
+			+ "átevez a szigetre, ott kiszállsz (és ugyanígy vissza).",
 		"A tó titka: Öreg Ábel új küldetéssora (a kis zár kulcsa a kalózoktól, átkelés a csónakkal a szigetre), "
 			+ "a sziget lépcsője alatt az elárasztott kripta (4 emelet), a legalján a Tófenék Ura; jutalom: "
 			+ "A tófenék gyöngye, és Ábel három új története.",

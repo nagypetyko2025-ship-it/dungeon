@@ -17,3 +17,5 @@ mountain.png: a sziklacsempék az "Adventure Awaits Asset Pack 1.0" csomagból (
 mine_tiles.png: a bánya belsejének csempéi. A föld és a sziklafal az "Adventure Awaits Asset Pack 1.0" (Ishtar Pixels, CC0,
   https://opengameart.org/content/adventure-awaits-asset-pack-10) földes sziklafalából és talajából, barlangosra sötétítve;
   a szakadék, a leszakadt deszkahíd, a hídoszlop és a bányatámfa ehhez a projekthez rajzolva (CC0).
+rowboat.png: Ábel csónakja a tavon — "Wooden Boat" (Pavel Kutejnikov, CC0, https://opengameart.org/content/wooden-boat),
+  a három változat közül az első, kivágva.

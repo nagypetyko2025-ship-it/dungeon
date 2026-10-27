@@ -34,6 +34,20 @@ var _busy := false
 ## A sziget déli partja: itt köt ki Ábel csónakja (innen vissza a mólóhoz).
 const ISLAND_LANDING := Vector2i(116, 10)
 const RANGE := 50.0
+## Ábel csónakja (rowboat.png): a tó déli részén, a móló mellett köt ki; a mólón a BOARD_CELL-ről lehet beszállni.
+const BOAT: Texture2D = preload("res://assets/props/rowboat.png")
+const BOAT_SCALE := 1.2
+const BOARD_CELL := Vector2i(113, 12)
+const PIER_DOCK := Vector2(114.5, 12.6)
+## Az evezés útja csempében (a mólótól a sziget déli partjáig); visszafelé fordítva.
+const ROUTE: Array[Vector2] = [PIER_DOCK, Vector2(115.5, 12.75), Vector2(116.6, 12.4)]
+## Hová ül a játékos a csónakon belül (a lába a pad közepén).
+const SEAT := Vector2(0, 8)
+const ROW_SPEED := 38.0
+const WALK_SPEED := 70.0
+var _boat: Node2D
+var _hull: Sprite2D
+var _boat_at_island := false
 
 
 func setup(camp: Node2D) -> void:
@@ -190,20 +204,20 @@ static func crypt_cleared() -> bool:
 	return Progress.npc_quest_state(Fisherman.CRYPT_QUEST) in ["slain", "done"]
 
 
+## A mólón az a pont, ahonnan a csónakba lehet szállni (a tó déli részén, a csónak mellett).
 func _pier_end() -> Vector2:
-	return (Vector2(pier_cells().back()) + Vector2(0.5, 0.5)) * TILE
+	return (Vector2(BOARD_CELL) + Vector2(0.5, 0.5)) * TILE
 
 
 func _landing() -> Vector2:
 	return (Vector2(ISLAND_LANDING) + Vector2(0.5, 0.5)) * TILE
 
 
-## Ábel csónakja a móló végén (ha már átkelhetsz), és egy kikötött csónak a sziget déli partján.
+## Ábel csónakja a tó déli részén, a móló mellett kikötve (ha már átkelhetsz).
 func _build_crossing() -> void:
 	_player = _camp.get_node("Entities/Player")
 	if Fisherman.can_cross():
-		_boat(_pier_end() + Vector2(30, 6))
-		_boat(_landing() + Vector2(-26, 22))
+		_build_boat()
 	_panel = ChallengePanel.new()
 	_panel.name = "LakeChallengePanel"
 	_panel.visible = false
@@ -221,32 +235,19 @@ func _build_crossing() -> void:
 	layer.add_child(_prompt)
 
 
-## Kis fa csónak a vízen (rajzolva): barna test, két deszkapad, egy evező.
-func _boat(at: Vector2) -> void:
-	var hull := Polygon2D.new()
-	hull.polygon = PackedVector2Array([Vector2(-22, -6), Vector2(22, -6), Vector2(16, 6), Vector2(-16, 6)])
-	hull.color = Color(0.45, 0.28, 0.15)
-	hull.position = at
-	hull.z_index = -8
-	add_child(hull)
-	var inside := Polygon2D.new()
-	inside.polygon = PackedVector2Array([Vector2(-18, -4), Vector2(18, -4), Vector2(14, 3), Vector2(-14, 3)])
-	inside.color = Color(0.3, 0.18, 0.09)
-	hull.add_child(inside)
-	for x in [-7.0, 7.0]:
-		var seat := Line2D.new()
-		seat.points = PackedVector2Array([Vector2(x, -4), Vector2(x, 3)])
-		seat.width = 3.0
-		seat.default_color = Color(0.6, 0.4, 0.22)
-		hull.add_child(seat)
-	var oar := Line2D.new()
-	oar.points = PackedVector2Array([Vector2(-2, -2), Vector2(20, -12)])
-	oar.width = 2.0
-	oar.default_color = Color(0.7, 0.5, 0.28)
-	hull.add_child(oar)
-	var bob := hull.create_tween().set_loops()
-	bob.tween_property(hull, "position:y", at.y + 2.0, 1.4).set_trans(Tween.TRANS_SINE)
-	bob.tween_property(hull, "position:y", at.y, 1.4).set_trans(Tween.TRANS_SINE)
+## A csónak (CC0 kép, orral felfelé): a `_hull` lebeg a vízen, a `_boat` mozog és fordul.
+func _build_boat() -> void:
+	_boat = Node2D.new()
+	_boat.position = PIER_DOCK * TILE
+	_boat.z_index = -2
+	add_child(_boat)
+	_hull = Sprite2D.new()
+	_hull.texture = BOAT
+	_hull.scale = Vector2(BOAT_SCALE, BOAT_SCALE)
+	_boat.add_child(_hull)
+	var bob := _hull.create_tween().set_loops()
+	bob.tween_property(_hull, "position:y", 1.5, 1.3).set_trans(Tween.TRANS_SINE)
+	bob.tween_property(_hull, "position:y", -0.5, 1.3).set_trans(Tween.TRANS_SINE)
 
 
 ## Merre áll a játékos: "boat" (a móló vége), "back" (a sziget partja), "stairs" (a rács), vagy "".
@@ -254,9 +255,9 @@ func _focus() -> String:
 	if not is_instance_valid(_player) or _busy:
 		return ""
 	var at: Vector2 = _player.global_position
-	if Fisherman.can_cross() and at.distance_to(_pier_end()) < RANGE:
+	if _boat != null and not _boat_at_island and at.distance_to(_pier_end()) < RANGE:
 		return "boat"
-	if at.distance_to(_landing()) < RANGE:
+	if _boat != null and _boat_at_island and at.distance_to(_landing()) < RANGE:
 		return "back"
 	if at.distance_to((Vector2(ISLAND_STAIRS) + Vector2(0.5, 1.2)) * TILE) < RANGE:
 		return "stairs"
@@ -283,18 +284,72 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	get_viewport().set_input_as_handled()
 	match focus:
-		"boat": _row(_landing())
-		"back": _row(_pier_end() + Vector2(0, 20))
+		"boat": _row(true)
+		"back": _row(false)
 		"stairs": _use_stairs()
 
 
-## Átevezés (elsötétül, és a túlparton ér partot).
-func _row(to: Vector2) -> void:
+## Átkelés: a játékos beszáll (átsétál a csónakba, leül), a csónak a vízen át a túlpartra evez (az orrával
+## a menetirányba fordulva, ringatózva), ott kiszáll. Közben a karakter nem irányítható, a kamera vele megy.
+func _row(to_island: bool) -> void:
 	_busy = true
+	var route: Array[Vector2] = []
+	for tile: Vector2 in ROUTE:
+		route.append(tile * TILE)
+	if not to_island:
+		route.reverse()
+	var shore := _landing() if to_island else _pier_end()
+	_player.set_physics_process(false)
+	_player.set_process_unhandled_input(false)
+	(_player as CharacterBody2D).velocity = Vector2.ZERO
+	var sprite: AnimatedSprite2D = _player.get_node("Visual/AnimatedSprite2D")
+	# Beszállás: odalép a csónakhoz, és beleül.
+	await _walk(sprite, _boat.position + SEAT)
 	Audio.play("footstep", -2.0)
-	_camp.call("teleport_player", to, Rect2(), Color.BLACK)
-	await get_tree().create_timer(0.7).timeout
+	sprite.play("idle")
+	# Evezés: pontról pontra, a csónak a menetirány felé fordul, a játékos vele megy.
+	for i in range(1, route.size()):
+		var from: Vector2 = route[i - 1]
+		var next: Vector2 = route[i]
+		await _turn((next - from).angle() + PI / 2.0)
+		var leg := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		leg.tween_method(_carry.bind(from, next), 0.0, 1.0, from.distance_to(next) / ROW_SPEED)
+		await leg.finished
+		Audio.play("footstep", -8.0)
+	# Kikötéskor a csónak orral a part felé (észak) fordul; a játékos kiszáll.
+	await _turn(0.0)
+	_boat_at_island = to_island
+	await _walk(sprite, shore)
+	sprite.play("idle")
+	_player.set_physics_process(true)
+	_player.set_process_unhandled_input(true)
 	_busy = false
+
+
+## A csónak (a legrövidebb irányba) a megadott szögbe fordul.
+func _turn(angle: float) -> void:
+	var start := _boat.rotation
+	var turn := create_tween()
+	turn.tween_method(func(t: float) -> void: _boat.rotation = lerp_angle(start, angle, t), 0.0, 1.0, 0.35)
+	await turn.finished
+
+
+## A csónak útja egy szakaszon (t: 0..1); a játékos a padon ül, vele együtt mozog.
+func _carry(t: float, from: Vector2, to: Vector2) -> void:
+	_boat.position = from.lerp(to, t)
+	_player.global_position = global_position + _boat.position + SEAT
+
+
+## A játékos sétál egy pontig (futó animáció, a menetirány felé néz).
+func _walk(sprite: AnimatedSprite2D, to: Vector2) -> void:
+	var target := global_position + to
+	var from: Vector2 = _player.global_position
+	if absf(target.x - from.x) > 2.0:
+		sprite.flip_h = target.x < from.x
+	sprite.play("run")
+	var walk := create_tween()
+	walk.tween_property(_player, "global_position", target, maxf(from.distance_to(target) / WALK_SPEED, 0.15))
+	await walk.finished
 
 
 func _use_stairs() -> void:
