@@ -159,6 +159,10 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   a Káosz Urát a 40. emeleten, a Szörnyek könyve szerint; 3000 tábori arany), és 4 új történet (`King.STORIES`).
 - Szörnyek könyve: állvány a táborban (`BESTIARY_TILE`), adatok: `world/bestiary.gd`, ablak: `ui/bestiary_book.gd`;
   a megölt szörnyek száma `Progress.kills` (a `room.gd` írja, főellenség a saját nevével).
+- Tárgyak könyve: második állvány mellette (`Camp.ITEM_BOOK_TILE`), adatok: `world/item_codex.gd` (`ItemCodex.TABS`:
+  közelharci / távolsági fegyver + helyenként), ablak: `ui/item_book.gd` (ikonrács, a meg nem szerzett sötét árnyék;
+  jobb lap: statok a saját ritkaságban + leírás). Felfedezett: `Progress.seen_items` (az `Inventory.changed` jegyzi be a
+  táskát és a felszerelést; megnyitáskor a tábori láda és a mentett felszerelések is: `note_stored`).
 - Általános küldetések (a kocsmárostól, `world/quests.gd`): 100 db nehézséggel (`Quests.TIERS`: easy / medium / hard).
   A J könyv általános fülén szűrők (állapot, nehézség); ha van leadható, azzal a szűréssel nyílik.
 - NPC-beszélgetés: `ui/dialogue_panel.gd` (bizalom -100..+100, oldalanként 5 opció, lapozható ← →, 1-5 gomb), szövegek: `world/dialogues.gd`;

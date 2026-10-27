@@ -29,6 +29,14 @@ var equipment := {}
 
 func _ready() -> void:
 	reset_to_start(false)
+	changed.connect(_note_seen)
+
+
+## A Tárgyak könyvébe (ItemCodex): minden tárgy, ami a táskába vagy a felszerelésbe kerül, felfedezett lesz.
+func _note_seen() -> void:
+	for item: Variant in bag + equipment.values():
+		if item is Dictionary:
+			ItemCodex.note(item)
 
 
 ## Kezdő felszerelés: üres táska, csak a karakter kezdőfegyvere (lovag: rozsdás kard,

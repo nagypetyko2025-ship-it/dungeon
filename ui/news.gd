@@ -4,6 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-27", "items": [
+		"Tárgyak könyve: új állvány a Szörnyek könyve mellett. Minden tárgy, amit valaha megszereztél, bekerül "
+			+ "(statokkal és leírással), a többi sötét árnyékként várja, hogy megtaláld.",
 		"A kút alatti járat: Döme új küldetése (tűzhangya-mirigyek), aztán a kút alján felrobbantja a törmeléket; "
 			+ "mögötte Lőrinc régi műhelye (jegyzetek, láda: Lőrinc iránytűje), egy rejtélyes rácsos lépcső, és "
 			+ "Lőrinc három új története.",
