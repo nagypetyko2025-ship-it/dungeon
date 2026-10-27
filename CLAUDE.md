@@ -42,10 +42,12 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Ellenségek: `enemies/enemy_types.gd` (statok, 10. emeleti ugrás; a kikerülés a végén ×0.25, `DODGE_FACTOR`; Káosz kategória: chaos_spawn 16.-tól,
   chaos_hound 26.-tól, és a 25. emelet utáni saját rajzúak: chaos_maw (Káosztorok, lő) 26.-tól, chaos_shard
   (Hasadékszilánk, pajzs + gyógyulás) 27.-től, chaos_weaver (Káoszszövő, káoszivadékot idéz a típus "summon" kulcsával)
-  28.-tól; a rajzoló szkript nincs a repóban, a lapok: 8 kocka, 4 álló + 4 futás), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`, `chaos_lord_boss.gd`;
+  28.-tól; a rajzoló szkript nincs a repóban, a lapok: 8 kocka, 4 álló + 4 futás; Bogarak: fire_ant (1.-től), blue_beetle (3.),
+  soldier_ant (6.), hornet (10.), scorpion (13.), CC0 képekből), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`, `chaos_lord_boss.gd`;
   képességek: `enemies/enemy_abilities.gd` (méreg/fagy/fosztogatás a `Player.apply_poison/apply_slow/lose_gold`-on át).
   Főellenségek: az első 3 (3., 6., 9. emelet) változatlan; a 12.-től `Boss.LATER_BOSS_GROWTH` (×1.3 élet) és
-  `LATER_BOSS_DAMAGE_STEP` (+6% sebzés) főellenségenként (30. emelet: ~110 000, 39.: ~180 000 élet). Vérfarkas:
+  `LATER_BOSS_DAMAGE_STEP` (+6% sebzés) főellenségenként (30. emelet: ~110 000, 39.: ~180 000 élet). A sor (`Boss.BOSSES`)
+  a 36. emeleten a Skorpiókirállyal zárul (bogár-főellenség, `scorpion_king.png`), utána elölről (39.: Ogrekirály). Vérfarkas:
   `LORD_HEALTH` ×40 = 128 000 (+ feltámadás), `LORD_DAMAGE` ×2 = 32; Káosz Ura: 1 000 000 élet, 120 sebzés.
   Mellé / kikerülés: a szörny `_on_hurt`-ja `hitbox.missed = true`-t állít, a Hurtbox ilyenkor nem hívja az `on_hit`-et,
   a lövedék továbbrepül (az átütést sem fogyasztja; ugyanazt a célt a `skips` miatt nem találja el újra).
@@ -61,7 +63,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Átütés stat (`Stats.pierce`, max `MAX_PIERCE` = 1): csak a legendás "Átütés" szintlépési kártya adja (íjjal, a
   Nyílzápornál 3× ritkább: `Upgrades.LEGENDARY` "weight"), a fegyver saját átütéséhez adódik.
 - Zene: `audio/audio.gd` (`Audio.music`): főmenü "menu" (halk ambient), tábor és kazamata "epic" = lejátszási lista
-  (`PLAYLIST_TRACKS`, 5 CC0 szám mp3/ogg-ban, keverve egymás után, ismétlés nélkül; számonként dB-igazítás kb. -20 dBFS-re,
+  (`PLAYLIST_TRACKS`, 10 CC0 szám mp3/ogg-ban, keverve egymás után, ismétlés nélkül; számonként dB-igazítás kb. -20 dBFS-re,
   mérve), főellenség "boss". Hangerő: Beállítások "Zene" csúszka (Music busz). Új szám: mérd meg a hangosságát.
   Bal alul (az XP-sáv fölött) kiírja, mi szól (`MUSIC_TITLES`, a főmenüben nem). Áttűnés lejátszónként (`_fade`): a
   régit le kell állítani újrahasználat előtt, különben egy elhalkítás vége az új számot is leállítja.
@@ -106,7 +108,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   y 30-tól): fent 5 ajtó (`ROOMS`: kopogásra szöveg; 2: Puskás Döme, a robbantómester; 4: kiadó).
   A négyes kibérelhető a kocsmárostól (`ROOM_PRICE` 500 tábori arany, egyszer; `ROOM_FLAG`): belül (`MY_ROOM`, y 40-től)
   ágy (alvás → `RESTED_FLAG`, a következő futás elején +1 HP-bájital: `Town.take_rest_bonus`, a Camp `_enter_dungeon_now`-ja),
-  láda (a tábori láda ablaka), trófeafal (`Town.trophies()`: 13 főellenség, a le nem győzöttek sötét árnyékként).
+  láda (a tábori láda ablaka), trófeafal (`Town.trophies()`: 14 főellenség, a le nem győzöttek sötét árnyékként).
 - Próbatétel (random kazamata): `world/challenge.gd` (`Challenge`). A bánya túlpartján a régi tárna (`Mine.DEEP_DOOR`,
   csak a híd után) → lyukas terem (`Mine.DEEP_ROOM`, x 640-től), a lépcsőnél E: `ui/challenge_panel.gd` (ajánlat / eredmény).
   1-20 emelet, 1-3 könnyítés (`BOONS`, 15) és 1-3 nehezítés (`BANES`, 15), ütköző hatás nem jön együtt, a súlyok

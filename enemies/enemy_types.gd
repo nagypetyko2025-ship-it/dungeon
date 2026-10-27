@@ -170,7 +170,7 @@ const TYPES: Array[Dictionary] = [
 		"knockback": [300, 340], "resist": [0.6, 0.7], "xp": [15, 17], "min_depth": 5, "weight": 2,
 		"fire_interval": [2.2, 3.0], "arrow_speed": [220, 260], "keep_distance": [200, 260]},
 	{"name": "skeleton_legionary", "abilities": ["summon"],
-		"sheet": "res://assets/enemies/skeleton_legionary.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.6,
+		"sheet": "res://assets/enemies/skeleton_legionary.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.5,
 		"health": [20, 26], "damage": [4, 5], "speed": [75, 90], "dodge": [20, 30],
 		"knockback": [360, 400], "resist": [0.5, 0.6], "xp": [14, 16], "min_depth": 5, "weight": 2},
 	# --- Csak a 10. emelettől: a mélység urai (MiniWorld Sprites, CC0) ---
@@ -226,7 +226,7 @@ const TYPES: Array[Dictionary] = [
 		"health": [9, 11], "damage": [2, 3], "speed": [55, 70], "dodge": [0, 5],
 		"knockback": [260, 300], "resist": [0.3, 0.4], "xp": [4, 4], "min_depth": 4, "weight": 2},
 	{"name": "pirate_captain", "abilities": ["plunder", "shield", "war_cry"],
-		"sheet": "res://assets/enemies/pirate_captain.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.6,
+		"sheet": "res://assets/enemies/pirate_captain.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.5,
 		"health": [18, 22], "damage": [4, 5], "speed": [80, 95], "dodge": [10, 20],
 		"knockback": [360, 400], "resist": [0.5, 0.6], "xp": [10, 11], "min_depth": 6, "weight": 1},
 	# --- Bogarak ---
@@ -273,6 +273,32 @@ const TYPES: Array[Dictionary] = [
 		"rect": Rect2(0, 0, 12, 20), "run": true, "size": 1.1,
 		"health": [3, 4], "damage": [1, 2], "speed": [115, 135], "dodge": [15, 25],
 		"knockback": [160, 200], "resist": [0.0, 0.1], "xp": [2, 3], "min_depth": 3, "weight": 2},
+	# --- Bogarak (CC0 képekből, lásd assets/enemies/LICENSE.txt) ---
+	# Tűzhangya: apró és fürge, sokan jönnek.
+	{"name": "fire_ant", "sheet": "res://assets/enemies/fire_ant.png", "rect": Rect2(0, 0, 16, 16), "run": true,
+		"size": 1.2,
+		"health": [2, 3], "damage": [1, 1], "speed": [115, 135], "dodge": [5, 10],
+		"knockback": [180, 220], "resist": [0.0, 0.0], "xp": [1, 2], "min_depth": 1, "weight": 3},
+	# Dongóbogár: páncélos repülő bogár, cikázik és nekiront.
+	{"name": "blue_beetle", "abilities": ["zigzag"], "dash": true, "sheet": "res://assets/enemies/blue_beetle.png",
+		"rect": Rect2(0, 0, 21, 20), "run": true, "size": 1.1,
+		"health": [5, 7], "damage": [1, 2], "speed": [110, 130], "dodge": [10, 20],
+		"knockback": [180, 220], "resist": [0.2, 0.3], "xp": [3, 3], "min_depth": 3, "weight": 2},
+	# Katonahangya: fekete páncél, pajzsot von maga köré, és megsebezve megvadul.
+	{"name": "soldier_ant", "abilities": ["shield", "berserk"], "sheet": "res://assets/enemies/soldier_ant.png",
+		"rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.5,
+		"health": [12, 15], "damage": [3, 4], "speed": [85, 100], "dodge": [5, 10],
+		"knockback": [300, 340], "resist": [0.5, 0.6], "xp": [6, 8], "min_depth": 6, "weight": 2},
+	# Óriás lódarázs: gyors, cikázik, nekiront, és a fullánkja mérgez.
+	{"name": "hornet", "abilities": ["poison", "zigzag"], "dash": true, "sheet": "res://assets/enemies/hornet.png",
+		"rect": Rect2(0, 0, 50, 41), "run": true, "size": 0.65,
+		"health": [12, 16], "damage": [4, 5], "speed": [125, 145], "dodge": [25, 35],
+		"knockback": [180, 220], "resist": [0.1, 0.2], "xp": [11, 13], "min_depth": 10, "weight": 2},
+	# Barlangi skorpió: páncélos, lassú, de nekiront, és a fullánkja mérgez.
+	{"name": "scorpion", "abilities": ["poison", "shield"], "dash": true, "sheet": "res://assets/enemies/scorpion.png",
+		"rect": Rect2(0, 0, 51, 35), "run": true, "size": 0.7,
+		"health": [24, 30], "damage": [5, 6], "speed": [80, 95], "dodge": [10, 15],
+		"knockback": [320, 360], "resist": [0.6, 0.7], "xp": [14, 17], "min_depth": 13, "weight": 1},
 	# Újabb szörnyek (MiniWorld Sprites, CC0): gyűjtögető goblin, ork martalóc, barbár, lángnindzsa,
 	# hitehagyott szerzetes.
 	{"name": "farmer_goblin", "abilities": ["plunder"], "sheet": "res://assets/enemies/farmer_goblin.png",
@@ -331,7 +357,7 @@ const TYPES: Array[Dictionary] = [
 		"knockback": [200, 240], "resist": [0.2, 0.3], "xp": [7, 8], "min_depth": 5, "weight": 2,
 		"fire_interval": [2.2, 2.8], "arrow_speed": [220, 260], "keep_distance": [200, 260]},
 	{"name": "red_demon", "abilities": ["teleport", "berserk", "death_burst"], "dash": true,
-		"sheet": "res://assets/enemies/red_demon.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.6,
+		"sheet": "res://assets/enemies/red_demon.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.5,
 		"health": [20, 24], "damage": [5, 6], "speed": [100, 115], "dodge": [10, 20],
 		"knockback": [340, 380], "resist": [0.5, 0.6], "xp": [13, 15], "min_depth": 8, "weight": 2},
 	{"name": "gold_dragon", "abilities": ["plunder", "shield"], "ranged": true, "no_weapon": true,

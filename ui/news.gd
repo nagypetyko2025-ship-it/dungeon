@@ -4,6 +4,9 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-27", "items": [
+		"Öt új zene a tábor és a kazamata lejátszási listáján (epikus és misztikus, mind CC0).",
+		"Öt új bogár a kazamatában: tűzhangya, dongóbogár, katonahangya, óriás lódarázs és barlangi skorpió.",
+		"Új főellenség a 36. emeleten: a Skorpiókirály (méregköpés, mérges tócsák, roham, skorpióhad).",
 		"A kopogás titka: Kormos Gyula küldetéssora a bánya mélyén, a végén a Kopogóval (egyedi főellenség) "
 			+ "és A huszonhét lámpása jutalommal.",
 		"A próbatétel nehézsége hatfokú (Nagyon könnyű – Brutális), és sokkal nagyobb eséllyel ad mítikus tárgyat "

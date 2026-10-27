@@ -486,7 +486,7 @@ func _build_my_room() -> void:
 	add_child(rug_trim)
 	# Trófeafal: keretek a felső falsávon.
 	var bosses := trophies()
-	var step := 25.0
+	var step := 24.0
 	var start := r.position.x * TILE + (r.size.x * TILE - step * bosses.size()) / 2.0
 	for i in bosses.size():
 		var frame := ColorRect.new()

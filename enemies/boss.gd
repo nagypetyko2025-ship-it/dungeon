@@ -51,6 +51,10 @@ const BOSSES: Array[Dictionary] = [
 	{"name": "Nyálkakirály", "sheet": "res://assets/enemies/green_slime.png", "rect": Rect2(0, 0, 16, 16),
 		"scale": 5.5, "tint": Color(0.9, 1.1, 0.8), "health": 160, "damage": 6, "speed": 60.0,
 		"xp": 120, "attacks": ["slam", "pools", "summon"], "minion": "green_slime", "abilities": ["poison"]},
+	# --- A 36. emelet: a bogarak ura ---
+	{"name": "Skorpiókirály", "sheet": "res://assets/enemies/scorpion_king.png", "rect": Rect2(0, 0, 101, 69),
+		"scale": 0.9, "health": 170, "damage": 7, "speed": 75.0,
+		"xp": 130, "attacks": ["charge", "barrage", "pools", "summon"], "minion": "scorpion", "abilities": ["poison"]},
 ]
 const HEALTH_PER_DEPTH := 0.42
 ## A főellenségek keménysége (élet / sebzés / XP szorzó), és hogy a Mélység Urának életéből

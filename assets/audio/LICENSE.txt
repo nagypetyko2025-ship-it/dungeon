@@ -13,6 +13,11 @@ Music (assets/audio/music) - all CC0 1.0 Universal:
   medieval_battle.mp3 = "Medieval: Battle" by RandomMind - https://opengameart.org/content/medieval-battle
   rising_moon.mp3 = "Fantasy: Rising Moon" by RandomMind - https://opengameart.org/content/fantasy-rising-moon
   jrpg_theme.ogg = "JRPG Trailer / Theme" by Juhani Junkala (SubspaceAudio) - https://opengameart.org/content/jrpg-trailer-theme
+  battle_theme_a.mp3 = "Battle Theme A" by cynicmusic - https://opengameart.org/content/battle-theme-a
+  fantasy_orchestral_theme.mp3 = "Fantasy Orchestral Theme" by Joth - https://opengameart.org/content/fantasy-orchestral-theme
+  cave_theme.ogg = "Cave Theme" by Brandon75689 (submitted by HaelDB; OGA-BY 3.0 / CC0, used under CC0) - https://opengameart.org/content/cave-theme
+  ancient_mysteries.ogg = "Ancient Mysteries" by sperrylion - https://opengameart.org/content/ancient-mysteries
+  great_labyrinth.ogg = "Great Labyrinth (Orchestral dungeon music)" by MintoDog - https://opengameart.org/content/great-labyrinthorchestral-dungeon-music
 
 anvil_1.wav, anvil_2.wav, anvil_3.wav: "Metal Impact Sounds" (clink1-3) by Brian MacIntosh, CC0 1.0,
   https://opengameart.org/content/metal-impact-sounds

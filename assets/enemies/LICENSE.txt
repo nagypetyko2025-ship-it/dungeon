@@ -21,3 +21,7 @@ chaos_lord.png: "Top-down Tentacle Creature" (Sean Noonan, CC0, https://opengame
 chaos_hound.png: "Shadow monster" (Game2rise, CC0, https://opengameart.org/content/shadow-monster), a vicsorgás 4 és a futás 4 kockája 56 px szélesre kicsinyítve, fekete-lilára színezve, ibolya peremfénnyel és szemmel.
 chaos_maw.png, chaos_shard.png, chaos_weaver.png: Káosztorok, Hasadékszilánk, Káoszszövő — ehhez a projekthez rajzolva (pixel art, a meglévő káoszlények színeivel), CC0. 8 kocka: 4 álló, 4 futás.
 knocker.png: A Kopogó (a régi tárnák főellensége) — ehhez a projekthez rajzolva (pixel art: kőből és bányafából összeállt alak, izzó érc-szemekkel, csákánnyal), CC0. 8 kocka (46×46): 4 álló, 4 futás.
+fire_ant.png, soldier_ant.png: "16x16 Ant Enemies" (ARoachIFoundOnMyPillow, CC0, https://opengameart.org/content/16x16-ant-enemies), a vörös és a szürke hangya 2 kockája tükrözve; a katonahangya fekete-acélosra színezve.
+blue_beetle.png: "Pixel Bug" (Umplix, CC0, https://opengameart.org/content/pixel-bug), a 3 kockás lapból (bad_boy_bug.png) a két szárnycsapás.
+hornet.png: "Flying Hornet/Wasp" (Nerveona, CC0, https://opengameart.org/content/flying-hornetwasp), a 2 kocka fehér háttér nélkül, felére kicsinyítve, tükrözve.
+scorpion.png, scorpion_king.png: "Scorpy Scorp - Side-Scroller Enemy" (madameberry, CC0, https://opengameart.org/content/scorpy-scorp-side-scroller-enemy), a 4 járó kocka tükrözve; a skorpió felére kicsinyítve, a Skorpiókirály teljes méretben, bíborra és aranyra színezve.

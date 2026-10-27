@@ -10,8 +10,8 @@ const WEREWOLF_SCRIPT := preload("res://enemies/werewolf_boss.gd")
 ## A hét szörnykirály (a 3. emelettől minden 3. emeleten), és a Mélység Ura.
 const KINGS := ["Ogrekirály", "Orkhadúr", "Gyíkkirály", "Démonúr", "Nekromanta-főpap", "Jégóriás", "Zombikirály"]
 const LORD := "Vérfarkas, a Mélység Ura"
-## A 21. emelet utáni új főellenségek (24., 27., 30., 33. emelet).
-const DEEP_BOSSES := ["Kalózkirály", "Lánggólem", "A Mélység Szeme", "Nyálkakirály"]
+## A 21. emelet utáni új főellenségek (24., 27., 30., 33., 36. emelet).
+const DEEP_BOSSES := ["Kalózkirály", "Lánggólem", "A Mélység Szeme", "Nyálkakirály", "Skorpiókirály"]
 ## A 40. emelet nagy főellensége.
 const CHAOS_LORD := "Ürességfaló, a Káosz Ura"
 const CHAOS_SCRIPT := preload("res://enemies/chaos_lord_boss.gd")
@@ -28,7 +28,7 @@ const CATEGORIES := [
 	["Kalózok", ["pirate_grunt", "pirate_gunner", "pirate_captain"]],
 	["Fenevadak", ["rat", "cave_bat", "minotaur", "yeti", "wendigo", "mammoth", "giant_crab"]],
 	["Sárkányok", ["fire_dragon", "frost_dragon", "gold_dragon", "shadow_dragon"]],
-	["Bogarak", ["fly", "spider"]],
+	["Bogarak", ["fly", "spider", "fire_ant", "blue_beetle", "soldier_ant", "hornet", "scorpion"]],
 	["Káosz", ["chaos_spawn", "chaos_hound", "chaos_maw", "chaos_shard", "chaos_weaver"]],
 	["Különös lények", ["mimic", "pumpkin_dude", "angel", "toadstool"]],
 	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES + [CHAOS_LORD]],
@@ -69,6 +69,11 @@ const ENTRIES := {
 	"fire_ninja": ["Lángnindzsa", "Narancs ruhás orgyilkos. Eltűnik, és a hátad mögött bukkan fel; szinte lehetetlen eltalálni."],
 	"renegade_monk": ["Hitehagyott szerzetes", "Egykor a kápolnákban szolgált, most a Mélységnek. Gyógyítja és pajzzsal védi a társait, és a puszta kezével is veszélyes."],
 	"fly": ["Légy", "Zümmögő, dögevő légy a kazamata mélyéről. Gyenge, de gyors, és kiszámíthatatlanul cikázik."],
+	"fire_ant": ["Tűzhangya", "Vörös, rozsdaszínű hangya, akkora, mint egy macska. Egyedül nem sokat ér, de sosem jár egyedül, és fürgébb, mint gondolnád."],
+	"blue_beetle": ["Dongóbogár", "Kék páncélú, zúgó szárnyú bogár. A páncélja lepattintja a gyenge ütéseket, és ha rád szegezi a szemét, egyenesen nekedrepül."],
+	"soldier_ant": ["Katonahangya", "Fekete, acélos páncélú hangya a boly őrségéből. Pajzsot von maga köré, és ha megsebzik, csak még vadabbul harap."],
+	"hornet": ["Óriás lódarázs", "Vörös szemű, sárga páncélú darázs, akkora, mint egy kutya. Cikázva zúg feléd, aztán hirtelen lecsap, és a fullánkja mérgez."],
+	"scorpion": ["Barlangi skorpió", "Kékesszürke páncélú skorpió a mély járatokból. Lassan lépked, de alig lehet megsebezni, és ha elég közel ér, nekiront: a fullánkja mérgez."],
 	"giant_skeleton": ["Óriás csontváz", "Egy ősi óriás csontjai, amiket valami újra összerakott. Lassú, de alig lehet kidönteni; csontvázakat hív maga mellé, és ha elesik, a csontjai szétrepülnek."],
 	"skeleton_legionary": ["Csontlégiós", "Egy elesett hadsereg katonája; halála után is sorban menetel."],
 	"necromancer": ["Nekromanta", "Halottakat idéz maga mellé. Őt öld meg először, különben sosem fogy el a sereg."],
@@ -132,6 +137,8 @@ const ENTRIES := {
 		+ "és egy pillanat alatt melletted terem."],
 	"Nyálkakirály": ["Nyálkakirály", "Hatalmas, remegő kocsonya. Mérgező tócsákat hagy maga után, " \
 		+ "és kisebb nyálkákat szül."],
+	"Skorpiókirály": ["Skorpiókirály", "A 36. emelet ura: bíbor páncélú, arany fullánkú óriásskorpió. " \
+		+ "Méregfröccsöt köp, mérges tócsákat hagy, nekiront, és a fiait hívja segítségül."],
 	"Ürességfaló, a Káosz Ura": ["Ürességfaló, a Káosz Ura", "A 40. emelet ura: fogas torkú csápgomolyag a " \
 		+ "valóság szélén túlról. Hasadékokat nyit a földön, lövedékörvényt szór, és ha félholtra vered, " \
 		+ "széthasad körülötte a világ."],

@@ -38,6 +38,11 @@ const PLAYLIST_TRACKS := {
 	"res://assets/audio/music/medieval_battle.mp3": -3.6,
 	"res://assets/audio/music/rising_moon.mp3": -3.7,
 	"res://assets/audio/music/jrpg_theme.ogg": -7.9,
+	"res://assets/audio/music/battle_theme_a.mp3": -6.9,
+	"res://assets/audio/music/fantasy_orchestral_theme.mp3": -2.8,
+	"res://assets/audio/music/cave_theme.ogg": -5.2,
+	"res://assets/audio/music/ancient_mysteries.ogg": -6.8,
+	"res://assets/audio/music/great_labyrinth.ogg": -4.1,
 }
 ## A játék közbeni zenék címe és szerzője: a bal alsó sarokban kiírja, mi szól éppen (lásd _show_now_playing;
 ## a főmenü zenéjénél nem, ott a Tutorial gomb van).
@@ -48,6 +53,11 @@ const MUSIC_TITLES := {
 	"res://assets/audio/music/medieval_battle.mp3": "Medieval: Battle — RandomMind",
 	"res://assets/audio/music/rising_moon.mp3": "Fantasy: Rising Moon — RandomMind",
 	"res://assets/audio/music/jrpg_theme.ogg": "JRPG Theme — Juhani Junkala",
+	"res://assets/audio/music/battle_theme_a.mp3": "Battle Theme A — cynicmusic",
+	"res://assets/audio/music/fantasy_orchestral_theme.mp3": "Fantasy Orchestral Theme — Joth",
+	"res://assets/audio/music/cave_theme.ogg": "Cave Theme — Brandon75689",
+	"res://assets/audio/music/ancient_mysteries.ogg": "Ancient Mysteries — sperrylion",
+	"res://assets/audio/music/great_labyrinth.ogg": "Great Labyrinth — MintoDog",
 }
 ## Új szám után ennyi ideig élénk a felirat, utána halványabb.
 const NOW_PLAYING_BRIGHT := 6.0
