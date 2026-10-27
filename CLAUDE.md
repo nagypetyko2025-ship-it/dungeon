@@ -38,6 +38,11 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   `world/ruin.gd`, benne a tolvaj rejtekszobája: `world/thief.gd`), `world/shop_interior.gd` bolt.
 - Félbehagyott futás: `world/run_save.gd` (a főellenség utáni pihenőnél kilépve a futás profilonként user://run*.cfg-be mentődik; a főmenü Folytatás gombja onnan indít; a kazamatába visszatéréskor / feladáskor / új játéknál törlődik; multiban nincs).
 - Állapot: `world/game_state.gd` (futás; `reset()`), `world/progress.gd` (mentett tábor: arany, láda, fejlesztések, küldetések; `deepest` = a valaha elért legmélyebb emelet, az emeletes küldetések ezt is nézik).
+- A mélység kinézete: `world/dungeon_theme.gd` (`DungeonTheme`): 1-20. a régi kő; 21-40. "Vérkő" (`assets/dungeon/depths_sheet.png`),
+  41.-től "Káoszkő" (`abyss_sheet.png`): a 0x72 lap bal felső 128x128-as része átszínezve (falak, padló izzó repedésekkel,
+  zászlók, kutak, oszlop), sávonként CanvasModulate (a sávon belül emeletről emeletre sötétebb, a 41. után a 100.-ig),
+  háttérszín, fáklyaláng és -fény, szálló hamu / lila szikrák (`add_motes`), izzó repedések a padlón (`add_rift`, RoomDecor),
+  több csont és vér. A szkript, ami a lapokat készítette, nincs a repóban.
 - Ellenségek útkeresése: `Dungeon.nav_path` (AStarGrid2D a padlón, oszlopok szilárdak), `Enemy._chase_direction`.
 - Ellenségek: `enemies/enemy_types.gd` (statok, 10. emeleti ugrás; a kikerülés a végén ×0.25, `DODGE_FACTOR`; Káosz kategória: chaos_spawn 16.-tól,
   chaos_hound 26.-tól, és a 25. emelet utáni saját rajzúak: chaos_maw (Káosztorok, lő) 26.-tól, chaos_shard
@@ -62,9 +67,12 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   rövid), warbow (lassú, átütő nyíl: `PlayerArrow.pierce`, a Hurtbox `skips`-szel kérdezi), crossbow (`Player.WEAPON_TYPES`).
   Átütés stat (`Stats.pierce`, max `MAX_PIERCE` = 1): csak a legendás "Átütés" szintlépési kártya adja (íjjal, a
   Nyílzápornál 3× ritkább: `Upgrades.LEGENDARY` "weight"), a fegyver saját átütéséhez adódik.
-- Zene: `audio/audio.gd` (`Audio.music`): főmenü "menu" (halk ambient), tábor és kazamata "epic" = lejátszási lista
-  (`PLAYLIST_TRACKS`, 10 CC0 szám mp3/ogg-ban, keverve egymás után, ismétlés nélkül; számonként dB-igazítás kb. -20 dBFS-re,
-  mérve), főellenség "boss". Hangerő: Beállítások "Zene" csúszka (Music busz). Új szám: mérd meg a hangosságát.
+- Zene: `audio/audio.gd` (`Audio.music`): főmenü "menu" (halk ambient), főellenség "boss"; a tábor és a kazamata
+  helyszínenként saját listát játszik (`PLACE_TRACKS`: camp, town, cave, dungeon (1-20.), depths (21-40.), abyss (41.-től),
+  trial), mindegyikben ott vannak a mindenhol szólók is (`GENERAL_TRACKS`); keverve egymás után, ismétlés nélkül.
+  Helyváltáskor a szóló szám marad, ha az új helyen is szólhat. A táborban a helyet `Camp.music_place(pozíció)` adja
+  (fél mp-enként), a kazamatában `Dungeon._music_place()`; "epic" = az utoljára kért hely. `PLAYLIST_TRACKS`: 14 CC0
+  szám hangereje (dB-igazítás kb. -20 dBFS-re, mérve). Hangerő: Beállítások "Zene" csúszka (Music busz). Új szám: mérd meg a hangosságát.
   Bal alul (az XP-sáv fölött) kiírja, mi szól (`MUSIC_TITLES`, a főmenüben nem). Áttűnés lejátszónként (`_fade`): a
   régit le kell állítani újrahasználat előtt, különben egy elhalkítás vége az új számot is leállítja.
 - HP bájital: `ui/potion_badge.gd` (`PotionBadge`, Q gomb; a kazamatában a HP-csík mellett, a táborban bal fent). Gyorstár nincs.

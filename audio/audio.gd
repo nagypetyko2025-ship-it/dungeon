@@ -3,7 +3,8 @@ extends Node
 ## Hangok és zene. Egyetlen példány él a SceneTree gyökerén (jelenetváltáskor
 ## sem tűnik el, így a zene sem szakad meg). Használat:
 ##   Audio.play("hit")            # effekt (több változatból véletlenül választ)
-##   Audio.music("epic")          # zene, áttűnéssel ("epic": a tábor és a kazamata lejátszási listája)
+##   Audio.music("town")          # zene, áttűnéssel: egy helyszín lejátszási listája (PLACE_TRACKS), vagy egy
+##                                # szám (MUSIC_TRACKS: "menu", "boss"); "epic": az utoljára kért helyszín listája
 ## A hangerők és a teljes képernyő a user://settings.cfg-be mentődnek.
 
 const SFX_DIR := "res://assets/audio/sfx/"
@@ -27,11 +28,27 @@ const MUSIC_TRACKS := {
 	"dungeon": "res://assets/audio/music/dungeon_ambience.ogg",
 	"boss": "res://assets/audio/music/boss_battle.wav",
 }
-## A tábor és a kazamata zenéje: epikus számok egymás után (ha az egyik véget ér, jön a következő; a sorrend
-## keverve, ugyanaz nem jön kétszer egymás után). Mind CC0, lásd assets/audio/LICENSE.txt.
+## A tábor és a kazamata zenéje helyszínenként: a hely saját számai (PLACE_TRACKS) és a mindenhol szólók
+## (GENERAL_TRACKS) egymás után (ha az egyik véget ér, jön a következő; a sorrend keverve, ugyanaz nem jön kétszer
+## egymás után). Helyváltáskor a szóló szám marad, ha az új helyen is szólhat; különben áttűnik az új hely zenéjére.
+## Mind CC0, lásd assets/audio/LICENSE.txt. "epic": az utoljára kért helyszín (pl. a feléledés után).
+const PLAYLIST := "epic"
+const GENERAL_TRACKS: Array[String] = [
+	"res://assets/audio/music/jrpg_theme.ogg", "res://assets/audio/music/rising_moon.mp3", "res://assets/audio/music/lament_of_the_war.mp3",
+]
+## Helyszín -> saját számok. camp: a tábor, a nyugati tisztás, a bolt; town: a város, a vár és a házak; cave: a bánya
+## és a kút alja; dungeon: az 1-20. emelet; depths: a 21-40. (Vérkő); abyss: a 41.-től (Káoszkő); trial: a próbatétel.
+const PLACE_TRACKS := {
+	"camp": ["res://assets/audio/music/medieval_exploration.mp3", "res://assets/audio/music/sirens_in_darkness.mp3"],
+	"town": ["res://assets/audio/music/fantasy_orchestral_theme.mp3", "res://assets/audio/music/medieval_exploration.mp3"],
+	"cave": ["res://assets/audio/music/cave_theme.ogg", "res://assets/audio/music/ancient_mysteries.ogg"],
+	"dungeon": ["res://assets/audio/music/great_labyrinth.ogg", "res://assets/audio/music/medieval_battle.mp3", "res://assets/audio/music/battle_theme_a.mp3", "res://assets/audio/music/cave_theme.ogg"],
+	"depths": ["res://assets/audio/music/dark_forest_theme.mp3", "res://assets/audio/music/the_final_battle.ogg", "res://assets/audio/music/great_labyrinth.ogg", "res://assets/audio/music/ancient_mysteries.ogg"],
+	"abyss": ["res://assets/audio/music/evil_awaits.mp3", "res://assets/audio/music/dark_forest_theme.mp3", "res://assets/audio/music/the_final_battle.ogg", "res://assets/audio/music/ancient_mysteries.ogg"],
+	"trial": ["res://assets/audio/music/battle_theme_a.mp3", "res://assets/audio/music/ancient_mysteries.ogg", "res://assets/audio/music/the_final_battle.ogg", "res://assets/audio/music/medieval_battle.mp3"],
+}
 ## Szám -> hangerő-igazítás (dB): mind kb. -20 dBFS átlagra (mérve), hogy ne ugráljon a hangerő; a
 ## főellenség zenéje (-17.5) kicsit hangosabb marad.
-const PLAYLIST := "epic"
 const PLAYLIST_TRACKS := {
 	"res://assets/audio/music/lament_of_the_war.mp3": -5.7,
 	"res://assets/audio/music/medieval_exploration.mp3": 3.0,
@@ -43,6 +60,10 @@ const PLAYLIST_TRACKS := {
 	"res://assets/audio/music/cave_theme.ogg": -5.2,
 	"res://assets/audio/music/ancient_mysteries.ogg": -6.8,
 	"res://assets/audio/music/great_labyrinth.ogg": -4.1,
+	"res://assets/audio/music/sirens_in_darkness.mp3": 1.2,
+	"res://assets/audio/music/dark_forest_theme.mp3": -2.1,
+	"res://assets/audio/music/the_final_battle.ogg": -1.9,
+	"res://assets/audio/music/evil_awaits.mp3": -2.8,
 }
 ## A játék közbeni zenék címe és szerzője: a bal alsó sarokban kiírja, mi szól éppen (lásd _show_now_playing;
 ## a főmenü zenéjénél nem, ott a Tutorial gomb van).
@@ -58,6 +79,10 @@ const MUSIC_TITLES := {
 	"res://assets/audio/music/cave_theme.ogg": "Cave Theme — Brandon75689",
 	"res://assets/audio/music/ancient_mysteries.ogg": "Ancient Mysteries — sperrylion",
 	"res://assets/audio/music/great_labyrinth.ogg": "Great Labyrinth — MintoDog",
+	"res://assets/audio/music/sirens_in_darkness.mp3": "Sirens in Darkness — cynicmusic",
+	"res://assets/audio/music/dark_forest_theme.mp3": "Dark Forest Theme — cynicmusic",
+	"res://assets/audio/music/the_final_battle.ogg": "The Final Battle — skrjablin",
+	"res://assets/audio/music/evil_awaits.mp3": "Evil Awaits — bosslevelaudio",
 }
 ## Új szám után ennyi ideig élénk a felirat, utána halványabb.
 const NOW_PLAYING_BRIGHT := 6.0
@@ -76,8 +101,10 @@ var _music_players: Array[AudioStreamPlayer] = []
 var _active_music := 0
 var _current_track := ""
 var _cache := {}
-## A lejátszási lista hátralévő számai (elfogyáskor újrakeverve) és az utoljára indított szám.
-var _queue: Array[String] = []
+## Helyszínenként a lejátszási lista hátralévő számai (elfogyáskor újrakeverve), a szóló helyszín és az
+## utoljára indított szám.
+var _queues := {}
+var _place := "camp"
 var _last_song := ""
 ## Lejátszónként a futó áttűnés: újrahasználat előtt le kell állítani (különben egy korábbi elhalkítás
 ## a végén leállítaná az új számot is, pl. ha gyorsan lépsz vissza a főmenüből a játékba).
@@ -159,6 +186,14 @@ func _play(effect: String, volume_db: float, pitch_variation: float) -> void:
 
 
 func _switch_music(track: String) -> void:
+	if track == PLAYLIST:
+		track = _place
+	if PLACE_TRACKS.has(track):
+		_place = track
+		# Másik helyszín, de a szóló szám ott is szólhat: nem vált, csak a következő szám jön már az új listából.
+		if PLACE_TRACKS.has(_current_track) and place_songs(track).has(_last_song):
+			_current_track = track
+			return
 	if track == _current_track:
 		return
 	_current_track = track
@@ -171,8 +206,8 @@ func _switch_music(track: String) -> void:
 		return
 	var stream: AudioStream
 	var target_db := 0.0
-	if track == PLAYLIST:
-		stream = _next_song()
+	if PLACE_TRACKS.has(track):
+		stream = _next_song(track)
 		target_db = PLAYLIST_TRACKS[_last_song]
 	else:
 		stream = _load(MUSIC_TRACKS[track])
@@ -196,15 +231,28 @@ func _fade(index: int, to_db: float, stop_after: bool) -> void:
 	_fades[index] = tween
 
 
-## A lejátszási lista következő száma (nem ismétlődik: a lista végén újrakeveri).
-func _next_song() -> AudioStream:
-	if _queue.is_empty():
-		_queue.assign(PLAYLIST_TRACKS.keys())
-		_queue.shuffle()
-		# Ugyanaz ne jöjjön kétszer egymás után (a keverés határán sem).
-		if _queue.size() > 1 and _queue[0] == _last_song:
-			_queue.append(_queue.pop_front())
-	_last_song = _queue.pop_front()
+## Egy helyszín összes száma: a sajátjai és a mindenhol szólók.
+static func place_songs(place: String) -> Array[String]:
+	var songs: Array[String] = []
+	songs.assign(PLACE_TRACKS[place])
+	for song in GENERAL_TRACKS:
+		if not songs.has(song):
+			songs.append(song)
+	return songs
+
+
+## A helyszín lejátszási listájának következő száma (nem ismétlődik: a lista végén újrakeveri).
+func _next_song(place: String) -> AudioStream:
+	var queue: Array[String] = []
+	queue.assign(_queues.get(place, []))
+	if queue.is_empty():
+		queue = place_songs(place)
+		queue.shuffle()
+	# Ugyanaz ne jöjjön kétszer egymás után (a keverés határán és helyváltáskor sem).
+	if queue.size() > 1 and queue[0] == _last_song:
+		queue.append(queue.pop_front())
+	_last_song = queue.pop_front()
+	_queues[place] = queue
 	var stream := _load(_last_song)
 	_set_loop(stream, false)
 	return stream
@@ -212,9 +260,9 @@ func _next_song() -> AudioStream:
 
 ## Egy szám véget ért: ha a lejátszási lista szól, jön a következő (ugyanazon a lejátszón).
 func _on_music_finished(player: AudioStreamPlayer) -> void:
-	if _current_track != PLAYLIST or player != _music_players[_active_music]:
+	if not PLACE_TRACKS.has(_current_track) or player != _music_players[_active_music]:
 		return
-	player.stream = _next_song()
+	player.stream = _next_song(_current_track)
 	player.volume_db = PLAYLIST_TRACKS[_last_song]
 	player.play()
 	_show_now_playing(_last_song)

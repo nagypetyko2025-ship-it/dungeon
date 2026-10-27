@@ -122,17 +122,20 @@ var _victory_lord := "werewolf"
 
 
 func _ready() -> void:
-	RenderingServer.set_default_clear_color(Color(0.1, 0.07, 0.09))
+	# A mélység sávja (DungeonTheme): a 21. és a 41. emelettől más kő, sötétebb, gonoszabb hangulat.
+	RenderingServer.set_default_clear_color(DungeonTheme.clear_color(GameState.depth))
+	($CanvasModulate as CanvasModulate).color = DungeonTheme.light(GameState.depth)
 	# Indításkor egyszer teljes képernyő; utána az F11-es váltás megmarad.
 	if not GameState.display_initialized:
 		GameState.display_initialized = true
 		if Audio.saved_fullscreen():
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-	Audio.music("epic")
+	Audio.music(_music_place())
 	GameCursor.apply()
 	var tile_set := _build_tile_set()
 	_floor_layer.tile_set = tile_set
 	_wall_layer.tile_set = tile_set
+	DungeonTheme.add_motes(GameState.depth, _player)
 
 	var depth := GameState.depth
 	# Pihenőből visszatérve (a főellenség után a táborba mentél): ugyanez az emelet, a kitisztított
@@ -392,8 +395,15 @@ func _on_boss_fight_started(boss: Node2D) -> void:
 	_hud.show_message("Főellenség: %s" % boss.get("boss_name"))
 
 
+## A zene helyszíne (Audio.PLACE_TRACKS): próbatétel, vagy a mélység sávja.
+func _music_place() -> String:
+	if Challenge.active():
+		return "trial"
+	return ["dungeon", "depths", "abyss"][DungeonTheme.band(GameState.depth)]
+
+
 func _on_boss_defeated(boss: Node2D) -> void:
-	Audio.music("epic")
+	Audio.music(_music_place())
 	_hud.call("hide_boss")
 	var room: Room = boss.get_parent().get_parent()
 	if room.final_boss:
@@ -828,7 +838,7 @@ func _build_tile_set() -> TileSet:
 	tile_set.set_physics_layer_collision_layer(0, 1)
 	tile_set.set_physics_layer_collision_mask(0, 0)
 	var source := TileSetAtlasSource.new()
-	source.texture = SpriteSheet.TEXTURE
+	source.texture = DungeonTheme.sheet(GameState.depth)
 	source.texture_region_size = Vector2i(16, 16)
 	tile_set.add_source(source, 0)
 	var square := PackedVector2Array([Vector2(-8, -8), Vector2(8, -8), Vector2(8, 8), Vector2(-8, 8)])

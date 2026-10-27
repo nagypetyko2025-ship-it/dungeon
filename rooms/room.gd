@@ -322,7 +322,8 @@ func _place_pillars() -> void:
 		for mirror in [Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)]:
 			var tile: Vector2i = anchor + offset * mirror
 			if inner.has_point(tile) and not _used_tiles.has(tile):
-				_add_at_tile(pillar_scene, _pillars, tile)
+				var pillar := _add_at_tile(pillar_scene, _pillars, tile)
+				DungeonTheme.retheme(pillar.get_node("Sprite2D"), depth)
 
 
 func _place_traps() -> void:

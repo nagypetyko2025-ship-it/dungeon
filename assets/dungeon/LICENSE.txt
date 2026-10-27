@@ -1,0 +1,1 @@
+depths_sheet.png, abyss_sheet.png: a 0x72 "DungeonTileset II" (CC0, https://0x72.itch.io/dungeontileset-ii) lap bal felső 128x128-as része (falak, padlók, zászlók, falikutak, oszlop) átszínezve: Vérkő (vöröses kő, parázsló repedések) és Káoszkő (fekete-ibolya obszidián, lila repedések). CC0.

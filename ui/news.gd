@@ -4,6 +4,10 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-27", "items": [
+		"Új kinézet a mélyben: a 21. emelettől Vérkő (vöröses kő, parázsló repedések, szálló hamu), a 41.-től Káoszkő "
+			+ "(fekete-ibolya obszidián, lila lángú fáklyák) — emeletről emeletre egyre sötétebb.",
+		"Helyszínenként saját zene (tábor, város, bánya, kazamata, mélység, próbatétel), és pár szám mindenhol szól; "
+			+ "négy új, sötétebb zene a mélyre és a táborra.",
 		"Öt új zene a tábor és a kazamata lejátszási listáján (epikus és misztikus, mind CC0).",
 		"Öt új bogár a kazamatában: tűzhangya, dongóbogár, katonahangya, óriás lódarázs és barlangi skorpió.",
 		"Új főellenség a 36. emeleten: a Skorpiókirály (méregköpés, mérges tócsák, roham, skorpióhad).",

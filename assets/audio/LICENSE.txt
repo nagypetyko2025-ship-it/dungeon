@@ -18,6 +18,10 @@ Music (assets/audio/music) - all CC0 1.0 Universal:
   cave_theme.ogg = "Cave Theme" by Brandon75689 (submitted by HaelDB; OGA-BY 3.0 / CC0, used under CC0) - https://opengameart.org/content/cave-theme
   ancient_mysteries.ogg = "Ancient Mysteries" by sperrylion - https://opengameart.org/content/ancient-mysteries
   great_labyrinth.ogg = "Great Labyrinth (Orchestral dungeon music)" by MintoDog - https://opengameart.org/content/great-labyrinthorchestral-dungeon-music
+  sirens_in_darkness.mp3 = "Sirens in Darkness" by cynicmusic - https://opengameart.org/content/sirens-in-darkness
+  dark_forest_theme.mp3 = "Dark Forest Theme" by cynicmusic - https://opengameart.org/content/dark-forest-theme
+  the_final_battle.ogg = "The Final Battle" by skrjablin - https://opengameart.org/content/the-final-battle
+  evil_awaits.mp3 = "Evil Awaits" by bosslevelaudio (several licenses offered, used under CC0) - https://opengameart.org/content/evil-awaits
 
 anvil_1.wav, anvil_2.wav, anvil_3.wav: "Metal Impact Sounds" (clink1-3) by Brian MacIntosh, CC0 1.0,
   https://opengameart.org/content/metal-impact-sounds

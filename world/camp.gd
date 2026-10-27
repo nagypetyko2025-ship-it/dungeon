@@ -134,6 +134,9 @@ var _veteran_props: Array[Node2D] = []
 var _veteran_walking := false
 ## Pihenő közben (főellenség után kimentél) vagy.
 var _on_break := false
+## A helyszín zenéjének ellenőrzése ennyi mp-enként (lásd music_place).
+const MUSIC_CHECK := 0.5
+var _music_left := 0.0
 var _town: Town
 ## Pihenő közben itt van a torlasz a városba vezető úton (felirat jelenik meg a közelében).
 var _road_block_position := Vector2.INF
@@ -159,7 +162,7 @@ func _ready() -> void:
 	Progress.load_game()
 	# Ha a futásban elérted a 30. emeletet, most "vissza is jöttél" (a királyi vár engedélye).
 	Castle.on_return_to_camp()
-	Audio.music("epic")
+	Audio.music(music_place(_player.global_position))
 	GameCursor.apply()
 	$CanvasModulate.color = EVENING
 	# A szabad ég alatt a lovag "lámpása" halványabb, hogy esti hangulata legyen.
@@ -1149,6 +1152,21 @@ func _build_bounds() -> void:
 	_solid(Rect2(Vector2(west.end.x, gap_bottom), Vector2(thickness, west.end.y - gap_bottom)))
 
 
+## Melyik helyszín zenéje szól itt (lásd Audio.PLACE_TRACKS): a bánya (a tisztás is) és a kút alja: "cave";
+## a város, a vár és a városi házak belseje: "town"; minden más (a tábor, a nyugati tisztás, a rom, a bolt): "camp".
+static func music_place(at: Vector2) -> String:
+	var tile := Vector2i((at / TILE).floor())
+	if tile.x >= Mine.BOUNDS.position.x - 4 or Mine.RECT.grow(2).has_point(tile) or WellCave.BOUNDS.has_point(tile):
+		return "cave"
+	# A kocsma belseje, a folyosó és a szobák (x 200-tól) egy tömbben.
+	var town: Array[Rect2i] = [Town.RECT, Castle.RECT, Rect2i(196, -5, 40, 52), Castle.THRONE_ROOM.grow(4),
+		Chapel.INTERIOR.grow(4), Hospital.INTERIOR.grow(4), Warehouse.INTERIOR.grow(4)]
+	for area in town:
+		if area.has_point(tile):
+			return "town"
+	return "camp"
+
+
 ## Átlépés egy másik helyre elsötétüléssel (pl. be a kocsmába): `limits` a kamera határai
 ## (üres = a szabadtéri határok), `light` a szín-hangulat (fekete = az esti szürkület).
 func teleport_player(at: Vector2, limits: Rect2, light: Color) -> void:
@@ -1310,6 +1328,11 @@ func _show_title() -> void:
 
 
 func _process(delta: float) -> void:
+	# A zene a helyszínhez igazodik (fél mp-enként nézi; ha a szóló szám az új helyen is szólhat, marad).
+	_music_left -= delta
+	if _music_left <= 0.0:
+		_music_left = MUSIC_CHECK
+		Audio.music(music_place(_player.global_position))
 	# Gáspár elköszönt (30. emelet): amint bezárult a beszélgetés, elindul a kocsmába.
 	if is_instance_valid(_veteran_sprite) and not _veteran_walking and not GamePause.active(get_tree()) \
 			and Progress.npc_quest_state(Dialogues.TAVERN_FLAG) == "done":

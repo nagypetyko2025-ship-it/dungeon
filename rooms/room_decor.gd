@@ -2,7 +2,8 @@ class_name RoomDecor
 extends Node2D
 ## Egy szoba berendezése (csak látvány, és pár útban nem lévő akadály):
 ## fáklyák a hátsó falon, néha falikút, pókhálók a sarkokban, csontok / koponyák /
-## vérfoltok a padlón, hordó- és ládakupacok a sarkokban.
+## vérfoltok a padlón, hordó- és ládakupacok a sarkokban. A mély sávokban (DungeonTheme, 21. / 41. emelettől)
+## a fal, a kút és a fáklya a sáv színeiben, több a csont és a vér, és izzó repedések nyílnak a padlón.
 ## A Room hozza létre, miután az ajtók, oszlopok és csapdák már a helyükön vannak.
 
 const TORCH := preload("res://rooms/decor/torch.tscn")
@@ -41,14 +42,21 @@ const FLASK_CHANCE := 0.3
 const FALLEN_SKELETON := Rect2(368, 88, 16, 16)
 const GUARD_SWORD := Rect2(339, 98, 10, 29)
 const FLOOR_Z := -7
+## A mély sávokban: gyakoribb (véres / lila) falikút, több csont és vér, izzó repedések a padlón.
+const DEEP_FOUNTAIN_CHANCE := 0.4
+const DEEP_EXTRA_SCATTER := 3
+## A Káoszkőben a vér sötét ibolya (nem vörös).
+const ABYSS_BLOOD := Color(0.55, 0.32, 0.85)
 
 var room: Room
+var _band := 0
 ## A hátsó fal már foglalt oszlopai (fáklya, kút), hogy a falidíszek ne kerüljenek rájuk.
 var _wall_used: Array[int] = []
 
 
 func _ready() -> void:
 	y_sort_enabled = true
+	_band = DungeonTheme.band(room.depth)
 	var fountain_x := _place_fountain()
 	_wall_used.append(fountain_x)
 	_place_torches(fountain_x)
@@ -57,6 +65,7 @@ func _ready() -> void:
 	_place_clutter()
 	_scatter_floor()
 	_place_dropped_flask()
+	_place_rifts()
 	if room.fallen_guards > 0:
 		_place_fallen_guards(room.fallen_guards)
 
@@ -65,9 +74,10 @@ func _ready() -> void:
 func _place_fountain() -> int:
 	var x := room.rect.position.x + 2
 	var floor_tile := Vector2i(x, room.rect.position.y)
-	if randf() >= FOUNTAIN_CHANCE or room.is_tile_used(floor_tile):
+	if randf() >= (DEEP_FOUNTAIN_CHANCE if _band > 0 else FOUNTAIN_CHANCE) or room.is_tile_used(floor_tile):
 		return -99999
-	var color: String = ["red", "blue"].pick_random()
+	# A mélyben mindig a "vörös" kút: a sáv lapján vér (Vérkő) vagy izzó lila (Káoszkő).
+	var color: String = "red" if _band > 0 else ["red", "blue"].pick_random()
 	_sprite(FOUNTAIN_TOP, Vector2i(x, room.rect.position.y - 2), -4)
 	_animated(FOUNTAIN_MID[color], Vector2i(x, room.rect.position.y - 1), -4)
 	_animated(FOUNTAIN_BASIN[color], floor_tile, -4)
@@ -92,6 +102,9 @@ func _place_torches(fountain_x: int) -> void:
 		var torch: Node2D = TORCH.instantiate()
 		torch.position = room.local_pos(Vector2i(x, y))
 		add_child(torch)
+		if _band > 0:
+			(torch.get_node("AnimatedSprite2D") as AnimatedSprite2D).modulate = DungeonTheme.FLAME[_band]
+			(torch.get_node("PointLight2D") as PointLight2D).color = DungeonTheme.TORCH_LIGHT[_band]
 		_wall_used.append(x)
 
 
@@ -256,6 +269,8 @@ func _place_clutter() -> void:
 ## Csontok, koponyák és vérfoltok szétszórva a padlón (nem akadályoznak).
 func _scatter_floor() -> void:
 	var count := randi_range(2, 3) if room.enemy_count <= 0 else randi_range(5, 9)
+	if _band > 0:
+		count += DEEP_EXTRA_SCATTER
 	var inner := room.rect.grow(-1)
 	for i in count:
 		for attempt in 10:
@@ -272,8 +287,27 @@ func _scatter_floor() -> void:
 				sprite = _texture_sprite(BONES, tile, FLOOR_Z)
 			else:
 				sprite = _texture_sprite(BLOOD, tile, FLOOR_Z)
+				if _band == 2:
+					sprite.modulate = ABYSS_BLOOD
 			sprite.flip_h = randf() < 0.5
 			sprite.position += Vector2(randf_range(-8, 8), randf_range(-8, 8))
+			break
+
+
+## Izzó repedések a padlón a mély sávokban (DungeonTheme.add_rift): harci szobában 1-2 (a Káoszkőben 2-3).
+func _place_rifts() -> void:
+	if _band == 0:
+		return
+	var count := randi_range(1, 2) + (1 if _band == 2 else 0)
+	if room.enemy_count <= 0:
+		count = randi_range(0, 1)
+	var inner := room.rect.grow(-2)
+	for i in count:
+		for attempt in 10:
+			var tile := Vector2i(randi_range(inner.position.x, inner.end.x - 1), randi_range(inner.position.y, inner.end.y - 1))
+			if room.is_tile_used(tile) or tile == room.anchor:
+				continue
+			DungeonTheme.add_rift(room.depth, self, room.local_pos(tile), FLOOR_Z + 1)
 			break
 
 
@@ -304,7 +338,7 @@ func _container(region: Rect2, tile: Vector2i) -> Sprite2D:
 ## Képrészlet a 0x72 lapról egy csempe közepén.
 func _sprite(region: Rect2, tile: Vector2i, z: int) -> Sprite2D:
 	var sprite := Sprite2D.new()
-	sprite.texture = SHEET
+	sprite.texture = DungeonTheme.sheet_for(region, room.depth)
 	sprite.region_enabled = true
 	sprite.region_rect = region
 	sprite.scale = Vector2(2, 2)
@@ -329,7 +363,10 @@ func _animated(first: Vector2, tile: Vector2i, z: int) -> void:
 	var frames := SpriteFrames.new()
 	frames.set_animation_speed("default", 6.0)
 	for i in 3:
-		frames.add_frame("default", SpriteSheet.region(Rect2(first + Vector2(i * 16, 0), Vector2(16, 16))))
+		var frame := AtlasTexture.new()
+		frame.region = Rect2(first + Vector2(i * 16, 0), Vector2(16, 16))
+		frame.atlas = DungeonTheme.sheet_for(frame.region, room.depth)
+		frames.add_frame("default", frame)
 	var sprite := AnimatedSprite2D.new()
 	sprite.sprite_frames = frames
 	sprite.scale = Vector2(2, 2)
