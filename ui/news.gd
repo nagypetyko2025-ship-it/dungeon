@@ -7,8 +7,8 @@ const ENTRIES: Array[Dictionary] = [
 		"A Vérkő lakói (81. emelettől): négy igazán erős démon — pokolkutya (falkában ront rád), pokolfajzat "
 			+ "(tűzgolyó-legyező), lidércló (lángsörényű paripa, nekivágtat) és pokolúr (pokolkutyákat hív, pajzs, "
 			+ "gyógyítás). Ők adják a mélység szörnyeinek majdnem felét.",
-		"Eredmények könyve: új, harmadik állvány a táborban, 28 teljesítménnyel (szörnyirtás, mélység, küldetések, "
-			+ "gyűjtés, főellenségek); mindegyikért arany, a nehezebbekért egy kis por is.",
+		"Eredmények könyve: új, harmadik állvány a táborban, 49 teljesítménnyel (szörnyirtás, szörnyfajták, mélység, küldetések, "
+			+ "gyűjtés ritkaság szerint, tábori fejlesztések, főellenségek); mindegyikért arany, a nehezebbekért egy kis por is.",
 		"A Tárgyak könyve fülenként jutalmat ad (25%, 50% és 100% után: arany és egy kis por).",
 		"A három könyv állványa arrébb került, a tábor nyugati, füves részére, egy kitaposott földfoltra.",
 	]},
