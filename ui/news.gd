@@ -4,6 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-28", "items": [
+		"32 új lövészfelszerelés: minden sisakból, mellvértből, nadrágból, cipőből, kesztyűből, gyűrűből, amulettből "
+			+ "és talizmánból 4 (átlagostól legendásig), mind távolsági sebzést ad, saját új képpel.",
 		"A Vérkő lakói (81. emelettől): négy igazán erős démon — pokolkutya (falkában ront rád), pokolfajzat "
 			+ "(tűzgolyó-legyező), lidércló (lángsörényű paripa, nekivágtat) és pokolúr (pokolkutyákat hív, pajzs, "
 			+ "gyógyítás). Ők adják a mélység szörnyeinek majdnem felét.",
