@@ -289,6 +289,32 @@ const TYPES: Array[Dictionary] = [
 		"size": 1.15, "tint": Color(0.55, 0.85, 1.35),
 		"health": [110, 130], "damage": [12, 15], "speed": [85, 98], "dodge": [10, 16],
 		"knockback": [420, 480], "resist": [0.75, 0.85], "xp": [44, 50], "min_depth": 44, "max_depth": 80, "weight": 2},
+	# --- A Vérkő lakói (81. emelettől): a pokol igazi démonjai, jóval erősebbek a régi démonoknál, és nagy
+	# súllyal jönnek (a sor majdnem fele ők). CC0: "Gothicvania Patreon's Collection" (ansimuz). ---
+	# Pokolkutya: izzó csontú fekete eb; falkában vadászik, nekiront a játékosnak, cikázik, és ha megsebzik, dühöng.
+	{"name": "hell_hound", "abilities": ["zigzag", "berserk"], "dash": true, "sheet": "res://assets/enemies/hell_hound.png",
+		"rect": Rect2(0, 0, 42, 26), "run": true, "size": 1.6,
+		"health": [130, 155], "damage": [18, 22], "speed": [165, 185], "dodge": [25, 32],
+		"knockback": [420, 480], "resist": [0.6, 0.7], "xp": [62, 70], "min_depth": 81, "weight": 36},
+	# Pokolfajzat: szarvas, tüzes bőrű démon; messziről tűzgolyó-legyezőt szór, visszagyógyul, és halálakor szétrobban.
+	{"name": "hell_beast", "abilities": ["regenerate", "death_burst"], "ranged": true, "no_weapon": true,
+		"projectile": "magic", "weapon_region": Rect2(324, 129, 8, 30), "shots": 3, "spread": 14.0,
+		"sheet": "res://assets/enemies/hell_beast.png", "rect": Rect2(0, 0, 35, 40), "run": true, "size": 1.7,
+		"health": [170, 200], "damage": [20, 24], "speed": [85, 100], "dodge": [12, 18],
+		"knockback": [400, 450], "resist": [0.7, 0.8], "xp": [70, 80], "min_depth": 81, "weight": 30,
+		"fire_interval": [1.7, 2.2], "arrow_speed": [290, 330], "keep_distance": [190, 240]},
+	# Lidércló: lángsörényű fekete paripa; nekivágtat a játékosnak, alig lehet megállítani, és dühöng.
+	{"name": "nightmare", "abilities": ["berserk", "war_cry"], "dash": true, "sheet": "res://assets/enemies/nightmare.png",
+		"rect": Rect2(0, 0, 53, 40), "run": true, "size": 1.8,
+		"health": [250, 290], "damage": [24, 28], "speed": [125, 140], "dodge": [8, 14],
+		"knockback": [520, 580], "resist": [0.9, 0.97], "xp": [86, 96], "min_depth": 82, "weight": 30},
+	# Pokolúr: denevérszárnyú, csuklyás démonúr; melletted terem, pokolkutyákat idéz, pajzsot von maga köré,
+	# és gyógyítja a többi démont.
+	{"name": "hell_demon", "abilities": ["teleport", "summon", "shield", "heal"],
+		"summon": {"type": "hell_hound", "count": 1, "limit": 2, "text": "Hozzám, falkám!"},
+		"sheet": "res://assets/enemies/hell_demon.png", "rect": Rect2(0, 0, 62, 50), "run": true, "size": 1.9,
+		"health": [330, 380], "damage": [28, 34], "speed": [95, 110], "dodge": [14, 20],
+		"knockback": [500, 560], "resist": [0.85, 0.95], "xp": [120, 135], "min_depth": 84, "weight": 24},
 	# Kazamatapók (bogár): kicsi, gyors, mérges.
 	{"name": "spider", "abilities": ["poison", "zigzag"], "sheet": "res://assets/enemies/spider.png",
 		"rect": Rect2(0, 0, 12, 20), "run": true, "size": 1.1,

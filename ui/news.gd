@@ -3,6 +3,15 @@ class_name News
 ## rövid, játékosnak szóló sor a legfrissebb dátum alá (a legújabb van felül).
 
 const ENTRIES: Array[Dictionary] = [
+	{"date": "2026-10-28", "items": [
+		"A Vérkő lakói (81. emelettől): négy igazán erős démon — pokolkutya (falkában ront rád), pokolfajzat "
+			+ "(tűzgolyó-legyező), lidércló (lángsörényű paripa, nekivágtat) és pokolúr (pokolkutyákat hív, pajzs, "
+			+ "gyógyítás). Ők adják a mélység szörnyeinek majdnem felét.",
+		"Eredmények könyve: új, harmadik állvány a táborban, 28 teljesítménnyel (szörnyirtás, mélység, küldetések, "
+			+ "gyűjtés, főellenségek); mindegyikért egy kis jutalom (arany, por).",
+		"A Tárgyak könyve fülenként jutalmat ad (25%, 50% és 100% után: arany és egy kis por).",
+		"A három könyv állványa arrébb került, a tábor nyugati, füves részére, egy kitaposott földfoltra.",
+	]},
 	{"date": "2026-10-27", "items": [
 		"Tárgyak könyve: új állvány a Szörnyek könyve mellett. Minden tárgy, amit valaha megszereztél, bekerül "
 			+ "(statokkal és leírással), a többi sötét árnyékként várja, hogy megtaláld.",

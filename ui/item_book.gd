@@ -18,6 +18,8 @@ var _selected := ""
 var _grid: GridContainer
 var _detail: VBoxContainer
 var _found: Label
+var _reward: Label
+var _claim: Button
 var _window: Control
 
 
@@ -78,6 +80,33 @@ func _set_tab(tab: int, sound := true) -> void:
 		total += ItemCodex.ids(i).size()
 	_found.text = "%s: %d / %d   ·   Összesen: %d / %d" % [ItemCodex.TABS[tab][0], ItemCodex.seen_count(_ids),
 		_ids.size(), Progress.seen_items.size(), total]
+	_update_reward()
+
+
+## A fül következő jutalma (25 / 50 / 100%), és az átvétel gombja, ha már elérted.
+func _update_reward() -> void:
+	var next := ItemCodex.next_milestone(_tab)
+	if next.is_empty():
+		_reward.text = "Ennek a fülnek minden jutalmát átvetted."
+		_claim.visible = false
+		return
+	var percent: int = next[0]
+	var ready := ItemCodex.milestone_reached(_tab, percent)
+	_reward.text = "%s jutalom (%d%%): %s" % ["Átvehető" if ready else "Következő", percent,
+		Achievements.reward_text(next[1])]
+	_claim.visible = ready
+
+
+func _claim_reward() -> void:
+	var got := ItemCodex.claim(_tab)
+	if got.is_empty():
+		return
+	Audio.play("coin")
+	_reward.text = "Átvetted: " + got
+	_claim.visible = false
+	await get_tree().create_timer(1.6).timeout
+	if visible:
+		_update_reward()
 
 
 func _select(id: String) -> void:
@@ -164,6 +193,21 @@ func _build() -> void:
 	_found.add_theme_color_override("font_color", MenuStyle.PARCHMENT)
 	_found.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(_found)
+	var reward_row := HBoxContainer.new()
+	reward_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	reward_row.add_theme_constant_override("separation", 12)
+	root.add_child(reward_row)
+	_reward = Label.new()
+	_reward.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
+	_reward.add_theme_font_size_override("font_size", 16)
+	_reward.add_theme_color_override("font_color", MenuStyle.GOLD)
+	reward_row.add_child(_reward)
+	_claim = MenuStyle.button("Jutalom átvétele")
+	_claim.custom_minimum_size = Vector2(190, 34)
+	_claim.add_theme_font_size_override("font_size", 14)
+	_claim.focus_mode = Control.FOCUS_NONE
+	_claim.pressed.connect(_claim_reward)
+	reward_row.add_child(_claim)
 	var hint := Label.new()
 	hint.text = "Kattints egy tárgyra   ·   A / D vagy ← / → fülváltás   ·   [E] / [Esc] bezárás"
 	hint.add_theme_font_override("font", MenuStyle.BUTTON_FONT)

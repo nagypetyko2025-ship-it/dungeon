@@ -10,6 +10,14 @@ const TABS: Array[Array] = [
 	["Gyűrűk", "ring"], ["Amulettek", "amulet"], ["Talizmánok", "trinket"],
 ]
 
+## Fülenkénti jutalmak (szerény): a fül tárgyainak ennyi százaléka után -> jutalom (Achievements.grant).
+## Átvéve: `Progress.rewards_claimed` ("codex_<fül>_<százalék>").
+const MILESTONES: Array[Array] = [
+	[25, {"gold": 100, "dust": {"rare": 1}}],
+	[50, {"gold": 200, "dust": {"epic": 1}}],
+	[100, {"gold": 400, "dust": {"legendary": 1}}],
+]
+
 
 ## Egy tárgy megszerzése (a könyvbe kerül). A küldetéstárgyak (pl. levél) nem számítanak.
 static func note(item: Dictionary) -> void:
@@ -86,3 +94,37 @@ static func stats_text(id: String) -> String:
 		else:
 			lines.append("%s … %s" % [Items.format_stat(stat, pair[0]), Items.format_stat(stat, pair[1])])
 	return "\n".join(lines)
+
+
+## A fül jutalmának kulcsa, és hogy elérte-e / átvette-e.
+static func _milestone_key(tab: int, percent: int) -> String:
+	return "codex_%s_%d" % [TABS[tab][1], percent]
+
+
+static func milestone_reached(tab: int, percent: int) -> bool:
+	var list := ids(tab)
+	return not list.is_empty() and seen_count(list) * 100 >= percent * list.size()
+
+
+static func milestone_claimed(tab: int, percent: int) -> bool:
+	return Progress.rewards_claimed.has(_milestone_key(tab, percent))
+
+
+## A fül elért, de még át nem vett jutalmai: átveszi mindet, és visszaadja, mit kapott ("" ha semmit).
+static func claim(tab: int) -> String:
+	var got: Array[String] = []
+	for milestone: Array in MILESTONES:
+		var percent: int = milestone[0]
+		if milestone_reached(tab, percent) and not milestone_claimed(tab, percent):
+			Progress.rewards_claimed[_milestone_key(tab, percent)] = true
+			Achievements.grant(milestone[1])
+			got.append(Achievements.reward_text(milestone[1]))
+	return ", ".join(got)
+
+
+## A fül következő (még át nem vett) jutalma: [százalék, jutalom], vagy [] ha mind megvan.
+static func next_milestone(tab: int) -> Array:
+	for milestone: Array in MILESTONES:
+		if not milestone_claimed(tab, milestone[0]):
+			return milestone
+	return []

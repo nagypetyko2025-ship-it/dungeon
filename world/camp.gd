@@ -82,12 +82,18 @@ const WORLD_START_X := WEST_RECT.position.x - FOREST_DEPTH
 ## A veterán sátrának bal felső csempéje (a tábor nyugati részén, a sáros ösvénytől
 ## délre); előtte ül a veterán.
 const VETERAN_TENT := Vector2i(9, 20)
-## A Szörnyek könyve állványa (a lépcsőhöz vezető ösvénytől balra, a tábor északi szélén).
-const BESTIARY_TILE := Vector2i(17, 13)
+## A könyvek állványai egymás mellett, a tábor északnyugati részén, egy kitaposott földfolton (BOOKS_PATCH):
+## a Szörnyek könyve, a Tárgyak könyve (ItemCodex, ui/item_book.gd) és az Eredmények könyve (Achievements,
+## ui/achievement_book.gd).
+const BESTIARY_TILE := Vector2i(10, 10)
 const BESTIARY_BOOK := preload("res://ui/bestiary_book.gd")
-## A Tárgyak könyve: második állvány a Szörnyek könyve mellett (ItemCodex, ui/item_book.gd).
-const ITEM_BOOK_TILE := Vector2i(19, 13)
+const ITEM_BOOK_TILE := Vector2i(12, 10)
 const ITEM_BOOK := preload("res://ui/item_book.gd")
+const ACHIEVEMENT_TILE := Vector2i(14, 10)
+const ACHIEVEMENT_BOOK := preload("res://ui/achievement_book.gd")
+## A földfolt közepe és félátmérői (csempében).
+const BOOKS_PATCH := Vector2i(12, 10)
+const BOOKS_PATCH_RADIUS := Vector2(3.6, 1.7)
 ## Olvasóállvány nyitott könyvvel (ehhez a projekthez rajzolva).
 const LECTERN: Texture2D = preload("res://assets/props/lectern.png")
 ## A sáros ösvény színe (a földcsempék sötét, nedves árnyalata).
@@ -130,6 +136,8 @@ var _bestiary_position := Vector2.ZERO
 var _bestiary_book: CanvasLayer
 var _item_book_position := Vector2.ZERO
 var _item_book: CanvasLayer
+var _achievement_position := Vector2.ZERO
+var _achievement_book: CanvasLayer
 ## A veterán helye (később ide jön a beszélgetés a régi időkről).
 var _veteran_position := Vector2.ZERO
 var _veteran_dialogue: DialoguePanel
@@ -281,6 +289,9 @@ func _ready() -> void:
 	_item_book = ITEM_BOOK.new()
 	_item_book.name = "ItemBook"
 	add_child(_item_book)
+	_achievement_book = ACHIEVEMENT_BOOK.new()
+	_achievement_book.name = "AchievementBook"
+	add_child(_achievement_book)
 	_merchant_panel = MERCHANT_PANEL.new()
 	_merchant_panel.name = "MerchantPanel"
 	add_child(_merchant_panel)
@@ -479,6 +490,11 @@ func _build_dirt() -> void:
 	for y in range(STAIRS_TILE.y + 2, FIRE_TILE.y):
 		for dx in range(-1, 2):
 			_dirt[Vector2i(STAIRS_TILE.x + dx, y)] = true
+	# Kitaposott földfolt a könyvek állványai alatt.
+	for x in range(-4, 5):
+		for y in range(-2, 3):
+			if pow(x / BOOKS_PATCH_RADIUS.x, 2) + pow(y / BOOKS_PATCH_RADIUS.y, 2) <= 1.0 + randf_range(-0.1, 0.1):
+				_dirt[BOOKS_PATCH + Vector2i(x, y)] = true
 	# Az út: a tisztáson kicsit kanyarog, az erdőben egyenesen megy tovább a városig, és át rajta.
 	for x in range(FIRE_TILE.x + 5, Town.RECT.end.x):
 		var row := ROAD_ROW
@@ -697,36 +713,28 @@ func _build_veteran() -> void:
 		_blocked[VETERAN_TENT + Vector2i(dx, 3)] = true
 
 
-## A Szörnyek könyve: nyitott könyv egy faállványon (E-re nyílik, lásd Bestiary).
+## A három könyv: nyitott könyv egy-egy faállványon (E-re nyílnak), mindegyik kicsit más színű.
 func _build_bestiary() -> void:
+	_bestiary_position = _lectern(BESTIARY_TILE, Color.WHITE)
+	_item_book_position = _lectern(ITEM_BOOK_TILE, Color(1.0, 0.86, 0.7))
+	_achievement_position = _lectern(ACHIEVEMENT_TILE, Color(1.0, 0.95, 0.62))
+
+
+func _lectern(tile: Vector2i, tint: Color) -> Vector2:
 	var holder := Node2D.new()
-	holder.position = _tile_center(BESTIARY_TILE) + Vector2(0, 14)
+	holder.position = _tile_center(tile) + Vector2(0, 14)
 	_entities.add_child(holder)
 	var lectern := Sprite2D.new()
 	lectern.texture = LECTERN
 	lectern.scale = Vector2(2, 2)
 	lectern.position = Vector2(0, -LECTERN.get_height())
+	lectern.modulate = tint
 	holder.add_child(lectern)
 	_body(holder, Vector2(0, -4), Vector2(30, 10))
-	_bestiary_position = holder.position
 	for dx in range(-1, 2):
 		for dy in range(-1, 2):
-			_blocked[BESTIARY_TILE + Vector2i(dx, dy)] = true
-	# A Tárgyak könyve: ugyanilyen állvány, melegebb (barnás) színnel.
-	var item_holder := Node2D.new()
-	item_holder.position = _tile_center(ITEM_BOOK_TILE) + Vector2(0, 14)
-	_entities.add_child(item_holder)
-	var item_lectern := Sprite2D.new()
-	item_lectern.texture = LECTERN
-	item_lectern.scale = Vector2(2, 2)
-	item_lectern.position = Vector2(0, -LECTERN.get_height())
-	item_lectern.modulate = Color(1.0, 0.86, 0.7)
-	item_holder.add_child(item_lectern)
-	_body(item_holder, Vector2(0, -4), Vector2(30, 10))
-	_item_book_position = item_holder.position
-	for dx in range(-1, 2):
-		for dy in range(-1, 2):
-			_blocked[ITEM_BOOK_TILE + Vector2i(dx, dy)] = true
+			_blocked[tile + Vector2i(dx, dy)] = true
+	return holder.position
 
 
 ## A 30. emelet híre után Gáspár feláll, magához veszi a kardját és a botját, és útvonal-
@@ -1368,9 +1376,10 @@ func _process(delta: float) -> void:
 	var near_block := _player.global_position.distance_to(_road_block_position) < 90.0
 	var near_bestiary := _is_near_bestiary()
 	var near_item_book := _is_near_item_book()
+	var near_achievements := _is_near_achievements()
 	var near_smith := _is_near_smith()
 	var any_near := near_stairs or near_tent or near_stash or near_npc or near_veteran or near_block or near_bestiary \
-		or near_smith or near_item_book
+		or near_smith or near_item_book or near_achievements
 	if near_smith:
 		_prompt.text = "[E] Kovács — tárgyfejlesztés, szétszedés"
 	elif near_veteran:
@@ -1379,6 +1388,8 @@ func _process(delta: float) -> void:
 		_prompt.text = "[E] Szörnyek könyve"
 	elif near_item_book:
 		_prompt.text = "[E] Tárgyak könyve"
+	elif near_achievements:
+		_prompt.text = "[E] Eredmények könyve"
 	elif near_block:
 		_prompt.text = "Pihenő közben nem mehetsz a városba"
 	elif near_stairs:
@@ -1412,6 +1423,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _is_near_item_book():
 		get_viewport().set_input_as_handled()
 		$Menus.open_menu(_item_book)
+		return
+	if _is_near_achievements():
+		get_viewport().set_input_as_handled()
+		$Menus.open_menu(_achievement_book)
 		return
 	# A kovács pihenő közben is dolgozik (akkor a futás felszerelésével).
 	if _is_near_smith():
@@ -1451,6 +1466,10 @@ func _is_near_bestiary() -> bool:
 
 func _is_near_item_book() -> bool:
 	return is_instance_valid(_player) and _player.global_position.distance_to(_item_book_position) < INTERACT_RANGE
+
+
+func _is_near_achievements() -> bool:
+	return is_instance_valid(_player) and _player.global_position.distance_to(_achievement_position) < INTERACT_RANGE
 
 
 func _is_near_smith() -> bool:

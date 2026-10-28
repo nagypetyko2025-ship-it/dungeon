@@ -31,6 +31,7 @@ const CATEGORIES := [
 	["Bogarak", ["fly", "spider", "fire_ant", "blue_beetle", "soldier_ant", "hornet", "scorpion"]],
 	["Káosz", ["chaos_spawn", "chaos_hound", "chaos_maw", "chaos_shard", "chaos_weaver"]],
 	["Fagyott lények", ["frost_wraith", "ice_spider", "snow_golem", "frozen_knight"]],
+	["A pokol démonjai", ["hell_hound", "hell_beast", "nightmare", "hell_demon"]],
 	["Különös lények", ["mimic", "pumpkin_dude", "angel", "toadstool"]],
 	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES + [CHAOS_LORD]],
 ]
@@ -58,6 +59,10 @@ const ENTRIES := {
 	"ice_spider": ["Jégpók", "Áttetsző, jégkék pók, ami a fagyott falakon fészkel. Villámgyorsan cikázik, és a csípése megdermeszti a tagjaidat."],
 	"snow_golem": ["Hógólem", "Összefagyott kő- és jégtömb, amit valami ősi hideg tart egyben. Lassú, de alig lehet megsebezni, és ha megsérül, dühbe gurul."],
 	"frozen_knight": ["Fagyott lovag", "A régi királyi őrség egyik lovagja, aki a Mélységben fagyott meg, és jégként kelt fel újra. Jégpajzsot von maga köré, a csapása dermeszt."],
+	"hell_hound": ["Pokolkutya", "Izzó csontú fekete eb a Vérkő mélyéről. Falkában vadászik, cikázva ront rád, és minden sebtől csak vadabb lesz."],
+	"hell_beast": ["Pokolfajzat", "Szarvas, parázsló bőrű démon. Messziről tűzgolyó-legyezőt szór, a sebei maguktól beforrnak, és halálakor lángokban robban szét."],
+	"nightmare": ["Lidércló", "Lángsörényű fekete paripa, aminek a patája alatt megolvad a kő. Nekivágtat a csapatodnak, alig lehet megállítani, és a nyerítése felszítja a többi démont."],
+	"hell_demon": ["Pokolúr", "Denevérszárnyú, csuklyás démonúr, a Démonkirály hadának egyik vezére. A semmiből terem melletted, pokolkutyákat hív, pajzsot von maga köré, és gyógyítja a démonokat."],
 	"chaos_spawn": ["Káoszivadék", "Fekete-lila, folyton alakot váltó csápgomolyag egyetlen vörös szemmel. A Mélység legaljáról tör fel, ahol a világ szabályai már nem érvényesek: eltűnik, cikázik, és ha elpusztul, szétrobban."],
 	"chaos_hound": ["Káoszkopó", "Fekete-lila árnyékfenevad, a szeme ibolyán izzik. A 25. emelet alól tör fel: nekiront, a semmin át melletted terem, és minél jobban megsebzed, annál vadabb."],
 	"chaos_maw": ["Káosztorok", "Lebegő, féloldalas fekete tömeg, oldalán egy ferde, fogakkal szegett hasíték nyílik és csukódik. A 25. emelet alól tör fel: messziről a semmit köpi rád, megdermeszt, és ha közel érsz, egyszerre melletted terem."],

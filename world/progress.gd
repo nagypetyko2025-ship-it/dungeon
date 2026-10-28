@@ -62,6 +62,8 @@ static var npc_quests := {}
 static var kills := {}
 ## Tárgyak könyve (ItemCodex): a valaha megszerzett tárgyak azonosítói (id -> true).
 static var seen_items := {}
+## Az átvett könyvjutalmak (a Tárgyak könyve fülenkénti jutalmai, az Eredmények könyve): kulcs -> true.
+static var rewards_claimed := {}
 ## A kovács porai (Smithing): ritkaság -> darab (szétszedéssel jön, fejlesztésre megy el).
 static var dust := {}
 ## A legmélyebb emelet, ahova valaha lejutottál (csalás és gyakorló pálya nélkül). Ha egy küldetés egy
@@ -133,6 +135,9 @@ static func load_game(force := false) -> void:
 		var saved_seen: Variant = config.get_value("camp", "seen_items", {})
 		if saved_seen is Dictionary:
 			seen_items = saved_seen
+		var saved_claimed: Variant = config.get_value("camp", "rewards_claimed", {})
+		if saved_claimed is Dictionary:
+			rewards_claimed = saved_claimed
 		var saved_dust: Variant = config.get_value("camp", "dust", {})
 		if saved_dust is Dictionary:
 			dust = saved_dust
@@ -162,6 +167,7 @@ static func save_game() -> void:
 	config.set_value("camp", "npc_quests", npc_quests)
 	config.set_value("camp", "kills", kills)
 	config.set_value("camp", "seen_items", seen_items)
+	config.set_value("camp", "rewards_claimed", rewards_claimed)
 	config.set_value("camp", "dust", dust)
 	config.set_value("camp", "deepest", deepest)
 	config.save(path())
@@ -220,6 +226,7 @@ static func _clear() -> void:
 	npc_quests = {}
 	kills = {}
 	seen_items = {}
+	rewards_claimed = {}
 	dust = {}
 	deepest = 0
 
