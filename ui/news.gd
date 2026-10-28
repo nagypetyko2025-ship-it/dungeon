@@ -8,7 +8,7 @@ const ENTRIES: Array[Dictionary] = [
 			+ "(tűzgolyó-legyező), lidércló (lángsörényű paripa, nekivágtat) és pokolúr (pokolkutyákat hív, pajzs, "
 			+ "gyógyítás). Ők adják a mélység szörnyeinek majdnem felét.",
 		"Eredmények könyve: új, harmadik állvány a táborban, 28 teljesítménnyel (szörnyirtás, mélység, küldetések, "
-			+ "gyűjtés, főellenségek); mindegyikért egy kis jutalom (arany, por).",
+			+ "gyűjtés, főellenségek); mindegyikért arany, a nehezebbekért egy kis por is.",
 		"A Tárgyak könyve fülenként jutalmat ad (25%, 50% és 100% után: arany és egy kis por).",
 		"A három könyv állványa arrébb került, a tábor nyugati, füves részére, egy kitaposott földfoltra.",
 	]},
