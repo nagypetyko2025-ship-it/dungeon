@@ -54,7 +54,7 @@ Lucifer, a Démonkirály (a pokol):
   lucifer_laugh (troll_02), lucifer_roar_1/2 (monster_05/06), lucifer_die (monster_07):
     "80 CC0 creature SFX" by rubberduck, CC0 1.0 - https://opengameart.org/content/80-cc0-creature-sfx
   lucifer_cast (forceField_000), lucifer_meteor_1/2 (explosionCrunch_001/002), lucifer_souls (laserLarge_003),
-    lucifer_abyss (spaceEngineLarge_001), lucifer_portal (spaceEngineLow_002): "Sci-Fi Sounds" by Kenney, CC0 1.0
+    lucifer_abyss (spaceEngineLarge_001): "Sci-Fi Sounds" by Kenney, CC0 1.0
 
 A befejező kisfilmek zenéi (Azazel után, karakterenként):
   end_knight.mp3 = "It Takes A Hero" by Zane Little Music, CC0 1.0 - https://opengameart.org/content/it-takes-a-hero
@@ -63,3 +63,8 @@ A befejező kisfilmek zenéi (Azazel után, karakterenként):
   end_wizard.mp3 = "Mirror Lake" by Joth, CC0 1.0 - https://opengameart.org/content/mirror-lake
   end_gravedigger.ogg = "Moonlit Lullaby for the Lost" by Tsorthan Grove, CC0 1.0 - https://opengameart.org/content/moonlit-lullaby-for-the-lost
   end_thief.ogg = "Night Prowler" by Section 31, CC0 1.0 - https://opengameart.org/content/night-prowler
+
+A pokol kapuja (belépés): lucifer_portal.wav = "Teleport Spell" by ogrebane, CC0 1.0 - https://opengameart.org/content/teleport-spell
+  (a korábbi, zúgó spaceEngineLow_002 helyett)
+A pokol zenéje (csak a pokolban, folyamatosan ismételve):
+  hell_fall_of_nightmares.wav = "Fall of Nightmares [Epic, Orchestral]" by nene, CC0 1.0 - https://opengameart.org/content/fall-of-nightmares-epic-orchestral

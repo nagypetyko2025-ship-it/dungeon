@@ -4,6 +4,9 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-29", "items": [
+		"A pokol kapuja új kinézetet kapott (izzó, animált kőkapu), és a belépéskor nincs többé hosszú zúgás.",
+		"A pokol útján elesett harcosok fekszenek, mellettük a fegyvereik (balta, buzogány, lándzsa, íj...), és sok csont.",
+		"A pokolnak saját, epikus zenéje van, ami folyamatosan szól (Azazel harcában az ő zenéje marad).",
 		"Javítva: a szintlépés kártyái néha a képernyő aljáig megnyúltak (pl. Vendel Fürgeség-kártyájánál).",
 		"Befejező kisfilm: Azazel legyőzése után minden karakternek saját, 6 képes története van arról, mi lett vele " \
 			+ "a jövőben, saját zenével (a zeneválasztóban: Befejezések).",

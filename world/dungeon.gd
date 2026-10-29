@@ -237,8 +237,8 @@ func _ready() -> void:
 				room.connections.append(dir)
 		var distance: int = distances[cell]
 		if hell:
-			# A pokol: se szörny, se csapda, se láda; csak tűz, és a végén Azazel.
-			pass
+			# A pokol: se szörny, se csapda, se láda; csak tűz, az úton elesett harcosok, és a végén Azazel.
+			room.fallen_warriors = Hell.THRONE_WARRIORS if cell == Hell.CELLS[-1] else Hell.ROAD_WARRIORS
 		elif final_floor:
 			# A nagy főellenség terme: nyitott aréna, se csapda, se láda. A 20. emeleten mindkét
 			# szobában Gáspár elesett embereinek csontvázai fekszenek (a teremben a legtöbb).
@@ -441,6 +441,9 @@ func _on_boss_fight_started(boss: Node2D) -> void:
 func _music_place() -> String:
 	if Challenge.active():
 		return "trial"
+	# A pokol saját zenéje (Azazel harcában az övé szól, utána ez folytatódik).
+	if GameState.hell and GameState.depth == Hell.DEPTH:
+		return "hell"
 	# A zene a mélység szerint (nem a kinézet szerint): 1-20. kazamata, 21-40. mélység, 41.-től káosz.
 	if GameState.tutorial or GameState.depth < 21:
 		return "dungeon"

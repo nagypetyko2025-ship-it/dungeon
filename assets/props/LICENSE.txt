@@ -19,3 +19,5 @@ mine_tiles.png: a bánya belsejének csempéi. A föld és a sziklafal az "Adven
   a szakadék, a leszakadt deszkahíd, a hídoszlop és a bányatámfa ehhez a projekthez rajzolva (CC0).
 rowboat.png: Ábel csónakja a tavon — "Wooden Boat" (Pavel Kutejnikov, CC0, https://opengameart.org/content/wooden-boat),
   a három változat közül az első, kivágva.
+hell_gate.png: a pokol kapuja a 100. emeleten — "portal" (matiasvme, CC0, https://opengameart.org/content/portal-2),
+  a portal_3.png 5 kockás animációja; a kő sötét obszidiánra, az örvény izzó vörös-narancsra színezve.

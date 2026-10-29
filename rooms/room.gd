@@ -81,6 +81,9 @@ var has_boss := false
 var _lucifer_at := Vector2.ZERO
 ## Ennyi elesett királyi őr csontváza fekszik a szobában (a 20. emeleten: Gáspár emberei).
 var fallen_guards := 0
+## A pokol útján: ennyi elesett harcos (csontváz, mellette a fegyvere: balta, buzogány, lándzsa, íj...),
+## és körülöttük sok szétszórt csont és koponya (lásd RoomDecor._place_fallen_warriors).
+var fallen_warriors := 0
 ## A nagy főellenség terme (20. emelet: Vérfarkas, 40. emelet: a Káosz Ura): nincs fülke és lépcső,
 ## győzelem után a portálon át a táborba mehetsz (vége a futásnak), vagy a lépcsőn tovább.
 var final_boss := false

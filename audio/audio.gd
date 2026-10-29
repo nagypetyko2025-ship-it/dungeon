@@ -45,6 +45,8 @@ const MUSIC_TRACKS := {
 	"gate": "res://assets/audio/music/heavy_boss_battle.ogg",
 	# Csak a Azazel elleni harcban szól.
 	"lucifer": "res://assets/audio/music/demon_king_battle.mp3",
+	# Csak a pokolban szól (a 100. emelet kapuja mögött), folyamatosan ismételve; Azazel harcában az övé ("lucifer").
+	"hell": "res://assets/audio/music/hell_fall_of_nightmares.wav",
 	# A befejező kisfilmek zenéi (Azazel után, karakterenként, lásd ui/ending_story.gd).
 	"end_knight": "res://assets/audio/music/end_knight.mp3",
 	"end_archer": "res://assets/audio/music/end_archer.mp3",
@@ -59,8 +61,8 @@ const ENDING_TRACKS := ["end_knight", "end_archer", "end_veteran", "end_wizard",
 ## (GENERAL_TRACKS) egymás után (ha az egyik véget ér, jön a következő; a sorrend keverve, ugyanaz nem jön kétszer
 ## egymás után). Helyváltáskor a szóló szám marad, ha az új helyen is szólhat; különben áttűnik az új hely zenéjére.
 ## Mind CC0, lásd assets/audio/LICENSE.txt. "epic": az utoljára kért helyszín (pl. a feléledés után).
-## Ezek a számok csak a saját harcukban szólnak (nincsenek a zeneválasztóban).
-const ONLY_IN_FIGHT := ["engine", "gate", "lucifer"]
+## Ezek a számok csak a saját harcukban (a "hell" a pokolban) szólnak (nincsenek a zeneválasztóban).
+const ONLY_IN_FIGHT := ["engine", "gate", "lucifer", "hell"]
 const PLAYLIST := "epic"
 const GENERAL_TRACKS: Array[String] = [
 	"res://assets/audio/music/jrpg_theme.ogg", "res://assets/audio/music/rising_moon.mp3", "res://assets/audio/music/lament_of_the_war.mp3",
@@ -101,6 +103,7 @@ const MUSIC_TITLES := {
 	"res://assets/audio/music/epic_boss_battle.wav": "Epic Boss Battle — Juhani Junkala",
 	"res://assets/audio/music/heavy_boss_battle.ogg": "Heavy Boss Battle 1 — MintoDog",
 	"res://assets/audio/music/demon_king_battle.mp3": "Battle RPG Theme — Cleyton Kauffman",
+	"res://assets/audio/music/hell_fall_of_nightmares.wav": "Fall of Nightmares — nene",
 	"res://assets/audio/music/end_knight.mp3": "It Takes a Hero — Zane Little (a Lovag befejezése)",
 	"res://assets/audio/music/end_archer.mp3": "Peaceful Forest — samza (az Íjász befejezése)",
 	"res://assets/audio/music/end_veteran.ogg": "Memories — HothXcc (Gáspár befejezése)",

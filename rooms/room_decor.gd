@@ -41,6 +41,10 @@ const FLASK_CHANCE := 0.3
 ## Elesett királyi őr: a 0x72 csontváz (fekve) és a lovagkard (rozsdásra színezve).
 const FALLEN_SKELETON := Rect2(368, 88, 16, 16)
 const GUARD_SWORD := Rect2(339, 98, 10, 29)
+## A pokolban elesett harcosok fegyverei (a tárgyak ikonjai), és a szétszórt csontok száma harcosonként.
+const WARRIOR_WEAPONS: Array[String] = ["axe_battle", "axe_double", "axe_headsman", "mace_morning", "mace_warhammer",
+	"mace_flail", "spear_halberd", "spear_barbed", "bow_long", "crossbow_steel", "sword_royal", "sword_bloodmoon"]
+const WARRIOR_BONES := 3
 const FLOOR_Z := -7
 ## A mély sávokban: gyakoribb (véres / lila) falikút, több csont és vér, izzó repedések a padlón.
 const DEEP_FOUNTAIN_CHANCE := 0.4
@@ -68,6 +72,8 @@ func _ready() -> void:
 	_place_rifts()
 	if room.fallen_guards > 0:
 		_place_fallen_guards(room.fallen_guards)
+	if room.fallen_warriors > 0:
+		_place_fallen_warriors(room.fallen_warriors)
 
 
 ## Falikút a hátsó fal bal oldalán (FOUNTAIN_CHANCE eséllyel). Az x-et adja vissza (vagy -99999).
@@ -219,6 +225,41 @@ func _place_fallen_guards(count: int) -> void:
 			extra.modulate = Color(0.6, 0.55, 0.5, 0.85)
 			extra.flip_h = randf() < 0.5
 			extra.position += Vector2(randf_range(-14, 14), randf_range(8, 16))
+			break
+
+
+
+## A pokol útján elesett harcosok: fekvő, megfeketedett csontváz, mellette a fegyvere (balta, buzogány,
+## lándzsa, íj, kard...), körülötte szétszórt csontok, koponyák és régi vér. Csak látvány, nem akadály.
+func _place_fallen_warriors(count: int) -> void:
+	var inner := room.rect.grow(-2)
+	var taken := {}
+	for i in count:
+		for attempt in 20:
+			var tile := Vector2i(randi_range(inner.position.x, inner.end.x - 1), randi_range(inner.position.y, inner.end.y - 1))
+			if room.is_tile_used(tile) or taken.has(tile) or taken.has(tile + Vector2i.LEFT) or taken.has(tile + Vector2i.RIGHT):
+				continue
+			taken[tile] = true
+			var side := -1.0 if randf() < 0.5 else 1.0
+			var body := _sprite(FALLEN_SKELETON, tile, FLOOR_Z + 1)
+			body.rotation = PI / 2.0 * side + randf_range(-0.3, 0.3)
+			body.modulate = Color(0.62, 0.5, 0.45).darkened(randf_range(0.0, 0.3))
+			body.position += Vector2(randf_range(-6, 6), randf_range(-2, 6))
+			var weapon := _texture_sprite(load("res://assets/items/%s.png" % WARRIOR_WEAPONS.pick_random()), tile, FLOOR_Z)
+			weapon.scale = Vector2(1.1, 1.1)
+			weapon.rotation = deg_to_rad(randf_range(30, 150)) * side
+			weapon.modulate = Color(0.7, 0.55, 0.5)
+			weapon.position += Vector2(20 * side, randf_range(2, 12))
+			for b in WARRIOR_BONES:
+				var bone := _texture_sprite(BONES, tile, FLOOR_Z - 1) if b > 0 else _sprite(SKULL, tile, FLOOR_Z)
+				bone.modulate = Color(0.65, 0.55, 0.5, 0.9)
+				bone.flip_h = randf() < 0.5
+				bone.rotation = randf_range(-0.6, 0.6)
+				bone.position += Vector2(randf_range(-34, 34), randf_range(-14, 24))
+			if randf() < 0.5:
+				var blood := _texture_sprite(BLOOD, tile, FLOOR_Z - 2)
+				blood.modulate = Color(0.45, 0.08, 0.05, 0.8)
+				blood.position += Vector2(randf_range(-10, 10), randf_range(4, 14))
 			break
 
 

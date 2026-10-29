@@ -15,6 +15,9 @@ const ROAD_SIZE := Vector2i(34, 11)
 const THRONE_SIZE := Vector2i(31, 21)
 ## Az utolsó útszakasz ennyivel rövidebb: a helyén folyosó vezet a trónterembe.
 const THRONE_GAP := 6
+## Elesett harcosok (csontváz + fegyver, sok csonttal) szobánként az úton és a trónteremben.
+const ROAD_WARRIORS := 9
+const THRONE_WARRIORS := 5
 ## A pokol fényei: vörösebb, mint a Vérkő.
 const LIGHT := Color(1.0, 0.62, 0.5)
 const CLEAR := Color(0.16, 0.02, 0.02)
@@ -196,14 +199,36 @@ class Gate:
 	const RANGE := 150.0
 	const ENTER_RANGE := 80.0
 	var on_enter: Callable
-	var _t := 0.0
 	var _player: Node2D
 	var _text: Label
 	var _prompt: Label
 	var _used := false
 
+	## A kapu képe: CC0 animált kőkapu (assets/props/hell_gate.png, 5 kocka, 32x40), pokolira színezve.
+	const SHEET: Texture2D = preload("res://assets/props/hell_gate.png")
+	const FRAME := Vector2(32, 40)
+	const SCALE := 4.0
+
 	func _ready() -> void:
 		z_index = 1
+		var frames := SpriteFrames.new()
+		frames.set_animation_speed("default", 8.0)
+		for i in 5:
+			var atlas := AtlasTexture.new()
+			atlas.atlas = SHEET
+			atlas.region = Rect2(Vector2(i * FRAME.x, 0), FRAME)
+			frames.add_frame("default", atlas)
+		var sprite := AnimatedSprite2D.new()
+		sprite.sprite_frames = frames
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sprite.scale = Vector2.ONE * SCALE
+		sprite.offset = Vector2(0, -FRAME.y / 2.0)
+		sprite.play()
+		add_child(sprite)
+		# Lassú izzás-lüktetés.
+		var pulse := sprite.create_tween().set_loops()
+		pulse.tween_property(sprite, "self_modulate", Color(1.35, 1.1, 1.0), 0.9).set_trans(Tween.TRANS_SINE)
+		pulse.tween_property(sprite, "self_modulate", Color.WHITE, 0.9).set_trans(Tween.TRANS_SINE)
 		var light := PointLight2D.new()
 		var gradient := Gradient.new()
 		gradient.set_color(0, Color(1.0, 0.15, 0.05))
@@ -216,14 +241,14 @@ class Gate:
 		light.texture = texture
 		light.texture_scale = 6.0
 		light.energy = 1.6
-		light.position = Vector2(0, -60)
+		light.position = Vector2(0, -80)
 		add_child(light)
 		var embers := CPUParticles2D.new()
 		embers.amount = 40
 		embers.lifetime = 1.8
-		embers.position = Vector2(0, -60)
+		embers.position = Vector2(0, -80)
 		embers.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
-		embers.emission_rect_extents = Vector2(34, 56)
+		embers.emission_rect_extents = Vector2(44, 70)
 		embers.direction = Vector2(0, 1)
 		embers.spread = 180.0
 		embers.gravity = Vector2(0, -25)
@@ -260,8 +285,6 @@ class Gate:
 		return _player.global_position.distance_to(global_position) if is_instance_valid(_player) else INF
 
 	func _process(delta: float) -> void:
-		_t += delta
-		queue_redraw()
 		var paused := GamePause.active(get_tree())
 		var distance := _distance()
 		_text.modulate.a = move_toward(_text.modulate.a, 1.0 if distance < RANGE and not paused else 0.0, delta * 3.0)
@@ -277,28 +300,6 @@ class Gate:
 		fade.tween_property(_player, "modulate", Color(3, 0.4, 0.2, 0), 0.8)
 		await fade.finished
 		on_enter.call()
-
-	func _draw() -> void:
-		var center := Vector2(0, -60)
-		var pulse := 1.0 + 0.05 * sin(_t * 4.0)
-		# Kőkeret, aztán az örvény rétegei (kívülről befelé egyre világosabb).
-		_oval(center, Vector2(46, 72) * pulse, Color(0.12, 0.03, 0.03))
-		_oval(center, Vector2(40, 66) * pulse, Color(0.5, 0.02, 0.02))
-		for i in 5:
-			var k := 1.0 - i * 0.17
-			var wobble := 0.06 * sin(_t * 3.0 + i)
-			_oval(center + Vector2(0, 2 * i), Vector2(36, 60) * (k + wobble), Color(0.8 + i * 0.04, 0.08 + i * 0.1, 0.02 + i * 0.03, 0.85))
-		for i in 3:
-			var angle := _t * (1.6 + i * 0.5) + i * TAU / 3.0
-			draw_arc(center, 22.0 + i * 8.0, angle, angle + 2.2, 16, Color(1.0, 0.75, 0.35, 0.7), 2.0)
-		draw_rect(Rect2(-50, -4, 100, 8), Color(0.18, 0.05, 0.04))
-
-	func _oval(center: Vector2, radius: Vector2, color: Color) -> void:
-		var points := PackedVector2Array()
-		for i in 28:
-			points.append(center + Vector2.from_angle(TAU * i / 28.0) * radius)
-		draw_colored_polygon(points, color)
-
 
 ## Azazel a trónja előtt: beszélgetni lehet vele (E), a hatodik opcióra indul a harc.
 class Throne:

@@ -118,6 +118,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   a régi nevű győzelmet a `Progress.load_game` átírja). A harc: `enemies/lucifer_boss.gd` (`LuciferBoss`, room.lord "lucifer", 30M élet, 50%-nál
   feldühödik; hellfire/souls/chains/pillars/abyss/summon + slam/blink/nova; hangok lucifer_*, zene Audio "lucifer"). Győzelem: portál,
   győzelmi ablak, nincs lépcső. A hell jelzőt a `GameState.reset`, a `go_to_floor` és a csalós teleport törli.
+  A kapu képe: `assets/props/hell_gate.png` (5 kocka, `Hell.Gate`), belépési hang lucifer_portal.wav. A pokol zenéje Audio "hell"
+  (`Dungeon._music_place`, ONLY_IN_FIGHT-ban: nincs a zeneválasztóban). Az úton `room.fallen_warriors` (`Hell.ROAD_WARRIORS` /
+  `THRONE_WARRIORS`) → `RoomDecor._place_fallen_warriors` (csontváz + `WARRIOR_WEAPONS` ikon + csontok).
   Befejező kisfilm: a győzelmi ablak "Vissza a táborba" gombja Azazel után a `ui/ending_story.tscn`-t indítja
   (`ui/ending_story.gd`, az `intro_story.gd`-t örökli, annak `_slide_count/_slide_text/_draw_slide/_next_scene/_music`
   függvényeit írja felül; `EndingStory.character` = Progress.character): karakterenként 6 kép (`ENDINGS`, rajz: `_<id>_<n>`,
