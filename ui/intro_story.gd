@@ -60,7 +60,7 @@ var _leaving := false
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	RenderingServer.set_default_clear_color(Color.BLACK)
-	Audio.music("menu")
+	Audio.music(_music())
 	_build()
 	_next()
 
@@ -184,7 +184,7 @@ func _advance() -> void:
 
 
 func _next() -> void:
-	if _index + 1 >= SLIDES.size():
+	if _index + 1 >= _slide_count():
 		_finish()
 		return
 	_busy = true
@@ -197,15 +197,15 @@ func _next() -> void:
 	_picture = Node2D.new()
 	_picture.scale = Vector2(PIXEL, PIXEL)
 	_stage.add_child(_picture)
-	call("_slide_%d" % _index)
+	_draw_slide(_index)
 	# Lassú "kameramozgás": a kép picit közelít.
 	var zoom := _picture.create_tween()
 	zoom.tween_property(_picture, "scale", Vector2(PIXEL, PIXEL) * 1.04, AUTO_NEXT + 3.0)
-	_text.text = SLIDES[_index]
+	_text.text = _slide_text(_index)
 	_text.visible_characters = 0
 	_typed = 0.0
 	_shown_for = 0.0
-	_counter.text = "%d / %d" % [_index + 1, SLIDES.size()]
+	_counter.text = "%d / %d" % [_index + 1, _slide_count()]
 	Audio.play("ui_click", -6.0)
 	var back := create_tween()
 	back.tween_property(_fade, "color:a", 0.0, 0.35)
@@ -220,7 +220,28 @@ func _finish() -> void:
 	var out := create_tween()
 	out.tween_property(_fade, "color:a", 1.0, 0.5)
 	await out.finished
-	get_tree().change_scene_to_file(NEXT_SCENE)
+	get_tree().change_scene_to_file(_next_scene())
+
+
+# A befejező kisfilm (ui/ending_story.gd) ezeket írja felül.
+func _slide_count() -> int:
+	return SLIDES.size()
+
+
+func _slide_text(index: int) -> String:
+	return str(SLIDES[index])
+
+
+func _draw_slide(index: int) -> void:
+	call("_slide_%d" % index)
+
+
+func _next_scene() -> String:
+	return NEXT_SCENE
+
+
+func _music() -> String:
+	return "menu"
 
 
 # ---------------------------------------------------------------- a jelenetek (240x100 "pixelen")

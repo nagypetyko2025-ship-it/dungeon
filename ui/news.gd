@@ -4,6 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-29", "items": [
+		"Befejező kisfilm: Azazel legyőzése után minden karakternek saját, 6 képes története van arról, mi lett vele " \
+			+ "a jövőben, saját zenével (a zeneválasztóban: Befejezések).",
 		"A pokol urának új neve: Azazel, a Halálangyal és Démonkirály.",
 		"Javítva: Azazel trónterme a harc kezdetén most teljesen bezárul (a bejárat keskeny folyosó lett, a tüskék lezárják).",
 		"A király története a végéig folytatódik: a Káosz Ura után három új fejezet (Dübörgés a jég alatt, Az alapító "

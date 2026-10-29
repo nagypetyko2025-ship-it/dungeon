@@ -5,6 +5,9 @@ extends CanvasLayer
 ## A következő leszállás újra az 1. emeletről indul. "Még maradok": körülnézhetsz.
 
 const CAMP := "res://world/camp.tscn"
+## Azazel után: a karakter befejező kisfilmje (ui/ending_story.gd), utána a tábor.
+const ENDING := "res://ui/ending_story.tscn"
+const EndingStory := preload("res://ui/ending_story.gd")
 const MAX_ITEMS := 2
 
 ## Melyik nagy főellenség esett el: "werewolf" vagy "chaos" (a feliratokhoz; a Dungeon állítja be).
@@ -170,6 +173,7 @@ func _show_item(item: Variant) -> void:
 ## A futás vége: 2 tárgy a ládába, a pénz 100%-a a táborba, eredmény mentése, új futás.
 func _go_to_camp() -> void:
 	var player := get_tree().get_first_node_in_group("player")
+	EndingStory.character = Progress.character
 	# Csalt futásból semmi nem kerül a táborba (a Records és a rescue_gold is figyeli).
 	if not GameState.cheated:
 		for index in _chosen:
@@ -181,4 +185,4 @@ func _go_to_camp() -> void:
 	GameState.won_lord = lord
 	Audio.play("level_up")
 	GamePause.set_paused(get_tree(), false)
-	get_tree().change_scene_to_file(CAMP)
+	get_tree().change_scene_to_file(ENDING if lord == "lucifer" else CAMP)

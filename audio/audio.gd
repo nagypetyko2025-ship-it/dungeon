@@ -45,7 +45,16 @@ const MUSIC_TRACKS := {
 	"gate": "res://assets/audio/music/heavy_boss_battle.ogg",
 	# Csak a Azazel elleni harcban szól.
 	"lucifer": "res://assets/audio/music/demon_king_battle.mp3",
+	# A befejező kisfilmek zenéi (Azazel után, karakterenként, lásd ui/ending_story.gd).
+	"end_knight": "res://assets/audio/music/end_knight.mp3",
+	"end_archer": "res://assets/audio/music/end_archer.mp3",
+	"end_veteran": "res://assets/audio/music/end_veteran.ogg",
+	"end_wizard": "res://assets/audio/music/end_wizard.mp3",
+	"end_gravedigger": "res://assets/audio/music/end_gravedigger.ogg",
+	"end_thief": "res://assets/audio/music/end_thief.ogg",
 }
+## A zeneválasztóban külön kategória: "Befejezések".
+const ENDING_TRACKS := ["end_knight", "end_archer", "end_veteran", "end_wizard", "end_gravedigger", "end_thief"]
 ## A tábor és a kazamata zenéje helyszínenként: a hely saját számai (PLACE_TRACKS) és a mindenhol szólók
 ## (GENERAL_TRACKS) egymás után (ha az egyik véget ér, jön a következő; a sorrend keverve, ugyanaz nem jön kétszer
 ## egymás után). Helyváltáskor a szóló szám marad, ha az új helyen is szólhat; különben áttűnik az új hely zenéjére.
@@ -92,6 +101,12 @@ const MUSIC_TITLES := {
 	"res://assets/audio/music/epic_boss_battle.wav": "Epic Boss Battle — Juhani Junkala",
 	"res://assets/audio/music/heavy_boss_battle.ogg": "Heavy Boss Battle 1 — MintoDog",
 	"res://assets/audio/music/demon_king_battle.mp3": "Battle RPG Theme — Cleyton Kauffman",
+	"res://assets/audio/music/end_knight.mp3": "It Takes a Hero — Zane Little (a Lovag befejezése)",
+	"res://assets/audio/music/end_archer.mp3": "Peaceful Forest — samza (az Íjász befejezése)",
+	"res://assets/audio/music/end_veteran.ogg": "Memories — HothXcc (Gáspár befejezése)",
+	"res://assets/audio/music/end_wizard.mp3": "Mirror Lake — Joth (Lőrinc befejezése)",
+	"res://assets/audio/music/end_gravedigger.ogg": "Moonlit Lullaby for the Lost — Tsorthan Grove (Vendel befejezése)",
+	"res://assets/audio/music/end_thief.ogg": "Night Prowler — Section 31 (Bence befejezése)",
 	"res://assets/audio/music/lament_of_the_war.mp3": "Laments of the War — Cethiel",
 	"res://assets/audio/music/medieval_exploration.mp3": "Medieval: Exploration — RandomMind",
 	"res://assets/audio/music/medieval_battle.mp3": "Medieval: Battle — RandomMind",
@@ -168,9 +183,13 @@ static func music_categories() -> Array:
 		categories.append([PLACE_NAMES.get(place, place), own])
 	var other: Array = []
 	for track: String in MUSIC_TRACKS:
-		if not ONLY_IN_FIGHT.has(track):
+		if not ONLY_IN_FIGHT.has(track) and not ENDING_TRACKS.has(track):
 			other.append(MUSIC_TRACKS[track])
 	categories.append(["Egyéb", other])
+	var endings: Array = []
+	for track: String in ENDING_TRACKS:
+		endings.append(MUSIC_TRACKS[track])
+	categories.append(["Befejezések", endings])
 	return categories
 
 
