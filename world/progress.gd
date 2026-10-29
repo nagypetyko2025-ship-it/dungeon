@@ -132,6 +132,10 @@ static func load_game(force := false) -> void:
 		var saved_kills: Variant = config.get_value("camp", "kills", {})
 		if saved_kills is Dictionary:
 			kills = saved_kills
+			# Átnevezés: a pokol ura régen "Lucifer, a Démonkirály" volt, most Azazel, a Halálangyal és Démonkirály.
+			if kills.has("Lucifer, a Démonkirály"):
+				kills["Azazel, a Halálangyal és Démonkirály"] = int(kills.get("Azazel, a Halálangyal és Démonkirály", 0)) + int(kills["Lucifer, a Démonkirály"])
+				kills.erase("Lucifer, a Démonkirály")
 		var saved_seen: Variant = config.get_value("camp", "seen_items", {})
 		if saved_seen is Dictionary:
 			seen_items = saved_seen

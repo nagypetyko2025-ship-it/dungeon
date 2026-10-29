@@ -1,6 +1,6 @@
 class_name LuciferBoss
 extends "res://enemies/boss.gd"
-## Lucifer, a Démonkirály: az utolsó főellenség, a pokol trónterme (world/hell.gd) a 100. emelet kapuja
+## Azazel, a Halálangyal és Démonkirály: az utolsó főellenség, a pokol trónterme (world/hell.gd) a 100. emelet kapuja
 ## mögött. Harmincmillió élete van, a felénél feldühödik (gyorsabb, sűrűbben támad), és a támadásai:
 ##   pokoltűz  tüzes meteorok záporoznak körülötted (egy mindig oda, ahol állsz)
 ##   lelkek    háromkarú spirálban lövi szét a kárhozott lelkeket
@@ -13,7 +13,7 @@ extends "res://enemies/boss.gd"
 
 const GateBoss := preload("res://enemies/hell_gate_boss.gd")
 const LUCIFER := {
-	"name": "Lucifer, a Démonkirály", "rect": Rect2(0, 0, 160, 144), "scale": 0.9,
+	"name": "Azazel, a Halálangyal és Démonkirály", "rect": Rect2(0, 0, 160, 144), "scale": 0.9,
 	"health": 30000000, "damage": 260, "speed": 85.0, "xp": 15000,
 	"attacks": ["hellfire", "souls", "chains", "pillars", "abyss", "blink", "summon", "souls", "hellfire",
 		"chains", "slam", "nova"],
@@ -68,7 +68,7 @@ const LAUGH_EVERY := Vector2(7.0, 12.0)
 var _laugh_left := 5.0
 
 
-## Lucifer beállítása a fába kerülés előtt (a setup_boss helyett).
+## Azazel beállítása a fába kerülés előtt (a setup_boss helyett).
 func setup_lucifer(depth: int) -> void:
 	mini_boss = false
 	_def = LUCIFER

@@ -66,7 +66,7 @@ static var visited_dungeon := false
 static var dungeon_won := false
 ## Melyik nagy főellenség után ("werewolf" / "chaos"): a tábor felirata ehhez igazodik.
 static var won_lord := "werewolf"
-## A pokolban vagy (a 100. emelet kapuja mögött, lásd Hell): az emelet a tüzes út Luciferrel.
+## A pokolban vagy (a 100. emelet kapuja mögött, lásd Hell): az emelet a tüzes út Azazellel.
 static var hell := false
 ## Csalás (CheatMenu): a játékos nem sebződik. A reset() nem törli, csak a menü kapcsolja.
 static var god_mode := false

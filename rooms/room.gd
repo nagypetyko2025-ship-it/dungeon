@@ -77,7 +77,7 @@ var has_lift_room := false
 var visited := false
 ## Főellenség-terem: a lépcső a fülkében van (lcove_dir irányban), rács mögött.
 var has_boss := false
-## Hol kel fel Lucifer (a terem közepéhez képest; start_lucifer állítja).
+## Hol kel fel Azazel (a terem közepéhez képest; start_lucifer állítja).
 var _lucifer_at := Vector2.ZERO
 ## Ennyi elesett királyi őr csontváza fekszik a szobában (a 20. emeleten: Gáspár emberei).
 var fallen_guards := 0
@@ -453,7 +453,7 @@ func add_puppet(type_name: String, at: Vector2, stats: Dictionary, id: int, boss
 	return enemy
 
 
-## A pokol trónterme: a Luciferrel folytatott beszélgetés hatodik opciója indítja a harcot (Hell.Throne).
+## A pokol trónterme: a Azazellel folytatott beszélgetés hatodik opciója indítja a harcot (Hell.Throne).
 func start_lucifer(at: Vector2, body: Node2D) -> void:
 	has_boss = true
 	final_boss = true
@@ -475,7 +475,7 @@ func _spawn_boss() -> void:
 		boss.position = Vector2(rect.size.x * 0.25, 0) * TILE
 		boss.get_node("Health").died.connect(_on_enemy_died.bind(boss))
 	elif final_boss and lord == "lucifer":
-		# Lucifer ott kel fel, ahol a trónja előtt állt (Hell.Throne).
+		# Azazel ott kel fel, ahol a trónja előtt állt (Hell.Throne).
 		boss.set_script(LUCIFER)
 		boss.setup_lucifer(depth)
 		boss.position = _lucifer_at

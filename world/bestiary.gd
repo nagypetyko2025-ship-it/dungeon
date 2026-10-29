@@ -22,7 +22,7 @@ const ENGINE_SCRIPT := preload("res://enemies/ancient_engine_boss.gd")
 const GATE := "A Pokolkapu Őre"
 const GATE_SCRIPT := preload("res://enemies/hell_gate_boss.gd")
 ## Az utolsó főellenség, a pokolban.
-const LUCIFER := "Lucifer, a Démonkirály"
+const LUCIFER := "Azazel, a Halálangyal és Démonkirály"
 ## Kategóriák sorrendben: [cím, szörnyek].
 const CATEGORIES := [
 	["Élőholtak", ["tiny_zombie", "zombie", "ice_zombie", "big_zombie", "skelet", "skeleton_legionary",
@@ -164,7 +164,7 @@ const ENTRIES := {
 	"Ürességfaló, a Káosz Ura": ["Ürességfaló, a Káosz Ura", "A 40. emelet ura: fogas torkú csápgomolyag a " \
 		+ "valóság szélén túlról. Hasadékokat nyit a földön, lövedékörvényt szór, és ha félholtra vered, " \
 		+ "széthasad körülötte a világ."],
-	"Lucifer, a Démonkirály": ["Lucifer, a Démonkirály", "A pokol ura, a 100. emelet kapuja mögött, a tüzes út végén, "
+	"Azazel, a Halálangyal és Démonkirály": ["Azazel, a Halálangyal és Démonkirály", "A pokol ura, a 100. emelet kapuja mögött, a tüzes út végén, "
 		+ "a trónja előtt vár. Szarvas koponyáján izzó arany korona, szárnyai a boltozatot súrolják. Meteorokat hív "
 		+ "le, lelkek spirálját szórja, láncokat csap végig a termen, tűzoszlopokat küld ki magából, és a mélység "
 		+ "örvényébe ránt. A felénél feldühödik. Harmincmillió életereje van."],

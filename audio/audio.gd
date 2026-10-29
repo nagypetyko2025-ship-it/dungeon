@@ -26,7 +26,7 @@ const VARIANTS := {
 	# A Pokolkapu Őre (a 80. emelet nagy főellensége)
 	"gate_bark": 2, "gate_chain": 2, "gate_spit": 2, "gate_howl": 0, "gate_die": 0,
 	"gate_fire": 0, "gate_lava": 0, "gate_shadow": 0,
-	# Lucifer, a Démonkirály (a pokolban, a 100. emelet kapuja mögött)
+	# Azazel, a Halálangyal és Démonkirály (a pokolban, a 100. emelet kapuja mögött)
 	"lucifer_laugh": 0, "lucifer_roar": 2, "lucifer_die": 0, "lucifer_cast": 0, "lucifer_meteor": 2,
 	"lucifer_souls": 0, "lucifer_abyss": 0, "lucifer_portal": 0,
 }
@@ -43,7 +43,7 @@ const MUSIC_TRACKS := {
 	"engine": "res://assets/audio/music/epic_boss_battle.wav",
 	# Csak a Pokolkapu Őre elleni harcban szól.
 	"gate": "res://assets/audio/music/heavy_boss_battle.ogg",
-	# Csak a Lucifer elleni harcban szól.
+	# Csak a Azazel elleni harcban szól.
 	"lucifer": "res://assets/audio/music/demon_king_battle.mp3",
 }
 ## A tábor és a kazamata zenéje helyszínenként: a hely saját számai (PLACE_TRACKS) és a mindenhol szólók

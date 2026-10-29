@@ -167,7 +167,7 @@ func _ready() -> void:
 	var chaos_floor := depth == CHAOS_DEPTH and not tutorial
 	var engine_floor := depth == ENGINE_DEPTH and not tutorial and Challenge.story().is_empty()
 	var gate_floor := depth == GATE_DEPTH and not tutorial and Challenge.story().is_empty()
-	# A 100. emelet: kezdőszoba és a nagy terem a kapuval; a pokol: egyenes, tüzes út Luciferhez.
+	# A 100. emelet: kezdőszoba és a nagy terem a kapuval; a pokol: egyenes, tüzes út Azazelhez.
 	var hell := GameState.hell and depth == HELL_DEPTH and not tutorial
 	var portal_floor := depth == HELL_DEPTH and not hell and not tutorial and Challenge.story().is_empty()
 	# Történet-futás (a régi tárnák: Knocking, a kripta: LakeCrypt) utolsó emelete: aréna a saját főellenségével.
@@ -237,7 +237,7 @@ func _ready() -> void:
 				room.connections.append(dir)
 		var distance: int = distances[cell]
 		if hell:
-			# A pokol: se szörny, se csapda, se láda; csak tűz, és a végén Lucifer.
+			# A pokol: se szörny, se csapda, se láda; csak tűz, és a végén Azazel.
 			pass
 		elif final_floor:
 			# A nagy főellenség terme: nyitott aréna, se csapda, se láda. A 20. emeleten mindkét
@@ -476,7 +476,7 @@ func _on_final_boss_defeated(room: Room) -> void:
 		room.open_stairs.call_deferred(room.anchor + Vector2i(DEEPER_STAIRS_OFFSET, 0))
 		return
 	if room.lord == "lucifer":
-		_hud.show_message("Lucifer elesett! Lépj a portálba — vége a történetnek!")
+		_hud.show_message("Azazel elesett! Lépj a portálba — vége a történetnek!")
 		var end_portal: Node2D = RETURN_PORTAL.new()
 		end_portal.position = Room.tile_center(room.anchor) - room.position
 		end_portal.set("prompt_text", "[E] Győzelem — vissza a táborba")

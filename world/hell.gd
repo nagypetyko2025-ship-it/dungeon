@@ -2,12 +2,12 @@ class_name Hell
 ## A 100. emelet és a pokol. A 100. emeleten (a nagy terem közepén) vörösen izzó, ismeretlen kapu áll
 ## (`Gate`); E-re a játékos belép, és a pokolba kerül (`GameState.hell`, ugyanaz a Dungeon-jelenet,
 ## más elrendezéssel): egyenes, nyitott, tüzes út kelet felé (`CELLS`), a végén a trónterem, benne
-## Lucifer, a Démonkirály (`Throne`). Vele E-re lehet beszélni: öt történet, a hatodik opció a harc
+## Azazel, a Halálangyal és Démonkirály (`Throne`). Vele E-re lehet beszélni: öt történet, a hatodik opció a harc
 ## (a beszélgetés bezárul, és a Room.start_lucifer elindítja). A harc: enemies/lucifer_boss.gd.
 
 const DEPTH := 100
 const ID := "lucifer"
-const NAME := "Lucifer, a Démonkirály"
+const NAME := "Azazel, a Halálangyal és Démonkirály"
 ## Az út szobái egy sorban, keletre; az utolsó a trónterem.
 const CELLS: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0), Vector2i(4, 0)]
 ## Az út egy szakasza: a cellánál szélesebb (a szomszédos szakaszok összeérnek), így egyetlen nyitott út.
@@ -30,9 +30,9 @@ const GREETING := "[i]A trón előtt hatalmas alak lebeg. Fekete köpenye füstk
 
 const STORIES: Array[Dictionary] = [
 	{"id": "who", "text": "Ki vagy te?", "trust": 0,
-		"answer": "[i]Nevetése mélyről jön, mintha a föld alól szólna.[/i]\n\nLucifer. A Démonkirály. A fény " \
-			+ "hozója, akit a fény elhagyott. Ezer néven hívtak, és mindegyiket ugyanazzal a remegéssel " \
-			+ "suttogták.\n\nEz itt az én birodalmam. Minden tűz, amit idefelé láttál, az enyém. Minden " \
+		"answer": "[i]Nevetése mélyről jön, mintha a föld alól szólna.[/i]\n\nAzazel. A Halálangyal, a démonok királya. Az első " \
+			+ "angyal, aki lezuhant, és nem akart többé felállni. A halált én tanítottam meg nektek, halandók. " \
+			+ "Ezer néven hívtak, és mindegyiket ugyanazzal a remegéssel suttogták.\n\nEz itt az én birodalmam. Minden tűz, amit idefelé láttál, az enyém. Minden " \
 			+ "démon, akit levágtál odafent, az én gyermekem volt."},
 	{"id": "dungeon", "text": "Miért van ez a kazamata?", "trust": 0,
 		"answer": "Azt hiszed, véletlenül ásták ilyen mélyre? A száz emelet az én lépcsőm. Minden emelettel " \
@@ -62,7 +62,7 @@ const STORIES: Array[Dictionary] = [
 ]
 
 
-## A köszöntés: ha a király küldött (King.LUCIFER_QUEST), Lucifer tudja.
+## A köszöntés: ha a király küldött (King.LUCIFER_QUEST), Azazel tudja.
 static func greeting() -> String:
 	if Progress.npc_quest_state(King.LUCIFER_QUEST) == "active":
 		return GREETING + "\n\n[i]Hirtelen elneveti magát.[/i]\n\nAurél háza küldött, igaz? Érzem rajtad a " \
@@ -70,12 +70,12 @@ static func greeting() -> String:
 	return GREETING
 
 
-## A Lucifer elleni harc opciója (mindig a hatodik, az öt történet után).
+## A Azazel elleni harc opciója (mindig a hatodik, az öt történet után).
 static func options(on_fight: Callable) -> Array[Dictionary]:
 	var list: Array[Dictionary] = STORIES.duplicate()
 	list.append({"id": "fight", "text": "Elég a szóból. Harcolj velem!", "on_choose": func() -> String:
 		on_fight.call_deferred()
-		return "[i]Lucifer felemelkedik. A tüzek a teremben egyszerre lobbannak fel.[/i]\n\nLegyen hát."})
+		return "[i]Azazel felemelkedik. A tüzek a teremben egyszerre lobbannak fel.[/i]\n\nLegyen hát."})
 	return list
 
 
@@ -300,7 +300,7 @@ class Gate:
 		draw_colored_polygon(points, color)
 
 
-## Lucifer a trónja előtt: beszélgetni lehet vele (E), a hatodik opcióra indul a harc.
+## Azazel a trónja előtt: beszélgetni lehet vele (E), a hatodik opcióra indul a harc.
 class Throne:
 	extends Node2D
 	const TALK_RANGE := 170.0
@@ -364,7 +364,7 @@ class Throne:
 		Audio.play("lucifer_laugh", -2.0)
 		get_tree().current_scene.get_node("Menus").call("open_menu", _dialogue)
 
-	## A hatodik opció: bezárul a beszélgetés, Lucifer eltűnik a helyéről, és a harc indul (ugyanott).
+	## A hatodik opció: bezárul a beszélgetés, Azazel eltűnik a helyéről, és a harc indul (ugyanott).
 	func _start_fight() -> void:
 		get_tree().current_scene.get_node("Menus").call("close_current")
 		visible = false

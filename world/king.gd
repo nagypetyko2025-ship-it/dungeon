@@ -18,7 +18,7 @@ const THIEF_FATE := "thief_fate"
 ## A hét király után: a 40. emelet ura (Ürességfaló, a Káosz Ura) tartja nyitva a Mélység kapuját.
 const CHAOS_QUEST := "king_chaos"
 ## A Káosz Ura után a király szála a 100. emeletig (lásd a QUESTS végét): a jég alatti gépezet (60.), a pokol
-## kapuja (80.), aztán a Démonkirály (Lucifer, a 100. emelet kapuja mögött, lásd Hell). Közben kiderül az
+## kapuja (80.), aztán a Démonkirály (Azazel, a 100. emelet kapuja mögött, lásd Hell). Közben kiderül az
 ## Aurél-ház titka: az alapító király alkuja a mélységgel, és az, hogy mi volt a harminc ember ára.
 const ENGINE_QUEST := "king_engine"
 const GATE_QUEST := "king_gate"
@@ -80,8 +80,8 @@ const QUESTS := {
 		"text": "A király bevallotta: a jóslat, ami miatt Gáspár harminc emberét a Mélységbe küldte, az "
 			+ "alapító egyezségének része volt, és a harminc ember volt a nemzedékenkénti ár. Az egyezséget csak "
 			+ "az törheti meg, aki legyőzi azt, akivel kötötték. A [b]100. emeleten[/b] a vörös kapu mögött "
-			+ "[b]Lucifer, a Démonkirály[/b] vár. Győzd le, és térj vissza a királyhoz.",
-		"reward": "%d tábori arany és a király gyűrűje" % LUCIFER_GOLD, "doing": "győzd le Lucifert a 100. emelet kapuja mögött",
+			+ "[b]Azazel, a Halálangyal és Démonkirály[/b] vár. Győzd le, és térj vissza a királyhoz.",
+		"reward": "%d tábori arany és a király gyűrűje" % LUCIFER_GOLD, "doing": "győzd le Azazelt a 100. emelet kapuja mögött",
 		"done": "az egyezség megtört"},
 }
 
@@ -287,7 +287,7 @@ static func _deep_quest_options() -> Array[Dictionary]:
 			list.append({"id": "price", "text": "Mi van a kapu túloldalán, felség?",
 				"on_choose": func() -> String: return _give_lucifer_quest()})
 		"active":
-			list.append({"id": "lucifer", "text": "Lucifer elesett, felség.",
+			list.append({"id": "lucifer", "text": "Azazel elesett, felség.",
 				"on_choose": func() -> String: return _report_lucifer()})
 	return list
 
@@ -383,8 +383,8 @@ static func _give_lucifer_quest() -> String:
 		+ "anélkül, hogy tudtam volna.\n\n" \
 		+ "[i]A hangja elcsuklik.[/i]\n\nBenedek. Kristóf. Ambrus. Huszonhét név. Az én nevemben haltak meg.\n\n" \
 		+ "[i]Aztán összeszedi magát, és újra király.[/i]\n\nA tekercs szerint az egyezséget csak az törheti " \
-		+ "meg, aki legyőzi azt, akivel kötötték. A századik emelet kapuja mögött ül. A neve [b]Lucifer, a " \
-		+ "Démonkirály[/b].\n\nNem kérhetem, hogy menj le érte. Harminc embert már leküldtem. De ha mégis " \
+		+ "meg, aki legyőzi azt, akivel kötötték. A századik emelet kapuja mögött ül. A neve [b]Azazel, a " \
+		+ "Halálangyal és Démonkirály[/b].\n\nNem kérhetem, hogy menj le érte. Harminc embert már leküldtem. De ha mégis " \
 		+ "megteszed... a házam soha többé nem fizet. És senki más sem.\n\n" \
 		+ "[color=#7a4a10](Új küldetés a J könyvben, a Király fülön.)[/color]"
 
@@ -393,7 +393,7 @@ static func _report_lucifer() -> String:
 	if Bestiary.kills(Bestiary.LUCIFER) <= 0:
 		Audio.play("ui_error")
 		return "[i]A király a gyűrűjét forgatja.[/i]\n\nAz arany még ott van a hegy alatt, kalandor. " \
-			+ "Amíg ott van, az egyezség áll. Lucifer él."
+			+ "Amíg ott van, az egyezség áll. Azazel él."
 	# Előbb a gyűrű (az add_to_stash újratölti a mentést, ami az utána jövő változásokat nem érinti).
 	Progress.add_to_stash(Items.mark_story(Items.create(RING_ID)))
 	Progress.set_npc_quest(LUCIFER_QUEST, "done")

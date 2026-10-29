@@ -20,7 +20,7 @@ var npc_name := ""
 var portrait: Texture2D
 var greeting := ""
 var options: Array[Dictionary] = []
-## Ennyi opció fér egy oldalra (alapból MAX_OPTIONS; Lucifernél 6).
+## Ennyi opció fér egy oldalra (alapból MAX_OPTIONS; Azazelnél 6).
 var page_size := MAX_OPTIONS
 ## Ha be van állítva: () -> Array[Dictionary], az aktuális opciók (az `options` helyett).
 var options_provider: Callable
