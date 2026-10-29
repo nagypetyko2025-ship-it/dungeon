@@ -125,6 +125,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   (`ui/ending_story.gd`, az `intro_story.gd`-t örökli, annak `_slide_count/_slide_text/_draw_slide/_next_scene/_music`
   függvényeit írja felül; `EndingStory.character` = Progress.character): karakterenként 6 kép (`ENDINGS`, rajz: `_<id>_<n>`,
   a 0. közös: `_fall`), saját zene Audio "end_<id>" (`Audio.ENDING_TRACKS`, a zeneválasztóban "Befejezések"), utána a tábor.
+  Rossz befejezés: ha Azazel él, amikor meghalsz (`DeathScreen._azazel_alive` a show_for-ban), a halálképernyő gombja
+  előbb a `ui/bad_ending.tscn`-t indítja (`ui/bad_ending.gd`, az ending_story-t örökli, 9 kép `_bad_<n>`, zene Audio "bad_ending";
+  `BadEnding.next_scene` = a tábor vagy a főmenü).
 - A király szála a Káosz Ura után (`King._deep_quest_options`): ENGINE_QUEST (60.) → GATE_QUEST (80., az alapító I. Aurél
   egyezsége a tekercsben) → LUCIFER_QUEST (a harminc ember volt az ár; Azazel köszöntése tudja: `Hell.greeting`), a jelentés
   a Szörnyek könyve szerint (Bestiary.kills). Jutalom: arany + `trinket_thirty_names` (a király gyűrűje); utána ENGINE_STORIES,

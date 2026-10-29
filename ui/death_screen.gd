@@ -9,8 +9,12 @@ const MAIN_MENU := "res://ui/main_menu.tscn"
 const CAMP := "res://world/camp.tscn"
 const GAME_SCENE := "res://world/dungeon.tscn"
 const DEATH_GOLD_RATIO := 0.2
+## Ha Azazel ellen estél el: a gomb után előbb a rossz befejezés (ui/bad_ending.gd), aztán a választott hely.
+const BAD_ENDING := "res://ui/bad_ending.tscn"
+const BadEnding := preload("res://ui/bad_ending.gd")
 
 var _shown := false
+var _azazel_won := false
 
 @onready var _dim: ColorRect = $Dim
 @onready var _content: Control = $Center/Box
@@ -43,6 +47,7 @@ func show_for(player: Node) -> void:
 	if _shown:
 		return
 	_shown = true
+	_azazel_won = _azazel_alive()
 	var experience: Experience = player.get_node("Experience")
 	var seconds := int(GameState.run_time)
 	var rank := Records.submit_run(player)
@@ -87,7 +92,7 @@ func _to_main_menu() -> void:
 	GameState.tutorial = false
 	GameState.reset()
 	GamePause.set_paused(get_tree(), false)
-	get_tree().change_scene_to_file(MAIN_MENU)
+	_leave(MAIN_MENU)
 
 
 ## Halál után vissza a táborba (onnan lehet újra lemenni).
@@ -95,7 +100,25 @@ func _restart_run() -> void:
 	GameState.reset()
 	GamePause.set_paused(get_tree(), false)
 	# Gyakorláskor a gyakorló pálya indul újra.
-	get_tree().change_scene_to_file(GAME_SCENE if GameState.tutorial else CAMP)
+	_leave(GAME_SCENE if GameState.tutorial else CAMP)
+
+
+## Jelenetváltás; ha Azazel győzött, előtte a rossz befejezés.
+func _leave(scene: String) -> void:
+	if _azazel_won:
+		BadEnding.next_scene = scene
+		scene = BAD_ENDING
+	get_tree().change_scene_to_file(scene)
+
+
+## Él-e még Azazel (a pokol trónjánál, a harc közben).
+func _azazel_alive() -> bool:
+	if not GameState.hell:
+		return false
+	for node in get_tree().current_scene.find_children("*", "", true, false):
+		if node is LuciferBoss and not node.is_queued_for_deletion() and int(node.get_node("Health").get("current")) > 0:
+			return true
+	return false
 
 
 func _panel_style(texture: Texture2D) -> StyleBoxTexture:

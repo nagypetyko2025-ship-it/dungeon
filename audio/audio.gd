@@ -54,9 +54,11 @@ const MUSIC_TRACKS := {
 	"end_wizard": "res://assets/audio/music/end_wizard.mp3",
 	"end_gravedigger": "res://assets/audio/music/end_gravedigger.ogg",
 	"end_thief": "res://assets/audio/music/end_thief.ogg",
+	# A rossz befejezés (ha Azazel ellen elestél), lásd ui/bad_ending.gd.
+	"bad_ending": "res://assets/audio/music/bad_ending_9th_circle.mp3",
 }
 ## A zeneválasztóban külön kategória: "Befejezések".
-const ENDING_TRACKS := ["end_knight", "end_archer", "end_veteran", "end_wizard", "end_gravedigger", "end_thief"]
+const ENDING_TRACKS := ["end_knight", "end_archer", "end_veteran", "end_wizard", "end_gravedigger", "end_thief", "bad_ending"]
 ## A tábor és a kazamata zenéje helyszínenként: a hely saját számai (PLACE_TRACKS) és a mindenhol szólók
 ## (GENERAL_TRACKS) egymás után (ha az egyik véget ér, jön a következő; a sorrend keverve, ugyanaz nem jön kétszer
 ## egymás után). Helyváltáskor a szóló szám marad, ha az új helyen is szólhat; különben áttűnik az új hely zenéjére.
@@ -104,6 +106,7 @@ const MUSIC_TITLES := {
 	"res://assets/audio/music/heavy_boss_battle.ogg": "Heavy Boss Battle 1 — MintoDog",
 	"res://assets/audio/music/demon_king_battle.mp3": "Battle RPG Theme — Cleyton Kauffman",
 	"res://assets/audio/music/hell_fall_of_nightmares.wav": "Fall of Nightmares — nene",
+	"res://assets/audio/music/bad_ending_9th_circle.mp3": "The 9th Circle — Joth (rossz befejezés)",
 	"res://assets/audio/music/end_knight.mp3": "It Takes a Hero — Zane Little (a Lovag befejezése)",
 	"res://assets/audio/music/end_archer.mp3": "Peaceful Forest — samza (az Íjász befejezése)",
 	"res://assets/audio/music/end_veteran.ogg": "Memories — HothXcc (Gáspár befejezése)",

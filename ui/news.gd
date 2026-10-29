@@ -4,6 +4,7 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-29", "items": [
+		"Rossz befejezés: ha Azazel ellen elesel, 9 képen, pokoli zenével kiderül, mi történt volna a királysággal.",
 		"A pokol kapuja új kinézetet kapott (izzó, animált kőkapu), és a belépéskor nincs többé hosszú zúgás.",
 		"A pokol útján elesett harcosok fekszenek, mellettük a fegyvereik (balta, buzogány, lándzsa, íj...), és sok csont.",
 		"A pokolnak saját, epikus zenéje van, ami folyamatosan szól (Azazel harcában az ő zenéje marad).",
