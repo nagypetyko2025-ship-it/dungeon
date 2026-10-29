@@ -34,13 +34,16 @@ A Vérkő démonjainak hangjai (hound_*, beast_*, horse_*, lord_*): "80 CC0 crea
   https://opengameart.org/content/80-cc0-creature-sfx
   hound: barking_01/02, howl · beast: monster_01/02, scream_01 · horse: nose, breath, scream_02 · lord: roar_02/03, roar_01
 
-A Vérkő démonjainak hangjai (hound_*, beast_*, horse_*, lord_*): "80 CC0 creature SFX" by rubberduck, CC0 1.0,
-  https://opengameart.org/content/80-cc0-creature-sfx
-  hound: barking_01/02, howl · beast: monster_01/02, scream_01 · horse: nose, breath, scream_02 · lord: roar_02/03, roar_01
-
 Az Ősgépezet (60. emelet):
   epic_boss_battle.wav = "Boss Battle Music" (Epic Boss Battle, seamlessly looping) by Juhani Junkala (SubspaceAudio), CC0 1.0 -
     https://opengameart.org/content/boss-battle-music
   engine_*.ogg: "Sci-Fi Sounds" by Kenney (www.kenney.nl), CC0 1.0 - https://opengameart.org/content/sci-fi-sounds
     steam: thrusterFire_000/002 · stomp: impactMetal_000/002 · zap: forceField_001, laserLarge_001 · gears: engineCircular_000
     magnet: spaceEngineLow_001 · wake: lowFrequency_explosion_000 · die: explosionCrunch_000 · beep: computerNoise_000
+
+A Pokolkapu Őre (80. emelet):
+  heavy_boss_battle.ogg = "Heavy Boss Battle 1" by MintoDog, CC0 1.0 - https://opengameart.org/content/heavy-boss-battle-1
+  gate_bark_1/2 (barking_01/02), gate_howl (howl), gate_spit_1/2 (spit_01/02), gate_die (roar_03):
+    "80 CC0 creature SFX" by rubberduck, CC0 1.0 - https://opengameart.org/content/80-cc0-creature-sfx
+  gate_chain_1/2 (impactMetal_003/004), gate_fire (thrusterFire_001), gate_lava (lowFrequency_explosion_000),
+    gate_shadow (forceField_002): "Sci-Fi Sounds" by Kenney, CC0 1.0 - https://opengameart.org/content/sci-fi-sounds

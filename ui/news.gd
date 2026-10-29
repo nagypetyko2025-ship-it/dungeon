@@ -4,6 +4,10 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-29", "items": [
+		"Új nagy főellenség a 80. emeleten: a Pokolkapu Őre, egy háromfejű, láncra vert pokolkutya (25 000 000 élet). "
+			+ "Lángcsóva, méregköpet, követő árnyékgömbök, lánccsapás, lávarepedések, és ha felvonyít, jön a falka — "
+			+ "saját hangokkal és egy sötét, csak ebben a harcban szóló zenével. Új eredmény: A kapu nyitva.",
+		"Új ellenség a Népek közt a 14. emelettől: az őrült bohóc. Vihogva ugrál, és nagyon sűrűn ront neked.",
 		"Új nagy főellenség a 60. emeleten: az Ősgépezet, egy ősrégi, sárgaréz lépegető gép (10 000 000 élet, "
 			+ "nincs második fázisa). Gőzkitörés, fogaskerék-fűrészek, dugattyú-rengés, Tesla-villámok, mágneses "
 			+ "rántás — saját gépies hangokkal és egy epikus zenével, ami csak ebben a harcban szól.",

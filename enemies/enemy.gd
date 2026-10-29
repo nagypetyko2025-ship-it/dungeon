@@ -474,8 +474,8 @@ func _dash_direction(delta: float, chase: Vector2) -> Vector2:
 			var close := global_position.distance_to(_player.global_position) < DASH_RANGE
 			if _dash_cooldown <= 0.0 and close and _has_line_of_sight(global_position + PLAYER_CENTER):
 				_dash_state = DashState.WINDUP
-				_dash_time = DASH_WINDUP
-				create_tween().tween_property(_visual, "modulate", DASH_WARNING_COLOR, DASH_WINDUP)
+				_dash_time = float(_type.get("dash_windup", DASH_WINDUP))
+				create_tween().tween_property(_visual, "modulate", DASH_WARNING_COLOR, _dash_time)
 			return chase
 		DashState.WINDUP:
 			_dash_time -= delta
@@ -489,7 +489,9 @@ func _dash_direction(delta: float, chase: Vector2) -> Vector2:
 			_dash_time -= delta
 			if _dash_time <= 0.0:
 				_dash_state = DashState.READY
-				_dash_cooldown = randf_range(DASH_COOLDOWN.x, DASH_COOLDOWN.y)
+				# A típus saját, gyakoribb rohamai ("dash_cooldown": [min, max], pl. az őrült bohóc).
+				var cooldown: Array = _type.get("dash_cooldown", [DASH_COOLDOWN.x, DASH_COOLDOWN.y])
+				_dash_cooldown = randf_range(float(cooldown[0]), float(cooldown[1]))
 			return _dash_dir * DASH_SPEED_MULTIPLIER
 
 

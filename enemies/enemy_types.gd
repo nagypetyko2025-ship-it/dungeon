@@ -233,20 +233,20 @@ const TYPES: Array[Dictionary] = [
 	# Légy: gyenge, de gyors és cikázik (rajzolt sprite, 2 szárnycsapás-kocka).
 	# Káosz: a Mélység legaljáról feltörő, szabálytalan alakú lények (a 15. emelet után).
 	{"name": "chaos_spawn", "abilities": ["teleport", "zigzag", "death_burst"], "sheet": "res://assets/enemies/chaos_spawn.png",
-		"rect": Rect2(0, 0, 34, 34), "run": true, "size": 1.0,
+		"rect": Rect2(0, 0, 34, 34), "run": true, "size": 0.85,
 		"health": [36, 45], "damage": [7, 9], "speed": [100, 120], "dodge": [18, 28],
 		"knockback": [320, 380], "resist": [0.55, 0.65], "xp": [21, 26], "min_depth": 16, "weight": 2},
 	# Káoszkopó: fekete-lila árnyékfenevad izzó szemmel (a 25. emelet után). Nekiront, átsuhan a
 	# semmin, és ha megsebzik, csak még vadabb lesz ("Shadow monster", Game2rise, CC0).
 	{"name": "chaos_hound", "abilities": ["teleport", "berserk"], "dash": true, "sheet": "res://assets/enemies/chaos_hound.png",
-		"rect": Rect2(0, 0, 58, 38), "run": true, "size": 1.0,
+		"rect": Rect2(0, 0, 58, 38), "run": true, "size": 0.85,
 		"health": [58, 72], "damage": [9, 11], "speed": [125, 145], "dodge": [20, 30],
 		"knockback": [380, 440], "resist": [0.6, 0.7], "xp": [30, 36], "min_depth": 26, "weight": 2},
 	# A 25. emelet utáni káoszlények (saját rajz, fekete-lila, aszimmetrikus, semmilyen élőlényre nem hasonlítanak).
 	# Káosztorok: lebegő, féloldalas tömeg ferde, fogas hasítékszájjal; messziről semmi-lövedékeket köp.
 	{"name": "chaos_maw", "abilities": ["teleport", "frost"], "ranged": true, "no_weapon": true,
 		"projectile": "magic", "weapon_region": Rect2(324, 129, 8, 30), "shots": 3, "spread": 18.0,
-		"sheet": "res://assets/enemies/chaos_maw.png", "rect": Rect2(0, 0, 40, 36), "run": true, "size": 1.0,
+		"sheet": "res://assets/enemies/chaos_maw.png", "rect": Rect2(0, 0, 40, 36), "run": true, "size": 0.85,
 		"health": [50, 62], "damage": [10, 12], "speed": [70, 85], "dodge": [15, 25],
 		"knockback": [300, 340], "resist": [0.6, 0.7], "xp": [32, 38], "min_depth": 26, "weight": 2,
 		"fire_interval": [2.0, 2.6], "arrow_speed": [250, 290], "keep_distance": [200, 260]},
@@ -368,6 +368,12 @@ const TYPES: Array[Dictionary] = [
 		"rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.35,
 		"health": [16, 20], "damage": [4, 6], "speed": [95, 110], "dodge": [20, 30],
 		"knockback": [360, 400], "resist": [0.45, 0.55], "xp": [12, 14], "min_depth": 14, "weight": 1},
+	# Őrült bohóc ("2D Pixel Clown Spritesheet", Zacard, CC0): gyors, vihogva ugrál, és sűrűn, rövid
+	# nekifutással üt (a sima roham várakozása helyett 0,5-0,9 mp).
+	{"name": "crazy_clown", "abilities": ["zigzag"], "dash": true, "dash_cooldown": [0.5, 0.9], "dash_windup": 0.2,
+		"sheet": "res://assets/enemies/crazy_clown.png", "rect": Rect2(0, 0, 32, 32), "run": true, "size": 0.85,
+		"health": [20, 24], "damage": [4, 5], "speed": [125, 140], "dodge": [20, 28],
+		"knockback": [220, 260], "resist": [0.4, 0.5], "xp": [14, 16], "min_depth": 14, "weight": 2},
 	{"name": "fly", "abilities": ["zigzag"],
 		"sheet": "res://assets/enemies/fly.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 0.9,
 		"health": [2, 3], "damage": [1, 1], "speed": [135, 155], "dodge": [20, 30],

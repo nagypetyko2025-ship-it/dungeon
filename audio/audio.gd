@@ -23,6 +23,9 @@ const VARIANTS := {
 	# Az Ősgépezet (a 60. emelet nagy főellensége)
 	"engine_steam": 2, "engine_stomp": 2, "engine_zap": 2, "engine_gears": 0, "engine_magnet": 0,
 	"engine_wake": 0, "engine_die": 0, "engine_beep": 0,
+	# A Pokolkapu Őre (a 80. emelet nagy főellensége)
+	"gate_bark": 2, "gate_chain": 2, "gate_spit": 2, "gate_howl": 0, "gate_die": 0,
+	"gate_fire": 0, "gate_lava": 0, "gate_shadow": 0,
 }
 ## Néhány effekt alap-hangereje (dB); a többi 0.
 const VOLUMES := {
@@ -35,13 +38,15 @@ const MUSIC_TRACKS := {
 	"boss": "res://assets/audio/music/boss_battle.wav",
 	# Csak az Ősgépezet elleni harcban szól (a zeneválasztóban sincs ott, lásd ONLY_IN_FIGHT).
 	"engine": "res://assets/audio/music/epic_boss_battle.wav",
+	# Csak a Pokolkapu Őre elleni harcban szól.
+	"gate": "res://assets/audio/music/heavy_boss_battle.ogg",
 }
 ## A tábor és a kazamata zenéje helyszínenként: a hely saját számai (PLACE_TRACKS) és a mindenhol szólók
 ## (GENERAL_TRACKS) egymás után (ha az egyik véget ér, jön a következő; a sorrend keverve, ugyanaz nem jön kétszer
 ## egymás után). Helyváltáskor a szóló szám marad, ha az új helyen is szólhat; különben áttűnik az új hely zenéjére.
 ## Mind CC0, lásd assets/audio/LICENSE.txt. "epic": az utoljára kért helyszín (pl. a feléledés után).
 ## Ezek a számok csak a saját harcukban szólnak (nincsenek a zeneválasztóban).
-const ONLY_IN_FIGHT := ["engine"]
+const ONLY_IN_FIGHT := ["engine", "gate"]
 const PLAYLIST := "epic"
 const GENERAL_TRACKS: Array[String] = [
 	"res://assets/audio/music/jrpg_theme.ogg", "res://assets/audio/music/rising_moon.mp3", "res://assets/audio/music/lament_of_the_war.mp3",
@@ -80,6 +85,7 @@ const PLAYLIST_TRACKS := {
 const MUSIC_TITLES := {
 	"res://assets/audio/music/boss_battle.wav": "Boss Battle #2 — nene",
 	"res://assets/audio/music/epic_boss_battle.wav": "Epic Boss Battle — Juhani Junkala",
+	"res://assets/audio/music/heavy_boss_battle.ogg": "Heavy Boss Battle 1 — MintoDog",
 	"res://assets/audio/music/lament_of_the_war.mp3": "Laments of the War — Cethiel",
 	"res://assets/audio/music/medieval_exploration.mp3": "Medieval: Exploration — RandomMind",
 	"res://assets/audio/music/medieval_battle.mp3": "Medieval: Battle — RandomMind",

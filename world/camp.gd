@@ -1346,6 +1346,7 @@ func _show_title() -> void:
 		GameState.dungeon_won = false
 		var text := "Legyőzted a Káosz Urát! A 40. emelet elcsendesedett." if GameState.won_lord == "chaos" \
 			else "Leállítottad az Ősgépezetet! A 60. emelet elnémult." if GameState.won_lord == "engine" \
+			else "Legyőzted a Pokolkapu Őrét! A pokol kapuja nyitva áll." if GameState.won_lord == "gate" \
 			else "Végigértél a kazamatán! A Mélység Ura elesett."
 		var won := MenuStyle.title_label(text, 40, Color(1, 0.85, 0.4))
 		won.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)

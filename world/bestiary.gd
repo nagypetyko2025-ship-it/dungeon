@@ -18,6 +18,9 @@ const CHAOS_SCRIPT := preload("res://enemies/chaos_lord_boss.gd")
 ## A 60. emelet nagy főellensége.
 const ENGINE := "Az Ősgépezet"
 const ENGINE_SCRIPT := preload("res://enemies/ancient_engine_boss.gd")
+## A 80. emelet nagy főellensége.
+const GATE := "A Pokolkapu Őre"
+const GATE_SCRIPT := preload("res://enemies/hell_gate_boss.gd")
 ## Kategóriák sorrendben: [cím, szörnyek].
 const CATEGORIES := [
 	["Élőholtak", ["tiny_zombie", "zombie", "ice_zombie", "big_zombie", "skelet", "skeleton_legionary",
@@ -27,7 +30,7 @@ const CATEGORIES := [
 	["Démonok", ["imp", "wogol", "chort", "big_demon", "armored_demon", "red_demon", "purple_demon"]],
 	["Nyálkák", ["tiny_slug", "slug", "green_slime", "frost_slime", "muddy", "swampy"]],
 	["Népek", ["archer", "huntress", "dark_mage", "fire_witch", "fallen_knight", "dwarf", "dwarf_berserker",
-		"plague_doctor", "lizard", "lizard_scout", "barbarian", "fire_ninja", "renegade_monk"]],
+		"plague_doctor", "lizard", "lizard_scout", "barbarian", "fire_ninja", "renegade_monk", "crazy_clown"]],
 	["Kalózok", ["pirate_grunt", "pirate_gunner", "pirate_captain"]],
 	["Fenevadak", ["rat", "cave_bat", "minotaur", "yeti", "wendigo", "mammoth", "giant_crab"]],
 	["Sárkányok", ["fire_dragon", "frost_dragon", "gold_dragon", "shadow_dragon"]],
@@ -36,7 +39,7 @@ const CATEGORIES := [
 	["Fagyott lények", ["frost_wraith", "ice_spider", "snow_golem", "frozen_knight"]],
 	["A pokol démonjai", ["hell_hound", "hell_beast", "nightmare", "hell_demon"]],
 	["Különös lények", ["mimic", "pumpkin_dude", "angel", "toadstool"]],
-	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES + [CHAOS_LORD, ENGINE]],
+	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES + [CHAOS_LORD, ENGINE, GATE]],
 ]
 ## A képességek neve a könyvben (EnemyAbilities, és a típus "dash" / "ranged" jelzője).
 const ABILITY_NAMES := {
@@ -112,6 +115,8 @@ const ENTRIES := {
 	"fire_witch": ["Tűzboszorkány", "Egyszerre öt tűzgolyót lő legyezőben."],
 	"fallen_knight": ["Elesett lovag", "Egykor a király szolgálatában állt. Most villámgyorsan rohan rád."],
 	"dwarf": ["Törpe harcos", "Alacsony, de szikla szilárd. Sérülten feldühödik."],
+	"crazy_clown": ["Őrült bohóc", "Vihogva ugrál feléd, és mielőtt felocsúdnál, már újra nekirontott. "
+		+ "Gyengén üt, de nagyon sűrűn; a 14. emelettől."],
 	"dwarf_berserker": ["Törpe berzerker", "Csatabárdos őrült; minél több sebet kap, annál vadabb."],
 	"plague_doctor": ["Pestisdoktor", "Csőrös maszkja mögül halálos ködöt fúj, amikor elesik."],
 	"lizard": ["Gyíkharcos", "Rövid felvillanás után villámgyorsan nekiront a prédájának."],
@@ -157,6 +162,10 @@ const ENTRIES := {
 	"Ürességfaló, a Káosz Ura": ["Ürességfaló, a Káosz Ura", "A 40. emelet ura: fogas torkú csápgomolyag a " \
 		+ "valóság szélén túlról. Hasadékokat nyit a földön, lövedékörvényt szór, és ha félholtra vered, " \
 		+ "széthasad körülötte a világ."],
+	"A Pokolkapu Őre": ["A Pokolkapu Őre", "A 80. emelet ura: háromfejű, láncra vert pokolkutya, ő őrzi a lejáratot "
+		+ "a Vérkő démonjaihoz. A középső feje lángcsóvát fúj, az alsó mérget köp, a felső sötét gömböket küld utánad; "
+		+ "a láncát végigcsapja a termen, a padlót lávarepedésekkel hasítja fel, és ha felvonyít, jön a falka. "
+		+ "Huszonötmillió életereje van."],
 	"Az Ősgépezet": ["Az Ősgépezet", "A 60. emelet ura: ősrégi, sárgaréz lépegető gép, ki tudja, ki építette " 		+ "a jég alá. Forró gőzt fúj, fogaskerék-fűrészeket hajít, rengéssort döngöl a földbe, villámot hív le, " 		+ "és mágnesével magához ránt. Nem dühödik fel — csak megy, mint egy óramű, tízmillió életerővel."],
 }
 
@@ -200,6 +209,11 @@ static func icon(monster: String) -> Array:
 					own.region = boss["rect"]
 					return [own, boss.get("tint", Color.WHITE)]
 				return [SpriteSheet.region(boss["rect"]), boss.get("tint", Color.WHITE)]
+		if monster == GATE:
+			var gate := AtlasTexture.new()
+			gate.atlas = load(GATE_SCRIPT.SHEET)
+			gate.region = GATE_SCRIPT.GATE["rect"]
+			return [gate, Color.WHITE]
 		if monster == ENGINE:
 			var engine := AtlasTexture.new()
 			engine.atlas = load(ENGINE_SCRIPT.SHEET)

@@ -30,3 +30,6 @@ ice_spider.png: a spider.png ("2D Spider Animated", CC0) jégkékre átszínezve
 snow_golem.png: a fire_golem.png ("Fire Golem", teasloth, CC0) jégkékre-fehérre átszínezve.
 hell_hound.png, hell_beast.png, nightmare.png, hell_demon.png: "Gothicvania Patreon's Collection" (ansimuz, CC0, https://opengameart.org/content/gothicvania-patreons-collection), a Hell Hound, a Hell Beast, a Nightmare és a (Flying) Demon kockáiból: 4 álló + 4 futás, kicsinyítve, jobbra tükrözve; a lidércló és a pokolúr kék lángjai tűzszínűre festve.
 ancient_engine.png: "Steam monster" by Blarumyrran, CC0 1.0 (https://opengameart.org/content/steam-monster): a 3 kocka (rövid, közepes, hosszú kémény), sárgarézre festve, kis patinával; 0-3 álló, 4-7 lépés (döccenés), 8-9 gőzkiengedés (kinyúló kémény).
+gate_hound.png (a Pokolkapu Őre): a fenti hell_hound.png-ből (Gothicvania, ansimuz, CC0) összerakva: a fejét kétszer
+  lemásolva (nyakkal, egy árnyék- és egy méregszínű fejjel), a szemeket átszínezve; 8 kocka, 52x36 px.
+crazy_clown.png: "2D Pixel Clown Spritesheet" (Zacard, CC0, https://iamzacard.itch.io/2d-pixel-clown-spritesheet), 4 álló + 4 futó kocka (32x32) a lapról.
