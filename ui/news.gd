@@ -4,6 +4,7 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-29", "items": [
+		"Javítva: a szintlépés kártyái néha a képernyő aljáig megnyúltak (pl. Vendel Fürgeség-kártyájánál).",
 		"Befejező kisfilm: Azazel legyőzése után minden karakternek saját, 6 képes története van arról, mi lett vele " \
 			+ "a jövőben, saját zenével (a zeneválasztóban: Befejezések).",
 		"A pokol urának új neve: Azazel, a Halálangyal és Démonkirály.",

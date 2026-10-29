@@ -7,6 +7,8 @@ extends CanvasLayer
 
 const CARD_COUNT := 3
 const CARD_SIZE := Vector2(210, 250)
+## A kártyák legfeljebb ilyen magasra nőnek (egy rosszul mért felirat se nyújthassa a képernyő aljáig).
+const MAX_CARD_HEIGHT := 420.0
 ## A kártya tartalma ennyire van a szélétől.
 const CARD_PADDING := 18
 ## Ennyi ideig nem fogad kattintást, hogy egy harc közbeni kattintás
@@ -204,6 +206,7 @@ func _fit_cards() -> void:
 		cards.append(card)
 		var box := card.get_child(0) as Control
 		height = maxf(height, box.get_combined_minimum_size().y + CARD_PADDING * 2.0)
+	height = minf(height, MAX_CARD_HEIGHT)
 	for card in cards:
 		card.custom_minimum_size.y = height
 
@@ -284,11 +287,17 @@ func _make_card(index: int, upgrade: Dictionary) -> Button:
 		label.custom_minimum_size.x = CARD_SIZE.x - 36
 	box.add_child(title)
 	box.add_child(text)
+	# A tördelt sorok szélessége rögzítve: enélkül a Label nagyon keskenynek és nagyon magasnak számolja magát,
+	# és az egész kártyasort a képernyő aljáig nyújtja.
 	if upgrade.has("note"):
-		box.add_child(_label(upgrade["note"], 13, Color(0.6, 0.85, 1.0)))
+		var note := _label(upgrade["note"], 13, Color(0.6, 0.85, 1.0))
+		note.custom_minimum_size.x = CARD_SIZE.x - 36
+		box.add_child(note)
 	# Karakter-bónusz (pl. Gáspár kikerülése): külön, zöldes sorban.
 	if upgrade.has("bonus_note"):
-		box.add_child(_label(upgrade["bonus_note"], 15, Color(0.55, 1.0, 0.6)))
+		var bonus := _label(upgrade["bonus_note"], 15, Color(0.55, 1.0, 0.6))
+		bonus.custom_minimum_size.x = CARD_SIZE.x - 36
+		box.add_child(bonus)
 	if upgrade.get("legendary", false):
 		_make_legendary(card, box, icon)
 	return card
