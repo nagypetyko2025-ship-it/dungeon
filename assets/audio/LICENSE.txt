@@ -29,3 +29,11 @@ anvil_1.wav, anvil_2.wav, anvil_3.wav: "Metal Impact Sounds" (clink1-3) by Brian
 level_up.ogg: "Music Jingles" (Kenney, CC0) jingles_NES03 - felfelé lépő, vidám dallam (korábban a lefelé lépő NES00 volt).
 
 bell.wav: templomi harang, ehhez a projekthez szintetizálva (a valódi harangok felhangjaiból), CC0.
+
+A Vérkő démonjainak hangjai (hound_*, beast_*, horse_*, lord_*): "80 CC0 creature SFX" by rubberduck, CC0 1.0,
+  https://opengameart.org/content/80-cc0-creature-sfx
+  hound: barking_01/02, howl · beast: monster_01/02, scream_01 · horse: nose, breath, scream_02 · lord: roar_02/03, roar_01
+
+A Vérkő démonjainak hangjai (hound_*, beast_*, horse_*, lord_*): "80 CC0 creature SFX" by rubberduck, CC0 1.0,
+  https://opengameart.org/content/80-cc0-creature-sfx
+  hound: barking_01/02, howl · beast: monster_01/02, scream_01 · horse: nose, breath, scream_02 · lord: roar_02/03, roar_01

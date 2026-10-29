@@ -17,6 +17,9 @@ const VARIANTS := {
 	"ui_click": 0, "ui_hover": 0, "ui_open": 0, "ui_close": 0, "ui_error": 0,
 	"boss_slam": 0, "boss_roar": 0, "level_up": 0, "boss_defeated": 0, "death": 0,
 	"anvil": 3, "bell": 0,
+	# A Vérkő démonjai (EnemyTypes "voice")
+	"hound_growl": 2, "hound_die": 0, "beast_growl": 2, "beast_die": 0,
+	"horse_growl": 2, "horse_die": 0, "lord_growl": 2, "lord_die": 0,
 }
 ## Néhány effekt alap-hangereje (dB); a többi 0.
 const VOLUMES := {

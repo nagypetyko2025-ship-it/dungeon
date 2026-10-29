@@ -88,6 +88,8 @@ var _dash_cooldown := 0.0
 var _dash_time := 0.0
 var _dash_dir := Vector2.ZERO
 var _abilities: EnemyAbilities
+## Saját hang (a típus "voice" kulcsa, pl. "hound"): vadászat közben időnként "<voice>_growl", haláskor "<voice>_die".
+var _growl_left := randf_range(1.0, 4.0)
 ## A mimik még alszik (csukott ládának látszik, nem mozdul, nem sebez).
 var _dormant := false
 ## Közös játék (lásd NetEnemies): azonosító, és hogy ez csak báb-e (a gazda szörnyét követi).
@@ -217,6 +219,7 @@ func _physics_process(delta: float) -> void:
 		if _dash:
 			dir = _dash_direction(delta, dir)
 		dir = _abilities.steer(dir, delta)
+		_growl(delta)
 
 	velocity = dir * stats["speed"] * _abilities.speed_multiplier() + _knockback
 	_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
@@ -640,8 +643,17 @@ func _on_dodged() -> void:
 	FloatingText.spawn(get_parent(), _head_position(), "Kikerülte!", Color(0.7, 0.75, 0.85))
 
 
+func _growl(delta: float) -> void:
+	if not _type.has("voice"):
+		return
+	_growl_left -= delta
+	if _growl_left <= 0.0:
+		_growl_left = randf_range(5.0, 10.0)
+		Audio.play(str(_type["voice"]) + "_growl", -6.0, 0.15)
+
+
 func _on_died() -> void:
-	Audio.play("enemy_die")
+	Audio.play(str(_type["voice"]) + "_die" if _type.has("voice") else "enemy_die")
 	set_physics_process(false)
 	_hitbox.set_deferred("monitorable", false)
 	_hurtbox.set_deferred("monitoring", false)

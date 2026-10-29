@@ -3,6 +3,10 @@ class_name News
 ## rövid, játékosnak szóló sor a legfrissebb dátum alá (a legújabb van felül).
 
 const ENTRIES: Array[Dictionary] = [
+	{"date": "2026-10-29", "items": [
+		"A Vérkő démonjainak saját hangjuk lett: a pokolkutya ugat és vonyít, a pokolfajzat hörög, a lidércló "
+			+ "fújtat, a pokolúr bömböl; vadászat közben időnként hallatják magukat, és saját halálhörgésük van.",
+	]},
 	{"date": "2026-10-28", "items": [
 		"32 új lövészfelszerelés: minden sisakból, mellvértből, nadrágból, cipőből, kesztyűből, gyűrűből, amulettből "
 			+ "és talizmánból 4 (átlagostól legendásig), mind távolsági sebzést ad, saját új képpel.",
