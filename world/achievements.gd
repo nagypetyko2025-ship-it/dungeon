@@ -61,6 +61,8 @@ const LIST: Array[Dictionary] = [
 		"target": "Jégkirálynő", "goal": 1, "reward": {"gold": 600, "dust": {"epic": 1}}},
 	{"id": "boss_chaos", "name": "Az üresség vége", "text": "Győzd le Ürességfalót, a Káosz Urát.", "kind": "boss",
 		"target": Bestiary.CHAOS_LORD, "goal": 1, "reward": {"gold": 1000, "dust": {"legendary": 1}}},
+	{"id": "boss_engine", "name": "Óramű-leállás", "text": "Állítsd le az Ősgépezetet a 60. emeleten.", "kind": "boss",
+		"target": Bestiary.ENGINE, "goal": 1, "reward": {"gold": 1500, "dust": {"legendary": 1}}},
 	{"id": "boss_knocker", "name": "Csend a tárnákban", "text": "Győzd le a Kopogót a bánya mélyén.", "kind": "boss",
 		"target": "A Kopogó", "goal": 1, "reward": {"gold": 300}},
 	{"id": "boss_lake", "name": "A tó nyugalma", "text": "Győzd le a Tófenék Urát az elárasztott kriptában.",

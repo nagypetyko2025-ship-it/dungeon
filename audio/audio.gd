@@ -20,6 +20,9 @@ const VARIANTS := {
 	# A Vérkő démonjai (EnemyTypes "voice")
 	"hound_growl": 2, "hound_die": 0, "beast_growl": 2, "beast_die": 0,
 	"horse_growl": 2, "horse_die": 0, "lord_growl": 2, "lord_die": 0,
+	# Az Ősgépezet (a 60. emelet nagy főellensége)
+	"engine_steam": 2, "engine_stomp": 2, "engine_zap": 2, "engine_gears": 0, "engine_magnet": 0,
+	"engine_wake": 0, "engine_die": 0, "engine_beep": 0,
 }
 ## Néhány effekt alap-hangereje (dB); a többi 0.
 const VOLUMES := {
@@ -30,11 +33,15 @@ const MUSIC_TRACKS := {
 	"menu": "res://assets/audio/music/menu_ambience.ogg",
 	"dungeon": "res://assets/audio/music/dungeon_ambience.ogg",
 	"boss": "res://assets/audio/music/boss_battle.wav",
+	# Csak az Ősgépezet elleni harcban szól (a zeneválasztóban sincs ott, lásd ONLY_IN_FIGHT).
+	"engine": "res://assets/audio/music/epic_boss_battle.wav",
 }
 ## A tábor és a kazamata zenéje helyszínenként: a hely saját számai (PLACE_TRACKS) és a mindenhol szólók
 ## (GENERAL_TRACKS) egymás után (ha az egyik véget ér, jön a következő; a sorrend keverve, ugyanaz nem jön kétszer
 ## egymás után). Helyváltáskor a szóló szám marad, ha az új helyen is szólhat; különben áttűnik az új hely zenéjére.
 ## Mind CC0, lásd assets/audio/LICENSE.txt. "epic": az utoljára kért helyszín (pl. a feléledés után).
+## Ezek a számok csak a saját harcukban szólnak (nincsenek a zeneválasztóban).
+const ONLY_IN_FIGHT := ["engine"]
 const PLAYLIST := "epic"
 const GENERAL_TRACKS: Array[String] = [
 	"res://assets/audio/music/jrpg_theme.ogg", "res://assets/audio/music/rising_moon.mp3", "res://assets/audio/music/lament_of_the_war.mp3",
@@ -72,6 +79,7 @@ const PLAYLIST_TRACKS := {
 ## a főmenü zenéjénél nem, ott a Tutorial gomb van).
 const MUSIC_TITLES := {
 	"res://assets/audio/music/boss_battle.wav": "Boss Battle #2 — nene",
+	"res://assets/audio/music/epic_boss_battle.wav": "Epic Boss Battle — Juhani Junkala",
 	"res://assets/audio/music/lament_of_the_war.mp3": "Laments of the War — Cethiel",
 	"res://assets/audio/music/medieval_exploration.mp3": "Medieval: Exploration — RandomMind",
 	"res://assets/audio/music/medieval_battle.mp3": "Medieval: Battle — RandomMind",
@@ -146,7 +154,11 @@ static func music_categories() -> Array:
 			if not GENERAL_TRACKS.has(song):
 				own.append(song)
 		categories.append([PLACE_NAMES.get(place, place), own])
-	categories.append(["Egyéb", MUSIC_TRACKS.values()])
+	var other: Array = []
+	for track: String in MUSIC_TRACKS:
+		if not ONLY_IN_FIGHT.has(track):
+			other.append(MUSIC_TRACKS[track])
+	categories.append(["Egyéb", other])
 	return categories
 
 

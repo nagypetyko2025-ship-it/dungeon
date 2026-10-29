@@ -66,8 +66,11 @@ func _build() -> void:
 	root.add_theme_constant_override("separation", 10)
 	window.add_child(root)
 	var chaos := lord == "chaos"
-	root.add_child(UiStyle.title_bar("A Káosz Ura elesett — győzelem!" if chaos else "A Mélység Ura elesett — győzelem!"))
+	var engine := lord == "engine"
+	root.add_child(UiStyle.title_bar("A Káosz Ura elesett — győzelem!" if chaos
+		else "Az Ősgépezet leállt — győzelem!" if engine else "A Mélység Ura elesett — győzelem!"))
 	root.add_child(UiStyle.label(("Legyőzted az Ürességfalót, a Káosz Urát a 40. emeleten. A pénzed 100%-át megtartod,\n" if chaos
+		else "Leállítottad az Ősgépezetet a 60. emeleten. A pénzed 100%-át megtartod,\n" if engine
 		else "Legyőzted a Vérfarkast, és ezzel végigértél a kazamatán. A pénzed 100%-át megtartod,\n")
 		+ "és 2 tárgyat felvihetsz a tábori ládába; a többi felszerelésed itt marad. A következő út az 1. emeletről indul.",
 		15, UiStyle.INK_LIGHT))

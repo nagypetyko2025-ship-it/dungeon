@@ -4,6 +4,10 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-29", "items": [
+		"Új nagy főellenség a 60. emeleten: az Ősgépezet, egy ősrégi, sárgaréz lépegető gép (10 000 000 élet, "
+			+ "nincs második fázisa). Gőzkitörés, fogaskerék-fűrészek, dugattyú-rengés, Tesla-villámok, mágneses "
+			+ "rántás — saját gépies hangokkal és egy epikus zenével, ami csak ebben a harcban szól.",
+		"A Jégkirálynő az 51. emeletre költözött; új eredmény: Óramű-leállás.",
 		"A Vérkő démonjainak saját hangjuk lett: a pokolkutya ugat és vonyít, a pokolfajzat hörög, a lidércló "
 			+ "fújtat, a pokolúr bömböl; vadászat közben időnként hallatják magukat, és saját halálhörgésük van.",
 	]},

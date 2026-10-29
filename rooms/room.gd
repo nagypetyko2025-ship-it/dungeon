@@ -38,6 +38,7 @@ const TUTORIAL_BOSS_HEALTH := 50
 const COIN := preload("res://pickups/coin.tscn")
 const WEREWOLF := preload("res://enemies/werewolf_boss.gd")
 const CHAOS_LORD := preload("res://enemies/chaos_lord_boss.gd")
+const ANCIENT_ENGINE := preload("res://enemies/ancient_engine_boss.gd")
 ## A nagy főellenség (Vérfarkas, 20. emelet) jutalma: sok arany és két tárgy.
 const FINAL_BOSS_GOLD := 400
 ## A Káosz Uráé (40. emelet) még több arany (és szintén két tárgy).
@@ -79,7 +80,8 @@ var fallen_guards := 0
 ## A nagy főellenség terme (20. emelet: Vérfarkas, 40. emelet: a Káosz Ura): nincs fülke és lépcső,
 ## győzelem után a portálon át a táborba mehetsz (vége a futásnak), vagy a lépcsőn tovább.
 var final_boss := false
-## Melyik nagy főellenség vár itt: "werewolf" (20. emelet) vagy "chaos" (a Káosz Ura, 40. emelet).
+## Melyik nagy főellenség vár itt: "werewolf" (20. emelet), "chaos" (a Káosz Ura, 40. emelet) vagy "engine"
+## (az Ősgépezet, 60. emelet).
 var lord := "werewolf"
 ## A tárgylift jobb oldali csempéjének x-e (csak a bolt szobájában; a fáklyák kikerülik).
 var lift_x := -99999
@@ -411,6 +413,12 @@ func add_puppet(type_name: String, at: Vector2, stats: Dictionary, id: int, boss
 		enemy.set("net_puppet", true)
 		enemy.call("setup_chaos", depth)
 		enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
+	elif boss_kind == "engine":
+		enemy.set_script(ANCIENT_ENGINE)
+		enemy.set("net_id", id)
+		enemy.set("net_puppet", true)
+		enemy.call("setup_engine", depth)
+		enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
 	elif boss_kind != "":
 		enemy.call("setup_boss", depth)
 		enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
@@ -438,6 +446,12 @@ func _spawn_boss() -> void:
 	if final_boss and LakeCrypt.is_story_lord(lord):
 		# A történet-futás főellensége (a Kopogó: Knocking, a Tófenék Ura: LakeCrypt): a terem túlsó felén vár.
 		boss.setup_boss(depth, LakeCrypt.story_boss(lord))
+		boss.position = Vector2(rect.size.x * 0.25, 0) * TILE
+		boss.get_node("Health").died.connect(_on_enemy_died.bind(boss))
+	elif final_boss and lord == "engine":
+		# Az Ősgépezet is a terem túlsó (keleti) felén vár.
+		boss.set_script(ANCIENT_ENGINE)
+		boss.setup_engine(depth)
 		boss.position = Vector2(rect.size.x * 0.25, 0) * TILE
 		boss.get_node("Health").died.connect(_on_enemy_died.bind(boss))
 	elif final_boss and lord == "chaos":
@@ -550,8 +564,8 @@ func _connect_center_stairs() -> void:
 func _drop_boss_loot(at: Vector2) -> void:
 	# A Kopogó (a régi tárnák alján) rendes főellenségnyi zsákmányt hagy, nem a nagy főellenségekét.
 	var lord_loot := final_boss and not LakeCrypt.is_story_lord(lord)
-	var total := (CHAOS_LORD_GOLD if lord == "chaos" else FINAL_BOSS_GOLD) if lord_loot 		else BOSS_GOLD + depth * BOSS_GOLD_PER_DEPTH
-	var coins := (30 if lord == "chaos" else 20) if lord_loot else 10
+	var total := (CHAOS_LORD_GOLD if lord == "chaos" or lord == "engine" else FINAL_BOSS_GOLD) if lord_loot 		else BOSS_GOLD + depth * BOSS_GOLD_PER_DEPTH
+	var coins := (30 if lord == "chaos" or lord == "engine" else 20) if lord_loot else 10
 	for i in coins:
 		var coin = COIN.instantiate()
 		coin.value = total / coins + (total % coins if i == 0 else 0)

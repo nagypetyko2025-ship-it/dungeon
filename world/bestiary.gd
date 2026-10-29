@@ -15,6 +15,9 @@ const DEEP_BOSSES := ["Kalózkirály", "Lánggólem", "A Mélység Szeme", "Nyá
 ## A 40. emelet nagy főellensége.
 const CHAOS_LORD := "Ürességfaló, a Káosz Ura"
 const CHAOS_SCRIPT := preload("res://enemies/chaos_lord_boss.gd")
+## A 60. emelet nagy főellensége.
+const ENGINE := "Az Ősgépezet"
+const ENGINE_SCRIPT := preload("res://enemies/ancient_engine_boss.gd")
 ## Kategóriák sorrendben: [cím, szörnyek].
 const CATEGORIES := [
 	["Élőholtak", ["tiny_zombie", "zombie", "ice_zombie", "big_zombie", "skelet", "skeleton_legionary",
@@ -33,7 +36,7 @@ const CATEGORIES := [
 	["Fagyott lények", ["frost_wraith", "ice_spider", "snow_golem", "frozen_knight"]],
 	["A pokol démonjai", ["hell_hound", "hell_beast", "nightmare", "hell_demon"]],
 	["Különös lények", ["mimic", "pumpkin_dude", "angel", "toadstool"]],
-	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES + [CHAOS_LORD]],
+	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES + [CHAOS_LORD, ENGINE]],
 ]
 ## A képességek neve a könyvben (EnemyAbilities, és a típus "dash" / "ranged" jelzője).
 const ABILITY_NAMES := {
@@ -149,11 +152,12 @@ const ENTRIES := {
 		+ "és kisebb nyálkákat szül."],
 	"Skorpiókirály": ["Skorpiókirály", "A 36. emelet ura: bíbor páncélú, arany fullánkú óriásskorpió. " \
 		+ "Méregfröccsöt köp, mérges tócsákat hagy, nekiront, és a fiait hívja segítségül."],
-	"Jégkirálynő": ["Jégkirálynő", "A Fagykő úrnője a 60. emeleten. Jégleheletet fúj, fagyos tócsákat hagy, " \
+	"Jégkirálynő": ["Jégkirálynő", "A Fagykő úrnője az 51. emeleten. Jégleheletet fúj, fagyos tócsákat hagy, " \
 		+ "eltűnik és máshol bukkan fel, és jégszellemeket hív. Az érintése megdermeszt."],
 	"Ürességfaló, a Káosz Ura": ["Ürességfaló, a Káosz Ura", "A 40. emelet ura: fogas torkú csápgomolyag a " \
 		+ "valóság szélén túlról. Hasadékokat nyit a földön, lövedékörvényt szór, és ha félholtra vered, " \
 		+ "széthasad körülötte a világ."],
+	"Az Ősgépezet": ["Az Ősgépezet", "A 60. emelet ura: ősrégi, sárgaréz lépegető gép, ki tudja, ki építette " 		+ "a jég alá. Forró gőzt fúj, fogaskerék-fűrészeket hajít, rengéssort döngöl a földbe, villámot hív le, " 		+ "és mágnesével magához ránt. Nem dühödik fel — csak megy, mint egy óramű, tízmillió életerővel."],
 }
 
 
@@ -196,6 +200,11 @@ static func icon(monster: String) -> Array:
 					own.region = boss["rect"]
 					return [own, boss.get("tint", Color.WHITE)]
 				return [SpriteSheet.region(boss["rect"]), boss.get("tint", Color.WHITE)]
+		if monster == ENGINE:
+			var engine := AtlasTexture.new()
+			engine.atlas = load(ENGINE_SCRIPT.SHEET)
+			engine.region = ENGINE_SCRIPT.ENGINE["rect"]
+			return [engine, Color.WHITE]
 		if monster == CHAOS_LORD:
 			var chaos := AtlasTexture.new()
 			chaos.atlas = load(CHAOS_SCRIPT.SHEET)

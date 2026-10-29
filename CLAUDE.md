@@ -105,7 +105,10 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - A Fagykő lakói (41-80.): frost_wraith, ice_spider, snow_golem, frozen_knight (`"max_depth"` az EnemyTypes-ban: eddig az
   emeletig jön); a 60. emeleten `Boss.FROST_QUEEN` (Jégkirálynő) a sor helyett.
 - A Vérkő lakói (81.-től): hell_hound, hell_beast, nightmare, hell_demon (Gothicvania CC0, nagy súllyal: a sor ~45%-a;
-  a régi gyenge démonok is jönnek még). Tervben: nagy főellenség a 60. és a 80. emeleten, a 100.-on portál a pokolba, ott a Démonkirály, az utolsó
+  a régi gyenge démonok is jönnek még). Az Ősgépezet (enemies/ancient_engine_boss.gd, room.lord "engine", Dungeon.ENGINE_DEPTH = 60): nagy
+  főellenség-aréna, mint a 20./40.; 10M élet, nincs fázisa, támadásai steam/gears/pistons/tesla/magnet (+charge),
+  saját hangok (engine_*), saját zene (Audio "engine", ONLY_IN_FIGHT: nincs a zeneválasztóban; Boss.music_track).
+  A Jégkirálynő ezért az 51. emeletre került. Tervben: nagy főellenség a 80. emeleten, a 100.-on portál a pokolba, ott a Démonkirály, az utolsó
   főellenség, ami lezárja a történetet. Hangjuk: a típus "voice" kulcsa ("hound" stb.) → Enemy._growl 5–10 mp-enként
   "<voice>_growl", haláskor "<voice>_die" (Audio.VARIANTS).
 - A tábor könyvei egy földfolton (`Camp.BOOKS_PATCH`): Szörnyek, Tárgyak (`ItemCodex.MILESTONES`: fülenként 25/50/100%

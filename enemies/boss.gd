@@ -18,9 +18,9 @@ signal enraged
 
 ## A főellenségek emeletenként váltják egymást (3., 6., 9. ... emelet), aztán elölről.
 ## scale: a kisebb figurákat jobban felnagyítjuk; tint: színezés.
-## A Fagykő (41-80. emelet) úrnője a 60. emeleten: jéglehelet, jégnova, eltűnés, fagyos tócsák, jégszellemek;
+## A Fagykő (41-80. emelet) úrnője az 51. emeleten (a 60.-on az Ősgépezet, ancient_engine_boss.gd, vár): jéglehelet, jégnova, eltűnés, fagyos tócsák, jégszellemek;
 ## az érintése fagyaszt (a 0x72 varázslónő, nagyban és jégkék árnyalattal).
-const FROST_QUEEN_DEPTH := 60
+const FROST_QUEEN_DEPTH := 51
 const FROST_QUEEN := {"name": "Jégkirálynő", "rect": Rect2(128, 132, 16, 28), "scale": 3.4,
 	"tint": Color(0.6, 0.9, 1.5), "health": 180, "damage": 7, "speed": 70.0, "xp": 160,
 	"attacks": ["breath", "nova", "blink", "pools", "summon"], "minion": "frost_wraith", "abilities": ["frost"]}
@@ -57,7 +57,7 @@ const BOSSES: Array[Dictionary] = [
 	{"name": "Nyálkakirály", "sheet": "res://assets/enemies/green_slime.png", "rect": Rect2(0, 0, 16, 16),
 		"scale": 5.5, "tint": Color(0.9, 1.1, 0.8), "health": 160, "damage": 6, "speed": 60.0,
 		"xp": 120, "attacks": ["slam", "pools", "summon"], "minion": "green_slime", "abilities": ["poison"]},
-	# (A 60. emeleten a sor helyett a Jégkirálynő jön: FROST_QUEEN.)
+	# (Az 51. emeleten a sor helyett a Jégkirálynő jön: FROST_QUEEN.)
 	# --- A 36. emelet: a bogarak ura ---
 	{"name": "Skorpiókirály", "sheet": "res://assets/enemies/scorpion_king.png", "rect": Rect2(0, 0, 101, 69),
 		"scale": 0.9, "health": 170, "damage": 7, "speed": 75.0,
@@ -124,6 +124,8 @@ const POOL_RADIUS := 46.0
 const POOL_TIME := 5.0
 
 var boss_name := ""
+## A harc zenéje (Audio.MUSIC_TRACKS; az Ősgépezeté saját).
+var music_track := "boss"
 ## Kis főellenség-e (a vérfarkas felülírja: ő a Mélység Ura, rá nem vonatkozik a kímélet).
 var mini_boss := true
 

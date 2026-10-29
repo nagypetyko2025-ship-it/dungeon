@@ -86,6 +86,8 @@ const FINAL_ARENA_GUARDS := 9
 const FINAL_START_GUARDS := 3
 ## A Káosz Ura emelete: ugyanilyen (kezdőszoba és tőle keletre a nagy terem), csak Gáspár emberei nélkül.
 const CHAOS_DEPTH := 40
+## Az Ősgépezet emelete (a Fagykő nagy főellensége): ugyanilyen kezdőszoba és nagy terem.
+const ENGINE_DEPTH := 60
 ## A Vérfarkas utáni lépcső helye a terem közepétől (csempe, keletre a portáltól).
 const DEEPER_STAIRS_OFFSET := 6
 ## Gáspár második küldetésének célja.
@@ -155,9 +157,10 @@ func _ready() -> void:
 	var tutorial := GameState.tutorial
 	# A nagy főellenség emelete: a 20. (Vérfarkas) és a 40. (a Káosz Ura).
 	var chaos_floor := depth == CHAOS_DEPTH and not tutorial
+	var engine_floor := depth == ENGINE_DEPTH and not tutorial and Challenge.story().is_empty()
 	# Történet-futás (a régi tárnák: Knocking, a kripta: LakeCrypt) utolsó emelete: aréna a saját főellenségével.
 	var knocker_floor := not Challenge.story().is_empty() and depth >= int(GameState.challenge["floors"])
-	var final_floor := (depth == FINAL_DEPTH or chaos_floor or knocker_floor) and not tutorial
+	var final_floor := (depth == FINAL_DEPTH or chaos_floor or engine_floor or knocker_floor) and not tutorial
 	var cells: Array[Vector2i] = []
 	if tutorial:
 		cells = TUTORIAL_CELLS.duplicate()
@@ -220,12 +223,12 @@ func _ready() -> void:
 		if final_floor:
 			# A nagy főellenség terme: nyitott aréna, se csapda, se láda. A 20. emeleten mindkét
 			# szobában Gáspár elesett embereinek csontvázai fekszenek (a teremben a legtöbb).
-			if not chaos_floor and not knocker_floor:
+			if not chaos_floor and not engine_floor and not knocker_floor:
 				room.fallen_guards = FINAL_ARENA_GUARDS if cell == Vector2i.RIGHT else FINAL_START_GUARDS
 			if cell == Vector2i.RIGHT:
 				room.has_boss = true
 				room.final_boss = true
-				room.lord = Challenge.story() if knocker_floor else ("chaos" if chaos_floor else "werewolf")
+				room.lord = Challenge.story() if knocker_floor else ("chaos" if chaos_floor else "engine" if engine_floor else "werewolf")
 				room.enemy_count = 1
 		elif cell == shop_cell:
 			room.has_shop = true
@@ -322,7 +325,9 @@ func _ready() -> void:
 		if depth >= QUEST_DEPTH and not GameState.cheated and Progress.npc_quest_state(Castle.DEEP_FLAG) == "":
 			Progress.set_npc_quest(Castle.DEEP_FLAG, "reached")
 			Progress.save_game()
-		if chaos_floor:
+		if engine_floor:
+			_hud.show_message("%d. emelet — keleten valami ősrégi gépezet dübörög a jég alatt..." % depth)
+		elif chaos_floor:
 			_hud.show_message("%d. emelet — keleten a Káosz Ura vár! Itt már a valóság is széthullik." % depth)
 		elif final_floor and Progress.character == "veteran" and not knocker_floor:
 			# Gáspár visszatér oda, ahol az emberei elestek.
@@ -390,7 +395,7 @@ func _add_quest_book() -> void:
 
 
 func _on_boss_fight_started(boss: Node2D) -> void:
-	Audio.music("boss")
+	Audio.music(str(boss.get("music_track")) if boss.get("music_track") else "boss")
 	_hud.call("show_boss", boss)
 	_hud.show_message("Főellenség: %s" % boss.get("boss_name"))
 
@@ -433,8 +438,9 @@ func _on_final_boss_defeated(room: Room) -> void:
 			else "A Mélység Ura legyőzve! A lépcső szabad.")
 		room.open_stairs.call_deferred(room.anchor + Vector2i(DEEPER_STAIRS_OFFSET, 0))
 		return
-	if room.lord == "chaos":
-		_hud.show_message("A Káosz Ura elesett! Portál a táborba — vagy a lépcsőn tovább a mélybe.")
+	if room.lord == "chaos" or room.lord == "engine":
+		_hud.show_message(("A Káosz Ura elesett!" if room.lord == "chaos" else "Az Ősgépezet leállt!")
+			+ " Portál a táborba — vagy a lépcsőn tovább a mélybe.")
 		var chaos_portal: Node2D = RETURN_PORTAL.new()
 		chaos_portal.position = Room.tile_center(room.anchor) - room.position
 		chaos_portal.set("prompt_text", "[E] Győzelem — vissza a táborba")
