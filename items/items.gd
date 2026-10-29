@@ -572,6 +572,11 @@ const DEFINITIONS := {
 		"shop": false, "stats": {"move_speed": [8, 8], "xp_bonus": [12, 12], "accuracy": [8, 8], "dodge": [4, 4]},
 		"description": "Sárgaréz iránytű, a fedelébe karcolva: \"L. — a Mélység felé\". A tűje nem északra mutat, "
 			+ "hanem mindig lefelé, a legközelebbi lépcső irányába."},
+	# A király szálának jutalma (King.LUCIFER_QUEST): egyedi, nem esik, nem kapható.
+	"trinket_thirty_names": {"name": "A harminc név gyűrűje", "slot": "trinket", "rarity": "legendary", "unique": true,
+		"shop": false, "stats": {"damage_percent": [12, 12], "max_health": [25, 25], "defense": [8, 8], "crit_chance": [5, 5]},
+		"description": "IV. Aurél király kopott aranygyűrűje. A belsejébe harminc név van vésve, huszonhét mellett "
+			+ "apró kereszt. Mellettük egy harmincegyedik: a tiéd, kereszt nélkül."},
 	# A kopogás titka jutalma (Knocking): egyedi, nem esik, nem kapható.
 	"trinket_miners_lamp": {"name": "A huszonhét lámpása", "slot": "trinket", "rarity": "legendary", "unique": true,
 		"shop": false, "stats": {"max_health": [15, 15], "defense": [6, 6], "gold_find": [20, 20], "xp_bonus": [10, 10]},

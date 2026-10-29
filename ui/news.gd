@@ -4,6 +4,10 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-29", "items": [
+		"A király története a végéig folytatódik: a Káosz Ura után három új fejezet (Dübörgés a jég alatt, Az alapító "
+			+ "titka, A harminc név ára). Kiderül, mit kötött az alapító király a mélységgel, és mi volt Gáspár harminc "
+			+ "emberének ára. A végén a király gyűrűje a tiéd, és utána is van mit kérdezni tőle.",
+		"Csalómenü: a teleportba a 100. emelet is beírható, és új csalás a végtelen sebzés: minden ütésed egyből megöl.",
 		"A 100. emeleten vörösen izzó, ismeretlen kapu vár. Mögötte a pokol: egyenes, tüzes út, a végén Lucifer, "
 			+ "a Démonkirály. Beszélgethetsz vele (öt titok a kazamatáról), aztán jöhet a végső harc: 30 000 000 élet, "
 			+ "meteorok, lelkek spirálja, láncok, tűzoszlopok, a mélység örvénye és démonlégió — saját zenével. "

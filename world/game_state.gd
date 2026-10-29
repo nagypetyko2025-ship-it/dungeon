@@ -70,6 +70,8 @@ static var won_lord := "werewolf"
 static var hell := false
 ## Csalás (CheatMenu): a játékos nem sebződik. A reset() nem törli, csak a menü kapcsolja.
 static var god_mode := false
+## Csalás: végtelen sebzés (a játékos minden ütése azonnal megöli a szörnyet, a főellenséget is).
+static var one_hit := false
 ## Ebben a futásban csaltál (teleport vagy halhatatlanság, akár csak egyszer is): a futásból
 ## semmi nem mentődik (eredmény, arany, tárgyak, küldetések). Új futáskor törlődik, kivéve ha
 ## a halhatatlanság még be van kapcsolva.
@@ -118,4 +120,4 @@ static func reset() -> void:
 	potions = 0
 	challenge = {}
 	tutorial_dust = {}
-	cheated = god_mode
+	cheated = god_mode or one_hit

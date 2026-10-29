@@ -17,9 +17,20 @@ const THIEF_QUEST := "king_thief"
 const THIEF_FATE := "thief_fate"
 ## A hét király után: a 40. emelet ura (Ürességfaló, a Káosz Ura) tartja nyitva a Mélység kapuját.
 const CHAOS_QUEST := "king_chaos"
+## A Káosz Ura után a király szála a 100. emeletig (lásd a QUESTS végét): a jég alatti gépezet (60.), a pokol
+## kapuja (80.), aztán a Démonkirály (Lucifer, a 100. emelet kapuja mögött, lásd Hell). Közben kiderül az
+## Aurél-ház titka: az alapító király alkuja a mélységgel, és az, hogy mi volt a harminc ember ára.
+const ENGINE_QUEST := "king_engine"
+const GATE_QUEST := "king_gate"
+const LUCIFER_QUEST := "king_lucifer"
 const TREASURY_GOLD := 1000
 const BETRAY_GOLD := 120
 const CHAOS_GOLD := 3000
+const ENGINE_GOLD := 5000
+const GATE_GOLD := 8000
+const LUCIFER_GOLD := 20000
+## A végén a király leveszi a gyűrűjét, és neked adja (egyedi talizmán, lásd Items).
+const RING_ID := "trinket_thirty_names"
 
 ## A király küldetései (az engedély a vár kapujánál indul, lásd Castle).
 const QUESTS := {
@@ -51,7 +62,74 @@ const QUESTS := {
 			+ "[b]Győzd le[/b], aztán jelentsd a királynak.",
 		"reward": "%d tábori arany" % CHAOS_GOLD, "doing": "győzd le a Káosz Urát a 40. emeleten",
 		"done": "a kapu bezárult"},
+	ENGINE_QUEST: {"name": "Dübörgés a jég alatt",
+		"text": "A Káosz kapuja bezárult, de a város alatt éjjelente újra dübörög a föld, egyenletesen, mint "
+			+ "egy óramű. A király ősi feljegyzései szerint az alapító király, I. Aurél mesterei egy gépet "
+			+ "építettek, ami aranyért ásott lefelé, és sosem állították le. A [b]60. emeleten[/b], a jég alatt "
+			+ "jár még ma is. [b]Állítsd le az Ősgépezetet[/b], aztán jelentsd a királynak.",
+		"reward": "%d tábori arany" % ENGINE_GOLD, "doing": "állítsd le az Ősgépezetet a 60. emeleten",
+		"done": "a gépezet elnémult"},
+	GATE_QUEST: {"name": "Az alapító titka",
+		"text": "Az Ősgépezet belsejében talált pecsétes tekercs I. Aurél saját kezével írt egyezsége: "
+			+ "\"aranyat a mélységből, szabad utat a mélységnek\". A tekercs szerint a [b]80. emeleten[/b] egy "
+			+ "háromfejű őr vigyázza az utat lefelé, a pokol felé. [b]Győzd le a Pokolkapu Őrét[/b], aztán "
+			+ "jelentsd a királynak.",
+		"reward": "%d tábori arany" % GATE_GOLD, "doing": "győzd le a Pokolkapu Őrét a 80. emeleten",
+		"done": "az őr elesett"},
+	LUCIFER_QUEST: {"name": "A harminc név ára",
+		"text": "A király bevallotta: a jóslat, ami miatt Gáspár harminc emberét a Mélységbe küldte, az "
+			+ "alapító egyezségének része volt, és a harminc ember volt a nemzedékenkénti ár. Az egyezséget csak "
+			+ "az törheti meg, aki legyőzi azt, akivel kötötték. A [b]100. emeleten[/b] a vörös kapu mögött "
+			+ "[b]Lucifer, a Démonkirály[/b] vár. Győzd le, és térj vissza a királyhoz.",
+		"reward": "%d tábori arany és a király gyűrűje" % LUCIFER_GOLD, "doing": "győzd le Lucifert a 100. emelet kapuja mögött",
+		"done": "az egyezség megtört"},
 }
+
+## A király szálának új kérdései: a gépezet után az alapítóról, a kapuőr után a szégyenről,
+## a Démonkirály után az epilógus (mi lesz most).
+const ENGINE_STORIES: Array[Dictionary] = [
+	{"id": "founder", "text": "Ki volt I. Aurél?", "trust": 3,
+		"answer": "[i]A király a trónterem végében álló, megfakult festményre néz: szigorú arcú, aranyláncos " \
+			+ "férfi, a háttérben egy bányatorony.[/i]\n\n" \
+			+ "Az Aranykezű. Így hívták a krónikák. Négyszáz éve ez a völgy egy szegény bányászfalu volt. Ő " \
+			+ "talált aranyat a hegy alatt, és húsz év alatt királyságot épített rá.\n\n" \
+			+ "Gyerekkoromban büszke voltam rá. Minden évben az ő szobra előtt ünnepeltük a korona napját.\n\n" \
+			+ "[i]Elfordul a képtől.[/i]\n\nMost már tudom, honnan volt az a sok arany. És hogy nem ő fizette meg az árát."},
+]
+const GATE_STORIES: Array[Dictionary] = [
+	{"id": "shame", "text": "Tudtad, felség, mit tesz a jóslat?", "trust": 2,
+		"answer": "[i]Sokáig nem felel. Amikor megszólal, nem néz rád.[/i]\n\n" \
+			+ "Nem. Esküszöm a harminc névre, hogy nem tudtam. A jóslatot apámtól kaptam, ő az apjától. Egy " \
+			+ "lezárt ládában volt, amit csak a király nyithat ki, amikor megremeg a föld.\n\n" \
+			+ "Azt írta: \"küldj le harminc pajzsot, és a sötétség visszahúzódik\". Elküldtem őket. És a " \
+			+ "sötétség tényleg visszahúzódott tizenkét évre. Azt hittem, ez a jóslat igazsága.\n\n" \
+			+ "[i]A keze ökölbe szorul a karfán.[/i]\n\nPedig csak kifizettem egy számlát, amit négyszáz éve nyitott " \
+			+ "valaki a nevemben."},
+]
+const EPILOGUE: Array[Dictionary] = [
+	{"id": "kingdom", "text": "Mi lesz most a királysággal?", "trust": 3,
+		"answer": "[i]A király kitárja a trónterem ablakát. Lentről zene hallatszik: a piactéren ünnepelnek.[/i]\n\n" \
+			+ "A hegy alatti arany elfogy, a tudósaim szerint az egyezséggel együtt. Szegényebbek leszünk. " \
+			+ "Talán olyan szegények, mint a falu volt négyszáz éve.\n\n" \
+			+ "De a mi aranyunk lesz. A miénk, és senki nem jön érte a mélyből.\n\n" \
+			+ "[i]Elmosolyodik, most először, amióta ismered.[/i]\n\nAz Aranykezű szobrát holnap ledöntik. " \
+			+ "A helyére harminc kőtáblát állíttatok, a harminc névvel."},
+	{"id": "gaspar", "text": "Elmondod Gáspárnak az igazat?", "trust": 4,
+		"answer": "Már elmondtam. Tegnap este eljött a várba, és én mindent elmondtam neki. A jóslatot, a " \
+			+ "ládát, az alkut. Azt is, hogy az emberei nem a kincsért haltak meg, hanem egy halott király " \
+			+ "adósságáért.\n\n" \
+			+ "[i]Megérinti az arcát, ahol egy friss, sötét folt látszik.[/i]\n\n" \
+			+ "Megütött. Megérdemeltem. Aztán leült velem szemben, és hajnalig sorolta a neveket, egyenként. " \
+			+ "Mindegyikhez elmondott valamit, amit én nem tudtam.\n\n" \
+			+ "Azt hiszem, soha nem bocsát meg. De hajnalban, amikor elment, azt mondta: \"felség\". " \
+			+ "Tizenkét éve nem szólított így."},
+	{"id": "archive", "text": "Mi lett az alapító tekercsével?", "trust": 2,
+		"answer": "[i]A kandallóra mutat. A hamuban még kivehető egy megpörkölődött pecsét.[/i]\n\n" \
+			+ "Elégettem. A tudósaim könyörögtek, hogy őrizzem meg, a történelemnek. Azt mondtam nekik, a " \
+			+ "történelem majd emlékszik rá enélkül is.\n\n" \
+			+ "A lezárt ládát is szétvertem, amiben a jóslat volt. A fiam, ha egyszer király lesz, nem fog " \
+			+ "találni benne semmit, csak egy levelet tőlem. Arról, hogy mi az ára az ingyen aranynak."},
+]
 
 ## A hét király után: négy új történet (a régi kérdés is marad; a beszélgetés lapozható).
 const STORIES: Array[Dictionary] = [
@@ -153,6 +231,8 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 				"active":
 					list.append({"id": "chaos", "text": "Legyőztem a Káosz Urát.",
 						"on_choose": func() -> String: return _report_chaos()})
+				"done":
+					list.append_array(_deep_quest_options())
 	if Progress.npc_quest_state(TREASURY_QUEST) == "active":
 		list.append({"id": "treasury", "text": "Hoztam legendás tárgyat.",
 			"on_choose": func() -> String: return _give_legendary(inventory)})
@@ -169,7 +249,171 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 	list.append({"id": "deep", "text": "Mi van a Mélység alján?", "answer": DEEP_STORY})
 	if Progress.npc_quest_state(SEVEN_QUEST) == "done":
 		list.append_array(STORIES)
+	if Progress.npc_quest_state(ENGINE_QUEST) == "done":
+		list.append_array(ENGINE_STORIES)
+	if Progress.npc_quest_state(GATE_QUEST) == "done":
+		list.append_array(GATE_STORIES)
+	if Progress.npc_quest_state(LUCIFER_QUEST) == "done":
+		for i in range(list.size() - 1, -1, -1):
+			if list[i]["id"] == "deep":
+				list.remove_at(i)
+		list.append_array(EPILOGUE)
 	return list
+
+
+## A Káosz Ura utáni fejezetek: mindig a soron következő feladat (megkapás / jelentés).
+static func _deep_quest_options() -> Array[Dictionary]:
+	var list: Array[Dictionary] = []
+	match Progress.npc_quest_state(ENGINE_QUEST):
+		"":
+			list.append({"id": "rumble", "text": "Elcsendesedett végre a föld, felség?",
+				"on_choose": func() -> String: return _give_engine_quest()})
+			return list
+		"active":
+			list.append({"id": "engine", "text": "Leállítottam az Ősgépezetet.",
+				"on_choose": func() -> String: return _report_engine()})
+			return list
+	match Progress.npc_quest_state(GATE_QUEST):
+		"":
+			list.append({"id": "scroll", "text": "Mit írt az alapító a tekercsben?",
+				"on_choose": func() -> String: return _give_gate_quest()})
+			return list
+		"active":
+			list.append({"id": "gate", "text": "Legyőztem a Pokolkapu Őrét.",
+				"on_choose": func() -> String: return _report_gate()})
+			return list
+	match Progress.npc_quest_state(LUCIFER_QUEST):
+		"":
+			list.append({"id": "price", "text": "Mi van a kapu túloldalán, felség?",
+				"on_choose": func() -> String: return _give_lucifer_quest()})
+		"active":
+			list.append({"id": "lucifer", "text": "Lucifer elesett, felség.",
+				"on_choose": func() -> String: return _report_lucifer()})
+	return list
+
+
+static func _give_engine_quest() -> String:
+	Progress.set_npc_quest(ENGINE_QUEST, "active")
+	Progress.mark_asked(ID, "rumble")
+	Progress.save_game()
+	Audio.play("ui_open")
+	return "[i]A király a gyűrűjét forgatja. Újra az ujján van.[/i]\n\n" \
+		+ "Három éjszakát aludtam végig. A negyediken megint felébredtem. Nem remegés volt, mint régen. " \
+		+ "Dübörgés. Egyenletes, mint egy óramű, mélyről, valahonnan a jég alól.\n\n" \
+		+ "Lementem a kincstár alatti levéltárba, ahová apám óta senki nem tette be a lábát. Az alapító, " \
+		+ "[b]I. Aurél[/b] mesterei négyszáz éve egy gépet építettek. Aranyért ásott lefelé, gőzzel és " \
+		+ "fogaskerekekkel, és a feljegyzések szerint [b]soha nem állították le[/b]. Egyszerűen otthagyták " \
+		+ "dolgozni a mélyben.\n\n" \
+		+ "[i]Egy megsárgult rajzot terít ki eléd: kéményes, lépegető sárgaréz szörnyeteg.[/i]\n\n" \
+		+ "A tudósaim szerint a [b]hatvanadik emeleten[/b] jár, a jég alatt, és minden lépésével közelebb " \
+		+ "ássa magát hozzánk. Ősgépezetnek hívják. [b]Állítsd le.[/b]\n\n" \
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Király fülön.)[/color]"
+
+
+static func _report_engine() -> String:
+	if Bestiary.kills(Bestiary.ENGINE) <= 0:
+		Audio.play("ui_error")
+		return "[i]A király a padlóra mutat.[/i]\n\nHallgasd. Ott van, a talpad alatt. Dübörög. " \
+			+ "Az Ősgépezet még jár, a hatvanadik emeleten."
+	Progress.set_npc_quest(ENGINE_QUEST, "done")
+	Progress.mark_asked(ID, "engine")
+	Progress.change_trust(ID, 20)
+	Progress.camp_gold += ENGINE_GOLD
+	Progress.save_game()
+	Audio.play("level_up")
+	return "[i]Elmondod, mit láttál: a gőzt, a fogaskerekeket, a villámokat. És azt, hogy amikor a gép " \
+		+ "végre leállt, a mellkasa kinyílt, és egy ólomtokot találtál benne, Aurél-pecséttel.[/i]\n\n" \
+		+ "[i]A király remegő kézzel töri fel a pecsétet. A tokban egy tekercs.[/i]\n\n" \
+		+ "Ez... ez az alapító keze írása. Ismerem, minden oklevelünk alján ott van.\n\n" \
+		+ "[i]Olvasni kezd, aztán elsápad, és összetekeri.[/i]\n\nKöszönöm, kalandor. A korona fizet. A " \
+		+ "tekercsről... arról majd beszélünk. Adj egy éjszakát.\n\n" \
+		+ "[color=#7a4a10](+%d tábori arany)[/color]" % ENGINE_GOLD
+
+
+static func _give_gate_quest() -> String:
+	Progress.set_npc_quest(GATE_QUEST, "active")
+	Progress.mark_asked(ID, "scroll")
+	Progress.save_game()
+	Audio.play("ui_open")
+	return "[i]A király szeme alatt sötét karikák. A tekercs a térdén fekszik.[/i]\n\n" \
+		+ "Nem aludtam. Felolvasom, mert neked is tudnod kell.\n\n" \
+		+ "[i]„Én, Aurél, a hegy alatti falu bányamestere, egyezséget kötök a mélység Urával. Ő aranyat ad " \
+		+ "nekem és a házamnak, amíg a házam áll. Cserébe szabad utat kap: minden emelet, amit kiásunk, " \
+		+ "az övé. És amikor a föld megremeg, a házam fizet.”[/i]\n\n" \
+		+ "Négyszáz év aranya. Minden korona, minden kárpit, minden ünnep ebből van.\n\n" \
+		+ "[i]Ujja egy rajzon áll meg a tekercs alján: háromfejű kutya, láncon.[/i]\n\n" \
+		+ "A mélység Ura őrt állított az út végére, hogy senki ne mehessen le hozzá egyezség nélkül. A " \
+		+ "[b]nyolcvanadik emeleten[/b] vár, a Fagykő legalján. A Pokolkapu Őre. Ha él, a mélység Urához " \
+		+ "senki sem jut el.\n\n" \
+		+ "[i]Feláll.[/i]\n\nÉn akarom tudni, mi van ott lent. Ha te is, [b]győzd le az őrt[/b].\n\n" \
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Király fülön.)[/color]"
+
+
+static func _report_gate() -> String:
+	if Bestiary.kills(Bestiary.GATE) <= 0:
+		Audio.play("ui_error")
+		return "[i]A király a fejét rázza.[/i]\n\nA tudósaim éjjelente hallják a vonyítást a kutakból. " \
+			+ "A háromfejű őr él, a nyolcvanadik emeleten."
+	Progress.set_npc_quest(GATE_QUEST, "done")
+	Progress.mark_asked(ID, "gate")
+	Progress.change_trust(ID, 20)
+	Progress.camp_gold += GATE_GOLD
+	Progress.save_game()
+	Audio.play("level_up")
+	return "[i]A király a tekercset szorongatja, mintha attól félne, hogy kiesik a kezéből.[/i]\n\n" \
+		+ "Az őr elesett. Akkor az út szabad. A tudósaim szerint a legalján, a [b]századik emeleten[/b] " \
+		+ "egy kapu áll, ami nem a Mélységbe vezet, hanem azon túl.\n\n" \
+		+ "Vedd el ezt. És gyere vissza holnap. Van még valami, amit el kell mondanom. Valami, amit " \
+		+ "tizenkét éve kellett volna valakinek elmondanom.\n\n" \
+		+ "[color=#7a4a10](+%d tábori arany)[/color]" % GATE_GOLD
+
+
+static func _give_lucifer_quest() -> String:
+	Progress.set_npc_quest(LUCIFER_QUEST, "active")
+	Progress.mark_asked(ID, "price")
+	Progress.change_trust(ID, 10)
+	Progress.save_game()
+	Audio.play("ui_open")
+	return "[i]A király egyedül vár a trónteremben. Az őröket elküldte, a fáklyák fele kialudt. Leveszi a " \
+		+ "gyűrűt, és a tenyerén tartja feléd.[/i]\n\n" \
+		+ "Emlékszel a jóslatra, ami miatt Gáspárt leküldtem? \"Küldj le harminc pajzsot, és a sötétség " \
+		+ "visszahúzódik.\" Egy lezárt ládában volt, amit csak a király nyithat ki.\n\n" \
+		+ "Az alapító írta. Ugyanazzal a kézzel, mint az egyezséget. [b]A harminc ember volt az ár.[/b] Az, " \
+		+ "amit a házam fizet, amikor a föld megremeg. Nem jóslat volt, hanem egy számla. És én kifizettem, " \
+		+ "anélkül, hogy tudtam volna.\n\n" \
+		+ "[i]A hangja elcsuklik.[/i]\n\nBenedek. Kristóf. Ambrus. Huszonhét név. Az én nevemben haltak meg.\n\n" \
+		+ "[i]Aztán összeszedi magát, és újra király.[/i]\n\nA tekercs szerint az egyezséget csak az törheti " \
+		+ "meg, aki legyőzi azt, akivel kötötték. A századik emelet kapuja mögött ül. A neve [b]Lucifer, a " \
+		+ "Démonkirály[/b].\n\nNem kérhetem, hogy menj le érte. Harminc embert már leküldtem. De ha mégis " \
+		+ "megteszed... a házam soha többé nem fizet. És senki más sem.\n\n" \
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Király fülön.)[/color]"
+
+
+static func _report_lucifer() -> String:
+	if Bestiary.kills(Bestiary.LUCIFER) <= 0:
+		Audio.play("ui_error")
+		return "[i]A király a gyűrűjét forgatja.[/i]\n\nAz arany még ott van a hegy alatt, kalandor. " \
+			+ "Amíg ott van, az egyezség áll. Lucifer él."
+	# Előbb a gyűrű (az add_to_stash újratölti a mentést, ami az utána jövő változásokat nem érinti).
+	Progress.add_to_stash(Items.mark_story(Items.create(RING_ID)))
+	Progress.set_npc_quest(LUCIFER_QUEST, "done")
+	Progress.mark_asked(ID, "lucifer")
+	Progress.change_trust(ID, 40)
+	Progress.camp_gold += LUCIFER_GOLD
+	Progress.save_game()
+	Audio.play("level_up")
+	return "[i]Ahogy belépsz, a trónterem megtelik emberekkel. Ott van Gáspár, Bence, Lőrinc, Vendel, a " \
+		+ "doktor, Rozi, a kocsmáros, a bányászok. Senki nem szól. A király lejön a trónról, és megáll " \
+		+ "előtted.[/i]\n\n" \
+		+ "Reggel a bányászok jöttek a várba. Azt mondták, a hegy alatti arany fekete kővé vált, egyetlen " \
+		+ "éjszaka alatt. Négyszáz év aranya.\n\n" \
+		+ "[i]Mosolyog.[/i]\n\nSoha nem örültem még ennyire szegénységnek. Az egyezség megtört.\n\n" \
+		+ "[i]Leveszi az ujjáról a kopott aranygyűrűt. Ezúttal könnyen jön le. A huszonhét kereszt mellé " \
+		+ "egy új név van vésve: a tiéd, kereszt nélkül.[/i]\n\n" \
+		+ "Ezt tizenkét évig hordtam, hogy ne felejtsem el, mit tettem. Most a tiéd, hogy ne felejtsd el, " \
+		+ "mit tettél te. Harminc név, és még egy, aki hazajött.\n\n" \
+		+ "[i]A teremben valaki tapsolni kezd. Aztán mindenki.[/i]\n\n" \
+		+ "[color=#7a4a10](+%d tábori arany. A harminc név gyűrűje a tábori ládába került.)[/color]" % LUCIFER_GOLD
 
 
 static func _royal_letter(inventory: Inventory) -> String:

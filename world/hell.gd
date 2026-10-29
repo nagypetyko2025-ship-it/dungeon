@@ -40,9 +40,13 @@ const STORIES: Array[Dictionary] = [
 			+ "amíg felérek."},
 	{"id": "king", "text": "Mi köze ehhez a királynak?", "trust": 0,
 		"answer": "[i]Megcsörgeti a láncait. Az egyik koponyán mintha korona nyoma látszana.[/i]\n\n" \
-			+ "A királyotok ősei nyitották meg az első aknát. Aranyat akartak, és mélyebbre ástak, mint szabadott " \
-			+ "volna. Én csak... meghallgattam őket. Adtam nekik aranyat. Sokat.\n\nCserébe minden emberöltőben " \
-			+ "egy kicsit szabadabban jártam. Az aranyat ti költöttétek el. Az árát én szedem be."},
+			+ "Aurél, a bányamester. Ő nyitotta meg az első aknát, és mélyebbre ásott, mint szabadott volna. " \
+			+ "Lejött hozzám, a saját lábán, mint te. Aranyat kért. Adtam neki. Sokat.\n\n" \
+			+ "Cserébe szabad utat kaptam, és a háza fizet, valahányszor megremeg a föld. Az unokája unokája " \
+			+ "unokája nemrég harminc pajzsot küldött le. Pontosan harmincat, ahogy a ládában állt.\n\n" \
+			+ "[i]A láncain csörgő koponyák közül az egyiken megcsillan egy címer.[/i]\n\n" \
+			+ "Huszonhetet megtartottam. Hármat visszaküldtem, hogy legyen, aki elmesélje. Az aranyat ti " \
+			+ "költöttétek el. Az árát én szedem be."},
 	{"id": "brave", "text": "Hányan jutottak el idáig?", "trust": 0,
 		"answer": "Hárman. Négyszáz év alatt.\n\n[i]Fejével a trón lábánál heverő páncélok felé biccent. " \
 			+ "Az egyiken még kivehető egy kopott címer.[/i]\n\nAz első lovag volt, a második tolvaj, a " \
@@ -54,6 +58,14 @@ const STORIES: Array[Dictionary] = [
 			+ "örök élet.\n\n[i]Aztán hátradől, és a hangja hideg lesz, mint a Fagykő.[/i]\n\nDe te nem " \
 			+ "egyezkedni jöttél. Látom a szemedben. Akkor ne húzzuk tovább az időt."},
 ]
+
+
+## A köszöntés: ha a király küldött (King.LUCIFER_QUEST), Lucifer tudja.
+static func greeting() -> String:
+	if Progress.npc_quest_state(King.LUCIFER_QUEST) == "active":
+		return GREETING + "\n\n[i]Hirtelen elneveti magát.[/i]\n\nAurél háza küldött, igaz? Érzem rajtad a " \
+			+ "kopott gyűrű szagát. Négyszáz év alatt először küldenek valakit, hogy [b]ne[/b] fizessen."
+	return GREETING
 
 
 ## A Lucifer elleni harc opciója (mindig a hatodik, az öt történet után).
@@ -311,7 +323,7 @@ class Throne:
 		_dialogue.name = "LuciferDialogue"
 		_dialogue.npc_id = Hell.ID
 		_dialogue.npc_name = Hell.NAME
-		_dialogue.greeting = Hell.GREETING
+		_dialogue.greeting = Hell.greeting()
 		_dialogue.portrait = Hell.portrait()
 		_dialogue.page_size = 6
 		_dialogue.options_provider = func() -> Array[Dictionary]:

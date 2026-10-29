@@ -116,7 +116,12 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   `Hell.CELLS` (5 szoba egy sorban, nyitott út, `Hell.add_fires`), a végén `Hell.Throne` (Lucifer, DialoguePanel `page_size` = 6:
   5 történet + harc → `Room.start_lucifer`). A harc: `enemies/lucifer_boss.gd` (`LuciferBoss`, room.lord "lucifer", 30M élet, 50%-nál
   feldühödik; hellfire/souls/chains/pillars/abyss/summon + slam/blink/nova; hangok lucifer_*, zene Audio "lucifer"). Győzelem: portál,
-  győzelmi ablak, nincs lépcső. A hell jelzőt a `GameState.reset`, a `go_to_floor` és a csalós teleport törli. Hangjuk: a típus "voice" kulcsa ("hound" stb.) → Enemy._growl 5–10 mp-enként
+  győzelmi ablak, nincs lépcső. A hell jelzőt a `GameState.reset`, a `go_to_floor` és a csalós teleport törli.
+- A király szála a Káosz Ura után (`King._deep_quest_options`): ENGINE_QUEST (60.) → GATE_QUEST (80., az alapító I. Aurél
+  egyezsége a tekercsben) → LUCIFER_QUEST (a harminc ember volt az ár; Lucifer köszöntése tudja: `Hell.greeting`), a jelentés
+  a Szörnyek könyve szerint (Bestiary.kills). Jutalom: arany + `trinket_thirty_names` (a király gyűrűje); utána ENGINE_STORIES,
+  GATE_STORIES, EPILOGUE. Vigyázat: `Progress.add_to_stash` / `add_camp_gold` újratölti a mentést — előbb hívd, aztán a többi változást.
+  Csalómenü: teleport 1–100, `GameState.one_hit` (végtelen sebzés, az `Enemy._on_hurt` nézi; a futás csaltnak számít). Hangjuk: a típus "voice" kulcsa ("hound" stb.) → Enemy._growl 5–10 mp-enként
   "<voice>_growl", haláskor "<voice>_die" (Audio.VARIANTS).
 - A tábor könyvei egy földfolton (`Camp.BOOKS_PATCH`): Szörnyek, Tárgyak (`ItemCodex.MILESTONES`: fülenként 25/50/100%
   jutalom) és Eredmények könyve (`world/achievements.gd` LIST, ablak `ui/achievement_book.gd`; `Achievements.grant`

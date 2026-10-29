@@ -544,14 +544,19 @@ func _on_hurt(hitbox: Hitbox) -> void:
 	# (A nyílvesszőnek nincs owner-e: a kilövője a "source" metában van.)
 	var source: Variant = hitbox.get_meta("source", hitbox.owner)
 	# A játékos találati esélye: ha mellé megy, nem sebez (utána jön a szörny kikerülése).
-	if is_instance_valid(source) and source.has_method("hit_chance") and randf() >= float(source.call("hit_chance")):
+	# Csalás (végtelen sebzés): a játékos ütése sosem megy mellé, és egyből megöl (pajzs, kikerülés nélkül).
+	var one_hit: bool = GameState.one_hit and is_instance_valid(source) and (source as Node).is_in_group("player")
+	if not one_hit and is_instance_valid(source) and source.has_method("hit_chance") and randf() >= float(source.call("hit_chance")):
 		hitbox.missed = true
 		_on_missed()
 		return
 	var hit := hitbox.roll_hit()
+	if one_hit:
+		hit["damage"] = maxi(int(hit["damage"]), _health.current)
+		hit["pierce"] = true
 	# Pajzs alatt (pajzs képesség) csak a pajzspontok fogynak (a sebzés 80%-ával), az élete nem.
 	# Báb: a gazda szörnyének pajzsa fogy (a pontok a pillanatképpel jönnek vissza).
-	if _abilities.is_shielded():
+	if _abilities.is_shielded() and not one_hit:
 		Audio.play("door_lock", -10.0, 0.3)
 		if net_puppet:
 			var net := NetEnemies.active(get_tree())

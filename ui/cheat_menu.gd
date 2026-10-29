@@ -3,13 +3,14 @@ extends Node
 ## Csalómenü a [0] gombra (a Menus kezeli, megnyitva megáll a játék). Csalások:
 ##   - teleport a 10. / 20. emeletre, vagy a beírt emeletre (a kazamatában és a táborból is; pihenő közben nem)
 ##   - halhatatlanság be/ki (GameState.god_mode: a játékos nem sebződik)
+##   - végtelen sebzés be/ki (GameState.one_hit: minden ütésed egyből megöl, a főellenségeket is)
 ##   - karakterváltás (csak a táborban, a még zárolt karakterekre is; nem számít csalt futásnak)
 ##   - tárgyak a táskába (külön lapon: fajta és ritkaság szerint szűrve; nem számít csalt futásnak)
 ## Halhatatlanság alatt felül középen egy kis felirat jelzi, hogy be van kapcsolva.
 
 const TELEPORT_DEPTH := 20
 ## A beírható emelet felső határa.
-const MAX_TELEPORT_DEPTH := 99
+const MAX_TELEPORT_DEPTH := 100
 const CHARACTER_BUTTON_SIZE := Vector2(225, 48)
 const ITEM_BUTTON_SIZE := Vector2(212, 44)
 const ITEM_COLUMNS := 4
@@ -24,6 +25,7 @@ var _menu_box: VBoxContainer
 var _items_box: VBoxContainer
 var _item_grid: GridContainer
 var _god_button: Button
+var _one_hit_button: Button
 var _depth_input: LineEdit
 var _character_buttons := {}
 var _slot_buttons := {}
@@ -64,10 +66,12 @@ func handle_escape() -> bool:
 
 func _process(_delta: float) -> void:
 	# A felirat: halhatatlanság, és/vagy hogy a futás csalás miatt nem mentődik.
-	_badge.visible = GameState.god_mode or GameState.cheated
+	_badge.visible = GameState.god_mode or GameState.one_hit or GameState.cheated
 	var parts: Array[String] = []
 	if GameState.god_mode:
 		parts.append("HALHATATLAN")
+	if GameState.one_hit:
+		parts.append("EGY ÜTÉS")
 	if GameState.cheated:
 		parts.append("csalt futás: nem mentődik")
 	_badge_label.text = "  ·  ".join(parts)
@@ -114,7 +118,7 @@ func _build() -> void:
 	# Teleport a beírt emeletre (Enter vagy a gomb).
 	_depth_input = LineEdit.new()
 	_depth_input.placeholder_text = "Emelet (1-%d)" % MAX_TELEPORT_DEPTH
-	_depth_input.max_length = 2
+	_depth_input.max_length = 3
 	_depth_input.custom_minimum_size = CHARACTER_BUTTON_SIZE
 	_depth_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_depth_input.add_theme_font_override("font", MenuStyle.BUTTON_FONT)
@@ -127,6 +131,9 @@ func _build() -> void:
 	_god_button = MenuStyle.button("")
 	_god_button.pressed.connect(_toggle_god_mode)
 	_menu_box.add_child(_god_button)
+	_one_hit_button = MenuStyle.button("")
+	_one_hit_button.pressed.connect(_toggle_one_hit)
+	_menu_box.add_child(_one_hit_button)
 	var extras := GridContainer.new()
 	extras.columns = 2
 	extras.add_theme_constant_override("h_separation", 10)
@@ -350,6 +357,15 @@ func _toggle_god_mode() -> void:
 
 func _update_god_button() -> void:
 	_god_button.text = "Halhatatlanság: %s" % ("BE" if GameState.god_mode else "KI")
+	_one_hit_button.text = "Végtelen sebzés: %s" % ("BE" if GameState.one_hit else "KI")
+
+
+func _toggle_one_hit() -> void:
+	GameState.one_hit = not GameState.one_hit
+	if GameState.one_hit:
+		GameState.cheated = true
+	Audio.play("ui_click")
+	_update_god_button()
 
 
 func _select_character(id: String) -> void:
