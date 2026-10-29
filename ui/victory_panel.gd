@@ -68,11 +68,15 @@ func _build() -> void:
 	var chaos := lord == "chaos"
 	var engine := lord == "engine"
 	var gate := lord == "gate"
+	var lucifer := lord == "lucifer"
 	root.add_child(UiStyle.title_bar("A Káosz Ura elesett — győzelem!" if chaos
-		else "Az Ősgépezet leállt — győzelem!" if engine else "A Pokolkapu Őre elesett — győzelem!" if gate else "A Mélység Ura elesett — győzelem!"))
+		else "Az Ősgépezet leállt — győzelem!" if engine else "A Pokolkapu Őre elesett — győzelem!" if gate
+		else "Lucifer, a Démonkirály elesett — a történet véget ért!" if lucifer else "A Mélység Ura elesett — győzelem!"))
 	root.add_child(UiStyle.label(("Legyőzted az Ürességfalót, a Káosz Urát a 40. emeleten. A pénzed 100%-át megtartod,\n" if chaos
 		else "Leállítottad az Ősgépezetet a 60. emeleten. A pénzed 100%-át megtartod,\n" if engine
 		else "Legyőzted a Pokolkapu Őrét a 80. emeleten. A pénzed 100%-át megtartod,\n" if gate
+		else "Legyőzted Lucifert, a Démonkirályt a pokol trónjánál. A kazamata száz emelete elcsendesedik.\n"
+			+ "A pénzed 100%-át megtartod,\n" if lucifer
 		else "Legyőzted a Vérfarkast, és ezzel végigértél a kazamatán. A pénzed 100%-át megtartod,\n")
 		+ "és 2 tárgyat felvihetsz a tábori ládába; a többi felszerelésed itt marad. A következő út az 1. emeletről indul.",
 		15, UiStyle.INK_LIGHT))

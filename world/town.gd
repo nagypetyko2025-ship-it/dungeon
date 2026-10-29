@@ -826,7 +826,7 @@ static func room_rented() -> bool:
 ## A trófeafal főellenségei: a hét király, a Vérfarkas, a mély főellenségek és a Káosz Ura.
 static func trophies() -> Array[String]:
 	var list: Array[String] = []
-	list.assign(Bestiary.KINGS + [Bestiary.LORD] + Bestiary.DEEP_BOSSES + [Bestiary.CHAOS_LORD, Bestiary.ENGINE, Bestiary.GATE])
+	list.assign(Bestiary.KINGS + [Bestiary.LORD] + Bestiary.DEEP_BOSSES + [Bestiary.CHAOS_LORD, Bestiary.ENGINE, Bestiary.GATE, Bestiary.LUCIFER])
 	return list
 
 

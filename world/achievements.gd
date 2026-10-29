@@ -65,6 +65,8 @@ const LIST: Array[Dictionary] = [
 		"target": Bestiary.ENGINE, "goal": 1, "reward": {"gold": 1500, "dust": {"legendary": 1}}},
 	{"id": "boss_gate", "name": "A kapu nyitva", "text": "Győzd le a Pokolkapu Őrét a 80. emeleten.", "kind": "boss",
 		"target": Bestiary.GATE, "goal": 1, "reward": {"gold": 2500, "dust": {"legendary": 2}}},
+	{"id": "boss_lucifer", "name": "A Démonkirály bukása", "text": "Győzd le Lucifert, a Démonkirályt a pokolban.", "kind": "boss",
+		"target": Bestiary.LUCIFER, "goal": 1, "reward": {"gold": 5000, "dust": {"mythic": 1}}},
 	{"id": "boss_knocker", "name": "Csend a tárnákban", "text": "Győzd le a Kopogót a bánya mélyén.", "kind": "boss",
 		"target": "A Kopogó", "goal": 1, "reward": {"gold": 300}},
 	{"id": "boss_lake", "name": "A tó nyugalma", "text": "Győzd le a Tófenék Urát az elárasztott kriptában.",

@@ -33,3 +33,5 @@ ancient_engine.png: "Steam monster" by Blarumyrran, CC0 1.0 (https://opengameart
 gate_hound.png (a Pokolkapu Őre): a fenti hell_hound.png-ből (Gothicvania, ansimuz, CC0) összerakva: a fejét kétszer
   lemásolva (nyakkal, egy árnyék- és egy méregszínű fejjel), a szemeket átszínezve; 8 kocka, 52x36 px.
 crazy_clown.png: "2D Pixel Clown Spritesheet" (Zacard, CC0, https://iamzacard.itch.io/2d-pixel-clown-spritesheet), 4 álló + 4 futó kocka (32x32) a lapról.
+lucifer.png: a "Gothicvania Patreon's Collection" (ansimuz, CC0) Demon idle kockáiból (160x144, jobbra tükrözve):
+  a kék koponya csontfehérre és izzó vörös szemekre festve, a köpeny és a szárnyak sötétebb vörösre, arany korona rajzolva.

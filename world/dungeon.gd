@@ -90,6 +90,8 @@ const CHAOS_DEPTH := 40
 const ENGINE_DEPTH := 60
 ## A Pokolkapu Őrének emelete (a Fagykő vége, a Vérkő kapuja): ugyanilyen kezdőszoba és nagy terem.
 const GATE_DEPTH := 80
+## A 100. emelet: a nagy terem közepén a pokol kapuja (Hell.Gate); mögötte a pokol (GameState.hell).
+const HELL_DEPTH := Hell.DEPTH
 ## A Vérfarkas utáni lépcső helye a terem közepétől (csempe, keletre a portáltól).
 const DEEPER_STAIRS_OFFSET := 6
 ## Gáspár második küldetésének célja.
@@ -129,6 +131,10 @@ func _ready() -> void:
 	# A mélység sávja (DungeonTheme): a 21. és a 41. emelettől más kő, sötétebb, gonoszabb hangulat.
 	RenderingServer.set_default_clear_color(DungeonTheme.clear_color(GameState.depth))
 	($CanvasModulate as CanvasModulate).color = DungeonTheme.light(GameState.depth)
+	# A pokol (a 100. emelet kapuja mögött): vörös fény, sötétvörös háttér.
+	if GameState.hell and GameState.depth == Hell.DEPTH:
+		RenderingServer.set_default_clear_color(Hell.CLEAR)
+		($CanvasModulate as CanvasModulate).color = Hell.LIGHT
 	# Indításkor egyszer teljes képernyő; utána az F11-es váltás megmarad.
 	if not GameState.display_initialized:
 		GameState.display_initialized = true
@@ -161,19 +167,24 @@ func _ready() -> void:
 	var chaos_floor := depth == CHAOS_DEPTH and not tutorial
 	var engine_floor := depth == ENGINE_DEPTH and not tutorial and Challenge.story().is_empty()
 	var gate_floor := depth == GATE_DEPTH and not tutorial and Challenge.story().is_empty()
+	# A 100. emelet: kezdőszoba és a nagy terem a kapuval; a pokol: egyenes, tüzes út Luciferhez.
+	var hell := GameState.hell and depth == HELL_DEPTH and not tutorial
+	var portal_floor := depth == HELL_DEPTH and not hell and not tutorial and Challenge.story().is_empty()
 	# Történet-futás (a régi tárnák: Knocking, a kripta: LakeCrypt) utolsó emelete: aréna a saját főellenségével.
 	var knocker_floor := not Challenge.story().is_empty() and depth >= int(GameState.challenge["floors"])
-	var final_floor := (depth == FINAL_DEPTH or chaos_floor or engine_floor or gate_floor or knocker_floor) and not tutorial
+	var final_floor := (depth == FINAL_DEPTH or chaos_floor or engine_floor or gate_floor or knocker_floor or portal_floor) and not tutorial and not hell
 	var cells: Array[Vector2i] = []
 	if tutorial:
 		cells = TUTORIAL_CELLS.duplicate()
+	elif hell:
+		cells = Hell.CELLS.duplicate()
 	elif final_floor:
 		cells = [Vector2i.ZERO, Vector2i.RIGHT]
 	else:
 		cells = _generate_layout(mini(base_room_count + depth - 1, max_room_count))
 	var distances := _distances_from_start(cells)
 	var stairs_cell := _farthest(distances)
-	var shop_cell := TUTORIAL_CELLS[TUTORIAL_SHOP_ROOM] if tutorial else NO_SHOP if final_floor \
+	var shop_cell := TUTORIAL_CELLS[TUTORIAL_SHOP_ROOM] if tutorial else NO_SHOP if final_floor or hell \
 		else _pick_shop_cell(cells, stairs_cell)
 	# A 10. emeleten mindig van liftszoba (kék a térképen), a kezdőszobához legközelebbi szabad szobában.
 	var lift_cell := NO_SHOP
@@ -185,12 +196,14 @@ func _ready() -> void:
 				lift_cell = cell
 	# Minden BOSS_EVERY. emeleten a lépcsős szoba helyett főellenség-terem van.
 	# (A gyakorló pálya utolsó szobája is főellenség-terem.)
-	var boss_floor := (depth % BOSS_EVERY == 0 or tutorial) and not final_floor
+	var boss_floor := (depth % BOSS_EVERY == 0 or tutorial) and not final_floor and not hell
 	var alcove_dir := _free_direction(cells, stairs_cell) if boss_floor else Vector2i.ZERO
 
 	var room_rects := {}
 	for cell in cells:
-		if final_floor:
+		if hell:
+			room_rects[cell] = Hell.room_rect(cell, _cell)
+		elif final_floor:
 			room_rects[cell] = FINAL_START_ROOM if cell == Vector2i.ZERO \
 				else Rect2i(cell * _cell - FINAL_ARENA_SIZE / 2, FINAL_ARENA_SIZE)
 		elif boss_floor and cell == stairs_cell:
@@ -223,12 +236,15 @@ func _ready() -> void:
 			if cells.has(cell + dir):
 				room.connections.append(dir)
 		var distance: int = distances[cell]
-		if final_floor:
+		if hell:
+			# A pokol: se szörny, se csapda, se láda; csak tűz, és a végén Lucifer.
+			pass
+		elif final_floor:
 			# A nagy főellenség terme: nyitott aréna, se csapda, se láda. A 20. emeleten mindkét
 			# szobában Gáspár elesett embereinek csontvázai fekszenek (a teremben a legtöbb).
-			if not chaos_floor and not engine_floor and not gate_floor and not knocker_floor:
+			if not chaos_floor and not engine_floor and not gate_floor and not knocker_floor and not portal_floor:
 				room.fallen_guards = FINAL_ARENA_GUARDS if cell == Vector2i.RIGHT else FINAL_START_GUARDS
-			if cell == Vector2i.RIGHT:
+			if cell == Vector2i.RIGHT and not portal_floor:
 				room.has_boss = true
 				room.final_boss = true
 				room.lord = Challenge.story() if knocker_floor else ("chaos" if chaos_floor else "engine" if engine_floor else "gate" if gate_floor else "werewolf")
@@ -254,7 +270,7 @@ func _ready() -> void:
 			if Challenge.active():
 				room.enemy_count = maxi(1, roundi(room.enemy_count * Challenge.mult("enemy_count")))
 				room.trap_count = roundi(room.trap_count * Challenge.mult("trap_count"))
-		room.has_stairs = cell == stairs_cell and not boss_floor and not final_floor
+		room.has_stairs = cell == stairs_cell and not boss_floor and not final_floor and not hell
 		if tutorial:
 			var plan: Dictionary = TUTORIAL_ROOMS[TUTORIAL_CELLS.find(cell)]
 			room.forced_enemies.assign(plan.get("enemies", []))
@@ -268,6 +284,18 @@ func _ready() -> void:
 		room.shop_entered.connect(_enter_shop)
 		room.boss_fight_started.connect(_on_boss_fight_started)
 		room.boss_defeated.connect(_on_boss_defeated)
+		if hell:
+			Hell.add_fires(room)
+			if cell == Hell.CELLS[-1]:
+				var throne := Hell.Throne.new()
+				throne.room = room
+				throne.position = Vector2(room.rect.size.x * 0.25, 0) * TILE
+				room.add_child(throne)
+		elif portal_floor and cell == Vector2i.RIGHT:
+			var gate := Hell.Gate.new()
+			gate.on_enter = _enter_hell
+			gate.position = Room.tile_center(room.anchor) - room.position
+			room.add_child(gate)
 
 	# Közös játékban innentől mindenkinek saját véletlen: a bolt áruja (és a szobák tartalma)
 	# játékosonként más; a terem, az oszlopok, csapdák és díszek fent már közösek.
@@ -328,7 +356,11 @@ func _ready() -> void:
 		if depth >= QUEST_DEPTH and not GameState.cheated and Progress.npc_quest_state(Castle.DEEP_FLAG) == "":
 			Progress.set_npc_quest(Castle.DEEP_FLAG, "reached")
 			Progress.save_game()
-		if gate_floor:
+		if hell:
+			_hud.show_message("A pokol. Az út egyenesen keletre vezet, a tűzön át...")
+		elif portal_floor:
+			_hud.show_message("%d. emelet — keleten vörös fény dereng, és forró szél fúj a terem felől..." % depth)
+		elif gate_floor:
 			_hud.show_message("%d. emelet — keleten láncok csörögnek, és három torok morog a sötétben..." % depth)
 		elif engine_floor:
 			_hud.show_message("%d. emelet — keleten valami ősrégi gépezet dübörög a jég alatt..." % depth)
@@ -442,6 +474,14 @@ func _on_final_boss_defeated(room: Room) -> void:
 		_hud.show_message(LakeCrypt.story_won_text(room.lord) if LakeCrypt.is_story_lord(room.lord)
 			else "A Mélység Ura legyőzve! A lépcső szabad.")
 		room.open_stairs.call_deferred(room.anchor + Vector2i(DEEPER_STAIRS_OFFSET, 0))
+		return
+	if room.lord == "lucifer":
+		_hud.show_message("Lucifer elesett! Lépj a portálba — vége a történetnek!")
+		var end_portal: Node2D = RETURN_PORTAL.new()
+		end_portal.position = Room.tile_center(room.anchor) - room.position
+		end_portal.set("prompt_text", "[E] Győzelem — vissza a táborba")
+		end_portal.set("on_use", _open_victory_panel)
+		room.add_child.call_deferred(end_portal)
 		return
 	if room.lord in ["chaos", "engine", "gate"]:
 		_hud.show_message(("A Káosz Ura elesett!" if room.lord == "chaos" else "Az Ősgépezet leállt!" if room.lord == "engine"
@@ -642,6 +682,7 @@ func _teleport(target: Vector2, message: String) -> void:
 func cheat_teleport(target_depth: int) -> bool:
 	if GameState.tutorial or _teleporting:
 		return false
+	GameState.hell = false
 	_player.save_state()
 	GameState.depth = target_depth
 	GamePause.set_paused(get_tree(), false)
@@ -678,7 +719,14 @@ func go_to_floor(target_depth: int) -> void:
 	GamePause.set_paused(get_tree(), false)
 	_player.save_state()
 	GameState.depth = target_depth
+	GameState.hell = false
 	get_tree().reload_current_scene.call_deferred()
+
+
+## A 100. emelet kapuja: be a pokolba (ugyanez az emelet, a tüzes úttal; lásd Hell).
+func _enter_hell() -> void:
+	go_to_floor(HELL_DEPTH)
+	GameState.hell = true
 
 
 ## Véletlen bolyongás a rácson: egy meglévő szoba mellé tesz újat.

@@ -111,8 +111,12 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   saját hangok (engine_*), saját zene (Audio "engine", ONLY_IN_FIGHT: nincs a zeneválasztóban; Boss.music_track).
   A Jégkirálynő ezért az 51. emeletre került. A Pokolkapu Őre (enemies/hell_gate_boss.gd, room.lord "gate", Dungeon.GATE_DEPTH = 80):
   háromfejű pokolkutya (gate_hound.png: a hell_hound fejeiből összerakva), 25M élet, nincs fázisa; fire/spit/shadow/chain/lava/summon
-  (hell_hound falka, max 4) + charge, hangok gate_*, zene Audio "gate" (ONLY_IN_FIGHT). Tervben: a 100.-on portál a pokolba, ott a Démonkirály, az utolsó
-  főellenség, ami lezárja a történetet. Hangjuk: a típus "voice" kulcsa ("hound" stb.) → Enemy._growl 5–10 mp-enként
+  (hell_hound falka, max 4) + charge, hangok gate_*, zene Audio "gate" (ONLY_IN_FIGHT). A 100. emelet és a pokol: `world/hell.gd` (`Hell`):
+  a 100.-on (Dungeon portal_floor) a nagy terem közepén `Hell.Gate` (szöveg + E) → `GameState.hell` = true, ugyanaz az emelet
+  `Hell.CELLS` (5 szoba egy sorban, nyitott út, `Hell.add_fires`), a végén `Hell.Throne` (Lucifer, DialoguePanel `page_size` = 6:
+  5 történet + harc → `Room.start_lucifer`). A harc: `enemies/lucifer_boss.gd` (`LuciferBoss`, room.lord "lucifer", 30M élet, 50%-nál
+  feldühödik; hellfire/souls/chains/pillars/abyss/summon + slam/blink/nova; hangok lucifer_*, zene Audio "lucifer"). Győzelem: portál,
+  győzelmi ablak, nincs lépcső. A hell jelzőt a `GameState.reset`, a `go_to_floor` és a csalós teleport törli. Hangjuk: a típus "voice" kulcsa ("hound" stb.) → Enemy._growl 5–10 mp-enként
   "<voice>_growl", haláskor "<voice>_die" (Audio.VARIANTS).
 - A tábor könyvei egy földfolton (`Camp.BOOKS_PATCH`): Szörnyek, Tárgyak (`ItemCodex.MILESTONES`: fülenként 25/50/100%
   jutalom) és Eredmények könyve (`world/achievements.gd` LIST, ablak `ui/achievement_book.gd`; `Achievements.grant`

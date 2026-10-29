@@ -20,6 +20,8 @@ var npc_name := ""
 var portrait: Texture2D
 var greeting := ""
 var options: Array[Dictionary] = []
+## Ennyi opció fér egy oldalra (alapból MAX_OPTIONS; Lucifernél 6).
+var page_size := MAX_OPTIONS
 ## Ha be van állítva: () -> Array[Dictionary], az aktuális opciók (az `options` helyett).
 var options_provider: Callable
 
@@ -78,7 +80,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var index := key.physical_keycode - KEY_1
 	if index >= 0 and index < _page_count_on_page():
 		get_viewport().set_input_as_handled()
-		_choose(_page * MAX_OPTIONS + index)
+		_choose(_page * page_size + index)
 
 
 func _build() -> void:
@@ -204,7 +206,7 @@ func _build() -> void:
 	_text.add_theme_font_size_override("normal_font_size", 17)
 	_text.add_theme_font_size_override("italics_font_size", 17)
 	top.add_child(_text)
-	var hint := UiStyle.label("1-5 / kattintás: választás   ·   ← → lapozás   ·   [E] / [Esc] búcsú", 14, UiStyle.INK_LIGHT)
+	var hint := UiStyle.label("1-%d / kattintás: választás" % page_size + "   ·   ← → lapozás   ·   [E] / [Esc] búcsú", 14, UiStyle.INK_LIGHT)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	root.add_child(hint)
 
@@ -224,7 +226,7 @@ func _refresh_options() -> void:
 	_next_button.disabled = _page == pages - 1
 	var asked: Array = Progress.asked_topics(npc_id)
 	for slot in _page_count_on_page():
-		var i := _page * MAX_OPTIONS + slot
+		var i := _page * page_size + slot
 		var option: Dictionary = _current[i]
 		var was_asked := asked.has(option["id"])
 		var button := Button.new()
@@ -246,12 +248,12 @@ func _refresh_options() -> void:
 
 
 func _page_total() -> int:
-	return maxi(1, ceili(_current.size() / float(MAX_OPTIONS)))
+	return maxi(1, ceili(_current.size() / float(page_size)))
 
 
 ## Hány opció van az aktuális oldalon.
 func _page_count_on_page() -> int:
-	return clampi(_current.size() - _page * MAX_OPTIONS, 0, MAX_OPTIONS)
+	return clampi(_current.size() - _page * page_size, 0, page_size)
 
 
 func _turn_page(step: int) -> void:

@@ -40,6 +40,7 @@ const WEREWOLF := preload("res://enemies/werewolf_boss.gd")
 const CHAOS_LORD := preload("res://enemies/chaos_lord_boss.gd")
 const ANCIENT_ENGINE := preload("res://enemies/ancient_engine_boss.gd")
 const HELL_GATE := preload("res://enemies/hell_gate_boss.gd")
+const LUCIFER := preload("res://enemies/lucifer_boss.gd")
 ## A nagy főellenség (Vérfarkas, 20. emelet) jutalma: sok arany és két tárgy.
 const FINAL_BOSS_GOLD := 400
 ## A Káosz Uráé (40. emelet) még több arany (és szintén két tárgy).
@@ -76,6 +77,8 @@ var has_lift_room := false
 var visited := false
 ## Főellenség-terem: a lépcső a fülkében van (lcove_dir irányban), rács mögött.
 var has_boss := false
+## Hol kel fel Lucifer (a terem közepéhez képest; start_lucifer állítja).
+var _lucifer_at := Vector2.ZERO
 ## Ennyi elesett királyi őr csontváza fekszik a szobában (a 20. emeleten: Gáspár emberei).
 var fallen_guards := 0
 ## A nagy főellenség terme (20. emelet: Vérfarkas, 40. emelet: a Káosz Ura): nincs fülke és lépcső,
@@ -420,6 +423,12 @@ func add_puppet(type_name: String, at: Vector2, stats: Dictionary, id: int, boss
 		enemy.set("net_puppet", true)
 		enemy.call("setup_engine", depth)
 		enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
+	elif boss_kind == "lucifer":
+		enemy.set_script(LUCIFER)
+		enemy.set("net_id", id)
+		enemy.set("net_puppet", true)
+		enemy.call("setup_lucifer", depth)
+		enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
 	elif boss_kind == "gate":
 		enemy.set_script(HELL_GATE)
 		enemy.set("net_id", id)
@@ -444,6 +453,16 @@ func add_puppet(type_name: String, at: Vector2, stats: Dictionary, id: int, boss
 	return enemy
 
 
+## A pokol trónterme: a Luciferrel folytatott beszélgetés hatodik opciója indítja a harcot (Hell.Throne).
+func start_lucifer(at: Vector2, body: Node2D) -> void:
+	has_boss = true
+	final_boss = true
+	lord = "lucifer"
+	enemy_count = 1
+	_lucifer_at = at
+	_begin_fight(body.global_position if is_instance_valid(body) else global_position, body)
+
+
 ## A főellenség a terem fülke felőli felén jelenik meg (a lépcső "mögötte" van).
 func _spawn_boss() -> void:
 	var net := NetEnemies.active(get_tree())
@@ -454,6 +473,12 @@ func _spawn_boss() -> void:
 		# A történet-futás főellensége (a Kopogó: Knocking, a Tófenék Ura: LakeCrypt): a terem túlsó felén vár.
 		boss.setup_boss(depth, LakeCrypt.story_boss(lord))
 		boss.position = Vector2(rect.size.x * 0.25, 0) * TILE
+		boss.get_node("Health").died.connect(_on_enemy_died.bind(boss))
+	elif final_boss and lord == "lucifer":
+		# Lucifer ott kel fel, ahol a trónja előtt állt (Hell.Throne).
+		boss.set_script(LUCIFER)
+		boss.setup_lucifer(depth)
+		boss.position = _lucifer_at
 		boss.get_node("Health").died.connect(_on_enemy_died.bind(boss))
 	elif final_boss and lord == "gate":
 		# A Pokolkapu Őre is a terem túlsó (keleti) felén vár.
@@ -577,8 +602,8 @@ func _connect_center_stairs() -> void:
 func _drop_boss_loot(at: Vector2) -> void:
 	# A Kopogó (a régi tárnák alján) rendes főellenségnyi zsákmányt hagy, nem a nagy főellenségekét.
 	var lord_loot := final_boss and not LakeCrypt.is_story_lord(lord)
-	var total := (CHAOS_LORD_GOLD if lord in ["chaos", "engine", "gate"] else FINAL_BOSS_GOLD) if lord_loot 		else BOSS_GOLD + depth * BOSS_GOLD_PER_DEPTH
-	var coins := (30 if lord in ["chaos", "engine", "gate"] else 20) if lord_loot else 10
+	var total := (CHAOS_LORD_GOLD if lord in ["chaos", "engine", "gate", "lucifer"] else FINAL_BOSS_GOLD) if lord_loot 		else BOSS_GOLD + depth * BOSS_GOLD_PER_DEPTH
+	var coins := (30 if lord in ["chaos", "engine", "gate", "lucifer"] else 20) if lord_loot else 10
 	for i in coins:
 		var coin = COIN.instantiate()
 		coin.value = total / coins + (total % coins if i == 0 else 0)

@@ -66,6 +66,8 @@ static var visited_dungeon := false
 static var dungeon_won := false
 ## Melyik nagy főellenség után ("werewolf" / "chaos"): a tábor felirata ehhez igazodik.
 static var won_lord := "werewolf"
+## A pokolban vagy (a 100. emelet kapuja mögött, lásd Hell): az emelet a tüzes út Luciferrel.
+static var hell := false
 ## Csalás (CheatMenu): a játékos nem sebződik. A reset() nem törli, csak a menü kapcsolja.
 static var god_mode := false
 ## Ebben a futásban csaltál (teleport vagy halhatatlanság, akár csak egyszer is): a futásból
@@ -89,6 +91,7 @@ static var pending_level_ups: Array[int] = []
 
 static func reset() -> void:
 	depth = 1
+	hell = false
 	net_dead = false
 	pending_level_ups = []
 	saved_stats = {}

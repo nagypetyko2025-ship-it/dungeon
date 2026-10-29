@@ -21,6 +21,8 @@ const ENGINE_SCRIPT := preload("res://enemies/ancient_engine_boss.gd")
 ## A 80. emelet nagy főellensége.
 const GATE := "A Pokolkapu Őre"
 const GATE_SCRIPT := preload("res://enemies/hell_gate_boss.gd")
+## Az utolsó főellenség, a pokolban.
+const LUCIFER := "Lucifer, a Démonkirály"
 ## Kategóriák sorrendben: [cím, szörnyek].
 const CATEGORIES := [
 	["Élőholtak", ["tiny_zombie", "zombie", "ice_zombie", "big_zombie", "skelet", "skeleton_legionary",
@@ -39,7 +41,7 @@ const CATEGORIES := [
 	["Fagyott lények", ["frost_wraith", "ice_spider", "snow_golem", "frozen_knight"]],
 	["A pokol démonjai", ["hell_hound", "hell_beast", "nightmare", "hell_demon"]],
 	["Különös lények", ["mimic", "pumpkin_dude", "angel", "toadstool"]],
-	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES + [CHAOS_LORD, ENGINE, GATE]],
+	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES + [CHAOS_LORD, ENGINE, GATE, LUCIFER]],
 ]
 ## A képességek neve a könyvben (EnemyAbilities, és a típus "dash" / "ranged" jelzője).
 const ABILITY_NAMES := {
@@ -162,6 +164,10 @@ const ENTRIES := {
 	"Ürességfaló, a Káosz Ura": ["Ürességfaló, a Káosz Ura", "A 40. emelet ura: fogas torkú csápgomolyag a " \
 		+ "valóság szélén túlról. Hasadékokat nyit a földön, lövedékörvényt szór, és ha félholtra vered, " \
 		+ "széthasad körülötte a világ."],
+	"Lucifer, a Démonkirály": ["Lucifer, a Démonkirály", "A pokol ura, a 100. emelet kapuja mögött, a tüzes út végén, "
+		+ "a trónja előtt vár. Szarvas koponyáján izzó arany korona, szárnyai a boltozatot súrolják. Meteorokat hív "
+		+ "le, lelkek spirálját szórja, láncokat csap végig a termen, tűzoszlopokat küld ki magából, és a mélység "
+		+ "örvényébe ránt. A felénél feldühödik. Harmincmillió életereje van."],
 	"A Pokolkapu Őre": ["A Pokolkapu Őre", "A 80. emelet ura: háromfejű, láncra vert pokolkutya, ő őrzi a lejáratot "
 		+ "a Vérkő démonjaihoz. A középső feje lángcsóvát fúj, az alsó mérget köp, a felső sötét gömböket küld utánad; "
 		+ "a láncát végigcsapja a termen, a padlót lávarepedésekkel hasítja fel, és ha felvonyít, jön a falka. "
@@ -209,6 +215,11 @@ static func icon(monster: String) -> Array:
 					own.region = boss["rect"]
 					return [own, boss.get("tint", Color.WHITE)]
 				return [SpriteSheet.region(boss["rect"]), boss.get("tint", Color.WHITE)]
+		if monster == LUCIFER:
+			var lucifer := AtlasTexture.new()
+			lucifer.atlas = load(LuciferBoss.SHEET)
+			lucifer.region = LuciferBoss.LUCIFER["rect"]
+			return [lucifer, Color.WHITE]
 		if monster == GATE:
 			var gate := AtlasTexture.new()
 			gate.atlas = load(GATE_SCRIPT.SHEET)

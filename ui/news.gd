@@ -4,6 +4,10 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-29", "items": [
+		"A 100. emeleten vörösen izzó, ismeretlen kapu vár. Mögötte a pokol: egyenes, tüzes út, a végén Lucifer, "
+			+ "a Démonkirály. Beszélgethetsz vele (öt titok a kazamatáról), aztán jöhet a végső harc: 30 000 000 élet, "
+			+ "meteorok, lelkek spirálja, láncok, tűzoszlopok, a mélység örvénye és démonlégió — saját zenével. "
+			+ "Új eredmény: A Démonkirály bukása.",
 		"Új nagy főellenség a 80. emeleten: a Pokolkapu Őre, egy háromfejű, láncra vert pokolkutya (25 000 000 élet). "
 			+ "Lángcsóva, méregköpet, követő árnyékgömbök, lánccsapás, lávarepedések, és ha felvonyít, jön a falka — "
 			+ "saját hangokkal és egy sötét, csak ebben a harcban szóló zenével. Új eredmény: A kapu nyitva.",
