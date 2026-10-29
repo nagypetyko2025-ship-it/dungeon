@@ -13,6 +13,8 @@ const CELLS: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), 
 ## Az út egy szakasza: a cellánál szélesebb (a szomszédos szakaszok összeérnek), így egyetlen nyitott út.
 const ROAD_SIZE := Vector2i(34, 11)
 const THRONE_SIZE := Vector2i(31, 21)
+## Az utolsó útszakasz ennyivel rövidebb: a helyén folyosó vezet a trónterembe.
+const THRONE_GAP := 6
 ## A pokol fényei: vörösebb, mint a Vérkő.
 const LIGHT := Color(1.0, 0.62, 0.5)
 const CLEAR := Color(0.16, 0.02, 0.02)
@@ -79,7 +81,12 @@ static func options(on_fight: Callable) -> Array[Dictionary]:
 
 static func room_rect(cell: Vector2i, cell_size: Vector2i) -> Rect2i:
 	var size := THRONE_SIZE if cell == CELLS[-1] else ROAD_SIZE
-	return Rect2i(cell * cell_size - size / 2, size)
+	var rect := Rect2i(cell * cell_size - size / 2, size)
+	# Az utolsó útszakasz nem ér hozzá a trónteremhez: rendes (CORRIDOR_WIDTH széles) folyosó vezet be, amit
+	# a harc kezdetén a tüskesor teljesen lezár (különben a teljes útszélesség nyitva maradna).
+	if cell == CELLS[-2]:
+		rect.size.x -= THRONE_GAP
+	return rect
 
 
 static func idle_frames() -> SpriteFrames:
