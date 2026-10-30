@@ -380,6 +380,8 @@ func pick_up_gold(amount: int) -> void:
 
 ## Az ellenség hívja, mielőtt a fegyvered sebezné: 0..1 esély, hogy eltalálod (Találati esély).
 func hit_chance() -> float:
+	if not Stats.ACCURACY_ENABLED:
+		return 1.0
 	return _stats.accuracy / 100.0
 
 

@@ -35,6 +35,9 @@ const MAX_PIERCE := 1
 ## Találati esély: ennyi % eséllyel találod el a szörnyet (a szörny kikerülése ezután még
 ## jön). Az alapérték karakterenként más (Characters), legfeljebb ennyi lehet.
 const MAX_ACCURACY := 95
+## A találati esély ki van kapcsolva: minden ütés talál, és a stat nem látszik (kártya, sátor, boszorkány, statok,
+## tárgyleírás). Visszakapcsolás: true.
+const ACCURACY_ENABLED := false
 ## Különleges tárgy-tulajdonságok (nem szintlépéses statok, csak tárgyakból / táborból):
 ## lifesteal: ennyi % eséllyel gyógyulsz 1-et találatkor; thorns: ennyit sebez vissza annak,
 ## aki megüt; gold_find: ennyi %-kal több arany; xp_bonus: ennyi %-kal több tapasztalat.

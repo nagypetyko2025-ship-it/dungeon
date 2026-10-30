@@ -90,6 +90,9 @@ func _refresh() -> void:
 	for child in _rows.get_children():
 		child.queue_free()
 	for id: String in Progress.UPGRADES:
+		# A kikapcsolt találati esély (Céllövölde) nem fejleszthető.
+		if Progress.UPGRADES[id]["stat"] == "accuracy" and not Stats.ACCURACY_ENABLED:
+			continue
 		_rows.add_child(_make_row(id))
 
 

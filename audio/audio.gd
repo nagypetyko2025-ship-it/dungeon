@@ -153,6 +153,8 @@ var _cache := {}
 var _queues := {}
 var _place := "camp"
 var _last_song := ""
+## A zeneválasztóban kiválasztott szám: addig ismétlődik (helyváltáskor is), amíg ki nem kapcsolod ("" = a lista szól).
+var _pinned := ""
 ## Lejátszónként a futó áttűnés: újrahasználat előtt le kell állítani (különben egy korábbi elhalkítás
 ## a végén leállítaná az új számot is, pl. ha gyorsan lépsz vissza a főmenüből a játékba).
 var _fades: Array[Tween] = [null, null]
@@ -215,9 +217,34 @@ static func current_song() -> String:
 	return ""
 
 
-## Egy kiválasztott szám azonnali lejátszása (áttűnéssel); ha véget ér, a helyszín lejátszási listája folytatódik.
+## Egy kiválasztott szám azonnali lejátszása (áttűnéssel); addig ismétlődik, amíg a `stop_song` ki nem kapcsolja.
 static func play_song(path: String) -> void:
 	_node().call_deferred("_play_song", path)
+
+
+## A zeneválasztóban kiválasztott (ismétlődő) szám, vagy "".
+static func pinned_song() -> String:
+	return _node()._pinned
+
+
+## A kiválasztott szám kikapcsolása: a helyszín lejátszási listája folytatódik.
+static func stop_song() -> void:
+	_node().call_deferred("_unpin")
+
+
+func _unpin() -> void:
+	_pinned = ""
+	if not PLACE_TRACKS.has(_current_track):
+		return
+	var old_index := _active_music
+	_active_music = 1 - _active_music
+	var new_player := _music_players[_active_music]
+	_fade(old_index, -80.0, true)
+	new_player.stream = _next_song(_current_track)
+	new_player.volume_db = -40.0
+	new_player.play()
+	_fade(_active_music, float(PLAYLIST_TRACKS[_last_song]), false)
+	_show_now_playing(_last_song)
 
 
 func _play_song(path: String) -> void:
@@ -228,6 +255,7 @@ func _play_song(path: String) -> void:
 	var stream := _load(path)
 	_set_loop(stream, false)
 	_last_song = path
+	_pinned = path
 	# A végén a lejátszási lista jön (a főmenüben / főellenségnél is az utolsó helyszíné).
 	_current_track = _place
 	new_player.stream = stream
@@ -301,7 +329,8 @@ func _switch_music(track: String) -> void:
 	if PLACE_TRACKS.has(track):
 		_place = track
 		# Másik helyszín, de a szóló szám ott is szólhat: nem vált, csak a következő szám jön már az új listából.
-		if PLACE_TRACKS.has(_current_track) and place_songs(track).has(_last_song):
+		# A kiválasztott szám bárhol szólhat.
+		if PLACE_TRACKS.has(_current_track) and (place_songs(track).has(_last_song) or not _pinned.is_empty()):
 			_current_track = track
 			return
 	if track == _current_track:
@@ -316,7 +345,13 @@ func _switch_music(track: String) -> void:
 		return
 	var stream: AudioStream
 	var target_db := 0.0
-	if PLACE_TRACKS.has(track):
+	if PLACE_TRACKS.has(track) and not _pinned.is_empty():
+		# Főellenség / főmenü után a kiválasztott szám jön vissza.
+		_last_song = _pinned
+		stream = _load(_pinned)
+		_set_loop(stream, false)
+		target_db = float(PLAYLIST_TRACKS.get(_pinned, 0.0))
+	elif PLACE_TRACKS.has(track):
 		stream = _next_song(track)
 		target_db = PLAYLIST_TRACKS[_last_song]
 	else:
@@ -371,6 +406,10 @@ func _next_song(place: String) -> AudioStream:
 ## Egy szám véget ért: ha a lejátszási lista szól, jön a következő (ugyanazon a lejátszón).
 func _on_music_finished(player: AudioStreamPlayer) -> void:
 	if not PLACE_TRACKS.has(_current_track) or player != _music_players[_active_music]:
+		return
+	if not _pinned.is_empty():
+		# A kiválasztott szám elölről.
+		player.play()
 		return
 	player.stream = _next_song(_current_track)
 	player.volume_db = PLAYLIST_TRACKS[_last_song]

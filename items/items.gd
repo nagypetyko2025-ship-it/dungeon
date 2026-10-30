@@ -991,6 +991,8 @@ static func describe_bbcode(item: Dictionary) -> String:
 			WEAPON_NOTE_INK.to_html(false), item["base_damage"], roundi(item["scaling"] * 100.0), scaling_stat,
 			str(item["crit_multiplier"])])
 	for stat: String in item.get("stats", {}):
+		if stat == "accuracy" and not Stats.ACCURACY_ENABLED:
+			continue
 		var value: float = item["stats"][stat]
 		var color := "3c8a32" if value >= 0 else "b0302a"
 		# A különleges képességek (életlopás, tüskék, aranykereső, XP) lilával.
@@ -1034,6 +1036,8 @@ static func compare_bbcode(new_item: Dictionary, equipped: Dictionary) -> String
 		if not stats.has(stat):
 			stats.append(stat)
 	for stat in stats:
+		if stat == "accuracy" and not Stats.ACCURACY_ENABLED:
+			continue
 		var old_value := float(equipped.get("stats", {}).get(stat, 0.0))
 		var new_value := float(new_item.get("stats", {}).get(stat, 0.0))
 		var number_format := "%+.1f" if stat == "health_regen" else "%+d"

@@ -25,7 +25,7 @@ func _ready() -> void:
 	close.add_theme_font_size_override("font_size", 20)
 	close.pressed.connect(func() -> void: closed.emit())
 	head.add_child(close)
-	var hint := UiStyle.label("Kattints egy számra: azonnal az szól. Ha véget ér, a hely zenéje folytatódik.",
+	var hint := UiStyle.label("Kattints egy számra: azonnal az szól, és ismétlődik. Kattints rá újra a kikapcsoláshoz (a hely zenéje folytatódik).",
 		14, MenuStyle.PARCHMENT)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size.x = 380
@@ -49,6 +49,7 @@ func _refresh(playing := "") -> void:
 		child.queue_free()
 	if playing.is_empty():
 		playing = Audio.current_song()
+	var pinned := Audio.pinned_song()
 	for category: Array in Audio.music_categories():
 		var songs: Array = category[1]
 		if songs.is_empty():
@@ -57,8 +58,9 @@ func _refresh(playing := "") -> void:
 		_list.add_child(header)
 		for song: String in songs:
 			var now := song == playing
+			var looped := song == pinned
 			var button := Button.new()
-			button.text = ("▶  " if now else "♪  ") + Audio.song_title(song)
+			button.text = ("▶  " if now or looped else "♪  ") + Audio.song_title(song) + ("  (ismétlődik)" if looped else "")
 			button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 			# A hosszú cím a panelen belül tördelődik (különben a gomb kiszélesítené a panelt, és kilógna a képből).
 			button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -70,11 +72,19 @@ func _refresh(playing := "") -> void:
 			button.add_theme_stylebox_override("normal", _style(Color(1, 1, 1, 0.08 if now else 0.03)))
 			button.add_theme_stylebox_override("hover", _style(Color(1, 1, 1, 0.14)))
 			button.add_theme_stylebox_override("pressed", _style(Color(1, 1, 1, 0.2)))
-			button.pressed.connect(func() -> void:
-				Audio.play("ui_click")
-				Audio.play_song(song)
-				_refresh(song))
+			button.pressed.connect(_on_song.bind(song))
 			_list.add_child(button)
+
+
+func _on_song(song: String) -> void:
+	Audio.play("ui_click")
+	if song == Audio.pinned_song():
+		# Újra rákattintva kikapcsol: a hely lejátszási listája jön.
+		Audio.stop_song()
+		_refresh.call_deferred()
+	else:
+		Audio.play_song(song)
+		_refresh.call_deferred(song)
 
 
 func _style(color: Color) -> StyleBoxFlat:

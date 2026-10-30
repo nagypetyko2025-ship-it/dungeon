@@ -57,6 +57,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   `LORD_HEALTH` ×40 = 128 000 (+ feltámadás), `LORD_DAMAGE` ×2 = 32; Káosz Ura: 1 000 000 élet, 120 sebzés.
   Mellé / kikerülés: a szörny `_on_hurt`-ja `hitbox.missed = true`-t állít, a Hurtbox ilyenkor nem hívja az `on_hit`-et,
   a lövedék továbbrepül (az átütést sem fogyasztja; ugyanazt a célt a `skips` miatt nem találja el újra).
+- Találati esély: KIKAPCSOLVA (`Stats.ACCURACY_ENABLED` = false; visszakapcsolás: true). Ilyenkor `Player.hit_chance` = 1, és elrejtve:
+  Pontosság kártya (`Upgrades._available`), Céllövölde (camp_upgrades / witch_panel), Tab-statok, HUD, tárgyleírás és összevetés.
+- Láda: `pickups/chest.gd` — `NEVER_EMPTY_UNTIL` (15) emeletig sosem üres, utána `EMPTY_CHANCE`.
 - Tárgyak: `items/items.gd` (DEFINITIONS; a bolti áru emeletenként erősebb: `Items.for_depth`); statok: `components/stats.gd`; szintlépés-kártyák: `components/upgrades.gd`.
   Ritkaságok: common → rare → epic → legendary → mythic (Mítikus, piros: 17 saját tárgy, fegyverfajtánként / helyenként
   egy, a DEFINITIONS végén). Mítikus csak két helyről jön: a nagy főellenség (Vérfarkas, Káosz Ura) fő dobása
@@ -74,7 +77,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Helyváltáskor a szóló szám marad, ha az új helyen is szólhat. A táborban a helyet `Camp.music_place(pozíció)` adja
   (fél mp-enként), a kazamatában `Dungeon._music_place()`; "epic" = az utoljára kért hely. `PLAYLIST_TRACKS`: 14 CC0
   szám hangereje (dB-igazítás kb. -20 dBFS-re, mérve). Hangerő: Beállítások "Zene" csúszka (Music busz). Új szám: mérd meg a hangosságát.
-  Zeneválasztó: a szünet menüben jobb oldalt "♪ Zene" (`ui/music_panel.gd`, `Audio.music_categories / play_song / current_song`): kategóriánként (bárhol szól, helyszínek, egyéb) bármelyik szám lejátszható; a végén a hely listája folytatódik.
+  Zeneválasztó: a szünet menüben jobb oldalt "♪ Zene" (`ui/music_panel.gd`, `Audio.music_categories / play_song / current_song`): kategóriánként (bárhol szól, helyszínek, egyéb) bármelyik szám lejátszható; a kiválasztott szám (`Audio._pinned`, `pinned_song`) ismétlődik helyváltáskor és főellenség után is, újra rákattintva `stop_song` → a hely listája folytatódik.
   Bal alul (az XP-sáv fölött) kiírja, mi szól (`MUSIC_TITLES`, a főmenüben nem). Áttűnés lejátszónként (`_fade`): a
   régit le kell állítani újrahasználat előtt, különben egy elhalkítás vége az új számot is leállítja.
 - HP bájital: `ui/potion_badge.gd` (`PotionBadge`, Q gomb; a kazamatában a HP-csík mellett, a táborban bal fent). Gyorstár nincs.

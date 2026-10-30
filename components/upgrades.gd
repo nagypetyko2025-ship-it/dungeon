@@ -116,6 +116,8 @@ static func _available(stats: Stats, upgrade: Dictionary) -> bool:
 		return false
 	if Characters.data(Progress.character).get("spells", false) and stat in ["damage", "ranged_damage"]:
 		return false
+	if stat == "accuracy" and not Stats.ACCURACY_ENABLED:
+		return false
 	return not (LIMITS.has(stat) and stats.get(stat) >= LIMITS[stat])
 
 

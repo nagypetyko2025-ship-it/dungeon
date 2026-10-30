@@ -6,6 +6,8 @@ extends StaticBody2D
 const COIN := preload("res://pickups/coin.tscn")
 const ITEM_DROP := preload("res://pickups/item_drop.tscn")
 const EMPTY_CHANCE := 0.15
+## Eddig az emeletig (a próbatételben is) sosem üres a láda.
+const NEVER_EMPTY_UNTIL := 15
 const MAX_COINS := 8
 ## Arany: GOLD_BASE véletlen része + emeletenként GOLD_PER_DEPTH.
 const GOLD_BASE := Vector2i(5, 12)
@@ -34,6 +36,8 @@ func _ready() -> void:
 	if NetLobby.is_playing(get_tree()):
 		var roll := hash([GameState.net_seed, GameState.depth, Vector2i(global_position.round())])
 		_empty = posmod(roll, 1000) < roundi(EMPTY_CHANCE * 1000.0)
+	if GameState.depth <= NEVER_EMPTY_UNTIL:
+		_empty = false
 	_sprite.sprite_frames = _make_frames()
 	_sprite.animation = "empty" if _empty else "full"
 	_sprite.frame = 0

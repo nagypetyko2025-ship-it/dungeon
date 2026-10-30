@@ -148,6 +148,8 @@ func _refresh() -> void:
 		# Az elemi sebzés csak a varázslónál látszik.
 		if stat == "elemental_damage" and not Characters.data(Progress.character).get("spells", false):
 			continue
+		if stat == "accuracy" and not Stats.ACCURACY_ENABLED:
+			continue
 		_add_stat(stat, stats, health)
 
 	# A fegyver és a végső sebzés (Brotato-szerű képlet, lásd Stats).
