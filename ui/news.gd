@@ -4,6 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-30", "items": [
+		"Holló Margit, a boszorkány küldetést ad: vigyél neki egy Vámpírfogat! Utána új történeteket mesél, és szóba kerül a test manipulálása is (hamarosan).",
+		"A Küldetések könyvének fülei két sorba kerültek (új fül: Boszorkány).",
 		"Új hely: a romos ház tisztása lejjebb nyúlik, az alján boszorkánykunyhó áll (bent rotyog az üst, Holló Margit mesél). Odatalálsz a tábor nyugati szélén álló kettős táblával.",
 		"A főmenünek saját, epikus zenéje lett (a zeneválasztóban az Egyéb alatt is lejátszható).",
 		"Gyorsabb játék: nem akad meg a harc sok ölésnél, a csalómenü tárgylistája és a könyvek azonnal nyílnak, és rövidebb a lejutás a kazamatába.",

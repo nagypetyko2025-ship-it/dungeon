@@ -13,7 +13,7 @@ const PAGE_SIZE := Vector2(400, 400)
 ## 2 = a tolvaj küldetései (Thief), 3 = a király küldetései (Castle; csak a vár kapujánál
 ## tett első látogatás után látszik).
 const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király", "Kutas idegen", "Csontváz sírásó", "Doktor",
-	"Mérnök", "Horgász", "Robbantómester", "Bányász"]
+	"Mérnök", "Horgász", "Robbantómester", "Bányász", "Boszorkány"]
 const KING_TAB := 3
 ## 4 = a kútba esett idegen küldetései (Stranger).
 const WELL_TAB := 4
@@ -29,6 +29,8 @@ const FISHER_TAB := 8
 const BLASTER_TAB := 9
 ## 10 = Kormos Gyula, a bányász küldetései (Knocking).
 const MINER_TAB := 10
+## 11 = Holló Margit, a boszorkány küldetése (WitchHut; csak az első kérés után látszik).
+const WITCH_TAB := 11
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 ## Az általános fül szűrői: [kulcs, felirat].
 const STATUS_FILTERS := [["all", "Mind"], ["ready", "Leadható"], ["active", "Folyamatban"], ["done", "Teljesítve"]]
@@ -84,6 +86,7 @@ func _npc_quests() -> Dictionary:
 		FISHER_TAB: return Fisherman.QUESTS
 		BLASTER_TAB: return Blaster.QUESTS
 		MINER_TAB: return Knocking.QUESTS
+		WITCH_TAB: return WitchHut.QUESTS
 	return Dialogues.VETERAN_QUESTS
 
 
@@ -98,6 +101,7 @@ func _npc_name() -> String:
 		FISHER_TAB: return Fisherman.NAME
 		BLASTER_TAB: return Blaster.NAME
 		MINER_TAB: return Knocking.NAME
+		WITCH_TAB: return WitchHut.WITCH_NAME
 	return Dialogues.VETERAN_NAME
 
 
@@ -160,6 +164,10 @@ func open() -> void:
 	# A Király fül csak a vár kapujánál tett első látogatás után látszik.
 	_tab_buttons[KING_TAB].visible = Progress.npc_quest_state(Castle.PERMIT_QUEST) != ""
 	if _tab == KING_TAB and not _tab_buttons[KING_TAB].visible:
+		_set_tab(0)
+	# A Boszorkány fül csak a küldetése elvállalása után.
+	_tab_buttons[WITCH_TAB].visible = Progress.npc_quest_state(WitchHut.FANG_QUEST) != ""
+	if _tab == WITCH_TAB and not _tab_buttons[WITCH_TAB].visible:
 		_set_tab(0)
 	# Ha van leadható küldetés, rögtön azokat mutatja.
 	if not Quests.ready_ids().is_empty():
@@ -224,12 +232,16 @@ func _build() -> void:
 	root.add_theme_constant_override("separation", 10)
 	center.add_child(root)
 	root.add_child(MenuStyle.title_label("Küldetések könyve", 44, MenuStyle.GOLD))
-	# Fülek: általános / veterán.
-	var tabs := HBoxContainer.new()
-	tabs.alignment = BoxContainer.ALIGNMENT_CENTER
-	tabs.add_theme_constant_override("separation", 4)
-	root.add_child(tabs)
+	# Fülek két sorban (egy sorba már nem férnek el).
+	var rows: Array[HBoxContainer] = []
+	for r in 2:
+		var row := HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_theme_constant_override("separation", 4)
+		root.add_child(row)
+		rows.append(row)
 	for i in TAB_NAMES.size():
+		var tabs := rows[0] if i < ceili(TAB_NAMES.size() / 2.0) else rows[1]
 		var tab := MenuStyle.button(TAB_NAMES[i])
 		tab.custom_minimum_size = Vector2(108, 44)
 		tab.add_theme_font_size_override("font_size", 12)

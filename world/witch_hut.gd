@@ -3,7 +3,9 @@ extends Node2D
 ## Boszorkánykunyhó a nyugati tisztás alján (a romos ház alatt): sötét, mohos tetejű ház, az ablakában zöld
 ## derengés, a kéményéből zöldes füst, az ajtó fölött koponya; a sáros ösvényről sáros út vezet az ajtajáig.
 ## Bent egy üst rotyog a tűzön (zöld gőz), a falon polcok üvegcsékkel, a mennyezetről száradó füvek lógnak,
-## gyertyák, koponyák, pókhálók. Az üst mellett áll Holló Margit, a boszorkány (E: beszélgetés).
+## gyertyák, koponyák, pókhálók. Az üst mellett áll Holló Margit, a boszorkány (E: beszélgetés):
+## 4 történet, küldetés: egy Vámpírfog (FANG_QUEST, J könyv "Boszorkány" fül), utána 4 új történet és a
+## "Test manipulálása" (a képességek végleges fejlesztése, mint a kiképzősátor — egyelőre még nem működik).
 ## A tábla a tábor nyugati szélén: "Boszorkány kunyhó", alatta a régi, kopott "Lakóház" (lásd Camp._build_witch_sign).
 ## (A tábor építi fel: setup(camp) + build(), mint a Romot.)
 
@@ -73,6 +75,46 @@ const WITCH_STORIES: Array[Dictionary] = [
 			+ "ne felelj. Gyere inkább ide, és igyál egy jó csalánteát."},
 ]
 
+## A küldetés: hozz egy Vámpírfogat (epikus talizmán, a táskádban legyen).
+const FANG_QUEST := "witch_fang"
+const FANG_ID := "trinket_fang"
+const FANG_GOLD := 400
+const QUESTS := {
+	FANG_QUEST: {"name": "A vámpír foga",
+		"text": "Holló Margitnak a főzetéhez egy igazi [b]Vámpírfog[/b] kell (epikus talizmán, a táskádban legyen). "
+			+ "Azt mondja, a vámpír foga emlékszik minden vérre, amit valaha ivott, és a test is emlékezni fog rá.",
+		"reward": "%d tábori arany (és a boszorkány bizalma)" % FANG_GOLD,
+		"doing": "vigyél a boszorkánynak egy Vámpírfogat", "done": "Margit megkapta a fogat"},
+}
+## A fog után: 4 új történet (az 5. opció a Test manipulálása).
+const FANG_STORIES: Array[Dictionary] = [
+	{"id": "fang_why", "text": "Mire kellett neked az a fog?", "trust": 3,
+		"answer": "[i]A fogat egy kis üvegcsébe ejti. A folyadék elsötétül, aztán lassan vörösre vált.[/i]\n\n" \
+			+ "A vámpír nem a vért issza, gyermekem. Az életet. A vér csak a pohár. A foga pedig ötszáz évnyi " \
+			+ "lopott életet hordoz magában, minden harapás egy újabb gyűrű rajta, mint a fa törzsén.\n\n" \
+			+ "Ebből a lőréből egy csepp elég, hogy a test emlékezzen arra, milyen erős volt valaha. Vagy arra, " \
+			+ "milyen erős lehetne."},
+	{"id": "body", "text": "Honnan tudsz ennyit a testről?", "trust": 3,
+		"answer": "[i]Felhúzza a ruhaujját. A karján apró, ezüstös hegek futnak, mint egy térkép.[/i]\n\n" \
+			+ "Ötven éve gyógyítok. Előbb a falu tehenét, aztán a falu népét, aztán a katonákat, akik a falut " \
+			+ "elűzték. A test nem titok. Csak egy ház, amiben laksz. És a házat át lehet építeni.\n\n" \
+			+ "A doktorotok, Kálmán, fűrésszel és szikével dolgozik. Én türelemmel. Mindkettő fáj, csak az enyém " \
+			+ "tovább tart."},
+	{"id": "lorinc", "text": "Ismered Lőrincet, a varázslót?", "trust": 2,
+		"answer": "[i]Fújtat egyet.[/i]\n\n" \
+			+ "A tűzgolyós fiút? Hogyne. Évekig a kútnál kísérletezett, és kétszer gyújtotta fel a tetőmet. " \
+			+ "A varázslók azt hiszik, a hatalom kívülről jön: csillagokból, könyvekből, szavakból.\n\n" \
+			+ "Pedig minden itt van belül. A csontban, az inakban, a vérben. Csak tudni kell, hol kell megcsavarni. " \
+			+ "Ezt a fiú sosem értette meg. Talán majd te."},
+	{"id": "village", "text": "Milyen volt itt a falu régen?", "trust": 2,
+		"answer": "[i]A szeme elréved, a kanál megáll az üstben.[/i]\n\n" \
+			+ "Tizenkét ház. Malom a patakon, a tisztáson vásár minden ősszel. Az erdész háza volt a legszebb, " \
+			+ "faragott ablakokkal. A gyerekek a kút körül játszottak, mielőtt a kútnak alja lett volna... vagy " \
+			+ "mielőtt rájöttünk, hogy nincs neki.\n\n" \
+			+ "Aztán megnyílt a Mélység, és jött a király. Kardokkal, sátrakkal, kalandorokkal. A falu elment. Én itt " \
+			+ "maradtam, hogy legyen, aki emlékszik rá."},
+]
+
 var _camp: Node2D
 var _player: Node2D
 var _entities: Node2D
@@ -94,8 +136,82 @@ func setup(camp: Node2D) -> void:
 	_dialogue.greeting = WITCH_GREETING
 	_dialogue.portrait = portrait()
 	_dialogue.options_provider = func() -> Array[Dictionary]:
-		return WITCH_STORIES.duplicate()
+		return options(_player.get_node("Inventory"))
 	camp.add_child.call_deferred(_dialogue)
+
+
+## A beszélgetés opciói: a küldetés (kérés / átadás), a fog után a 4 új történet és a Test manipulálása
+## (5. opció, az első lapon), utána a régi történetek.
+static func options(inventory: Inventory) -> Array[Dictionary]:
+	var list: Array[Dictionary] = []
+	match Progress.npc_quest_state(FANG_QUEST):
+		"":
+			list.append({"id": "help", "text": "Segíthetek valamiben?",
+				"on_choose": func() -> String: return _give_fang_quest()})
+		"active":
+			if _has(inventory, FANG_ID):
+				list.append({"id": "fang", "text": "Hoztam egy Vámpírfogat.",
+					"on_choose": func() -> String: return _give_fang(inventory)})
+			else:
+				list.append({"id": "fang_wait", "text": "Hol találok vámpírfogat?",
+					"on_choose": func() -> String: return "[i]Meg sem fordul.[/i]\n\n" \
+						+ "Ahol a vámpírok. Lent, a Mélységben, ahol a fáklya is fázik. Ha megölsz egyet, és szerencséd " \
+						+ "van, a foga a porban marad. Hozd ide, mielőtt eladod valami ostoba kereskedőnek."})
+		"done":
+			list.append_array(FANG_STORIES)
+			list.append({"id": "manipulate", "text": "Test manipulálása (a képességeid végleges fejlesztése)",
+				"on_choose": func() -> String: return _manipulation_text()})
+	list.append_array(WITCH_STORIES)
+	return list
+
+
+## Az új funkció helye: még nem működik, csak a boszorkány mondja el, mi lesz.
+static func _manipulation_text() -> String:
+	return "[i]Margit végigméri a karodat, a válladat, a nyakadat, mint egy hentes a vásáron.[/i]\n\n" \
+		+ "Erős vagy, de rosszul. Az izmod ott dagad, ahol nem kell, az inad ott feszül, ahol enged. Ezt " \
+		+ "rendbe lehet tenni. Végleg. Nem úgy, mint a kiképzősátorban, ahol csak izzadsz és kiabálnak veled.\n\n" \
+		+ "De a főzet még nem érett meg. A fog lassan adja ki, amit tud. Gyere vissza később.\n\n" \
+		+ "[color=#7a4a10](Hamarosan: a boszorkány végleg fejleszti a képességeidet. Ez még nem érhető el.)[/color]"
+
+
+static func _give_fang_quest() -> String:
+	Progress.set_npc_quest(FANG_QUEST, "active")
+	Progress.mark_asked(WITCH_ID, "help")
+	Progress.save_game()
+	Audio.play("ui_open")
+	return "[i]Most először teszi le a kanalat. Hosszan néz rád.[/i]\n\n" \
+		+ "Talán. A főzetemből egyvalami hiányzik: egy [b]Vámpírfog[/b]. Nem bármilyen állaté, igazi vámpíré. " \
+		+ "A kalandorok néha felhozzák talizmánnak, a nyakukba akasztják, és azt hiszik, attól erősebbek. " \
+		+ "Bolondok. Az ereje nem a nyakban van.\n\n" \
+		+ "Hozz egyet, és megmutatom, mire jó valójában.\n\n" \
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Boszorkány fülön.)[/color]"
+
+
+static func _give_fang(inventory: Inventory) -> String:
+	for i in inventory.bag.size():
+		var item: Variant = inventory.bag[i]
+		if not (item is Dictionary and item.get("id", "") == FANG_ID):
+			continue
+		inventory.take_from_bag(i)
+		# Az add_camp_gold újratölti a mentést: előbb az arany, aztán a többi változás.
+		Progress.add_camp_gold(FANG_GOLD)
+		Progress.set_npc_quest(FANG_QUEST, "done")
+		Progress.mark_asked(WITCH_ID, "fang")
+		Progress.change_trust(WITCH_ID, 25)
+		Progress.save_game()
+		Audio.play("level_up")
+		return "[i]Két ujjal veszi el, a gyertya fénye felé tartja. A fog hegye egy pillanatra vörösen felizzik.[/i]" \
+			+ "\n\nIgazi. Régi is. Ez legalább háromszáz évig harapott.\n\n" \
+			+ "[i]Az üstbe ejti. A zöld gőz egy szívverésnyi időre vérvörösre vált, aztán visszazöldül.[/i]\n\n" \
+			+ "Jól van. Most már beszélhetünk komolyabb dolgokról is. [color=#7a4a10](+%d tábori arany)[/color]" % FANG_GOLD
+	return "Hm? Nem látok nálad vámpírfogat."
+
+
+static func _has(inventory: Inventory, id: String) -> bool:
+	for item: Variant in inventory.bag:
+		if item is Dictionary and item.get("id", "") == id:
+			return true
+	return false
 
 
 static func portrait() -> Texture2D:
@@ -203,9 +319,6 @@ func _build_interior() -> void:
 	var fire := Fire.new()
 	fire.position = Vector2(0, 2)
 	pot.add_child(fire)
-	var brew := Brew.new()
-	brew.position = Vector2(0, -34)
-	pot.add_child(brew)
 	pot.add_child(_steam(Vector2(0, -40)))
 	_body(pot, Vector2(0, -12), Vector2(44, 18))
 	_light(pot.position + Vector2(0, -30), BREW, 4.0, 1.4)
@@ -455,26 +568,6 @@ func _steam(at: Vector2) -> CPUParticles2D:
 	ramp.set_color(1, Color(0.3, 0.7, 0.3, 0.0))
 	steam.color_ramp = ramp
 	return steam
-
-
-## A rotyogó lé az üst szájában: zöld ellipszis, rajta fel-felbukkanó buborékok.
-class Brew:
-	extends Node2D
-	var _t := 0.0
-
-	func _process(delta: float) -> void:
-		_t += delta
-		queue_redraw()
-
-	func _draw() -> void:
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.32))
-		draw_circle(Vector2.ZERO, 15.0, Color(0.2, 0.55, 0.15))
-		draw_circle(Vector2(-3, -4), 10.0, Color(0.35, 0.8, 0.25))
-		draw_set_transform(Vector2.ZERO)
-		for i in 4:
-			var phase := fmod(_t * 0.9 + i * 0.37, 1.0)
-			var at := Vector2(sin(i * 2.7) * 9.0, cos(i * 1.9) * 2.0)
-			draw_circle(at, 1.0 + phase * 2.6, Color(0.6, 1.0, 0.5, 1.0 - phase))
 
 
 ## Kis tűz az üst alatt (lobogó lángnyelvek).
