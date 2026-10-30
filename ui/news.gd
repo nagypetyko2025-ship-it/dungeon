@@ -4,6 +4,7 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-30", "items": [
+		"Javítva: Bertalan aknáinál számít, ha már korábban (csalás nélkül) jártál azon az emeleten: rögtön fizethetsz neki, és utána ott a lift.",
 		"Javítva: Bertalan liftje most már ott áll minden megnyitott liftes emeleten (20-80.), a nagy főellenséges emeleteken a kezdőszobában.",
 		"Javítva: a szünet menü zeneválasztója nem lóg ki a képből (a hosszú címek két sorba törnek).",
 		"Javítva: a szobád trófeafalán a főellenségek képei két sorban, kilógás nélkül férnek el.",

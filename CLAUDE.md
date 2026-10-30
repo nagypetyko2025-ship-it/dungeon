@@ -229,7 +229,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   `Room.has_lift_room`) Bertalan mérnökkel (`world/engineer.gd`): 500 kazamatai aranyért megjavítja (J könyv "Mérnök" fül), felmegy a lifttel, és a táborban a lift mellett áll (2 új történet); a lift a 10. emeletre is visz.
   Mély aknák (a táborban, `Engineer.camp_options`): `LIFT_FLOORS` 20-80, egyszerre a soron következő (`next_floor`);
   "lift_<n>" küldetés: "" → active (elvállalod) → reached (`Engineer.note_depth`, a Dungeon hívja; csalás és próbatétel nem
-  számít) → done (fizetés tábori aranyból, `LIFT_PRICES`; szövegek: `CHAPTERS`). A lift ablaka (`CampLift.LiftPanel`): 2 oszlop,
+  számít; a `Progress.deepest` is: elvállaláskor és a `camp_options`-ban `note_depth(deepest, true)`) → done (fizetés tábori aranyból, `LIFT_PRICES`; szövegek: `CHAPTERS`). A lift ablaka (`CampLift.LiftPanel`): 2 oszlop,
   `Engineer.floor_open`, a zártak lakattal (`assets/ui/lock.png`). A 80. alá nem visz lift. Lent a nyitott mély aknák emeletein is
   liftszoba van (`Dungeon` deep_lift; nagy főellenség emeletén a kezdőszobában, `Room.lift_offset` = `FINAL_LIFT_OFFSET`), Bertalan nélkül.
   Mindkét helyen ugyanaz a lift: `LiftRoom.LiftRig` (pixelrácsra rajzolt bakállvány, láncon lógó ketrec, a gerenda végén

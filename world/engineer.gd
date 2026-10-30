@@ -152,6 +152,8 @@ static func in_camp() -> bool:
 ## közül a még fel nem tettek, a végén a lift.
 static func camp_options() -> Array[Dictionary]:
 	var list: Array[Dictionary] = []
+	# Ha már jártál ott (Progress.deepest, csalás nélkül), az elvállalt akna rögtön "reached" (régi mentések is).
+	note_depth(Progress.deepest, true)
 	var next := next_floor()
 	if next > 0:
 		var quest := floor_quest(next)
@@ -207,8 +209,8 @@ static func next_floor() -> int:
 
 
 ## A kazamatában (a Dungeon hívja): ha egy akna küldetése él, és leértél (legalább) arra az emeletre, teljesítetted.
-static func note_depth(depth: int) -> void:
-	if GameState.cheated:
+static func note_depth(depth: int, from_record := false) -> void:
+	if GameState.cheated and not from_record:
 		return
 	for floor_depth in LIFT_FLOORS:
 		var quest := floor_quest(floor_depth)
@@ -224,6 +226,7 @@ static func _article(depth: int) -> String:
 static func _give_floor(depth: int) -> String:
 	Progress.set_npc_quest(floor_quest(depth), "active")
 	Progress.save_game()
+	note_depth(Progress.deepest, true)
 	return str(CHAPTERS[depth][0]) % int(LIFT_PRICES[depth])
 
 
