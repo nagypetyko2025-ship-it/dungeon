@@ -501,7 +501,7 @@ func _own_frames(sheet: String, frame_size: Vector2) -> SpriteFrames:
 	var key := [sheet, frame_size, mimic]
 	if _sheet_frames.has(key):
 		return _sheet_frames[key]
-	var texture: Texture2D = load(sheet)
+	var texture := ResourceWarmer.fetch(sheet) as Texture2D
 	var frames := SpriteFrames.new()
 	frames.remove_animation("default")
 	_sheet_frames[key] = frames

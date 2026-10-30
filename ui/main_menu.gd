@@ -51,6 +51,8 @@ const MENU_BUTTON_SIZE := Vector2(340, 54)
 
 
 func _ready() -> void:
+	# Háttérbetöltés: a tárgyikonok már a főmenüben elkezdenek betöltődni (lásd ResourceWarmer).
+	Items.warm_icons()
 	# Ha a gyakorlásból jöttünk vissza (bárhogy), annak változásai nem maradnak meg.
 	GameState.tutorial = false
 	Progress.discard_tutorial_changes()

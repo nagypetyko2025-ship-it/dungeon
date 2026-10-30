@@ -211,37 +211,37 @@ static func icon(monster: String) -> Array:
 			if boss["name"] == monster:
 				if boss.has("sheet"):
 					var own := AtlasTexture.new()
-					own.atlas = load(boss["sheet"])
+					own.atlas = ResourceWarmer.fetch(boss["sheet"]) as Texture2D
 					own.region = boss["rect"]
 					return [own, boss.get("tint", Color.WHITE)]
 				return [SpriteSheet.region(boss["rect"]), boss.get("tint", Color.WHITE)]
 		if monster == LUCIFER:
 			var lucifer := AtlasTexture.new()
-			lucifer.atlas = load(LuciferBoss.SHEET)
+			lucifer.atlas = ResourceWarmer.fetch(LuciferBoss.SHEET) as Texture2D
 			lucifer.region = LuciferBoss.LUCIFER["rect"]
 			return [lucifer, Color.WHITE]
 		if monster == GATE:
 			var gate := AtlasTexture.new()
-			gate.atlas = load(GATE_SCRIPT.SHEET)
+			gate.atlas = ResourceWarmer.fetch(GATE_SCRIPT.SHEET) as Texture2D
 			gate.region = GATE_SCRIPT.GATE["rect"]
 			return [gate, Color.WHITE]
 		if monster == ENGINE:
 			var engine := AtlasTexture.new()
-			engine.atlas = load(ENGINE_SCRIPT.SHEET)
+			engine.atlas = ResourceWarmer.fetch(ENGINE_SCRIPT.SHEET) as Texture2D
 			engine.region = ENGINE_SCRIPT.ENGINE["rect"]
 			return [engine, Color.WHITE]
 		if monster == CHAOS_LORD:
 			var chaos := AtlasTexture.new()
-			chaos.atlas = load(CHAOS_SCRIPT.SHEET)
+			chaos.atlas = ResourceWarmer.fetch(CHAOS_SCRIPT.SHEET) as Texture2D
 			chaos.region = CHAOS_SCRIPT.LORD["rect"]
 			return [chaos, Color.WHITE]
 		var sheet := AtlasTexture.new()
-		sheet.atlas = load(WEREWOLF_SCRIPT.SHEET)
+		sheet.atlas = ResourceWarmer.fetch(WEREWOLF_SCRIPT.SHEET) as Texture2D
 		sheet.region = WEREWOLF_SCRIPT.WEREWOLF["rect"]
 		return [sheet, Color.WHITE]
 	if type.has("sheet"):
 		var texture := AtlasTexture.new()
-		texture.atlas = load(type["sheet"])
+		texture.atlas = ResourceWarmer.fetch(type["sheet"]) as Texture2D
 		texture.region = type["rect"]
 		return [texture, type.get("tint", Color.WHITE)]
 	return [SpriteSheet.region(type["rect"]), type.get("tint", Color.WHITE)]

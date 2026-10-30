@@ -1073,5 +1073,16 @@ static func slot_icon(slot: String) -> Texture2D:
 
 static func icon(item: Dictionary) -> Texture2D:
 	if item.has("icon_path"):
-		return load(item["icon_path"])
+		# Gyorsítótárból: a csalómenü és a könyvek egyszerre sokat kérnek (lásd ResourceWarmer).
+		return ResourceWarmer.fetch(item["icon_path"]) as Texture2D
 	return SpriteSheet.region(item["region"])
+
+
+## Az összes tárgyikon háttérbetöltése (a tábor és a kazamata indulásakor), hogy a csalómenü, a könyvek és a
+## táska első megnyitása se akadjon.
+static func warm_icons() -> void:
+	var paths: Array[String] = []
+	for id: String in DEFINITIONS:
+		if not DEFINITIONS[id].has("region"):
+			paths.append("res://assets/items/%s.png" % id)
+	ResourceWarmer.warm(paths)

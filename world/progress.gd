@@ -85,10 +85,51 @@ static func has_save() -> bool:
 	return FileAccess.file_exists(path())
 
 
+## Halasztott mentés a gyakori, apró változásokhoz (szörnyölés, mélységrekord): nem ír minden ölésnél a lemezre
+## (az a víruskeresővel együtt akasztotta a harcot), hanem legfeljebb SAVE_DELAY másodpercenként egyszer.
+## Mielőtt bármi újratölti a mentést, profilt vált, vagy a játék bezárul, a függő változás kiíródik (flush).
+const SAVE_DELAY := 1.0
+static var _dirty := false
+
+
+static func save_soon() -> void:
+	if GameState.tutorial or _dirty:
+		return
+	_dirty = true
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		save_game()
+		return
+	tree.create_timer(SAVE_DELAY, true, false, true).timeout.connect(Progress.flush)
+	if not is_instance_valid(_flusher):
+		_flusher = SaveFlusher.new()
+		_flusher.name = "ProgressSaveFlusher"
+		tree.root.add_child.call_deferred(_flusher)
+
+
+static func flush() -> void:
+	if _dirty:
+		save_game()
+
+
+static var _flusher: Node
+
+
+## Bezáráskor (ablak X, Alt+F4) kiírja a függő mentést.
+class SaveFlusher:
+	extends Node
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE:
+			Progress.flush()
+
+
 ## Betölti a mentést (ha még nem történt meg, vagy `force`).
 static func load_game(force := false) -> void:
 	if _loaded and not force:
 		return
+	# Ami még nincs kiírva, előbb kiíródik, különben az újratöltés eldobná.
+	flush()
 	_loaded = true
 	character = Characters.DEFAULT
 	_clear()
@@ -157,6 +198,7 @@ static func load_game(force := false) -> void:
 static func save_game() -> void:
 	if GameState.tutorial:
 		return
+	_dirty = false
 	_all_inventories[character] = camp_inventory
 	var config := ConfigFile.new()
 	config.set_value("camp", "gold", camp_gold)
@@ -270,7 +312,7 @@ static func add_kill(monster: String) -> void:
 		return
 	load_game()
 	kills[monster] = int(kills.get(monster, 0)) + 1
-	save_game()
+	save_soon()
 
 
 ## Másik karakterre váltás (a kocsmában): a saját tábori felszerelése töltődik be.
@@ -378,4 +420,4 @@ static func permanent_bonuses() -> Dictionary:
 static func reached_depth(depth: int) -> void:
 	if depth > deepest:
 		deepest = depth
-		save_game()
+		save_soon()

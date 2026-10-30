@@ -38,6 +38,8 @@ static func records_path(profile := 0) -> String:
 
 ## Profilváltás: elmenti a választást, és betölti az új profil mentését.
 static func select(profile: int) -> void:
+	# A régi profil függő mentése még a régi helyére kerüljön.
+	Progress.flush()
 	_current = clampi(profile, 1, COUNT)
 	var config := ConfigFile.new()
 	config.set_value("profile", "current", _current)

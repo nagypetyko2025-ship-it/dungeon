@@ -163,6 +163,10 @@ var _gold_label: Label
 
 
 func _ready() -> void:
+	# Háttérbetöltés: a tárgyikonok (csalómenü, könyvek, láda) és a kazamata jelenete a képeivel, hogy a
+	# lejutás se akadjon (lásd ResourceWarmer).
+	Items.warm_icons()
+	ResourceWarmer.warm(["res://world/dungeon.tscn"])
 	RenderingServer.set_default_clear_color(Color(0.04, 0.06, 0.05))
 	if not GameState.display_initialized:
 		GameState.display_initialized = true

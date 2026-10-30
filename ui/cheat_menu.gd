@@ -32,6 +32,8 @@ var _slot_buttons := {}
 var _rarity_buttons := {}
 var _slot_filter := ""
 var _rarity_filter := ""
+## Melyik ritkaság-szűrővel épültek a tárgygombok (lásd _fill_items).
+var _built_rarity := "-"
 var _status: Label
 var _badge: CanvasLayer
 var _badge_label: Label
@@ -222,16 +224,25 @@ func _show_items_page(show: bool) -> void:
 		_fill_items()
 
 
-## A rács újratöltése a szűrők szerint (fajta, majd ritkaság szerint rendezve).
+## A rács a szűrők szerint (fajta, majd ritkaság szerint rendezve). A gombok csak akkor épülnek újra, ha a
+## ritkaság-szűrő változott (a nevük és a színük attól függ); a fajta-szűrő csak elrejti / megmutatja őket.
 func _fill_items() -> void:
-	for child: Node in _item_grid.get_children():
-		child.queue_free()
 	for slot: String in _slot_buttons:
 		_mark(_slot_buttons[slot], slot == _slot_filter)
 	for rarity: String in _rarity_buttons:
 		_mark(_rarity_buttons[rarity], rarity == _rarity_filter)
-	var ids: Array = Items.DEFINITIONS.keys().filter(func(id: String) -> bool:
-		return _slot_filter.is_empty() or Items.DEFINITIONS[id]["slot"] == _slot_filter)
+	if _built_rarity != _rarity_filter or _item_grid.get_child_count() == 0:
+		_build_item_buttons()
+	for button: Node in _item_grid.get_children():
+		var id := str(button.get_meta("item_id", ""))
+		(button as Control).visible = _slot_filter.is_empty() or Items.DEFINITIONS[id]["slot"] == _slot_filter
+
+
+func _build_item_buttons() -> void:
+	_built_rarity = _rarity_filter
+	for child: Node in _item_grid.get_children():
+		child.queue_free()
+	var ids: Array = Items.DEFINITIONS.keys()
 	ids.sort_custom(func(a: String, b: String) -> bool:
 		var slot_a := Inventory.EQUIPMENT_SLOTS.find(Items.DEFINITIONS[a]["slot"])
 		var slot_b := Inventory.EQUIPMENT_SLOTS.find(Items.DEFINITIONS[b]["slot"])
@@ -251,6 +262,7 @@ func _fill_items() -> void:
 		item_button.tooltip_text = "%s (%s, %s)" % [definition["name"], Items.RARITIES[definition["rarity"]]["name"],
 			Inventory.SLOT_NAMES[definition["slot"]]]
 		item_button.pressed.connect(_give_item.bind(id))
+		item_button.set_meta("item_id", id)
 		_item_grid.add_child(item_button)
 
 

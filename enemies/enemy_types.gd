@@ -472,6 +472,16 @@ static func surges(depth: int) -> int:
 	return count
 
 
+## Az ezen a mélységen előforduló szörnyek saját lapjainak háttérbetöltése (a Dungeon hívja az emelet
+## indulásakor), hogy az első harc ne akadjon a lemezről olvasáson.
+static func warm_sheets(depth: int) -> void:
+	var paths: Array[String] = []
+	for type in TYPES:
+		if type.has("sheet") and int(type.get("min_depth", 1)) <= depth:
+			paths.append(str(type["sheet"]))
+	ResourceWarmer.warm(paths)
+
+
 static func by_name(type_name: String) -> Dictionary:
 	for type in TYPES:
 		if type["name"] == type_name:

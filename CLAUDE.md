@@ -207,6 +207,11 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   +1 sebzés, csontváz-erősítés, gyors idézés, jobb klikkre a másodlagos idézés: 3 íjász VAGY óriás csontváz (kizárják egymást); idézéskor szabad helyre kelnek (`_free_spawn_spot`); a csontvázak statjai és a töltési idők a
   szinttel / Vendel statjaival NEM nőnek; a szörnyek (a főellenség nem) a közelebbi csontvázra is rátámadnak, a csontváz `hits`
   találatot bír ki (saját Hurtbox); `GameState.necromancy`; Tab-ban "Idézés" oldal), választó: `ui/spell_picker.gd`). Kocsmai székek: `world/town.gd`.
+- Teljesítmény: `world/resource_warmer.gd` (ResourceWarmer): `fetch(path)` gyorsítótár (tárgyikonok `Items.icon`, a Szörnyek
+  könyve képei, a szörnylapok `Enemy._own_frames`), `warm(paths)` háttérbetöltés (`Items.warm_icons` a főmenüben / táborban /
+  kazamatában, `EnemyTypes.warm_sheets(depth)`, a tábor a dungeon.tscn-t is). Gyakori apró mentés: `Progress.save_soon()`
+  (add_kill, reached_depth; 1 mp után egyben, `flush()` újratöltés / profilváltás / bezárás előtt). A csalómenü tárgyrácsa csak
+  ritkaságváltáskor épül újra (`_built_rarity`), a fajta-szűrő csak elrejt.
 - Csalómenü: [0], kód nélkül (`ui/cheat_menu.gd`): teleport a 10. / 20. vagy a beírt emeletre (1–99; `cheat_teleport` a Dungeon/Camp jeleneten),
   halhatatlanság (`GameState.god_mode`), karakterváltás a táborban (zároltakra is; `cheat_select_character` a Camp-en →
   `Town.cheat_switch_to`), tárgylap (bármelyik tárgy bármelyik ritkaságban a táskába). Teszteléshez is hasznos.

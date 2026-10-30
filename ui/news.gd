@@ -4,6 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-30", "items": [
+		"Gyorsabb játék: nem akad meg a harc sok ölésnél, a csalómenü tárgylistája és a könyvek azonnal nyílnak, és rövidebb a lejutás a kazamatába.",
+		"Javítva: A harminc név gyűrűjének hiányzott az ikonja.",
 		"Javítva: a Szörnyek könyvéből nem lóg ki többé a lap (a hosszú leírású szörnyek, pl. Azazel, saját lapot kapnak).",
 		"Bertalan, a mérnök tovább építi a liftet: a táborban fejezetenként elvállalhatod a 20., 30., 40., 50., 60., 70. és 80. " \
 			+ "emeleti aknát (leérsz arra az emeletre, aztán kifizeted tábori aranyból). A 80. alá nem visz lift.",
