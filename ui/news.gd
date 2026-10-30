@@ -3,6 +3,11 @@ class_name News
 ## rövid, játékosnak szóló sor a legfrissebb dátum alá (a legújabb van felül).
 
 const ENTRIES: Array[Dictionary] = [
+	{"date": "2026-10-30", "items": [
+		"Bertalan, a mérnök tovább építi a liftet: a táborban fejezetenként elvállalhatod a 20., 30., 40., 50., 60., 70. és 80. " \n			+ "emeleti aknát (leérsz arra az emeletre, aztán kifizeted tábori aranyból). A 80. alá nem visz lift.",
+		"A lift ablakában a még zárt emeleteken lakat látszik.",
+		"A kovácsnak neve lett (Ambrus): E-re beszélget, 4 történetet mesél, és az első opcióval nyílik a műhelye.",
+	]},
 	{"date": "2026-10-29", "items": [
 		"Rossz befejezés: ha Azazel ellen elesel, 9 képen, pokoli zenével kiderül, mi történt volna a királysággal.",
 		"A pokol kapuja új kinézetet kapott (izzó, animált kőkapu), és a belépéskor nincs többé hosszú zúgás.",

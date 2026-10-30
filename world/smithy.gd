@@ -8,6 +8,38 @@ extends Node2D
 
 const RPG: Texture2D = preload("res://assets/shop/kenney_rpg.png")
 const SMITH_SHEET: Texture2D = preload("res://assets/characters/blacksmith.png")
+## Ambrus, a kovács: E-re beszélget (4 történet), az első opció a műhelye (SmithPanel; a tábor nyitja).
+const SMITH_ID := "smith"
+const SMITH_NAME := "Ambrus, a kovács"
+const SMITH_GREETING := "[i]A törpe kovács meg sem áll: a kalapács egyenletesen csendül az izzó vason. " \
+	+ "Csak a szemét emeli rád a szikrák mögül.[/i]\n\nBeszélj, de ne állj a kohó elé. Ha hozol valamit, " \
+	+ "rakd az üllőre. Ha csak kérdezni jöttél... hát, a vas addig is hűl."
+const SMITH_STORIES: Array[Dictionary] = [
+	{"id": "who", "text": "Honnan jöttél, mester?", "trust": 3,
+		"answer": "[i]Lecsap még egyszer, aztán a vízbe mártja a vasat. Sistereg.[/i]\n\n" \
+			+ "A hegy túloldaláról, a törpecsarnokokból. Ott az ember (meg a törpe) száz évig tanulja a mesterséget, " \
+			+ "mielőtt a saját üllőjéhez állhat. Én hetvenkilenc év után eljöttem.\n\n" \
+			+ "Miért? Mert odafent mindent megkovácsoltak már. Itt, a Mélység szájánál minden nap jön valaki egy " \
+			+ "olyan pengével, amilyet még sosem láttam. Egy kovácsnak ennél jobb hely nincs a világon."},
+	{"id": "dust", "text": "Mi ez a por, amiből fejlesztesz?", "trust": 2,
+		"answer": "[i]Felmarkol egy csipetnyit a kötényéből, és a fény felé tartja. Csillog.[/i]\n\n" \
+			+ "Emlékezet. Minden fegyver emlékszik a kézre, ami forgatta, a vérre, amit ontott, a mélységre, " \
+			+ "ahonnan jött. Ha szétszedek egyet, az emlékezete porrá őrlődik.\n\n" \
+			+ "És ha azt a port beleütöm egy másik pengébe, az is emlékezni kezd. Erősebb lesz, élesebb. " \
+			+ "Néha nem sikerül: a vas nem akar emlékezni. Olyankor a por elszáll. Ilyen a mesterség."},
+	{"id": "best", "text": "Mi volt a legjobb fegyver, amit valaha kovácsoltál?", "trust": 4,
+		"answer": "[i]Megáll a kalapács. Most először, amióta itt állsz.[/i]\n\n" \
+			+ "Egy őrkard. Díszes markolat, kék acél, és a pengébe vésett királyi korona. A királyi őrség " \
+			+ "kapitányának készült, tizenkét éve.\n\n" \
+			+ "Gáspár hordta, amikor lement az embereivel. És Gáspár hozta vissza, egyedül. Azóta is nála van.\n\n" \
+			+ "[i]Csendesen folytatja a kalapálást.[/i]\n\nA kard visszajött. Ez a legtöbb, amit egy kovács remélhet."},
+	{"id": "why", "text": "Miért pont a Mélység szájánál dolgozol?", "trust": 4,
+		"answer": "[i]A kohó parazsát piszkálja, és sokáig hallgat.[/i]\n\n" \
+			+ "Volt egy öcsém, Barnabás. Ő is kovács volt, jobb nálam. Húsz éve lement, hogy a mélyből hozzon " \
+			+ "vasat, olyat, amilyet a felszínen nem találni. Nem jött vissza.\n\n" \
+			+ "Itt dolgozom, ahol ő utoljára látta a napot. Minden pengét, ami innen lemegy, úgy kovácsolok meg, " \
+			+ "hogy visszajöjjön a gazdájával együtt. Ennyit tehetek."},
+]
 const TILE := 32
 ## Kenney RPG lap (16 px + 1 px hézag): ponyva oszloppal (bal / jobb vég), oszlopok,
 ## kohó (két lángkocka), üllő.

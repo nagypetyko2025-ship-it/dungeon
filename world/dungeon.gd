@@ -352,6 +352,9 @@ func _ready() -> void:
 		add_child(guide)
 		guide.call("setup", self, rooms)
 	else:
+		# Bertalan aknái: leértél a soron következő akna emeletére.
+		if not Challenge.active():
+			Engineer.note_depth(depth)
 		# A királyi vár engedélyéhez: elérted a 30. emeletet (ha vissza is jössz, az a táborban számít).
 		if depth >= QUEST_DEPTH and not GameState.cheated and Progress.npc_quest_state(Castle.DEEP_FLAG) == "":
 			Progress.set_npc_quest(Castle.DEEP_FLAG, "reached")

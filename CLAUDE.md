@@ -82,7 +82,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Bezáró X: a Menus minden megnyíló ablakra kitesz egy `CloseButton`-t (`ui/close_button.gd`), az ablak jobb felső
   sarkába (a legnagyobb nem teljes képernyős panelhez igazodik; egy ablak `close_anchor()`-ral megadhatja, pl. a
   Szörnyek könyve és a szünet menü).
-- Kovács (a tábor jobb alsó sarkában, `world/smithy.gd`): előtte E-re `ui/smith_panel.gd` (SmithPanel). Szabályok:
+- Kovács (a tábor jobb alsó sarkában, `world/smithy.gd`): Ambrus (`Smithy.SMITH_*`), E-re beszélgetés (`Camp._smith_dialogue`:
+  első opció a műhely → `Camp._open_smith_panel`, utána 4 történet `SMITH_STORIES`); a műhely `ui/smith_panel.gd` (SmithPanel). Szabályok:
   `items/smithing.gd` — fejlesztés a következő ritkaságba 4 porért abból a ritkaságból, 65% eséllyel (ha nem sikerül,
   a por elvész; `Smithing.upgraded` a statokat a tartományukban ugyanott tartja), szétszedés: 1 (30%: 2) por a tárgy
   ritkaságából (a rajtad lévő tárgyat nem lehet beolvasztani, csak fejleszteni). Mítikus tárgy: nem lép feljebb, hanem
@@ -211,6 +212,10 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   `Town.cheat_switch_to`), tárgylap (bármelyik tárgy bármelyik ritkaságban a táskába). Teszteléshez is hasznos.
 - Lift: a táborban a lépcső mellett (`world/camp_lift.gd`, "Lefelé utazás"); a 10. emeleten kék liftszoba (`world/lift_room.gd`,
   `Room.has_lift_room`) Bertalan mérnökkel (`world/engineer.gd`): 500 kazamatai aranyért megjavítja (J könyv "Mérnök" fül), felmegy a lifttel, és a táborban a lift mellett áll (2 új történet); a lift a 10. emeletre is visz.
+  Mély aknák (a táborban, `Engineer.camp_options`): `LIFT_FLOORS` 20-80, egyszerre a soron következő (`next_floor`);
+  "lift_<n>" küldetés: "" → active (elvállalod) → reached (`Engineer.note_depth`, a Dungeon hívja; csalás és próbatétel nem
+  számít) → done (fizetés tábori aranyból, `LIFT_PRICES`; szövegek: `CHAPTERS`). A lift ablaka (`CampLift.LiftPanel`): 2 oszlop,
+  `Engineer.floor_open`, a zártak lakattal (`assets/ui/lock.png`). A 80. alá nem visz lift.
   Mindkét helyen ugyanaz a lift: `LiftRoom.LiftRig` (pixelrácsra rajzolt bakállvány, láncon lógó ketrec, a gerenda végén
   forgó fogaskerék: `assets/props/lift_gear.png`, 8 kocka); lent a szoba közepén, a táborban a kőpadló mellett egy akna fölött (`CampLift.Shaft`).
 - Pihenő a főellenség után (`ui/boss_return_panel.gd`): a kék portál a táborból ugyanoda hoz vissza — `GameState.break_floor`

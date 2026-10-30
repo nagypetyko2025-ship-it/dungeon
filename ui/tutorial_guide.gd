@@ -309,8 +309,8 @@ func _build_camp_steps() -> void:
 			+ "biztonságban marad, ahogy a tábori arany és a fejlesztések is. Ezért a legjobb zsákmányt küldd fel "
 			+ "(tárgylift, pihenő)!", {"short": "Halálkor elveszted, ami nálad van; ami a ládában van, megmarad."}),
 		_task("Kovács", "Itt a [b]kovács[/b]: ugyanaz, amit a gyakorló üllőnél kipróbáltál, csak itt a porok megmaradnak. "
-			+ "Nyisd meg ([b]E[/b]), nézd meg, aztán csukd be.", func() -> bool: return _seen.has("smith_closed"),
-			{"target": _camp_spot.bind("_smith_position"), "window": "SmithPanel", "short": "Ez a kovács. Nézd meg, aztán csukd be (X)."}),
+			+ "Beszélj vele ([b]E[/b]), és válaszd az első opciót ([b]1[/b]): megnyílik a műhely. Nézd meg, aztán csukd be.", func() -> bool: return _seen.has("smith_closed"),
+			{"target": _camp_spot.bind("_smith_position"), "window": "SmithPanel", "short": "E, aztán 1: a kovács műhelye. Nézd meg, aztán csukd be (X)."}),
 		_task("Szörnyek könyve", "Ez a [b]Szörnyek könyve[/b]: minden szörny leírása és képességei, amelyiket már "
 			+ "legyőzted. Nyisd meg ([b]E[/b]), lapozz bele, aztán csukd be.",
 			func() -> bool: return _seen.has("bestiary_closed"), {"target": _camp_spot.bind("_bestiary_position"),

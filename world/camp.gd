@@ -131,6 +131,8 @@ var _npc_position := Vector2.ZERO
 ## A kovács (E-re nyílik a műhelye: tárgyfejlesztés, szétszedés; lásd SmithPanel).
 var _smith_position := Vector2.ZERO
 var _smith_panel: SmithPanel
+## A kovács (Ambrus): E-re beszélgetés, az első opció nyitja a műhelyt.
+var _smith_dialogue: DialoguePanel
 ## A Szörnyek könyve (E-re nyílik az állványnál).
 var _bestiary_position := Vector2.ZERO
 var _bestiary_book: CanvasLayer
@@ -298,6 +300,21 @@ func _ready() -> void:
 	_smith_panel = SmithPanel.new()
 	_smith_panel.name = "SmithPanel"
 	add_child(_smith_panel)
+	_smith_dialogue = DialoguePanel.new()
+	_smith_dialogue.name = "SmithDialogue"
+	_smith_dialogue.npc_id = Smithy.SMITH_ID
+	_smith_dialogue.npc_name = Smithy.SMITH_NAME
+	_smith_dialogue.greeting = Smithy.SMITH_GREETING
+	_smith_dialogue.options_provider = func() -> Array[Dictionary]:
+		var list: Array[Dictionary] = [{"id": "forge", "text": "Dolgoznék a műhelyben. (fejlesztés, szétszedés)",
+			"on_choose": _open_smith_panel}]
+		list.append_array(Smithy.SMITH_STORIES)
+		return list
+	var smith_face := AtlasTexture.new()
+	smith_face.atlas = Smithy.SMITH_SHEET
+	smith_face.region = Rect2(0, 0, 16, 28)
+	_smith_dialogue.portrait = smith_face
+	add_child(_smith_dialogue)
 	# Beszélgetés a veteránnal (bizalom, kérdések: Dialogues).
 	_veteran_dialogue = DialoguePanel.new()
 	_veteran_dialogue.name = "VeteranDialogue"
@@ -1384,7 +1401,7 @@ func _process(delta: float) -> void:
 	var any_near := near_stairs or near_tent or near_stash or near_npc or near_veteran or near_block or near_bestiary \
 		or near_smith or near_item_book or near_achievements
 	if near_smith:
-		_prompt.text = "[E] Kovács — tárgyfejlesztés, szétszedés"
+		_prompt.text = "[E] Beszélgetés: %s (műhely)" % Smithy.SMITH_NAME
 	elif near_veteran:
 		_prompt.text = "[E] Beszélgetés: %s" % Dialogues.VETERAN_NAME
 	elif near_bestiary:
@@ -1434,8 +1451,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	# A kovács pihenő közben is dolgozik (akkor a futás felszerelésével).
 	if _is_near_smith():
 		get_viewport().set_input_as_handled()
-		Audio.play("anvil", -4.0)
-		$Menus.open_menu(_smith_panel)
+		$Menus.open_menu(_smith_dialogue)
 		return
 	var near_something := _is_near_stairs() or _is_near_tent() or _is_near_stash() or _is_near_npc()
 	if not near_something:
@@ -1473,6 +1489,14 @@ func _is_near_item_book() -> bool:
 
 func _is_near_achievements() -> bool:
 	return is_instance_valid(_player) and _player.global_position.distance_to(_achievement_position) < INTERACT_RANGE
+
+
+## A kovács beszélgetéséből: a műhely (a beszélgetés bezárul, a műhely nyílik).
+func _open_smith_panel() -> String:
+	Audio.play("anvil", -4.0)
+	$Menus.call("close_current")
+	$Menus.call_deferred("open_menu", _smith_panel)
+	return ""
 
 
 func _is_near_smith() -> bool:

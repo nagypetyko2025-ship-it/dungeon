@@ -170,6 +170,9 @@ class LiftPanel:
 	extends CanvasLayer
 	signal chosen(depth: int)
 
+	## A zárt emeletek lakatja (Kenney Game Icons, CC0).
+	const LOCK: Texture2D = preload("res://assets/ui/lock.png")
+
 	var _box: VBoxContainer
 
 	func _ready() -> void:
@@ -199,23 +202,49 @@ class LiftPanel:
 		var note := UiStyle.label("A régi bányalift a kazamata mélyére.", 17, MenuStyle.PARCHMENT)
 		note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_box.add_child(note)
-		var first := MenuStyle.button("1. emelet")
-		first.custom_minimum_size = Vector2(420, 56)
-		first.pressed.connect(func() -> void: chosen.emit(1))
-		_box.add_child(first)
-		var open_ten := Engineer.repaired()
-		var tenth := MenuStyle.button("%d. emelet" % Engineer.DEPTH if open_ten else "%d. emelet — zárva" % Engineer.DEPTH)
-		tenth.custom_minimum_size = Vector2(420, 56)
-		tenth.disabled = not open_ten
-		tenth.pressed.connect(func() -> void: chosen.emit(Engineer.DEPTH))
-		_box.add_child(tenth)
-		if not open_ten:
-			var why := UiStyle.label("A kötél elszakadt. A 10. emeleten a liftszobában (a térképen kék)\n" \
-				+ "egy mérnök dolgozik: talán ő meg tudja javítani.", 15, Color(1, 0.6, 0.45))
+		# Két oszlopban az emeletek: 1, 10, 20 ... 80 (Engineer.floor_open); a zártak halványak, lakattal.
+		var grid := GridContainer.new()
+		grid.columns = 2
+		grid.add_theme_constant_override("h_separation", 12)
+		grid.add_theme_constant_override("v_separation", 10)
+		_box.add_child(grid)
+		var floors: Array[int] = [1, Engineer.DEPTH]
+		floors.append_array(Engineer.LIFT_FLOORS)
+		var first: Button = null
+		for depth in floors:
+			var open := Engineer.floor_open(depth)
+			var button := MenuStyle.button("%d. emelet" % depth)
+			button.custom_minimum_size = Vector2(300, 52)
+			button.disabled = not open
+			button.pressed.connect(func() -> void: chosen.emit(depth))
+			if not open:
+				var lock := TextureRect.new()
+				lock.texture = LOCK
+				lock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				lock.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				lock.modulate = Color(1, 0.8, 0.35)
+				lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				lock.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
+				lock.offset_left = -44
+				lock.offset_right = -14
+				lock.offset_top = -15
+				lock.offset_bottom = 15
+				button.add_child(lock)
+			grid.add_child(button)
+			if first == null:
+				first = button
+		var why_text := ""
+		if not Engineer.repaired():
+			why_text = "A kötél elszakadt. A 10. emeleten a liftszobában (a térképen kék)\n" \
+				+ "egy mérnök dolgozik: talán ő meg tudja javítani."
+		elif Engineer.next_floor() > 0:
+			why_text = "A mélyebb aknákat Bertalan építi: beszélj vele a lift mellett."
+		if not why_text.is_empty():
+			var why := UiStyle.label(why_text, 15, Color(1, 0.6, 0.45))
 			why.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			_box.add_child(why)
 		var back := MenuStyle.button("Mégse")
-		back.custom_minimum_size = Vector2(420, 50)
+		back.custom_minimum_size = Vector2(612, 50)
 		back.pressed.connect(func() -> void: get_tree().current_scene.get_node("Menus").call("close_current"))
 		_box.add_child(back)
 		visible = true
