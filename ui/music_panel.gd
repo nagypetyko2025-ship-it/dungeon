@@ -11,7 +11,7 @@ var _list: VBoxContainer
 
 func _ready() -> void:
 	add_theme_stylebox_override("panel", MenuStyle.box(MenuStyle.MENU_PANEL, 14, 20))
-	custom_minimum_size = Vector2(400, 0)
+	custom_minimum_size = Vector2(420, 0)
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 10)
 	add_child(root)
@@ -28,10 +28,10 @@ func _ready() -> void:
 	var hint := UiStyle.label("Kattints egy számra: azonnal az szól. Ha véget ér, a hely zenéje folytatódik.",
 		14, MenuStyle.PARCHMENT)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.custom_minimum_size.x = 360
+	hint.custom_minimum_size.x = 380
 	root.add_child(hint)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(360, 440)
+	scroll.custom_minimum_size = Vector2(380, 440)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	root.add_child(scroll)
 	_list = VBoxContainer.new()
@@ -60,6 +60,9 @@ func _refresh(playing := "") -> void:
 			var button := Button.new()
 			button.text = ("▶  " if now else "♪  ") + Audio.song_title(song)
 			button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			# A hosszú cím a panelen belül tördelődik (különben a gomb kiszélesítené a panelt, és kilógna a képből).
+			button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			button.custom_minimum_size.x = 1
 			button.focus_mode = Control.FOCUS_NONE
 			button.add_theme_font_size_override("font_size", 16)
 			button.add_theme_color_override("font_color", MenuStyle.GOLD if now else MenuStyle.PARCHMENT)

@@ -4,6 +4,7 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-30", "items": [
+		"Javítva: a szünet menü zeneválasztója nem lóg ki a képből (a hosszú címek két sorba törnek).",
 		"Javítva: a szobád trófeafalán a főellenségek képei két sorban, kilógás nélkül férnek el.",
 		"Működik a boszorkány Test manipulálása: aranyért és porért végleg erősíti a képességeidet, szintenként 1,5× annyival, mint a kiképzősátor, és bármeddig fejleszthető (a korlátos képességek, pl. kikerülés, nyilak, csak a korlátjukig).",
 		"Holló Margit, a boszorkány küldetést ad: vigyél neki egy Vámpírfogat! Utána új történeteket mesél, és szóba kerül a test manipulálása is (hamarosan).",
