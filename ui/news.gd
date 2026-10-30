@@ -4,6 +4,7 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-30", "items": [
+		"Javítva: a Szörnyek könyvéből nem lóg ki többé a lap (a hosszú leírású szörnyek, pl. Azazel, saját lapot kapnak).",
 		"Bertalan, a mérnök tovább építi a liftet: a táborban fejezetenként elvállalhatod a 20., 30., 40., 50., 60., 70. és 80. " \
 			+ "emeleti aknát (leérsz arra az emeletre, aztán kifizeted tábori aranyból). A 80. alá nem visz lift.",
 		"A lift ablakában a még zárt emeleteken lakat látszik.",

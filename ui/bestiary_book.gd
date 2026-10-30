@@ -1,7 +1,7 @@
 extends CanvasLayer
 ## Szörnyek könyve (a táborban, az állványon, E-re): bőrkötéses, nyitott könyv. Felül a
-## kategóriák fülei, lent két lap, lapanként PER_PAGE szörny (kép, név, hányat öltél meg,
-## rövid leírás). Csak az látszik, amiből már legalább egyet megöltél (Bestiary).
+## kategóriák fülei, lent két lap, lapanként legfeljebb PER_PAGE szörny (kép, név, hányat öltél meg,
+## rövid leírás) — ha a hosszú leírások nem férnek el, kevesebb (lásd _paginate). Csak az látszik, amiből már legalább egyet megöltél (Bestiary).
 ## Lapozás: a nyilakkal, vagy A / D, ← / →. Megnyitását/bezárását a Menus kezeli.
 
 const LEATHER := Color(0.22, 0.2, 0.26)
@@ -9,12 +9,19 @@ const LEATHER_DARK := Color(0.11, 0.1, 0.14)
 const PAGE_SIZE := Vector2(420, 400)
 const PER_PAGE := 3
 const ICON_SIZE := Vector2(52, 52)
+## A lap belső magassága (a lap kerete nélkül), és a szövegoszlop / a név szélessége.
+const PAGE_INNER_HEIGHT := PAGE_SIZE.y - 28.0
+const TEXT_WIDTH := PAGE_SIZE.x - ICON_SIZE.x - 50
+const NAME_WIDTH := TEXT_WIDTH - 64
+const ENTRY_GAP := 8.0
 
 var _tab := 0
 var _tab_buttons: Array[Button] = []
 ## A bal oldali lap indexe (mindig páros).
 var _spread := 0
 var _ids: Array[String] = []
+## Lapok: az _ids-ből melyik [első, utolsó utáni] indexek kerülnek egy lapra (a mért magasság szerint).
+var _page_ranges: Array[Vector2i] = []
 var _pages: Array[VBoxContainer] = []
 var _found: Label
 var _prev: Button
@@ -66,6 +73,7 @@ func _set_tab(tab: int, sound := true) -> void:
 	for i in _tab_buttons.size():
 		_tab_buttons[i].modulate = Color.WHITE if i == tab else Color(0.6, 0.55, 0.5)
 	_ids = Bestiary.discovered(tab)
+	_paginate()
 	_spread = 0
 	if sound:
 		Audio.play("ui_click")
@@ -73,7 +81,7 @@ func _set_tab(tab: int, sound := true) -> void:
 
 
 func _flip(step: int) -> void:
-	var page_count := ceili(_ids.size() / float(PER_PAGE))
+	var page_count := _page_ranges.size()
 	var target := clampi(_spread + step, 0, maxi(page_count - 1, 0) / 2 * 2)
 	if target == _spread:
 		return
@@ -179,18 +187,58 @@ func _show_spread() -> void:
 		var page := _pages[side]
 		for child in page.get_children():
 			child.queue_free()
-		var first := (_spread + side) * PER_PAGE
-		if first >= _ids.size():
+		var index := _spread + side
+		if index >= _page_ranges.size():
 			if side == 0 or _ids.is_empty():
 				_empty(page, side)
 			continue
-		for i in range(first, mini(first + PER_PAGE, _ids.size())):
-			if i > first:
+		var range_on_page := _page_ranges[index]
+		for i in range(range_on_page.x, range_on_page.y):
+			if i > range_on_page.x:
 				page.add_child(_rule())
 			page.add_child(_entry(_ids[i]))
-	var page_count := ceili(_ids.size() / float(PER_PAGE))
+	var page_count := _page_ranges.size()
 	_prev.disabled = _spread <= 0
 	_next.disabled = _spread + 2 >= page_count
+
+
+## A felfedezett szörnyek lapokra osztása: egy lapra legfeljebb PER_PAGE kerül, de csak annyi, amennyinek a
+## (betűtípussal megmért, tördelt) szövege kifér a lap magasságába. Egy túl hosszú bejegyzés egyedül kap lapot.
+func _paginate() -> void:
+	_page_ranges.clear()
+	var start := 0
+	var used := 0.0
+	for i in _ids.size():
+		var height := _entry_height(_ids[i])
+		var extra := height if i == start else height + ENTRY_GAP * 2.0 + 2.0
+		if i > start and (i - start >= PER_PAGE or used + extra > PAGE_INNER_HEIGHT):
+			_page_ranges.append(Vector2i(start, i))
+			start = i
+			used = height
+		else:
+			used += extra
+	if start < _ids.size():
+		_page_ranges.append(Vector2i(start, _ids.size()))
+
+
+## Egy bejegyzés várható magassága: a név, a leírás és a képességek tördelt sorai (legalább az ikon).
+func _entry_height(monster: String) -> float:
+	var entry: Array = Bestiary.ENTRIES[monster]
+	var height := _text_height(entry[0], 19, NAME_WIDTH) + _text_height(entry[1], 14, TEXT_WIDTH)
+	var abilities := Bestiary.abilities_text(monster)
+	if not abilities.is_empty():
+		height += _text_height("Képességek: " + abilities, 13, TEXT_WIDTH)
+	return maxf(height, ICON_SIZE.y)
+
+
+func _text_height(text: String, font_size: int, width: float) -> float:
+	var probe := _pages[0]
+	var font := probe.get_theme_font("font", "Label")
+	var spacing := float(probe.get_theme_constant("line_spacing", "Label"))
+	var size := font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, width, font_size,
+		-1, TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE)
+	var lines := maxf(1.0, roundf(size.y / font.get_height(font_size)))
+	return size.y + lines * spacing + 2.0
 
 
 ## Üres lap: a kategória még ismeretlen (bal), vagy a könyv itt véget ér (jobb).
@@ -227,17 +275,20 @@ func _entry(monster: String) -> HBoxContainer:
 	text.add_child(header)
 	var name_label := UiStyle.label(entry[0], 19, UiStyle.INK)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# A hosszú név (pl. Azazelé) tördelődik, és nem tolja ki a lapból a szöveget.
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.custom_minimum_size.x = NAME_WIDTH
 	header.add_child(name_label)
 	header.add_child(UiStyle.label("× %d" % Bestiary.kills(monster), 17, Color(0.6, 0.18, 0.12)))
 	var description := UiStyle.label(entry[1], 14, UiStyle.INK_LIGHT)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	description.custom_minimum_size.x = PAGE_SIZE.x - ICON_SIZE.x - 50
+	description.custom_minimum_size.x = TEXT_WIDTH
 	text.add_child(description)
 	var abilities := Bestiary.abilities_text(monster)
 	if not abilities.is_empty():
 		var ability_label := UiStyle.label("Képességek: " + abilities, 13, Color(0.45, 0.22, 0.6))
 		ability_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		ability_label.custom_minimum_size.x = PAGE_SIZE.x - ICON_SIZE.x - 50
+		ability_label.custom_minimum_size.x = TEXT_WIDTH
 		text.add_child(ability_label)
 	return row
 
