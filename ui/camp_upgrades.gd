@@ -57,7 +57,7 @@ func _build() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 8)
 	_window.add_child(root)
-	root.add_child(UiStyle.title_bar("Kiképzősátor"))
+	root.add_child(UiStyle.title_bar(_title()))
 	# Egy sorban: a tábori kincs, és hogy mit mutat a kártya (szintenkénti érték, a következő szint ára).
 	var gold_row := HBoxContainer.new()
 	gold_row.add_theme_constant_override("separation", 8)
@@ -71,8 +71,8 @@ func _build() -> void:
 	gold_row.add_child(coin)
 	_gold_label = UiStyle.label("0", 20, Color(0.6, 0.38, 0.05))
 	gold_row.add_child(_gold_label)
-	gold_row.add_child(UiStyle.label("   ·   Minden futásra érvényes. A kártyán: amit szintenként ad, és a következő szint ára (arany).",
-		14, UiStyle.INK_LIGHT))
+	_header_extra(gold_row)
+	gold_row.add_child(UiStyle.label(_header_text(), 14, UiStyle.INK_LIGHT))
 	_rows = GridContainer.new()
 	_rows.columns = 4
 	_rows.add_theme_constant_override("h_separation", 10)
@@ -91,6 +91,19 @@ func _refresh() -> void:
 		child.queue_free()
 	for id: String in Progress.UPGRADES:
 		_rows.add_child(_make_row(id))
+
+
+func _title() -> String:
+	return "Kiképzősátor"
+
+
+func _header_text() -> String:
+	return "   ·   Minden futásra érvényes. A kártyán: amit szintenként ad, és a következő szint ára (arany)."
+
+
+## Hely a fejlécben a tábori kincs után (a boszorkány ablaka ide teszi a porokat).
+func _header_extra(_row: HBoxContainer) -> void:
+	pass
 
 
 ## Egy fejlesztés kártyája: ikon, név és szint, mit ad, szint-pöttyök, ár / gomb.

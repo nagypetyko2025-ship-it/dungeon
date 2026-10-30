@@ -5,7 +5,7 @@ extends Node2D
 ## Bent egy üst rotyog a tűzön (zöld gőz), a falon polcok üvegcsékkel, a mennyezetről száradó füvek lógnak,
 ## gyertyák, koponyák, pókhálók. Az üst mellett áll Holló Margit, a boszorkány (E: beszélgetés):
 ## 4 történet, küldetés: egy Vámpírfog (FANG_QUEST, J könyv "Boszorkány" fül), utána 4 új történet és a
-## "Test manipulálása" (a képességek végleges fejlesztése, mint a kiképzősátor — egyelőre még nem működik).
+## "Test manipulálása": a képességek végleges fejlesztése aranyért és porért (ui/witch_panel.gd, Progress.witch_*).
 ## A tábla a tábor nyugati szélén: "Boszorkány kunyhó", alatta a régi, kopott "Lakóház" (lásd Camp._build_witch_sign).
 ## (A tábor építi fel: setup(camp) + build(), mint a Romot.)
 
@@ -115,8 +115,11 @@ const FANG_STORIES: Array[Dictionary] = [
 			+ "maradtam, hogy legyen, aki emlékszik rá."},
 ]
 
+const WITCH_PANEL := preload("res://ui/witch_panel.gd")
+
 var _camp: Node2D
 var _player: Node2D
+var _panel: CanvasLayer
 var _entities: Node2D
 var _prompt: Label
 var _dialogue: DialoguePanel
@@ -136,7 +139,15 @@ func setup(camp: Node2D) -> void:
 	_dialogue.greeting = WITCH_GREETING
 	_dialogue.portrait = portrait()
 	_dialogue.options_provider = func() -> Array[Dictionary]:
-		return options(_player.get_node("Inventory"))
+		var list := options(_player.get_node("Inventory"))
+		# A Test manipulálása bezárja a beszélgetést, és megnyitja a boszorkány fejlesztő ablakát.
+		for option in list:
+			if option["id"] == "manipulate":
+				option["on_choose"] = _open_panel
+		return list
+	_panel = WITCH_PANEL.new()
+	_panel.name = "WitchPanel"
+	camp.add_child.call_deferred(_panel)
 	camp.add_child.call_deferred(_dialogue)
 
 
@@ -159,19 +170,17 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 						+ "van, a foga a porban marad. Hozd ide, mielőtt eladod valami ostoba kereskedőnek."})
 		"done":
 			list.append_array(FANG_STORIES)
-			list.append({"id": "manipulate", "text": "Test manipulálása (a képességeid végleges fejlesztése)",
-				"on_choose": func() -> String: return _manipulation_text()})
+			list.append({"id": "manipulate", "text": "Test manipulálása (a képességeid végleges fejlesztése)"})
 	list.append_array(WITCH_STORIES)
 	return list
 
 
-## Az új funkció helye: még nem működik, csak a boszorkány mondja el, mi lesz.
-static func _manipulation_text() -> String:
-	return "[i]Margit végigméri a karodat, a válladat, a nyakadat, mint egy hentes a vásáron.[/i]\n\n" \
-		+ "Erős vagy, de rosszul. Az izmod ott dagad, ahol nem kell, az inad ott feszül, ahol enged. Ezt " \
-		+ "rendbe lehet tenni. Végleg. Nem úgy, mint a kiképzősátorban, ahol csak izzadsz és kiabálnak veled.\n\n" \
-		+ "De a főzet még nem érett meg. A fog lassan adja ki, amit tud. Gyere vissza később.\n\n" \
-		+ "[color=#7a4a10](Hamarosan: a boszorkány végleg fejleszti a képességeidet. Ez még nem érhető el.)[/color]"
+func _open_panel() -> String:
+	Audio.play("ui_open")
+	var menus := _camp.get_node("Menus")
+	menus.call("close_current")
+	menus.call_deferred("open_menu", _panel)
+	return ""
 
 
 static func _give_fang_quest() -> String:

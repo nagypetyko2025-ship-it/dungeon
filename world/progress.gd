@@ -42,6 +42,16 @@ const UPGRADES := {
 		"icon_path": "res://assets/ui/icon_xp.png"},
 }
 
+## A boszorkány (Holló Margit) test-manipulálása (ui/witch_panel.gd): ugyanazok a statok, mint a kiképzősátorban
+## (UPGRADES), de szintenként WITCH_FACTOR-szor annyit adnak, és nincs felső szint (csak a statok saját korlátja, Stats).
+## Ár szintenként: [tábori arany, por ritkasága, por db] (WITCH_COSTS), a 8. szinttől mindig WITCH_LATE_COST.
+const WITCH_FACTOR := 1.5
+const WITCH_COSTS := [[250, "common", 1], [300, "common", 2], [350, "rare", 1], [400, "rare", 2], [450, "epic", 1],
+	[500, "epic", 2], [700, "legendary", 1]]
+const WITCH_LATE_COST := [1000, "legendary", 3]
+## A boszorkány fejlesztései: fejlesztés (UPGRADES kulcs) -> szint (közös, mint az upgrades).
+static var witch_levels := {}
+
 ## A táborban váró arany (halálkor, kilépéskor, és a főellenség utáni visszatéréskor kerül ide).
 static var camp_gold := 0
 ## Az aktív (játszott) karakter (lásd Characters).
@@ -186,6 +196,9 @@ static func load_game(force := false) -> void:
 		var saved_dust: Variant = config.get_value("camp", "dust", {})
 		if saved_dust is Dictionary:
 			dust = saved_dust
+		var saved_witch: Variant = config.get_value("camp", "witch_levels", {})
+		if saved_witch is Dictionary:
+			witch_levels = saved_witch
 		deepest = int(config.get_value("camp", "deepest", -1))
 	# Régebbi mentés: az eredménytábla legjobb futásából.
 	if deepest < 0:
@@ -215,6 +228,7 @@ static func save_game() -> void:
 	config.set_value("camp", "seen_items", seen_items)
 	config.set_value("camp", "rewards_claimed", rewards_claimed)
 	config.set_value("camp", "dust", dust)
+	config.set_value("camp", "witch_levels", witch_levels)
 	config.set_value("camp", "deepest", deepest)
 	config.save(path())
 
@@ -274,6 +288,7 @@ static func _clear() -> void:
 	seen_items = {}
 	rewards_claimed = {}
 	dust = {}
+	witch_levels = {}
 	deepest = 0
 
 
@@ -406,14 +421,47 @@ static func buy(id: String) -> bool:
 	return true
 
 
-## A fejlesztések stat-bónuszai (minden futás elején a játékosra kerülnek).
+## A fejlesztések stat-bónuszai (minden futás elején a játékosra kerülnek): a kiképzősátor és a boszorkány.
 static func permanent_bonuses() -> Dictionary:
 	var bonuses := {}
 	for id: String in UPGRADES:
 		var definition: Dictionary = UPGRADES[id]
 		var stat: String = definition["stat"]
-		bonuses[stat] = bonuses.get(stat, 0.0) + level(id) * float(definition["per_level"])
+		bonuses[stat] = bonuses.get(stat, 0.0) + level(id) * float(definition["per_level"]) + witch_bonus(id, witch_level(id))
 	return bonuses
+
+
+static func witch_level(id: String) -> int:
+	load_game()
+	return int(witch_levels.get(id, 0))
+
+
+## Ennyit ad összesen `levels` szint a boszorkánytól (a nyíl csak egész lehet: lefelé kerekítve).
+static func witch_bonus(id: String, levels: int) -> float:
+	var definition: Dictionary = UPGRADES[id]
+	var value := levels * float(definition["per_level"]) * WITCH_FACTOR
+	return floorf(value) if definition["stat"] == "multishot" else value
+
+
+## A következő szint ára: [tábori arany, por ritkasága, por db].
+static func witch_cost(id: String) -> Array:
+	var current := witch_level(id)
+	return WITCH_COSTS[current] if current < WITCH_COSTS.size() else WITCH_LATE_COST
+
+
+## Megveszi a boszorkánytól a következő szintet, ha van rá elég tábori arany és por.
+static func witch_buy(id: String) -> bool:
+	var cost := witch_cost(id)
+	var gold := int(cost[0])
+	var rarity := str(cost[1])
+	var amount := int(cost[2])
+	if camp_gold < gold or dust_of(rarity) < amount:
+		return false
+	camp_gold -= gold
+	dust[rarity] = dust_of(rarity) - amount
+	witch_levels[id] = witch_level(id) + 1
+	save_game()
+	return true
 
 
 ## Elérted ezt az emeletet (a kazamata hívja): ha mélyebb, mint eddig bármikor, megjegyezzük.

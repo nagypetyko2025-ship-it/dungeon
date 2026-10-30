@@ -97,7 +97,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Alján (a tisztás 26 csempe magas) a boszorkánykunyhó: `world/witch_hut.gd` (`WitchHut`, sáros út `path_tiles()`, belül
   `INTERIOR` x 570-től: üst (`cauldron.png`) tűzön, Holló Margit `WITCH_STORIES` 4 történet; `WitchHut.options`: FANG_QUEST
   (Vámpírfog a táskából, 400 tábori arany, J könyv "Boszorkány" fül = `QuestBook.WITCH_TAB`, a fülsor két soros), utána
-  `FANG_STORIES` (4) + 5. opció "Test manipulálása" (`_manipulation_text`: a képességek végleges fejlesztése, MÉG NEM MŰKÖDIK)). Kettős tábla a tábor nyugati szélén:
+  `FANG_STORIES` (4) + 5. opció "Test manipulálása" → `ui/witch_panel.gd` (a `camp_upgrades.gd`-t örökli: `_title/_header_text/_header_extra`;
+  `Progress.witch_levels` (mentve: camp/witch_levels), `witch_cost` (`WITCH_COSTS` 7 szint, utána `WITCH_LATE_COST` 1000 + 3 legendás por),
+  `witch_bonus` = szint × per_level × `WITCH_FACTOR` 1.5 (nyíl lefelé kerekítve), végtelen szint; a `permanent_bonuses` adja hozzá)). Kettős tábla a tábor nyugati szélén:
   `Camp._build_witch_sign` (`WITCH_SIGN_TILE`): "Boszorkány kunyhó" + kopott "L kóh z". A Camp-nek nincs class_name-je.
 - A tábor jobb felső sarkából rejtett ösvény északra: `world/hidden_grave.gd` (tisztás: Borbás Márton sírja, elhalt fa
   Ilona kitűzött levelével, egyszer nyitható láda: 150 tábori arany, Görbe kés, Ismétlő számszeríj; jelző: hidden_grave_chest).
