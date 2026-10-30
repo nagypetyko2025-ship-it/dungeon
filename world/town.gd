@@ -484,15 +484,20 @@ func _build_my_room() -> void:
 	rug_trim.size = rug.size - Vector2(8, 8)
 	rug_trim.z_index = -9
 	add_child(rug_trim)
-	# Trófeafal: keretek a felső falsávon.
+	# Trófeafal: keretek a falon, annyi sorban, hogy beférjenek (a szoba két szélén egy-egy csempe szabadon marad).
 	var bosses := trophies()
 	var step := 24.0
-	var start := r.position.x * TILE + (r.size.x * TILE - step * bosses.size()) / 2.0
+	var per_row := maxi(1, floori((r.size.x - 2) * TILE / step))
+	var rows := ceili(bosses.size() / float(per_row))
+	per_row = ceili(bosses.size() / float(rows))
 	for i in bosses.size():
+		var row := floori(i / float(per_row))
+		var in_row := mini(per_row, bosses.size() - row * per_row)
+		var start := r.position.x * TILE + (r.size.x * TILE - step * in_row) / 2.0
 		var frame := ColorRect.new()
 		frame.color = Color(0.36, 0.22, 0.1)
 		frame.size = Vector2(23, 23)
-		frame.position = Vector2(start + i * step, top * TILE + 10)
+		frame.position = Vector2(start + (i % per_row) * step, top * TILE + 8 + row * step)
 		frame.z_index = -7
 		add_child(frame)
 		var inner := ColorRect.new()

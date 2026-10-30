@@ -169,7 +169,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   y 30-tól): fent 5 ajtó (`ROOMS`: kopogásra szöveg; 2: Puskás Döme, a robbantómester; 4: kiadó).
   A négyes kibérelhető a kocsmárostól (`ROOM_PRICE` 500 tábori arany, egyszer; `ROOM_FLAG`): belül (`MY_ROOM`, y 40-től)
   ágy (alvás → `RESTED_FLAG`, a következő futás elején +1 HP-bájital: `Town.take_rest_bonus`, a Camp `_enter_dungeon_now`-ja),
-  láda (a tábori láda ablaka), trófeafal (`Town.trophies()`: 14 főellenség, a le nem győzöttek sötét árnyékként).
+  láda (a tábori láda ablaka), trófeafal (`Town.trophies()`: 18 főellenség, annyi sorban, ahány kell (most 2×9), a le nem győzöttek sötét árnyékként).
 - Próbatétel (random kazamata): `world/challenge.gd` (`Challenge`). A bánya túlpartján a régi tárna (`Mine.DEEP_DOOR`,
   csak a híd után) → lyukas terem (`Mine.DEEP_ROOM`, x 640-től), a lépcsőnél E: `ui/challenge_panel.gd` (ajánlat / eredmény).
   1-20 emelet, 1-3 könnyítés (`BOONS`, 15) és 1-3 nehezítés (`BANES`, 15), ütköző hatás nem jön együtt, a súlyok
