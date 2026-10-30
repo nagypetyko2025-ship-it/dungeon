@@ -139,6 +139,8 @@ var _dialogue: DialoguePanel
 ## Puskás Döme (lásd Blaster): első kopogásra kijön, és a kettes szoba ajtaja előtt áll, amíg a bányába nem megy.
 var _dome: AnimatedSprite2D
 var _dome_dialogue: DialoguePanel
+## A trófeafal közelről (ui/trophy_panel.gd: a karaktered véleménye a főellenségekről).
+var _trophy_panel: CanvasLayer
 var _in_room := false
 ## A "KIADÓ" cetli a négyes ajtaján (a bérlés után eltűnik).
 var _vacant_note: Array[CanvasItem] = []
@@ -147,6 +149,7 @@ var _quest_panel: CanvasLayer
 var _quest_mark: Label
 
 const QUEST_PANEL := preload("res://ui/quest_panel.gd")
+const TROPHY_PANEL := preload("res://ui/trophy_panel.gd")
 var _intro: PanelContainer
 var _intro_title: PanelContainer
 var _intro_portrait: TextureRect
@@ -162,6 +165,9 @@ func setup(camp: Node2D) -> void:
 	_quest_panel = QUEST_PANEL.new()
 	_quest_panel.name = "QuestPanel"
 	camp.add_child.call_deferred(_quest_panel)
+	_trophy_panel = TROPHY_PANEL.new()
+	_trophy_panel.name = "TrophyPanel"
+	camp.add_child.call_deferred(_trophy_panel)
 	_dialogue = DialoguePanel.new()
 	_dialogue.name = "BarkeepDialogue"
 	_dialogue.npc_id = BARKEEP_ID
@@ -795,13 +801,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			Audio.play("chest_open", -4.0)
 			_camp.get_node("Menus").call("open_menu", _camp.get_node("StashPanel"))
 		"trophies":
-			var beaten := 0
-			for boss: String in trophies():
-				if Bestiary.kills(boss) > 0:
-					beaten += 1
-			message.emit("Trófeafal: %d / %d főellenség emléke lóg a falon. Az üres keretek még várnak." % [beaten,
-				trophies().size()] if beaten < trophies().size() else "Trófeafal: mind a %d főellenség emléke a falon. " \
-				% trophies().size() + "Tóbiás szerint ilyet még nem látott.")
+			Audio.play("ui_open")
+			_camp.get_node("Menus").call("open_menu", _trophy_panel)
 		_:
 			if str(focus[0]).begins_with("room_"):
 				_knock(int(str(focus[0]).trim_prefix("room_")))
