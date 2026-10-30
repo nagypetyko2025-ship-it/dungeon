@@ -94,6 +94,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Megállítás: `GamePause.set_paused(tree, on)` / `GamePause.active(tree)` (`ui/game_pause.gd`) a `get_tree().paused` helyett —
   egyjátékosban a fa áll meg, közös játékban semmi (szintlépés, halál, Esc-menü alatt sem), csak a karakter nem irányítható és a világ nem fogad E-t.
 - Nyugati tisztás: romos ház + tolvaj (`world/ruin.gd`, `world/thief.gd`), kút + Lőrinc (`world/stranger.gd`), a kút alja: `world/well_cave.gd`.
+  Alján (a tisztás 26 csempe magas) a boszorkánykunyhó: `world/witch_hut.gd` (`WitchHut`, sáros út `path_tiles()`, belül
+  `INTERIOR` x 570-től: üst (`cauldron.png`) tűzön, Holló Margit `WITCH_STORIES` 4 történet). Kettős tábla a tábor nyugati szélén:
+  `Camp._build_witch_sign` (`WITCH_SIGN_TILE`): "Boszorkány kunyhó" + kopott "L kóh z". A Camp-nek nincs class_name-je.
 - A tábor jobb felső sarkából rejtett ösvény északra: `world/hidden_grave.gd` (tisztás: Borbás Márton sírja, elhalt fa
   Ilona kitűzött levelével, egyszer nyitható láda: 150 tábori arany, Görbe kés, Ismétlő számszeríj; jelző: hidden_grave_chest).
 - A tó titka: `world/lake_crypt.gd` (`LakeCrypt`). Ábel (`Fisherman`): az átlagos tárgy után KEY_QUEST (8 kalóz a küldetés óta,

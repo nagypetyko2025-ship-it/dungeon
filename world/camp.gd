@@ -75,8 +75,8 @@ const ROAD_ROW := 17
 ## A világ keleti széle (a város mögötti erdő vége).
 const WORLD_END_X := Town.RECT.end.x + FOREST_DEPTH
 ## A nyugati tisztás (a várossal ellentétes irányban): ide vezet egy kis sáros ösvény a
-## táborból; a végén a romos ház áll (lásd Ruin).
-const WEST_RECT := Rect2i(-30, 9, 20, 16)
+## táborból; a végén a romos ház áll (lásd Ruin), lent a boszorkánykunyhó (WitchHut).
+const WEST_RECT := Rect2i(-30, 9, 20, 26)
 ## A világ nyugati széle (a nyugati tisztás mögötti erdő vége).
 const WORLD_START_X := WEST_RECT.position.x - FOREST_DEPTH
 ## A veterán sátrának bal felső csempéje (a tábor nyugati részén, a sáros ösvénytől
@@ -98,6 +98,8 @@ const BOOKS_PATCH_RADIUS := Vector2(3.6, 1.7)
 const LECTERN: Texture2D = preload("res://assets/props/lectern.png")
 ## A sáros ösvény színe (a földcsempék sötét, nedves árnyalata).
 const MUD_TINT := Color(0.42, 0.31, 0.25)
+## A kettős tábla helye (a sáros ösvény fölött, a könyvek alatt; lásd _build_witch_sign).
+const WITCH_SIGN_TILE := Vector2i(11, 15)
 ## A veterán botja ("16x16 RPG items", Jetrel, CC0), a rönknek támasztva.
 const CANE: Texture2D = preload("res://assets/props/cane.png")
 const VETERAN_SHEET: Texture2D = preload("res://assets/characters/veteran.png")
@@ -266,6 +268,12 @@ func _ready() -> void:
 	ruin.setup(self)
 	ruin.build()
 	ruin.message.connect(_toast)
+	# A nyugati tisztás alján a boszorkánykunyhó (bent az üst és Holló Margit).
+	var witch_hut := WitchHut.new()
+	witch_hut.name = "WitchHut"
+	add_child(witch_hut)
+	witch_hut.setup(self)
+	witch_hut.build()
 	# A kút alja (Lőrinc megmentése után le lehet mászni).
 	var cave := WellCave.new()
 	cave.name = "WellCave"
@@ -552,6 +560,9 @@ func _build_dirt() -> void:
 				_mud[tile] = true
 	# Rövid sáros ösvény a romos ház ajtajáig.
 	for tile in Ruin.path_tiles():
+		_mud[tile] = true
+	# Sáros út le a boszorkánykunyhó ajtajáig.
+	for tile in WitchHut.path_tiles():
 		_mud[tile] = true
 	var tile_set := TileSet.new()
 	tile_set.tile_size = Vector2i(16, 16)
@@ -998,7 +1009,8 @@ func _build_trees() -> void:
 	for x in range(west.position.x, west.end.x):
 		for y in range(west.position.y, west.end.y):
 			var tile := Vector2i(x, y)
-			if _blocked.has(tile) or _near_blocked(tile, 1) or Ruin.blocked_rect().has_point(tile):
+			if _blocked.has(tile) or _near_blocked(tile, 1) or Ruin.blocked_rect().has_point(tile) \
+					or WitchHut.blocked_rect().has_point(tile):
 				continue
 			var edge := mini(mini(x - west.position.x, west.end.x - 1 - x), mini(y - west.position.y, west.end.y - 1 - y))
 			if (edge == 0 and randf() < 0.85) or (edge == 1 and randf() < 0.3):
@@ -1071,6 +1083,61 @@ func _build_signs() -> void:
 	_branch_sign(Vector2i(Castle.PATH_COLUMN + 2, 8), "Királyi palota", true)
 	_branch_sign(Vector2i(Mine.PATH_COLUMN + 2, ROAD_ROW - 1), "Bánya", true)
 	_branch_sign(Vector2i(Lake.PIER_COLUMN, ROAD_ROW - 1), "Tó", false)
+	_build_witch_sign()
+
+
+## Kettős tábla a nyugati sáros ösvény mellett (a könyvek alatt), nyugatra mutat: fent a frissen festett
+## "Boszorkány kunyhó", alatta az erdész régi, kopott "Lakóház" táblája (pár betűje már lekopott).
+func _build_witch_sign() -> void:
+	var tile := WITCH_SIGN_TILE
+	var holder := Node2D.new()
+	holder.position = _tile_center(tile) + Vector2(0, 12)
+	_entities.add_child(holder)
+	_body(holder, Vector2(0, -4), Vector2(12, 8))
+	var post := ColorRect.new()
+	post.color = Color(0.36, 0.22, 0.12)
+	post.size = Vector2(8, 84)
+	post.position = Vector2(-4, -82)
+	holder.add_child(post)
+	# [felirat, deszka színe, betűszín, a deszka teteje, dőlés]
+	for board: Array in [["Boszorkány kunyhó", Color(0.32, 0.22, 0.3), Color(0.75, 1.0, 0.6), -92.0, 0.0],
+			["L kóh z", Color(0.55, 0.5, 0.44), Color(0.3, 0.26, 0.22, 0.6), -56.0, 0.06]]:
+		var text: String = board[0]
+		var measure := UiStyle.label(text, 18, Color.BLACK)
+		holder.add_child(measure)
+		var width := measure.get_minimum_size().x + 26.0
+		measure.free()
+		var top: float = board[3]
+		var plank_node := Node2D.new()
+		plank_node.rotation = board[4]
+		holder.add_child(plank_node)
+		var shape := PackedVector2Array([Vector2(-width + 18, top), Vector2(14, top), Vector2(14, top + 28),
+			Vector2(-width + 18, top + 28), Vector2(-width + 2, top + 14)])
+		var plank := Polygon2D.new()
+		plank.polygon = shape
+		plank.color = board[1]
+		plank_node.add_child(plank)
+		var rim := Line2D.new()
+		rim.points = shape
+		rim.closed = true
+		rim.width = 3.0
+		rim.default_color = Color(0.22, 0.13, 0.08)
+		plank_node.add_child(rim)
+		var label := UiStyle.label(text, 18, board[2])
+		label.size = Vector2(width - 14, 26)
+		label.position = Vector2(-width + 14, top + 1)
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		plank_node.add_child(label)
+	# A régi deszkán repedés és kopott foltok.
+	var crack := Line2D.new()
+	crack.points = PackedVector2Array([Vector2(-60, -52), Vector2(-48, -42), Vector2(-52, -34), Vector2(-40, -26)])
+	crack.width = 1.5
+	crack.default_color = Color(0.25, 0.2, 0.16, 0.8)
+	crack.rotation = 0.06
+	holder.add_child(crack)
+	_blocked[tile] = true
+	_blocked[tile + Vector2i.LEFT] = true
+	_blocked[tile + Vector2i(-2, 0)] = true
 
 
 ## Egy felfelé mutató tábla: `tile` az út melletti csempe (`east`: az út jobb oldalán, különben a bal oldalán).

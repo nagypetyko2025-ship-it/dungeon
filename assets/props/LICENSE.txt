@@ -21,3 +21,7 @@ rowboat.png: Ábel csónakja a tavon — "Wooden Boat" (Pavel Kutejnikov, CC0, h
   a három változat közül az első, kivágva.
 hell_gate.png: a pokol kapuja a 100. emeleten — "portal" (matiasvme, CC0, https://opengameart.org/content/portal-2),
   a portal_3.png 5 kockás animációja; a kő sötét obszidiánra, az örvény izzó vörös-narancsra színezve.
+cauldron.png: üst — "Various Containers" (simples-pimples csomag, CC0, https://opengameart.org/content/various-containers),
+  a cauldron_3.png bal oldali üstje, a háttér kivágva.
+witch.png: Holló Margit, a boszorkány — a 0x72 DungeonTileset II (CC0) wizzard_f álló kockái, a kék ruha és kalap
+  sötétlilára, az arc sápadt zöldesre színezve.
