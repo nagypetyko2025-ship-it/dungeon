@@ -4,7 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-30", "items": [
-		"Bertalan, a mérnök tovább építi a liftet: a táborban fejezetenként elvállalhatod a 20., 30., 40., 50., 60., 70. és 80. " \n			+ "emeleti aknát (leérsz arra az emeletre, aztán kifizeted tábori aranyból). A 80. alá nem visz lift.",
+		"Bertalan, a mérnök tovább építi a liftet: a táborban fejezetenként elvállalhatod a 20., 30., 40., 50., 60., 70. és 80. " \
+			+ "emeleti aknát (leérsz arra az emeletre, aztán kifizeted tábori aranyból). A 80. alá nem visz lift.",
 		"A lift ablakában a még zárt emeleteken lakat látszik.",
 		"A kovácsnak neve lett (Ambrus): E-re beszélget, 4 történetet mesél, és az első opcióval nyílik a műhelye.",
 	]},
