@@ -1,6 +1,6 @@
 class_name LiftRoom
 extends Node2D
-## A 10. emelet liftszobája (a Room teszi bele, ha has_lift_room): a szoba közepén áll a lift (LiftRig:
+## A 10. emelet (és a nyitott mély aknák: 20-80.) liftszobája (a Room teszi bele, ha has_lift_room): a szoba közepén áll a lift (LiftRig:
 ## bakállvány, láncon lógó vasketrec, fogaskerék), mellette Bertalan, a mérnök (E: beszélgetés, lásd Engineer).
 ## A szobában nincs szörny, csapda és láda; a térképen kék.
 
@@ -24,7 +24,7 @@ func _ready() -> void:
 	# A szoba közepén a lift, jobbra mellette a mérnök (a játékossal együtt rendeződnek mélység szerint).
 	y_sort_enabled = true
 	var rig := LiftRig.new()
-	rig.working = Engineer.repaired()
+	rig.working = Engineer.repaired() or GameState.depth != Engineer.DEPTH
 	add_child(rig)
 	_cage = rig.cage
 	_engineer = Node2D.new()
@@ -47,8 +47,10 @@ func _ready() -> void:
 	_engineer.add_child(body)
 	_engineer_body = shape
 	# A javítás után felment a lifttel: azóta a táborban van (lásd CampLift).
-	_engineer.visible = not Engineer.in_camp()
-	shape.disabled = Engineer.in_camp()
+	# A mély aknák emeletein (20-80.) csak a lift áll, Bertalan nincs ott.
+	var here := not Engineer.in_camp() and GameState.depth == Engineer.DEPTH
+	_engineer.visible = here
+	shape.disabled = not here
 	_dialogue = DialoguePanel.new()
 	_dialogue.name = "EngineerDialogue"
 	_dialogue.npc_id = Engineer.ID
@@ -80,7 +82,8 @@ func _near() -> bool:
 
 func _process(delta: float) -> void:
 	# A javítás után, amint bezárult a beszélgetés: beszáll a ketrecbe, és felmegy vele.
-	if not _riding and not GamePause.active(get_tree()) and Progress.npc_quest_state(Engineer.RIDE_FLAG) == "pending":
+	if not _riding and not GamePause.active(get_tree()) and GameState.depth == Engineer.DEPTH \
+			and Progress.npc_quest_state(Engineer.RIDE_FLAG) == "pending":
 		_ride()
 	var target := 1.0 if _near() and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)

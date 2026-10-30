@@ -80,6 +80,8 @@ const BOSS_ROOM_SIZE := Vector2i(15, 11)
 ## Az utolsó, 20. emelet: csak a kezdőszoba és a Vérfarkas nagy terme (tőle keletre).
 const FINAL_DEPTH := 20
 const FINAL_START_ROOM := Rect2i(-6, -5, 13, 11)
+## A nagy főellenség emeletén a lift a kezdőszoba bal oldalán áll (a közepén jelensz meg).
+const FINAL_LIFT_OFFSET := Vector2i(-3, -1)
 const FINAL_ARENA_SIZE := Vector2i(31, 21)
 ## Gáspár elesett embereinek csontvázai a 20. emeleten (az aréna és a kezdőszoba).
 const FINAL_ARENA_GUARDS := 9
@@ -189,9 +191,13 @@ func _ready() -> void:
 	var stairs_cell := _farthest(distances)
 	var shop_cell := TUTORIAL_CELLS[TUTORIAL_SHOP_ROOM] if tutorial else NO_SHOP if final_floor or hell \
 		else _pick_shop_cell(cells, stairs_cell)
-	# A 10. emeleten mindig van liftszoba (kék a térképen), a kezdőszobához legközelebbi szabad szobában.
+	# A 10. emeleten mindig van liftszoba (kék a térképen), a kezdőszobához legközelebbi szabad szobában;
+	# a mély aknák emeletein (Engineer.LIFT_FLOORS, ha már nyitva vannak) is, a nagy főellenség emeletén a
+	# kezdőszobában.
 	var lift_cell := NO_SHOP
-	if depth == Engineer.DEPTH and not tutorial:
+	var deep_lift := depth in Engineer.LIFT_FLOORS and Engineer.floor_open(depth) and not tutorial and not hell \
+		and not Challenge.active()
+	if (depth == Engineer.DEPTH and not tutorial) or (deep_lift and not final_floor):
 		var best := 999999
 		for cell in cells:
 			if cell != Vector2i.ZERO and cell != stairs_cell and cell != shop_cell and int(distances[cell]) < best:
@@ -245,6 +251,9 @@ func _ready() -> void:
 		elif final_floor:
 			# A nagy főellenség terme: nyitott aréna, se csapda, se láda. A 20. emeleten mindkét
 			# szobában Gáspár elesett embereinek csontvázai fekszenek (a teremben a legtöbb).
+			if cell == Vector2i.ZERO and deep_lift:
+				room.has_lift_room = true
+				room.lift_offset = FINAL_LIFT_OFFSET
 			if not chaos_floor and not engine_floor and not gate_floor and not knocker_floor and not portal_floor:
 				room.fallen_guards = FINAL_ARENA_GUARDS if cell == Vector2i.RIGHT else FINAL_START_GUARDS
 			if cell == Vector2i.RIGHT and not portal_floor:

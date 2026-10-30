@@ -230,7 +230,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Mély aknák (a táborban, `Engineer.camp_options`): `LIFT_FLOORS` 20-80, egyszerre a soron következő (`next_floor`);
   "lift_<n>" küldetés: "" → active (elvállalod) → reached (`Engineer.note_depth`, a Dungeon hívja; csalás és próbatétel nem
   számít) → done (fizetés tábori aranyból, `LIFT_PRICES`; szövegek: `CHAPTERS`). A lift ablaka (`CampLift.LiftPanel`): 2 oszlop,
-  `Engineer.floor_open`, a zártak lakattal (`assets/ui/lock.png`). A 80. alá nem visz lift.
+  `Engineer.floor_open`, a zártak lakattal (`assets/ui/lock.png`). A 80. alá nem visz lift. Lent a nyitott mély aknák emeletein is
+  liftszoba van (`Dungeon` deep_lift; nagy főellenség emeletén a kezdőszobában, `Room.lift_offset` = `FINAL_LIFT_OFFSET`), Bertalan nélkül.
   Mindkét helyen ugyanaz a lift: `LiftRoom.LiftRig` (pixelrácsra rajzolt bakállvány, láncon lógó ketrec, a gerenda végén
   forgó fogaskerék: `assets/props/lift_gear.png`, 8 kocka); lent a szoba közepén, a táborban a kőpadló mellett egy akna fölött (`CampLift.Shaft`).
 - Pihenő a főellenség után (`ui/boss_return_panel.gd`): a kék portál a táborból ugyanoda hoz vissza — `GameState.break_floor`

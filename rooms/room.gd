@@ -73,6 +73,8 @@ var has_chest := false
 var has_shop := false
 ## A 10. emelet liftszobája (Bertalan, a mérnök; lásd LiftRoom): nincs benne szörny, csapda, láda.
 var has_lift_room := false
+## A lift helye a szoba közepéhez képest (csempében; a nagy főellenség emeletén a kezdőszoba bal oldala).
+var lift_offset := Vector2i.ZERO
 ## Járt-e már itt a játékos (a térképhez).
 var visited := false
 ## Főellenség-terem: a lépcső a fülkében van (lcove_dir irányban), rács mögött.
@@ -254,12 +256,13 @@ func _place_shop() -> void:
 ## A liftszoba: a fülke a hátsó fal előtt, a szoba közepén; körülötte nem lesz oszlop.
 func _place_lift_room() -> void:
 	# A lift a szoba közepén áll (a bakállvány magasra nyúlik: fölötte is szabadon marad a hely).
+	var center := anchor + lift_offset
 	var lift_room := LiftRoom.new()
-	lift_room.position = tile_center(anchor) - position
+	lift_room.position = tile_center(center) - position
 	add_child(lift_room)
 	for dx in range(-3, 4):
 		for dy in range(-4, 3):
-			_used_tiles[anchor + Vector2i(dx, dy)] = true
+			_used_tiles[center + Vector2i(dx, dy)] = true
 
 
 ## Tárgylift ugyanebben a falban, a középső folyosó bal oldalán (két csempe széles,
