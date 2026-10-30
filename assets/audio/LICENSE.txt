@@ -70,3 +70,6 @@ A pokol zenéje (csak a pokolban, folyamatosan ismételve):
   hell_fall_of_nightmares.wav = "Fall of Nightmares [Epic, Orchestral]" by nene, CC0 1.0 - https://opengameart.org/content/fall-of-nightmares-epic-orchestral
 A rossz befejezés (ha Azazel ellen elestél):
   bad_ending_9th_circle.mp3 = "The 9th Circle" (V2) by Joth, CC0 1.0 - https://opengameart.org/content/the-9th-circle
+
+A főmenü zenéje:
+  main_menu_theme.ogg = "Epic Main Menu Theme ~ Loop" (Übermensch [Main Menu]) by Cleyton Kauffman, CC0 1.0 - https://opengameart.org/content/epic-main-menu-theme-loop

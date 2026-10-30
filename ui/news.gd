@@ -4,6 +4,7 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-30", "items": [
+		"A főmenünek saját, epikus zenéje lett (a zeneválasztóban az Egyéb alatt is lejátszható).",
 		"Gyorsabb játék: nem akad meg a harc sok ölésnél, a csalómenü tárgylistája és a könyvek azonnal nyílnak, és rövidebb a lejutás a kazamatába.",
 		"Javítva: A harminc név gyűrűjének hiányzott az ikonja.",
 		"Javítva: a Szörnyek könyvéből nem lóg ki többé a lap (a hosszú leírású szörnyek, pl. Azazel, saját lapot kapnak).",

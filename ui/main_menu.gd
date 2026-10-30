@@ -63,7 +63,7 @@ func _ready() -> void:
 		GameState.display_initialized = true
 		if Audio.saved_fullscreen():
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-	Audio.music("menu")
+	Audio.music("main_menu")
 	# A főmenübe érve véget ér a közös játék (a többjátékos ablakból lehet újat kezdeni).
 	var lobby := NetLobby.current(get_tree())
 	if lobby != null and lobby.state == "playing":

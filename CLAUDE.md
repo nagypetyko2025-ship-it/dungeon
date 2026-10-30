@@ -207,6 +207,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   +1 sebzés, csontváz-erősítés, gyors idézés, jobb klikkre a másodlagos idézés: 3 íjász VAGY óriás csontváz (kizárják egymást); idézéskor szabad helyre kelnek (`_free_spawn_spot`); a csontvázak statjai és a töltési idők a
   szinttel / Vendel statjaival NEM nőnek; a szörnyek (a főellenség nem) a közelebbi csontvázra is rátámadnak, a csontváz `hits`
   találatot bír ki (saját Hurtbox); `GameState.necromancy`; Tab-ban "Idézés" oldal), választó: `ui/spell_picker.gd`). Kocsmai székek: `world/town.gd`.
+- Főmenü zenéje: Audio "main_menu" (main_menu_theme.ogg, csak a főmenü kéri; a zeneválasztóban "Egyéb"). A bevezető
+  történet a régi "menu" (menu_ambience) zenét használja.
 - Teljesítmény: `world/resource_warmer.gd` (ResourceWarmer): `fetch(path)` gyorsítótár (tárgyikonok `Items.icon`, a Szörnyek
   könyve képei, a szörnylapok `Enemy._own_frames`), `warm(paths)` háttérbetöltés (`Items.warm_icons` a főmenüben / táborban /
   kazamatában, `EnemyTypes.warm_sheets(depth)`, a tábor a dungeon.tscn-t is). Gyakori apró mentés: `Progress.save_soon()`

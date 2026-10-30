@@ -36,6 +36,8 @@ const VOLUMES := {
 	"thrust": -4.0, "dodge": -6.0, "magic": -6.0, "anvil": -8.0,
 }
 const MUSIC_TRACKS := {
+	# A főmenü saját zenéje (csak ott szól magától; a zeneválasztóban az "Egyéb" alatt lejátszható).
+	"main_menu": "res://assets/audio/music/main_menu_theme.ogg",
 	"menu": "res://assets/audio/music/menu_ambience.ogg",
 	"dungeon": "res://assets/audio/music/dungeon_ambience.ogg",
 	"boss": "res://assets/audio/music/boss_battle.wav",
@@ -101,6 +103,7 @@ const PLAYLIST_TRACKS := {
 ## A játék közbeni zenék címe és szerzője: a bal alsó sarokban kiírja, mi szól éppen (lásd _show_now_playing;
 ## a főmenü zenéjénél nem, ott a Tutorial gomb van).
 const MUSIC_TITLES := {
+	"res://assets/audio/music/main_menu_theme.ogg": "Epic Main Menu Theme — Cleyton Kauffman (főmenü)",
 	"res://assets/audio/music/boss_battle.wav": "Boss Battle #2 — nene",
 	"res://assets/audio/music/epic_boss_battle.wav": "Epic Boss Battle — Juhani Junkala",
 	"res://assets/audio/music/heavy_boss_battle.ogg": "Heavy Boss Battle 1 — MintoDog",
