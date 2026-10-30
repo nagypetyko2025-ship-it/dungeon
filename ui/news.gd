@@ -4,7 +4,7 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-30", "items": [
-		"Működik a boszorkány Test manipulálása: aranyért és porért végleg erősíti a képességeidet, szintenként 1,5× annyival, mint a kiképzősátor, és bármeddig fejleszthető.",
+		"Működik a boszorkány Test manipulálása: aranyért és porért végleg erősíti a képességeidet, szintenként 1,5× annyival, mint a kiképzősátor, és bármeddig fejleszthető (a korlátos képességek, pl. kikerülés, nyilak, csak a korlátjukig).",
 		"Holló Margit, a boszorkány küldetést ad: vigyél neki egy Vámpírfogat! Utána új történeteket mesél, és szóba kerül a test manipulálása is (hamarosan).",
 		"A Küldetések könyvének fülei két sorba kerültek (új fül: Boszorkány).",
 		"Új hely: a romos ház tisztása lejjebb nyúlik, az alján boszorkánykunyhó áll (bent rotyog az üst, Holló Margit mesél). Odatalálsz a tábor nyugati szélén álló kettős táblával.",

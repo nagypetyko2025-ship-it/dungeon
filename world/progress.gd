@@ -49,6 +49,10 @@ const WITCH_FACTOR := 1.5
 const WITCH_COSTS := [[250, "common", 1], [300, "common", 2], [350, "rare", 1], [400, "rare", 2], [450, "epic", 1],
 	[500, "epic", 2], [700, "legendary", 1]]
 const WITCH_LATE_COST := [1000, "legendary", 3]
+## A korlátos statok (Stats.LIMITS felső értéke): ezeket a boszorkány csak addig fejleszti, amíg a karakter
+## alapértéke + a kiképzősátor + a boszorkány el nem éri a korlátot (witch_maxed).
+const WITCH_CAPPED: Array[String] = ["dodge", "move_speed", "attack_speed", "crit_chance", "attack_range", "defense",
+	"multishot", "accuracy"]
 ## A boszorkány fejlesztései: fejlesztés (UPGRADES kulcs) -> szint (közös, mint az upgrades).
 static var witch_levels := {}
 
@@ -449,8 +453,21 @@ static func witch_cost(id: String) -> Array:
 	return WITCH_COSTS[current] if current < WITCH_COSTS.size() else WITCH_LATE_COST
 
 
-## Megveszi a boszorkánytól a következő szintet, ha van rá elég tábori arany és por.
-static func witch_buy(id: String) -> bool:
+## Elérte-e már a korlátját ez a stat (`base`: a karakter alapértéke, tárgyak nélkül).
+static func witch_maxed(id: String, base: float) -> bool:
+	var definition: Dictionary = UPGRADES[id]
+	var stat: String = definition["stat"]
+	if not stat in WITCH_CAPPED:
+		return false
+	var total := base + level(id) * float(definition["per_level"]) + witch_bonus(id, witch_level(id))
+	return total >= float(Stats.LIMITS[stat][1]) - 0.001
+
+
+## Megveszi a boszorkánytól a következő szintet, ha van rá elég tábori arany és por, és a stat még nincs
+## a korlátján.
+static func witch_buy(id: String, base: float) -> bool:
+	if witch_maxed(id, base):
+		return false
 	var cost := witch_cost(id)
 	var gold := int(cost[0])
 	var rarity := str(cost[1])

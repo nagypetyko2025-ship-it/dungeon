@@ -79,6 +79,16 @@ func _make_row(id: String) -> PanelContainer:
 	var gold := int(cost[0])
 	var rarity := str(cost[1])
 	var amount := int(cost[2])
+	if Progress.witch_maxed(id, _base(stat)):
+		# A korlátos stat (pl. kikerülés 75%) elérte a plafont: tovább nem fejleszthető.
+		var full := MenuStyle.button("Max")
+		full.tooltip_text = "Ez a képesség elérte a korlátját."
+		full.custom_minimum_size = Vector2(76, 44)
+		full.add_theme_font_size_override("font_size", 14)
+		full.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		full.disabled = true
+		row.add_child(full)
+		return panel
 	var button := MenuStyle.button("%d\n%d×" % [gold, amount])
 	button.icon = Smithing.DUST_ICONS[rarity]
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -106,6 +116,15 @@ func _precise(stat: String, value: float) -> String:
 	return number + text.substr(first.length())
 
 
+## A játszott karakter alapértéke ebből a statból (tárgyak és fejlesztések nélkül).
+func _base(stat: String) -> float:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return 0.0
+	var value: Variant = player.get_node("Stats").get("base_" + stat)
+	return float(value) if value != null else 0.0
+
+
 func _dust_icon(rarity: String, size: float) -> TextureRect:
 	var icon := TextureRect.new()
 	icon.texture = Smithing.DUST_ICONS[rarity]
@@ -118,7 +137,7 @@ func _dust_icon(rarity: String, size: float) -> TextureRect:
 
 func _buy(id: String) -> void:
 	var cost := Progress.witch_cost(id)
-	if Progress.witch_buy(id):
+	if Progress.witch_buy(id, _base(Progress.UPGRADES[id]["stat"])):
 		Audio.play("level_up")
 		_message.text = "%s: %d. szint kész! A boszorkány elégedetten szuszog." % [NAMES.get(id, id), Progress.witch_level(id)]
 		_message.add_theme_color_override("font_color", Color(0.24, 0.5, 0.2))

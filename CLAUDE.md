@@ -99,7 +99,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   (Vámpírfog a táskából, 400 tábori arany, J könyv "Boszorkány" fül = `QuestBook.WITCH_TAB`, a fülsor két soros), utána
   `FANG_STORIES` (4) + 5. opció "Test manipulálása" → `ui/witch_panel.gd` (a `camp_upgrades.gd`-t örökli: `_title/_header_text/_header_extra`;
   `Progress.witch_levels` (mentve: camp/witch_levels), `witch_cost` (`WITCH_COSTS` 7 szint, utána `WITCH_LATE_COST` 1000 + 3 legendás por),
-  `witch_bonus` = szint × per_level × `WITCH_FACTOR` 1.5 (nyíl lefelé kerekítve), végtelen szint; a `permanent_bonuses` adja hozzá)). Kettős tábla a tábor nyugati szélén:
+  `witch_bonus` = szint × per_level × `WITCH_FACTOR` 1.5 (nyíl lefelé kerekítve), végtelen szint, kivéve a `WITCH_CAPPED`
+  statokat: `witch_maxed(id, base)` = a karakter base_<stat> + sátor + boszorkány ≥ Stats.LIMITS max → "Max"; a `permanent_bonuses` adja hozzá)). Kettős tábla a tábor nyugati szélén:
   `Camp._build_witch_sign` (`WITCH_SIGN_TILE`): "Boszorkány kunyhó" + kopott "L kóh z". A Camp-nek nincs class_name-je.
 - A tábor jobb felső sarkából rejtett ösvény északra: `world/hidden_grave.gd` (tisztás: Borbás Márton sírja, elhalt fa
   Ilona kitűzött levelével, egyszer nyitható láda: 150 tábori arany, Görbe kés, Ismétlő számszeríj; jelző: hidden_grave_chest).
