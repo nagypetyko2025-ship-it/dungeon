@@ -22,6 +22,13 @@ const RESCUED_GREETING := "[i]Lőrinc a kút kávájának dőlve rajzolgat valam
 	+ "Á, a megmentőm! Gyere, nézd: a kút alatti járatokat rajzolom fel."
 
 const QUESTS := {
+	OldEntrance.QUEST: {"name": "A legrégebbi bejárat",
+		"text": "Lőrinc műhelyében, a kút alatt, egy olajozott rács zár el egy lefelé vezető lépcsőt. Lőrinc szerint "
+			+ "ez a Mélység legrégebbi bejárata, és valaki háromszáz éve őrzi. Lőrinc kinyitotta a rácsot: menj le "
+			+ "a lépcsőn (%d emelet), és győzd le, ami a legalján vár." % OldEntrance.RUN_FLOORS,
+		"reward": "Az Őrző kulcsa (egyedi legendás talizmán) és %d tábori arany" % OldEntrance.GOLD,
+		"doing": "menj le a műhely rácsos lépcsőjén, és győzd le az Őrzőt",
+		"doing_slain": "mondd el Lőrincnek, mi volt a rács alatt", "done": "az Őrző nyugszik"},
 	LADDER_QUEST: {"name": "Létra a kútba",
 		"text": "A romos ház melletti kút aljáról egy idegen kér segítséget: leszakadt alatta a kötél, "
 			+ "és nem tud kimászni. Keress neki valahonnan egy [b]létrát[/b], és engedd le neki a kútba.",
@@ -58,6 +65,30 @@ const TAVERN_FLAG := "lorinc_tavern"
 ## A második kérés (a megmentése után): egy epikus talizmán, mert varázsló.
 const TALISMAN_QUEST := "well_talisman"
 const TALISMAN_GOLD := 200
+## A rács alatti lépcső (OldEntrance) közben: Lőrinc tanácsa.
+const ENTRANCE_HINT := "[i]Lőrinc a rézkulcsot forgatja a kezében.[/i]\n\nA rács a műhelyem hátsó falánál van, " \
+	+ "a kút alatti járat végén. Odalent minden emelet régebbi a fentieknél, és a legalján vár az őr. Ha " \
+	+ "kalapácsolást hallasz, közel vagy.\n\nÉs ha nem tetszik, ami lent van, gyere fel. A lépcső nem fut el."
+## Az Őrző után: 3 új történet.
+const ENTRANCE_STORIES: Array[Dictionary] = [
+	{"id": "keeper_who", "text": "Ki volt az Őrző?", "trust": 3,
+		"answer": "[i]Lőrinc kiterít egy foltos pergament: egy pajzsos lovag rajza, alatta régi írás.[/i]\n\n" \
+			+ "Gellért. Aurél király fegyvernöke. A krónika szerint a király a legelső kapuhoz állította, mielőtt a " \
+			+ "tábort felépítette volna, és megesküdtette, hogy senki sem megy át rajta a király engedélye nélkül.\n\n" \
+			+ "A király meghalt. Az eskü nem. A Mélység pedig megtartotta Gellértet, ahogy mindent megtart, ami " \
+			+ "elég sokáig marad lent."},
+	{"id": "keeper_door", "text": "Miért volt ez a legrégebbi bejárat?", "trust": 2,
+		"answer": "Mert a falu kútja volt az első lyuk, amin a Mélység kilélegzett. Holló Margit is mondta, " \
+			+ "hogy a kútnak egyszer csak nem lett alja. Aurél ezen a kúton ment le először, és ide állította az " \
+			+ "őrt.\n\nA tábor lépcsőjét csak később ásták, amikor kiderült, hogy a kút szűk a sereghez. A " \
+			+ "térképek szerint a két út a Mélység felső szintjein találkozik. Szóval eddig is ott jártál, csak " \
+			+ "a hátsó ajtón."},
+	{"id": "keeper_key", "text": "Mit csináljak az Őrző kulcsával?", "trust": 3,
+		"answer": "[i]Elmosolyodik.[/i]\n\nViseld. Háromszáz évig egy hűséges ember övén lógott, aki soha " \
+			+ "nem hagyta el a posztját. Az ilyen tárgy emlékszik. Nem enged meghátrálni, de el sem enged " \
+			+ "esni.\n\nÉs ha egyszer újra kalapácsolást hallasz a kút alól... az már csak a visszhang lesz. " \
+			+ "Remélem."},
+]
 ## A kút alatti járat felrobbantása után (Blaster.WELL_QUEST, WellCave): a régi műhelyéről.
 const WELL_STORIES: Array[Dictionary] = [
 	{"id": "workshop", "text": "Megtaláltam a műhelyedet a kút alatt.", "trust": 4,
@@ -116,6 +147,19 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 					"on_choose": func() -> String: return _give_phoenix(inventory)})
 	if is_rescued() and Blaster.well_open():
 		list.append_array(WELL_STORIES)
+	if OldEntrance.available():
+		match Progress.npc_quest_state(OldEntrance.QUEST):
+			"":
+				list.append({"id": "entrance", "text": "Mi van a műhelyed rácsa mögött?",
+					"on_choose": func() -> String: return _ask_entrance()})
+			"active":
+				list.append({"id": "entrance_wait", "text": "Mit tudsz még a rács mögötti lépcsőről?",
+					"on_choose": func() -> String: return ENTRANCE_HINT})
+			"slain":
+				list.append({"id": "entrance_done", "text": "Legyőztem az Őrzőt a rács alatt.",
+					"on_choose": func() -> String: return _finish_entrance()})
+			"done":
+				list.append_array(ENTRANCE_STORIES)
 	match Progress.npc_quest_state(ROYAL_LETTER_QUEST):
 		"active":
 			list.append({"id": "lost_royal_letter", "text": "Elvesztettem a levelet...",
@@ -432,6 +476,38 @@ static func _give_ladder(inventory: Inventory) -> String:
 
 
 ## Kijutott a kútból (onnantól a kút mellett áll).
+static func _ask_entrance() -> String:
+	Progress.set_npc_quest(OldEntrance.QUEST, "active")
+	Progress.mark_asked(ID, "entrance")
+	Progress.save_game()
+	Audio.play("ui_open")
+	return "[i]Lőrinc leteszi a térképet. Sokáig hallgat.[/i]\n\n" \
+		+ "A rács. Hetekig néztem, mielőtt a kútba estem. Tudod, mi a furcsa? Nem rozsdás. Háromszáz éves vas, " \
+		+ "és a lakatja olajos, mintha tegnap kenték volna. Éjjelente pedig odalentről kalapácsolás hallatszik. " \
+		+ "Egyenletes, türelmes, mint aki javít valamit.\n\n" \
+		+ "A királyi levéltárban találtam egy feljegyzést: I. Aurél, a tábor alapítója, \"őrt állított a legelső " \
+		+ "kapuhoz, aki nem alszik és nem felejt\". Szerintem az az őr még mindig ott van.\n\n" \
+		+ "[i]Elővesz egy kis, rézből reszelt kulcsot.[/i]\n\nAz iránytűm mutatta meg a lakat belsejét. Ezt " \
+		+ "csináltam hozzá. Én nem merek lemenni. De te... te már a Mélység aljáig jártál. Nyisd ki.\n\n" \
+		+ "[color=#7a4a10](Új küldetés a J könyvben. A rács a kút alatti műhelyben most nyitható.)[/color]"
+
+
+static func _finish_entrance() -> String:
+	# Az add_camp_gold újratölti a mentést: előbb az arany, aztán a többi változás.
+	Progress.add_camp_gold(OldEntrance.GOLD)
+	Progress.set_npc_quest(OldEntrance.QUEST, "done")
+	Progress.mark_asked(ID, "entrance_done")
+	Progress.change_trust(ID, 15)
+	Progress.save_game()
+	Audio.play("level_up")
+	return "[i]Lőrinc tágra nyílt szemmel hallgatja, a toll megáll a kezében.[/i]\n\n" \
+		+ "Egy páncélos lovag. Háromszáz évig. Egyedül, a sötétben, és olajozta a lakatot, hogy a kapu " \
+		+ "rendben legyen, ha a király egyszer visszajön...\n\n" \
+		+ "[i]Leveszi a kalapját.[/i]\n\nNem jött vissza senki. Csak te. Talán épp ezt várta: hogy valaki " \
+		+ "végre leváltsa az őrségből. Fogadd el ezt az aranyat a térképész-céh nevében. Meg az enyémben." \
+		+ "\n\n[color=#7a4a10](+%d tábori arany)[/color]" % OldEntrance.GOLD
+
+
 static func is_rescued() -> bool:
 	return Progress.npc_quest_state(LADDER_QUEST) == "done"
 

@@ -4,7 +4,7 @@ extends Node2D
 ## derengés, a kéményéből zöldes füst, az ajtó fölött koponya; a sáros ösvényről sáros út vezet az ajtajáig.
 ## Bent egy üst rotyog a tűzön (zöld gőz), a falon polcok üvegcsékkel, a mennyezetről száradó füvek lógnak,
 ## gyertyák, koponyák, pókhálók. Az üst mellett áll Holló Margit, a boszorkány (E: beszélgetés):
-## 4 történet, küldetés: egy Vámpírfog (FANG_QUEST, J könyv "Boszorkány" fül), utána 4 új történet és a
+## 5 történet, 5 küldetés egymás után (CHAIN, J könyv "Boszorkány" fül), mindegyik után 3 új történet; a 3. után a
 ## "Test manipulálása": a képességek végleges fejlesztése aranyért és porért (ui/witch_panel.gd, Progress.witch_*).
 ## A tábla a tábor nyugati szélén: "Boszorkány kunyhó", alatta a régi, kopott "Lakóház" (lásd Camp._build_witch_sign).
 ## (A tábor építi fel: setup(camp) + build(), mint a Romot.)
@@ -73,39 +73,6 @@ const WITCH_STORIES: Array[Dictionary] = [
 			+ "a bejárata fölött meleg a levegő, mint egy alvó állat orra fölött.\n\n" \
 			+ "Járj csak le, hozz fel kincset, öld a szörnyeit. De ha egyszer a legalján valaki a neveden szólít... " \
 			+ "ne felelj. Gyere inkább ide, és igyál egy jó csalánteát."},
-]
-
-## A küldetés: hozz egy Vámpírfogat (epikus talizmán, a táskádban legyen).
-const FANG_QUEST := "witch_fang"
-const FANG_ID := "trinket_fang"
-const FANG_GOLD := 400
-const QUESTS := {
-	FANG_QUEST: {"name": "A vámpír foga",
-		"text": "Holló Margitnak a főzetéhez egy igazi [b]Vámpírfog[/b] kell (epikus talizmán, a táskádban legyen). "
-			+ "Azt mondja, a vámpír foga emlékszik minden vérre, amit valaha ivott, és a test is emlékezni fog rá.",
-		"reward": "%d tábori arany (és a boszorkány bizalma)" % FANG_GOLD,
-		"doing": "vigyél a boszorkánynak egy Vámpírfogat", "done": "Margit megkapta a fogat"},
-}
-## A fog után: 4 új történet (az 5. opció a Test manipulálása).
-const FANG_STORIES: Array[Dictionary] = [
-	{"id": "fang_why", "text": "Mire kellett neked az a fog?", "trust": 3,
-		"answer": "[i]A fogat egy kis üvegcsébe ejti. A folyadék elsötétül, aztán lassan vörösre vált.[/i]\n\n" \
-			+ "A vámpír nem a vért issza, gyermekem. Az életet. A vér csak a pohár. A foga pedig ötszáz évnyi " \
-			+ "lopott életet hordoz magában, minden harapás egy újabb gyűrű rajta, mint a fa törzsén.\n\n" \
-			+ "Ebből a lőréből egy csepp elég, hogy a test emlékezzen arra, milyen erős volt valaha. Vagy arra, " \
-			+ "milyen erős lehetne."},
-	{"id": "body", "text": "Honnan tudsz ennyit a testről?", "trust": 3,
-		"answer": "[i]Felhúzza a ruhaujját. A karján apró, ezüstös hegek futnak, mint egy térkép.[/i]\n\n" \
-			+ "Ötven éve gyógyítok. Előbb a falu tehenét, aztán a falu népét, aztán a katonákat, akik a falut " \
-			+ "elűzték. A test nem titok. Csak egy ház, amiben laksz. És a házat át lehet építeni.\n\n" \
-			+ "A doktorotok, Kálmán, fűrésszel és szikével dolgozik. Én türelemmel. Mindkettő fáj, csak az enyém " \
-			+ "tovább tart."},
-	{"id": "lorinc", "text": "Ismered Lőrincet, a varázslót?", "trust": 2,
-		"answer": "[i]Fújtat egyet.[/i]\n\n" \
-			+ "A tűzgolyós fiút? Hogyne. Évekig a kútnál kísérletezett, és kétszer gyújtotta fel a tetőmet. " \
-			+ "A varázslók azt hiszik, a hatalom kívülről jön: csillagokból, könyvekből, szavakból.\n\n" \
-			+ "Pedig minden itt van belül. A csontban, az inakban, a vérben. Csak tudni kell, hol kell megcsavarni. " \
-			+ "Ezt a fiú sosem értette meg. Talán majd te."},
 	{"id": "village", "text": "Milyen volt itt a falu régen?", "trust": 2,
 		"answer": "[i]A szeme elréved, a kanál megáll az üstben.[/i]\n\n" \
 			+ "Tizenkét ház. Malom a patakon, a tisztáson vásár minden ősszel. Az erdész háza volt a legszebb, " \
@@ -114,6 +81,226 @@ const FANG_STORIES: Array[Dictionary] = [
 			+ "Aztán megnyílt a Mélység, és jött a király. Kardokkal, sátrakkal, kalandorokkal. A falu elment. Én itt " \
 			+ "maradtam, hogy legyen, aki emlékszik rá."},
 ]
+
+## Margit küldetései egymás után (mindegyik után 3 új történet; a 3. után nyílik meg a Test manipulálása):
+## 1. Vámpírfog a táskából, 2. Tűzboszorkányok (a nővérei), 3. ritka por, 4. Barlangi denevérek,
+## 5. Vérszellemek (az erdész felesége). A szörnyes küldetések az elvállalás óta számolnak (Progress.kills, "<id>_base").
+const FANG_QUEST := "witch_fang"
+const FANG_ID := "trinket_fang"
+const SISTERS_QUEST := "witch_sisters"
+const DUST_QUEST := "witch_dust"
+const BATS_QUEST := "witch_bats"
+const WIFE_QUEST := "witch_wife"
+const CHAIN: Array[String] = [FANG_QUEST, SISTERS_QUEST, DUST_QUEST, BATS_QUEST, WIFE_QUEST]
+## Ennek a küldetésnek a teljesítése után fejleszt (Test manipulálása).
+const UNLOCK_QUEST := DUST_QUEST
+## Szörnyes küldetések: szörny (Progress.kills kulcs) és darab.
+const KILL_QUESTS := {
+	SISTERS_QUEST: ["fire_witch", 6],
+	BATS_QUEST: ["cave_bat", 12],
+	WIFE_QUEST: ["blood_wraith", 5],
+}
+const DUST_RARITY := "rare"
+const DUST_COUNT := 3
+const GOLD := {FANG_QUEST: 400, SISTERS_QUEST: 500, DUST_QUEST: 600, BATS_QUEST: 700, WIFE_QUEST: 1000}
+const QUESTS := {
+	FANG_QUEST: {"name": "A vámpír foga",
+		"text": "Holló Margitnak a főzetéhez egy igazi [b]Vámpírfog[/b] kell (epikus talizmán, a táskádban legyen). "
+			+ "Azt mondja, a vámpír foga emlékszik minden vérre, amit valaha ivott, és a test is emlékezni fog rá.",
+		"reward": "400 tábori arany (és a boszorkány bizalma)",
+		"doing": "vigyél a boszorkánynak egy Vámpírfogat", "done": "Margit megkapta a fogat"},
+	SISTERS_QUEST: {"name": "A nővérek",
+		"text": "Margit két nővére évtizedekkel ezelőtt lement a Mélységbe, és [b]Tűzboszorkány[/b]ként jöttek vissza... "
+			+ "vagy valami, ami a bőrüket viseli. Ölj meg [b]6 Tűzboszorkányt[/b], hogy a lelkük elszabadulhasson.",
+		"reward": "500 tábori arany",
+		"doing": "ölj meg 6 Tűzboszorkányt", "done": "a nővérek lelke szabad"},
+	DUST_QUEST: {"name": "A Mélység pora",
+		"text": "A test átformálásához olyan por kell, amiben még ott él a Mélység ereje. Vigyél Margitnak "
+			+ "[b]3 ritka port[/b] (a kovácsnál szedheted szét a ritka tárgyakat).",
+		"reward": "600 tábori arany és a [b]Test manipulálása[/b]",
+		"doing": "vigyél Margitnak 3 ritka port", "done": "Margit megtanít a test manipulálására"},
+	BATS_QUEST: {"name": "Suttogó szárnyak",
+		"text": "Margit szerint a [b]Barlangi denevér[/b]ek a Mélység suttogását hordják a szárnyukon, és az egyik "
+			+ "hang ismerős neki. Ölj meg [b]12 Barlangi denevért[/b], hogy kihallgathassa a szárnyukat.",
+		"reward": "700 tábori arany",
+		"doing": "ölj meg 12 Barlangi denevért", "done": "Margit megtalálta a hangot"},
+	WIFE_QUEST: {"name": "Az erdész felesége",
+		"text": "A suttogó hang Ilkáé, az erdész feleségéé, aki egy éjjel lement a Mélységhez. A lelkét egy "
+			+ "[b]Vérszellem[/b] tartja fogva. Ölj meg [b]5 Vérszellemet[/b], hogy Ilka hazatérhessen.",
+		"reward": "1000 tábori arany (és Margit hálája)",
+		"doing": "ölj meg 5 Vérszellemet", "done": "Ilka lelke hazatért"},
+}
+## A következő küldetés kérése: az opció szövege és Margit válasza.
+const ASK := {
+	FANG_QUEST: ["Segíthetek valamiben?",
+		"[i]Most először teszi le a kanalat. Hosszan néz rád.[/i]\n\n"
+		+ "Talán. A főzetemből egyvalami hiányzik: egy [b]Vámpírfog[/b]. Nem bármilyen állaté, igazi vámpíré. "
+		+ "A kalandorok néha felhozzák talizmánnak, a nyakukba akasztják, és azt hiszik, attól erősebbek. "
+		+ "Bolondok. Az ereje nem a nyakban van.\n\n"
+		+ "Hozz egyet, és megmutatom, mire jó valójában.\n\n"
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Boszorkány fülön.)[/color]"],
+	SISTERS_QUEST: ["Van még valami, amiben segíthetek?",
+		"[i]Sokáig hallgat. Aztán a polcról levesz egy megfakult, három nőt ábrázoló rajzot.[/i]\n\n"
+		+ "Hárman voltunk. Én, Borka és Rozália. Holló-lányok, a falu boszorkányai. Amikor megnyílt a Mélység, ők "
+		+ "lementek megnézni, mi lélegzik odalent. Én itt maradtam az üst mellett. Gyáva voltam? Okos? Ma sem tudom.\n\n"
+		+ "Évekkel később a kalandorok tűzzel dobáló, piros ruhás asszonyokról meséltek. [b]Tűzboszorkány[/b]ok, így "
+		+ "hívjátok őket. Én tudom, kik azok. Nem ők már... csak a bőrüket viseli valami.\n\n"
+		+ "Ölj meg hatot közülük. Ha jól sejtem, a nővéreim lelke valamelyikben ott ragadt. Szabadítsd fel őket.\n\n"
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Boszorkány fülön.)[/color]"],
+	DUST_QUEST: ["Megtanítasz a test manipulálására?",
+		"[i]Elmosolyodik. Most először, amióta ismered.[/i]\n\n"
+		+ "Már vártam, hogy megkérdezd. A test egy ház, mondtam már. Át lehet építeni. De nem fából és szögből, "
+		+ "hanem porból. Abból a porból, amit a kovácsotok szitál ki az összetört tárgyakból.\n\n"
+		+ "Az átlagos por gyenge, abban csak a kovács verejtéke van. Nekem [b]3 ritka por[/b] kell, abban még ott "
+		+ "zümmög a Mélység ereje. Hozd el, és megmutatom, hogyan kell a csontot megcsavarni.\n\n"
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Boszorkány fülön.)[/color]"],
+	BATS_QUEST: ["Kérhetek még valamit... vagy te kérsz?",
+		"[i]Az ablakhoz lép. Odakint denevérek cikáznak a fák között.[/i]\n\n"
+		+ "Kérek. Éjszakánként, amikor a denevérek felszállnak a Mélységből, hallok valamit. Egy hangot, ami a "
+		+ "szárnyukba ragadt, ahogy a pókháló ragad a ruhába. Ismerős hang. Ötven éve nem hallottam.\n\n"
+		+ "A denevér szárnya mindent megőriz, amit odalent hallott. Ölj meg [b]12 Barlangi denevért[/b] ott lent, "
+		+ "és a szárnyuk suttogása idetalál az üstömhöz. Akkor kihallgatom, kié az a hang.\n\n"
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Boszorkány fülön.)[/color]"],
+	WIFE_QUEST: ["Kié volt a hang a denevérek szárnyán?",
+		"[i]Leül az üst mellé egy háromlábú székre. Most nagyon öregnek látszik.[/i]\n\n"
+		+ "Ilkáé. Az erdész feleségéé, a fenti házból, amiből rom lett. Az egyetlen barátnőm volt a faluban. "
+		+ "Ő hozta a gyógyfüvet a hegyről, én főztem belőle. Aztán egy éjjel lement a Mélységhez vízért.\n\n"
+		+ "A lelke nem halt meg. Fogva tartja egy [b]Vérszellem[/b], abból a vörös leplű fajtából, ami a Mélység "
+		+ "közepén kóborol. Ölj meg ötöt. Az egyik majd elengedi.\n\n"
+		+ "[color=#7a4a10](Új küldetés a J könyvben, a Boszorkány fülön.)[/color]"],
+}
+## Amíg a küldetés fut: kérdés és válasz (a haladás a végén).
+const WAIT := {
+	FANG_QUEST: ["Hol találok vámpírfogat?",
+		"[i]Meg sem fordul.[/i]\n\nAhol a vámpírok. Lent, a Mélységben, ahol a fáklya is fázik. Ha megölsz egyet, "
+		+ "és szerencséd van, a foga a porban marad. Hozd ide, mielőtt eladod valami ostoba kereskedőnek."],
+	SISTERS_QUEST: ["Hogyan ismerem fel a nővéreidet?",
+		"Sehogy. A Tűzboszorkány mind egyforma: piros ruha, öt tűzgolyó legyezőben. A nővéreim nem fognak "
+		+ "megszólítani. Csak öld meg őket, gyermekem, mindet, akit látsz. A lélek majd tudja, hová menjen."],
+	DUST_QUEST: ["Honnan szerzek ritka port?",
+		"A kovácsotoktól, Ambrustól. Vigyél neki ritka tárgyat, a kék fajtát, és szedesse szét. Abból jön a ritka "
+		+ "por. Ha nem elég, hozz többet. A Mélység bőkezű a tárgyakkal, csak a lelkekkel fukar."],
+	BATS_QUEST: ["Hol vannak a denevérek?",
+		"Ahol a sötét a legsűrűbb. A kazamata felső emeletein csapatban lógnak a mennyezeten. Gyorsak, cikáznak, "
+		+ "nehéz eltalálni őket. Légy türelmes. A türelem is fegyver."],
+	WIFE_QUEST: ["Hol keressem a Vérszellemeket?",
+		"Mélyen. Ott, ahol a kő már nem a mi kövünk. Eltűnnek és máshol bukkannak fel, és az érintésük jéghideg. "
+		+ "Ne félj tőlük. Ilka sem félt semmitől, csak a sötéttől. Hozd haza."],
+}
+## A küldetés átadása: az opció szövege és Margit válasza (a végén a jutalom).
+const TURN_IN := {
+	FANG_QUEST: ["Hoztam egy Vámpírfogat.",
+		"[i]Két ujjal veszi el, a gyertya fénye felé tartja. A fog hegye egy pillanatra vörösen felizzik.[/i]"
+		+ "\n\nIgazi. Régi is. Ez legalább háromszáz évig harapott.\n\n"
+		+ "[i]Az üstbe ejti. A zöld gőz egy szívverésnyi időre vérvörösre vált, aztán visszazöldül.[/i]\n\n"
+		+ "Jól van. Most már beszélhetünk komolyabb dolgokról is."],
+	SISTERS_QUEST: ["Megöltem hat Tűzboszorkányt.",
+		"[i]Az üst fölött két kis, piros fénygömb jelenik meg. Körbetáncolják Margitot, aztán kirepülnek a "
+		+ "kéményen.[/i]\n\n[i]Margit sokáig néz utánuk. A szeme nedves.[/i]\n\n"
+		+ "Borka mindig előrement. Rozália mindig utána. Most is így mentek el. Köszönöm, gyermekem. Ezt nem tudom "
+		+ "megfizetni, de azért megpróbálom."],
+	DUST_QUEST: ["Itt a három ritka por.",
+		"[i]A port egy csontkanálon az üst fölé tartja. A por magától felemelkedik, és kék csillámként kering a "
+		+ "gőzben.[/i]\n\nÉrzed? Zümmög. Ez a Mélység ereje, ami még nem tudja, hová tartozik. Ha jól csinálom, "
+		+ "a te csontjaidba fog tartozni.\n\n[i]Megfogja a csuklódat. A keze meglepően erős.[/i]\n\n"
+		+ "Mostantól nálam is fejlesztheted magad. Csak arany kell és por. Meg némi fájdalomtűrés.\n\n"
+		+ "[color=#7a4a10](Megnyílt a Test manipulálása.)[/color]"],
+	BATS_QUEST: ["Megöltem tizenkét denevért.",
+		"[i]Az üst gőze elsötétül. Halk suhogás tölti be a kunyhót, mintha száz apró szárny verdesne "
+		+ "körülötted. Aztán egy női hang, alig hallhatóan: \"...Margit... sötét van...\"[/i]\n\n"
+		+ "[i]A kanál kiesik Margit kezéből.[/i]\n\nIlka. Ez Ilka hangja."],
+	WIFE_QUEST: ["Megöltem öt Vérszellemet.",
+		"[i]A kunyhó ajtaja magától kinyílik. Hűvös, fenyőillatú szél fúj be, és egy pillanatra egy fiatal "
+		+ "asszony alakja áll a küszöbön, kosárral a karján. Rámosolyog Margitra, aztán eltűnik a fák között, a "
+		+ "romos ház felé.[/i]\n\n[i]Margit csak áll, és nem szól. Aztán halkan becsukja az ajtót.[/i]\n\n"
+		+ "Hazament. Ötven év után hazament. Gyermekem... ezt sosem felejtem el."],
+}
+## Minden küldetés után 3 új történet.
+const AFTER_STORIES := {
+	FANG_QUEST: [
+		{"id": "fang_why", "text": "Mire kellett neked az a fog?", "trust": 3,
+			"answer": "[i]A fogat egy kis üvegcsébe ejti. A folyadék elsötétül, aztán lassan vörösre vált.[/i]\n\n"
+				+ "A vámpír nem a vért issza, gyermekem. Az életet. A vér csak a pohár. A foga pedig ötszáz évnyi "
+				+ "lopott életet hordoz magában, minden harapás egy újabb gyűrű rajta, mint a fa törzsén.\n\n"
+				+ "Ebből a lőréből egy csepp elég, hogy a test emlékezzen arra, milyen erős volt valaha. Vagy arra, "
+				+ "milyen erős lehetne."},
+		{"id": "body", "text": "Honnan tudsz ennyit a testről?", "trust": 3,
+			"answer": "[i]Felhúzza a ruhaujját. A karján apró, ezüstös hegek futnak, mint egy térkép.[/i]\n\n"
+				+ "Ötven éve gyógyítok. Előbb a falu tehenét, aztán a falu népét, aztán a katonákat, akik a falut "
+				+ "elűzték. A test nem titok. Csak egy ház, amiben laksz. És a házat át lehet építeni.\n\n"
+				+ "A doktorotok, Kálmán, fűrésszel és szikével dolgozik. Én türelemmel. Mindkettő fáj, csak az enyém "
+				+ "tovább tart."},
+		{"id": "lorinc", "text": "Ismered Lőrincet, a varázslót?", "trust": 2,
+			"answer": "[i]Fújtat egyet.[/i]\n\n"
+				+ "A tűzgolyós fiút? Hogyne. Évekig a kútnál kísérletezett, és kétszer gyújtotta fel a tetőmet. "
+				+ "A varázslók azt hiszik, a hatalom kívülről jön: csillagokból, könyvekből, szavakból.\n\n"
+				+ "Pedig minden itt van belül. A csontban, az inakban, a vérben. Csak tudni kell, hol kell megcsavarni. "
+				+ "Ezt a fiú sosem értette meg. Talán majd te."},
+	],
+	SISTERS_QUEST: [
+		{"id": "borka", "text": "Milyen volt Borka?", "trust": 2,
+			"answer": "[i]Elneveti magát.[/i]\n\nHangos. Mindig hangos. A vásáron ő kiabálta túl a "
+				+ "lacikonyhást, és ő verte el a molnárt, amikor megcsalta a feleségét. A tüzet ő szerette a "
+				+ "legjobban. Gyertyát gyújtott, ha szomorú volt, máglyát, ha dühös.\n\n"
+				+ "Talán ezért lett belőle épp tűzboszorkány. A Mélység abból formál, amit talál."},
+		{"id": "rozalia", "text": "És Rozália?", "trust": 2,
+			"answer": "[i]Az arca ellágyul.[/i]\n\nA legkisebb. Csendes, mint a hó. Ő tudta a legtöbb "
+				+ "dalt, és madarakat szelídített a kezére. Borka ment le, mert kíváncsi volt. Rozália utána, mert "
+				+ "Borka nélkül nem tudott élni.\n\nÉn meg itt maradtam, mert nélkülük sem tudtam. Csak máshogy."},
+		{"id": "coven", "text": "Mi lett a falu többi boszorkányával?", "trust": 3,
+			"answer": "Nem volt több. Hárman voltunk, a Holló-lányok, anyánk után, aki szintén boszorkány volt. "
+				+ "A falu félt tőlünk, de hozzánk jött, ha beteg volt a gyerek vagy meddő a tehén.\n\n"
+				+ "[i]Megkocogtatja az üst peremét.[/i]\n\nEz az üst anyánké volt. Háromszáz éves. Többet látott, "
+				+ "mint a királyotok egész családfája."},
+	],
+	DUST_QUEST: [
+		{"id": "how_body", "text": "Hogyan működik a test manipulálása?", "trust": 2,
+			"answer": "[i]Egy marék port szór a tenyerébe, és ráfúj. A por kék fényben a karodra telepszik.[/i]\n\n"
+				+ "A kiképzősátorban a katonák izzadsággal építik a testet. Lassan, egyenként. Én a porral "
+				+ "egyszerre a csontig hatolok. Ezért erősebb, másfélszer annyit ad.\n\n"
+				+ "De drága. Arany kell a füvekre és por a Mélységből. És minél többet építek rád, annál több kell."},
+		{"id": "limits", "text": "Van határa?", "trust": 2,
+			"answer": "Az erőnek nincs. Az ütést, az életet, a sebzést a végtelenségig csavarhatom. Csak egyre "
+				+ "többe kerül.\n\n[i]Felemeli a mutatóujját.[/i]\n\nDe a gyorsaságnak, a kitérésnek, a "
+				+ "pontos szemnek van határa. Egy ember nem lehet gyorsabb a saját árnyékánál. Ott megállok, akármennyi "
+				+ "port hozol."},
+		{"id": "price", "text": "Fáj?", "trust": 3,
+			"answer": "[i]Nem néz rád.[/i]\n\nIgen. Mindig. Ha valaki azt mondja, hogy erősebb lehetsz "
+				+ "fájdalom nélkül, az hazudik, vagy el akar adni valamit.\n\n"
+				+ "De te már ismered a fájdalmat. Minden alkalommal, amikor lemész abba a lyukba, és felhoznak "
+				+ "hordágyon. Ehhez képest az én fájdalmam csak egy csípés."},
+	],
+	BATS_QUEST: [
+		{"id": "ilka", "text": "Ki volt Ilka?", "trust": 2,
+			"answer": "Az erdész felesége. Vörös hajú, szeplős, mindig nevetett. Ő hozta nekem a hegyről a "
+				+ "kakukkfüvet és az árnikát, én meg főztem neki teát, amikor fájt a háta.\n\n"
+				+ "[i]Elhallgat.[/i]\n\nEgyszer azt mondta, ha meghal, denevér lesz belőle, hogy éjjel is "
+				+ "repülhessen. Nevettünk rajta. Most nem nevetek."},
+		{"id": "forester", "text": "Mi lett az erdésszel?", "trust": 2,
+			"answer": "Utánament. Fejszével, fáklyával, egyedül. Három nap múlva jött fel, ősz hajjal. "
+				+ "Harmincéves volt.\n\nSosem mondta el, mit látott. Leült a ház küszöbére, és egy évig "
+				+ "faragta a táblát. Aztán egy reggel üres volt a ház. Senki sem látta elmenni."},
+		{"id": "bats", "text": "Honnan tudtad, hogy a denevérek hordják a hangot?", "trust": 3,
+			"answer": "[i]Megvonja a vállát.[/i]\n\nAnyámtól. Ő azt mondta, a denevér az egyetlen állat, "
+				+ "ami a hangjával lát. Amit a sötétben hall, az belekerül. A szárnya olyan, mint egy üres levél, "
+				+ "amire a Mélység ír.\n\nEgy denevér csak egy szót visz. Tizenkettő már egy mondatot."},
+	],
+	WIFE_QUEST: [
+		{"id": "after", "text": "Most mi lesz veled, Margit?", "trust": 3,
+			"answer": "[i]Kavar egyet az üstön, és most először dúdol közben.[/i]\n\n"
+				+ "Ugyanaz, mint eddig. Főzök, gyógyítok, és csavarom a kalandorok csontját. De most már nem "
+				+ "egyedül várok. A nővéreim szabadok, Ilka hazament. Akiket vártam, megjöttek, csak máshogy.\n\n"
+				+ "Most már csak te maradtál, gyermekem. Rád is várni fogok. Mindig."},
+		{"id": "ruin", "text": "Ilka a romos ház felé ment...", "trust": 2,
+			"answer": "Igen. Haza. Néha éjjel, ha kinézek, gyertyafényt látok a rom ablakában. A tolvaj "
+				+ "fiú, aki ott rejtőzik, azt mondja, nem ő gyújtja.\n\n[i]Mosolyog.[/i]\n\n"
+				+ "Hagyd csak. Ötven évig volt sötétben. Most világítson egy kicsit."},
+		{"id": "blessing", "text": "Mit kívánsz nekem?", "trust": 4,
+			"answer": "[i]Feláll, és a hüvelykujjával egy kis jelet rajzol a homlokodra. Hűvös és fenyőillatú.[/i]\n\n"
+				+ "Azt, hogy ha egyszer a Mélység legalján valaki a neveden szólít, legyen ott valaki, aki "
+				+ "visszahív. Ahogy te visszahívtad Ilkát és a nővéreimet.\n\nMost menj. És gyere vissza."},
+	],
+}
 
 const WITCH_PANEL := preload("res://ui/witch_panel.gd")
 
@@ -151,26 +338,30 @@ func setup(camp: Node2D) -> void:
 	camp.add_child.call_deferred(_dialogue)
 
 
-## A beszélgetés opciói: a küldetés (kérés / átadás), a fog után a 4 új történet és a Test manipulálása
-## (5. opció, az első lapon), utána a régi történetek.
+## A beszélgetés opciói: a soron következő küldetés (kérés / haladás / átadás), a Test manipulálása (a 3. küldetés
+## után), a teljesített küldetések utáni történetek (a legújabbak elöl), végül a régi történetek.
 static func options(inventory: Inventory) -> Array[Dictionary]:
 	var list: Array[Dictionary] = []
-	match Progress.npc_quest_state(FANG_QUEST):
-		"":
-			list.append({"id": "help", "text": "Segíthetek valamiben?",
-				"on_choose": func() -> String: return _give_fang_quest()})
-		"active":
-			if _has(inventory, FANG_ID):
-				list.append({"id": "fang", "text": "Hoztam egy Vámpírfogat.",
-					"on_choose": func() -> String: return _give_fang(inventory)})
-			else:
-				list.append({"id": "fang_wait", "text": "Hol találok vámpírfogat?",
-					"on_choose": func() -> String: return "[i]Meg sem fordul.[/i]\n\n" \
-						+ "Ahol a vámpírok. Lent, a Mélységben, ahol a fáklya is fázik. Ha megölsz egyet, és szerencséd " \
-						+ "van, a foga a porban marad. Hozd ide, mielőtt eladod valami ostoba kereskedőnek."})
-		"done":
-			list.append_array(FANG_STORIES)
-			list.append({"id": "manipulate", "text": "Test manipulálása (a képességeid végleges fejlesztése)"})
+	var current := current_quest()
+	if not current.is_empty():
+		var state := Progress.npc_quest_state(current)
+		if state == "":
+			var ask: Array = ASK[current]
+			list.append({"id": "help" if current == FANG_QUEST else "help_" + current, "text": ask[0],
+				"on_choose": func() -> String: return _accept(current)})
+		elif quest_ready(current, inventory):
+			list.append({"id": "give_" + current, "text": TURN_IN[current][0],
+				"on_choose": func() -> String: return _turn_in(current, inventory)})
+		else:
+			var wait: Array = WAIT[current]
+			list.append({"id": "wait_" + current, "text": wait[0],
+				"on_choose": func() -> String: return "%s%s" % [wait[1], _progress_note(current)]})
+	if panel_open():
+		list.append({"id": "manipulate", "text": "Test manipulálása (a képességeid végleges fejlesztése)"})
+	for i in range(CHAIN.size() - 1, -1, -1):
+		if Progress.npc_quest_state(CHAIN[i]) == "done":
+			for story: Dictionary in AFTER_STORIES[CHAIN[i]]:
+				list.append(story)
 	list.append_array(WITCH_STORIES)
 	return list
 
@@ -183,37 +374,84 @@ func _open_panel() -> String:
 	return ""
 
 
-static func _give_fang_quest() -> String:
-	Progress.set_npc_quest(FANG_QUEST, "active")
-	Progress.mark_asked(WITCH_ID, "help")
+## Az első még nem teljesített küldetés ("" = mind kész).
+static func current_quest() -> String:
+	for id in CHAIN:
+		if Progress.npc_quest_state(id) != "done":
+			return id
+	return ""
+
+
+## Nyitva van-e már a Test manipulálása (a 3. küldetés után).
+static func panel_open() -> bool:
+	return Progress.npc_quest_state(UNLOCK_QUEST) == "done"
+
+
+## Az elvállalás óta megölt szörnyek (legfeljebb a cél).
+static func kill_progress(id: String) -> int:
+	var target: Array = KILL_QUESTS[id]
+	var base := int(Progress.npc_quest_state(id + "_base"))
+	return clampi(int(Progress.kills.get(target[0], 0)) - base, 0, int(target[1]))
+
+
+## Leadható-e már a küldetés.
+static func quest_ready(id: String, inventory: Inventory) -> bool:
+	if id == FANG_QUEST:
+		return _has(inventory, FANG_ID)
+	if id == DUST_QUEST:
+		return Smithing.dust_of(DUST_RARITY) >= DUST_COUNT
+	if KILL_QUESTS.has(id):
+		return kill_progress(id) >= int(KILL_QUESTS[id][1])
+	return false
+
+
+## A J könyv "folyamatban" szövege (a szörnyes és a poros küldetésnél a haladással).
+static func doing_text(id: String, fallback: String) -> String:
+	if KILL_QUESTS.has(id):
+		return "%s: %d / %d" % [fallback, kill_progress(id), int(KILL_QUESTS[id][1])]
+	if id == DUST_QUEST:
+		return "%s: %d / %d" % [fallback, mini(Smithing.dust_of(DUST_RARITY), DUST_COUNT), DUST_COUNT]
+	return fallback
+
+
+static func _progress_note(id: String) -> String:
+	if KILL_QUESTS.has(id):
+		return "\n\n[color=#7a4a10](Eddig: %d / %d)[/color]" % [kill_progress(id), int(KILL_QUESTS[id][1])]
+	if id == DUST_QUEST:
+		return "\n\n[color=#7a4a10](Ritka porod: %d / %d)[/color]" % [Smithing.dust_of(DUST_RARITY), DUST_COUNT]
+	return ""
+
+
+static func _accept(id: String) -> String:
+	Progress.set_npc_quest(id, "active")
+	if KILL_QUESTS.has(id):
+		Progress.set_npc_quest(id + "_base", str(int(Progress.kills.get(KILL_QUESTS[id][0], 0))))
+	Progress.mark_asked(WITCH_ID, "help" if id == FANG_QUEST else "help_" + id)
 	Progress.save_game()
 	Audio.play("ui_open")
-	return "[i]Most először teszi le a kanalat. Hosszan néz rád.[/i]\n\n" \
-		+ "Talán. A főzetemből egyvalami hiányzik: egy [b]Vámpírfog[/b]. Nem bármilyen állaté, igazi vámpíré. " \
-		+ "A kalandorok néha felhozzák talizmánnak, a nyakukba akasztják, és azt hiszik, attól erősebbek. " \
-		+ "Bolondok. Az ereje nem a nyakban van.\n\n" \
-		+ "Hozz egyet, és megmutatom, mire jó valójában.\n\n" \
-		+ "[color=#7a4a10](Új küldetés a J könyvben, a Boszorkány fülön.)[/color]"
+	return ASK[id][1]
 
 
-static func _give_fang(inventory: Inventory) -> String:
-	for i in inventory.bag.size():
-		var item: Variant = inventory.bag[i]
-		if not (item is Dictionary and item.get("id", "") == FANG_ID):
-			continue
-		inventory.take_from_bag(i)
-		# Az add_camp_gold újratölti a mentést: előbb az arany, aztán a többi változás.
-		Progress.add_camp_gold(FANG_GOLD)
-		Progress.set_npc_quest(FANG_QUEST, "done")
-		Progress.mark_asked(WITCH_ID, "fang")
-		Progress.change_trust(WITCH_ID, 25)
-		Progress.save_game()
-		Audio.play("level_up")
-		return "[i]Két ujjal veszi el, a gyertya fénye felé tartja. A fog hegye egy pillanatra vörösen felizzik.[/i]" \
-			+ "\n\nIgazi. Régi is. Ez legalább háromszáz évig harapott.\n\n" \
-			+ "[i]Az üstbe ejti. A zöld gőz egy szívverésnyi időre vérvörösre vált, aztán visszazöldül.[/i]\n\n" \
-			+ "Jól van. Most már beszélhetünk komolyabb dolgokról is. [color=#7a4a10](+%d tábori arany)[/color]" % FANG_GOLD
-	return "Hm? Nem látok nálad vámpírfogat."
+static func _turn_in(id: String, inventory: Inventory) -> String:
+	if not quest_ready(id, inventory):
+		return "Hm? Még nincs kész, gyermekem."
+	if id == FANG_QUEST:
+		for i in inventory.bag.size():
+			var item: Variant = inventory.bag[i]
+			if item is Dictionary and item.get("id", "") == FANG_ID:
+				inventory.take_from_bag(i)
+				break
+	var gold: int = GOLD[id]
+	# Az add_camp_gold újratölti a mentést: előbb az arany, aztán a többi változás.
+	Progress.add_camp_gold(gold)
+	if id == DUST_QUEST:
+		Smithing.add_dust(DUST_RARITY, -DUST_COUNT)
+	Progress.set_npc_quest(id, "done")
+	Progress.mark_asked(WITCH_ID, "give_" + id)
+	Progress.change_trust(WITCH_ID, 20)
+	Progress.save_game()
+	Audio.play("level_up")
+	return "%s [color=#7a4a10](+%d tábori arany)[/color]" % [TURN_IN[id][1], gold]
 
 
 static func _has(inventory: Inventory, id: String) -> bool:

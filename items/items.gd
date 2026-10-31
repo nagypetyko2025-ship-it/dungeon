@@ -563,6 +563,10 @@ const DEFINITIONS := {
 	"trinket_lantern": {"name": "Koponyalámpás", "slot": "trinket", "rarity": "rare",
 		"stats": {"xp_bonus": [10, 15], "dodge": [2, 3]}},
 	# A tó titka jutalma (LakeCrypt): egyedi, nem esik, nem kapható.
+	"trinket_keeper_key": {"name": "Az Őrző kulcsa", "slot": "trinket", "rarity": "legendary", "unique": true,
+		"shop": false, "stats": {"defense": [8, 8], "max_health": [12, 12], "damage_percent": [8, 8], "attack_speed": [8, 8]},
+		"description": "Nehéz, fekete vaskulcs egy kopott bőrszíjon. Háromszáz évig egy hűséges őr övén lógott, aki "
+			+ "sosem hagyta el a posztját. Ha a kezedben tartod, halk kalapácsolást érzel benne, egyenletesen, mint a szívverés."},
 	"trinket_lake_pearl": {"name": "A tófenék gyöngye", "slot": "trinket", "rarity": "legendary", "unique": true,
 		"shop": false, "stats": {"health_regen": [1.5, 1.5], "dodge": [6, 6], "crit_chance": [6, 6], "max_health": [10, 10]},
 		"description": "Hideg, kékesfehér gyöngy a tó legaljáról. Negyven évig egy lámpás fényében aludt. Ha a fülédhez "

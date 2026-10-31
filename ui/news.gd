@@ -3,6 +3,10 @@ class_name News
 ## rövid, játékosnak szóló sor a legfrissebb dátum alá (a legújabb van felül).
 
 const ENTRIES: Array[Dictionary] = [
+	{"date": "2026-10-31", "items": [
+		"Holló Margit, a boszorkány története folytatódik: 4 új küldetés (összesen 5), mindegyik után 3 új beszélgetés. A Test manipulálása mostantól a 3. küldetés után nyílik meg.",
+		"Lőrinc műhelyének rácsos lépcsője kinyílt: kérdezd meg Lőrincet, mi van mögötte. Odalent 5 emelet és egy háromszáz éves őr vár, jutalma egy egyedi talizmán.",
+	]},
 	{"date": "2026-10-30", "items": [
 		"Az első 15 emeleten a ládák sosem üresek.",
 		"A találati esély egyelőre kikerült a játékból: minden ütésed és lövésed talál (a szörnyek kikerülése maradt).",

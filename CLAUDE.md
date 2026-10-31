@@ -99,8 +99,10 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Nyugati tisztás: romos ház + tolvaj (`world/ruin.gd`, `world/thief.gd`), kút + Lőrinc (`world/stranger.gd`), a kút alja: `world/well_cave.gd`.
   Alján (a tisztás 26 csempe magas) a boszorkánykunyhó: `world/witch_hut.gd` (`WitchHut`, sáros út `path_tiles()`, belül
   `INTERIOR` x 570-től: üst (`cauldron.png`) tűzön, Holló Margit `WITCH_STORIES` 4 történet; `WitchHut.options`: FANG_QUEST
-  (Vámpírfog a táskából, 400 tábori arany, J könyv "Boszorkány" fül = `QuestBook.WITCH_TAB`, a fülsor két soros), utána
-  `FANG_STORIES` (4) + 5. opció "Test manipulálása" → `ui/witch_panel.gd` (a `camp_upgrades.gd`-t örökli: `_title/_header_text/_header_extra`;
+  → küldetéslánc `CHAIN` (5): Vámpírfog a táskából, 6 Tűzboszorkány, 3 ritka por, 12 Barlangi denevér, 5 Vérszellem
+  (`KILL_QUESTS`: az elvállalás óta, "<id>_base"; szövegek `ASK / WAIT / TURN_IN`, jutalom `GOLD`; J könyv "Boszorkány" fül =
+  `QuestBook.WITCH_TAB`, a fülsor két soros, haladás: `WitchHut.doing_text`), mindegyik után 3 történet (`AFTER_STORIES`);
+  a `UNLOCK_QUEST` (3. küldetés) után nyílik a "Test manipulálása" → `ui/witch_panel.gd` (a `camp_upgrades.gd`-t örökli: `_title/_header_text/_header_extra`;
   `Progress.witch_levels` (mentve: camp/witch_levels), `witch_cost` (`WITCH_COSTS` 7 szint, utána `WITCH_LATE_COST` 1000 + 3 legendás por),
   `witch_bonus` = szint × per_level × `WITCH_FACTOR` 1.5 (nyíl lefelé kerekítve), végtelen szint, kivéve a `WITCH_CAPPED`
   statokat: `witch_maxed(id, base)` = a karakter base_<stat> + sátor + boszorkány ≥ Stats.LIMITS max → "Max"; a `permanent_bonuses` adja hozzá)). Kettős tábla a tábor nyugati szélén:
@@ -198,7 +200,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   A híd és Lőrinc megmentése után a bányában: `WELL_QUEST` (6 tűzhangya a küldetés óta) → "ready": Döme a kút alján vár
   (`Blaster.at_well()`, `away()` = nincs a folyosón), ott "Robbants!" → `WellCave._blast` → "done" (`well_open()`):
   `WellCave.TUNNEL` + `WORKSHOP` (Lőrinc régi műhelye: jegyzetek, láda `CHEST_FLAG`: `trinket_lorinc_compass` + 250 arany,
-  lezárt rácsos lépcső `GRATE_TILE` — a későbbi folytatásnak), `OPEN_BOUNDS`; Lőrincnél `Stranger.WELL_STORIES`.
+  rácsos lépcső `GRATE_TILE` → `world/old_entrance.gd` (`OldEntrance`): Lőrinc küldetése `QUEST` ("" → active → slain → done,
+  Stranger: `_ask_entrance` / `_finish_entrance`, utána `ENTRANCE_STORIES`), a rácsnál `WellCave._use_grate` → 5 emeletes
+  történet-futás ("story": "entrance", a LakeCrypt elosztóban), főellenség `OldEntrance.BOSS` (Az Őrző), jutalom `trinket_keeper_key`), `OPEN_BOUNDS`; Lőrincnél `Stranger.WELL_STORIES`.
 - Város északi része: `world/castle.gd` ( út, királyi vár, őrök, trónterem; király: `world/king.gd`; a
   "Király" fül a J könyvben az első látogatás után; engedély: `deep_30` jelző, a 30. emelet után a táborban "done").
   A hét király jelentése után: "Mi lesz most, felség?" → új küldetés, a Káosz kapuja (`King.CHAOS_QUEST`: győzd le

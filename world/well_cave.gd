@@ -84,6 +84,10 @@ var _flash: ColorRect
 var _shake := 0.0
 
 
+## A legrégebbi bejárat ajánlata (az első használatkor jön létre).
+var _challenge_panel: ChallengePanel
+
+
 func setup(camp: Node2D) -> void:
 	_camp = camp
 	_entities = camp.get_node("Entities")
@@ -470,9 +474,29 @@ func _unhandled_input(event: InputEvent) -> void:
 		"chest":
 			_open_chest()
 		"grate":
-			Audio.play("door_lock", -6.0)
-			message.emit("Vasrács egy lefelé vezető lépcső előtt. Nem rozsdás, a lakatja olajos... Lentről halk, "
-				+ "egyenletes kopogás szűrődik fel. Most nem nyílik.")
+			_use_grate()
+
+
+## A rácsos lépcső: Lőrinc kulcsával (OldEntrance) le lehet menni a legrégebbi bejáraton.
+func _use_grate() -> void:
+	if OldEntrance.cleared():
+		message.emit("A rács nyitva, odalent csend van. A kalapácsolás elhallgatott.")
+		return
+	if Progress.npc_quest_state(OldEntrance.QUEST) != "active":
+		Audio.play("door_lock", -6.0)
+		message.emit("Vasrács egy lefelé vezető lépcső előtt. Nem rozsdás, a lakatja olajos... Lentről halk, "
+			+ "egyenletes kopogás szűrődik fel. Most nem nyílik." + (" Talán Lőrinc tud róla valamit."
+			if OldEntrance.available() else ""))
+		return
+	if _challenge_panel == null:
+		_challenge_panel = ChallengePanel.new()
+		_challenge_panel.name = "EntranceChallengePanel"
+		_challenge_panel.visible = false
+		_camp.add_child(_challenge_panel)
+	Audio.play("ui_open")
+	var start := func(challenge: Dictionary) -> void: _camp.call("enter_challenge", challenge)
+	_challenge_panel.show_offer(OldEntrance.run_challenge(), start)
+	_camp.get_node("Menus").call("open_menu", _challenge_panel)
 
 
 ## Döme "Robbants!" válasza: a beszélgetés bezárul, és lejátszódik a robbantás.
