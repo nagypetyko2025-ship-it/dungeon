@@ -201,7 +201,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   (`Blaster.at_well()`, `away()` = nincs a folyosón), ott "Robbants!" → `WellCave._blast` → "done" (`well_open()`):
   `WellCave.TUNNEL` + `WORKSHOP` (Lőrinc régi műhelye: jegyzetek, láda `CHEST_FLAG`: `trinket_lorinc_compass` + 250 arany,
   rácsos lépcső `GRATE_TILE` → `world/old_entrance.gd` (`OldEntrance`): Lőrinc küldetése `QUEST` ("" → active → slain → done,
-  Stranger: `_ask_entrance` / `_finish_entrance`, utána `ENTRANCE_STORIES`), a rácsnál `WellCave._use_grate` → 5 emeletes
+  Stranger: `_ask_entrance` / `_finish_entrance`, utána `ENTRANCE_STORIES`; ha Lőrinc a kocsmában van (`lorinc_away`), a műhely asztala adja és veszi vissza a kulcsot:
+  `OldEntrance.desk_letter`), a rácsnál `WellCave._use_grate` → 5 emeletes
   történet-futás ("story": "entrance", a LakeCrypt elosztóban), főellenség `OldEntrance.BOSS` (Az Őrző), jutalom `trinket_keeper_key`), `OPEN_BOUNDS`; Lőrincnél `Stranger.WELL_STORIES`.
 - Város északi része: `world/castle.gd` ( út, királyi vár, őrök, trónterem; király: `world/king.gd`; a
   "Király" fül a J könyvben az első látogatás után; engedély: `deep_30` jelző, a 30. emelet után a táborban "done").

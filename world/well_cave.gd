@@ -476,7 +476,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_camp.get_node("Menus").call("open_menu", _dome_dialogue)
 		"desk":
 			Audio.play("ui_open")
-			_note_panel.show_text(NOTE_TITLE, NOTE_TEXT)
+			# Ha Lőrinc már nincs a kútnál, a rácsról szóló levele is itt van (OldEntrance.desk_letter).
+			var letter := OldEntrance.desk_letter()
+			_note_panel.show_text(NOTE_TITLE, NOTE_TEXT + ("\n\n" + letter if not letter.is_empty() else ""))
 			_camp.get_node("Menus").call("open_menu", _note_panel)
 		"chest":
 			_open_chest()
@@ -492,8 +494,8 @@ func _use_grate() -> void:
 	if Progress.npc_quest_state(OldEntrance.QUEST) != "active":
 		Audio.play("door_lock", -6.0)
 		message.emit("Vasrács egy lefelé vezető lépcső előtt. Nem rozsdás, a lakatja olajos... Lentről halk, "
-			+ "egyenletes kopogás szűrődik fel. Most nem nyílik." + (" Talán Lőrinc tud róla valamit."
-			if OldEntrance.available() else ""))
+			+ "egyenletes kopogás szűrődik fel. Most nem nyílik." + ((" Lőrinc asztalán talán van róla valami."
+			if OldEntrance.lorinc_away() else " Talán Lőrinc tud róla valamit.") if OldEntrance.available() else ""))
 		return
 	if _challenge_panel == null:
 		_challenge_panel = ChallengePanel.new()

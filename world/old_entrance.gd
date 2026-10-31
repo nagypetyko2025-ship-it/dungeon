@@ -42,6 +42,51 @@ static func available() -> bool:
 	return Stranger.is_rescued() and Blaster.well_open()
 
 
+## Lőrinc nincs a kútnál (a kocsmába költözött, vagy épp vele játszol): ilyenkor a műhely asztalán hagyott
+## levele adja a kulcsot (desk_letter), és oda kell visszatenni a legyőzött Őrző után.
+static func lorinc_away() -> bool:
+	return Stranger.moved_to_tavern() or Progress.character == "wizard"
+
+
+## A műhely asztala (WellCave "desk"): Lőrinc jegyzetei, és ha ő nincs a kútnál, a levele a rácsról.
+## A levél elolvasása elindítja a küldetést; a legyőzött Őrző után a kulcs visszatétele teljesíti (arany).
+static func desk_letter() -> String:
+	if not available() or not lorinc_away():
+		return ""
+	match Progress.npc_quest_state(QUEST):
+		"":
+			Progress.set_npc_quest(QUEST, "active")
+			Progress.save_game()
+			Audio.play("ui_open")
+			return LETTER_KEY
+		"active":
+			return LETTER_KEY
+		"slain":
+			# Az add_camp_gold újratölti a mentést: előbb az arany, aztán a többi változás.
+			Progress.add_camp_gold(GOLD)
+			Progress.set_npc_quest(QUEST, "done")
+			Progress.save_game()
+			Audio.play("level_up")
+			return LETTER_DONE + "\n\n[color=#7a4a10](+%d tábori arany)[/color]" % GOLD
+		"done":
+			return LETTER_DONE
+	return ""
+
+
+const LETTER_KEY := "[i]Az asztalon, a tintatartó alá csúsztatva, egy frissebb levél. Mellette egy kis, rézből reszelt " \
+	+ "kulcs.[/i]\n\n„Kedves barátom!\n\nHa ezt olvasod, Döme kinyitotta a járatot, én meg már a kocsmában ülök, és " \
+	+ "Tóbiás borát iszom. Nem bírtam tovább a kút hidegét.\n\nA rács mögötti lépcső a Mélység legrégebbi bejárata. " \
+	+ "Háromszáz éves vas, de a lakatja olajos, és éjjelente kalapácsolás hallatszik alulról. A királyi levéltár szerint " \
+	+ "I. Aurél őrt állított a legelső kapuhoz, \"aki nem alszik és nem felejt\". Szerintem még mindig ott van.\n\n" \
+	+ "Az iránytűm megmutatta a lakat belsejét, ezt a kulcsot reszeltem hozzá. Én nem merek lemenni. Te igen.\n\n" \
+	+ "Ha legyőzted, ami lent van, tedd vissza a kulcsot az asztalra. A céh jutalmát a fiókban hagyom.\n\n— L.”\n\n" \
+	+ "[color=#7a4a10](A rács mostantól nyitható: %d emelet lefelé. A J könyvben, Lőrinc fülén.)[/color]" % RUN_FLOORS
+const LETTER_DONE := "[i]Visszateszed a rézkulcsot az asztalra. A fiókban egy erszény és egy cetli.[/i]\n\n" \
+	+ "„Gellért volt az, ugye? Aurél fegyvernöke. A krónikában olvastam róla: megesküdött, hogy senki sem megy át a " \
+	+ "kapun a király engedélye nélkül. A király meghalt, az eskü nem.\n\nKöszönöm, hogy leváltottad az őrségből. " \
+	+ "Ha erre jársz a kocsmában, meghívlak egy pohárra, és mindent elmesélsz. — L.”"
+
+
 const START_TEXT := "A legrégebbi bejárat: %d emelet lefelé. A lépcsőn friss olajfolt."
 const FLOOR_TEXT := "A legrégebbi bejárat — %d. / %d emelet%s"
 const NEAR_TEXT := " — alulról kalapácsolás hallatszik..."

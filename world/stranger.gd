@@ -28,7 +28,8 @@ const QUESTS := {
 			+ "a lépcsőn (%d emelet), és győzd le, ami a legalján vár." % OldEntrance.RUN_FLOORS,
 		"reward": "Az Őrző kulcsa (egyedi legendás talizmán) és %d tábori arany" % OldEntrance.GOLD,
 		"doing": "menj le a műhely rácsos lépcsőjén, és győzd le az Őrzőt",
-		"doing_slain": "mondd el Lőrincnek, mi volt a rács alatt", "done": "az Őrző nyugszik"},
+		"doing_slain": "mondd el Lőrincnek, mi volt a rács alatt (ha a kocsmába költözött: tedd vissza a kulcsot a műhely asztalára)",
+		"done": "az Őrző nyugszik"},
 	LADDER_QUEST: {"name": "Létra a kútba",
 		"text": "A romos ház melletti kút aljáról egy idegen kér segítséget: leszakadt alatta a kötél, "
 			+ "és nem tud kimászni. Keress neki valahonnan egy [b]létrát[/b], és engedd le neki a kútba.",
