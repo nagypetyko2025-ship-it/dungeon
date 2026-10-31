@@ -159,13 +159,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Temető a kocsma alatt: `world/graveyard.gd`; mellette (keletre) a régi kápolna: `world/chapel.gd` (létra a harangtoronyba, kötél: harang, `bell.wav`). A sírásó (Vendel):
   `world/gravedigger.gd` (küldetései: 50 csontváz → Szent kereszt → 20 zombi → legendás talizmán, köztük 2-2 történet; utána
   a kocsmába költözik, játszható "gravedigger" karakter; J könyv: "Csontváz sírásó" fül).
-- Kripta és rituálé: `world/crypt.gd` (`Crypt`): a kápolnától keletre a temető bővítése (`RECT`, saját `EPITAPHS`, a Graveyard Soil/Mound/Fog/InscriptionPanel
-  osztályait használja), a sarkában a kripta (`MAUSOLEUM`, 0x72 kőfal, ajtókeret, sötét lejárat; bent 0x72 padló/fal/oszlopok/koponyák, csak az oltár és az alakok Dungeon Crawl); E: le a rituálé termébe (`INTERIOR` x 700-tól): oltár, `RitualCircle`,
-  4 Arctalan (`HOODED_SPOTS`, a közeli játékos felé fordulnak), Szürke Orsolya (`STORIES`, DialoguePanel npc_id "orsolya"). Ablak: `ui/ritual_panel.gd`.
-  Drágakövek: `items/gems.gd` (`Gems.LIST`: ruby, moonstone, sapphire, amethyst + star; `Progress.gems`, azonnal mentődik). Ejtés: `Room._on_boss_defeated`
-  (1 kő, `BOSS_STAR_CHANCE`; nagy főellenség: Csillagkő + 2), `Chest._open_now` (`CHEST_DEPTH` 21-től, `CHEST_CHANCE`); nincs gyakorláson, próbatételben, csalt futásban.
-  Rituálé: `RITUAL_GEMS` + `RITUAL_STARS` + `RITUAL_GOLD` → `Progress.blessing` (egyszerre egy); a futás elején (`Camp._enter_dungeon_now`, próbatételnél nem)
-  `Gems.start_run` → `GameState.blessing` (RunSave menti), a `Player._apply_equipment` adja hozzá (`Gems.run_bonuses`). Képek: `assets/props/crypt` (altar, hooded, orsolya: Dungeon Crawl CC0), kövek: 496 icons.
+- Félretett képek (NINCS a játékban, a kripta/rituálé kikerült): `assets/props/crypt` (Dungeon Crawl CC0: oltár, csuklyás alak, Orsolya,
+  szobor, kriptapadló, lépcső, kőív) és a drágakő-ikonok `assets/items/gem_*.png` (496 icons). A régi kód a git történetben: 8c88d71, 50b1f1b.
 - A kórháztól jobbra a poros raktár: `world/warehouse.gd` (belül ládák, hordók, polcok, por, asztal székekkel; a széken alszik Kormos Gyula, a bányász: közel érve felriad, felveszi a csákányát, 3 történet + "Ki az a robbantómester?": Puskás Döme, a kocsma hátsó szobáiban lakik).
 - A kocsmától jobbra a kalandorok kórháza: `world/hospital.gd` (betegágyak, Kálmán doktor, Rozi nővér; a régi lakóház helyén).
 - Utak a városban: minden ház ajtajához földút vezet (a `path_tiles()` statikus függvényekből a tábor rajzolja ki);

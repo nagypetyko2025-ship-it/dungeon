@@ -1,6 +1,7 @@
-A kripta képei: "Dungeon Crawl 32x32 tiles" (crawl-tiles Oct-5-2010) — https://opengameart.org/content/dungeon-crawl-32x32-tiles
-License: CC0 1.0 Universal.
-  altar.png: dngn_altar (a rituálé oltára).
-  hooded.png: dc-mon/necromancer — az arca (a vörös szemek) helyére fekete pacát festettünk.
-  orsolya.png (Szürke Orsolya): dc-mon/unique/josephine.
-A kripta fala, padlója, ajtaja, oszlopai, koponyái, zászlói a 0x72 DungeonTileset II-ből vannak (assets/0x72_dungeon, CC0).
+JELENLEG NEM HASZNÁLT (a kripta és a rituálé kikerült a játékból, a képek későbbre megmaradtak).
+A kripta képei (altar, bone_altar, floor0, floor1, stairs_down, stairs_up, arch, statue):
+  "Dungeon Crawl 32x32 tiles" (crawl-tiles Oct-5-2010) — https://opengameart.org/content/dungeon-crawl-32x32-tiles
+  License: CC0 1.0 Universal. Fájlok: dngn_altar, dngn_altar_kikubaaqudgha, floor/tomb0, floor/tomb1,
+  gateways/stone_stairs_down, gateways/stone_stairs_up, gateways/dngn_stone_arch, dngn_granite_statue.
+hooded.png: ugyanebből a csomagból, dc-mon/necromancer — az arca (a vörös szemek) helyére fekete pacát festettünk.
+orsolya.png (Szürke Orsolya): ugyanebből a csomagból, dc-mon/unique/josephine. Mind CC0.

@@ -107,7 +107,6 @@ func _open_now() -> void:
 		coin.position = position + Vector2(0, -12)
 		get_parent().add_child(coin)
 	FloatingText.spawn(get_parent(), global_position + Vector2(0, -16), "+%d arany" % total, Color(1, 0.85, 0.3))
-	Gems.chest_drop(get_parent(), global_position, depth)
 
 
 func _on_body_entered(body: Node2D) -> void:

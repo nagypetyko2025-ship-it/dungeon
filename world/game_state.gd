@@ -48,8 +48,6 @@ static var merchant_stock: Array = []
 static var rerolls := 0
 ## HP bájitalok (Q-val iszod meg, lásd PotionBadge): a futáshoz tartoznak (boltban vehető, főellenség után jár).
 static var potions := 0
-## A kripta rituáléjának áldása erre a futásra (Gems.LIST kulcs, "" = nincs).
-static var blessing := ""
 ## Próbatétel (a bánya mélyén, lásd Challenge): a futás ennek a szabályai szerint megy (üres = rendes futás).
 static var challenge := {}
 
@@ -120,7 +118,6 @@ static func reset() -> void:
 	merchant_stock = []
 	rerolls = 0
 	potions = 0
-	blessing = ""
 	challenge = {}
 	tutorial_dust = {}
 	cheated = god_mode or one_hit

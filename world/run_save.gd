@@ -16,7 +16,7 @@ static func _state() -> Dictionary:
 		"run_time": GameState.run_time, "lift_used_floor": GameState.lift_used_floor,
 		"break_gold_left": GameState.break_gold_left, "break_floor": GameState.break_floor, "exits": GameState.exits,
 		"merchant_stock": GameState.merchant_stock, "rerolls": GameState.rerolls, "potions": GameState.potions,
-		"cheated": GameState.cheated, "blessing": GameState.blessing}
+		"cheated": GameState.cheated}
 
 
 static func _apply(state: Dictionary) -> void:
@@ -41,7 +41,6 @@ static func _apply(state: Dictionary) -> void:
 	GameState.rerolls = int(state.get("rerolls", 0))
 	GameState.potions = int(state.get("potions", 0))
 	GameState.cheated = bool(state.get("cheated", false))
-	GameState.blessing = String(state.get("blessing", ""))
 
 
 static func path(profile := 0) -> String:

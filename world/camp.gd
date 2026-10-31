@@ -261,13 +261,6 @@ func _ready() -> void:
 	chapel.setup(self)
 	chapel.build()
 	chapel.message.connect(_toast)
-	# A kápolnától keletre a temető bővítése és a kripta (lent a rituálé terme, Szürke Orsolya).
-	var crypt := Crypt.new()
-	crypt.name = "Crypt"
-	add_child(crypt)
-	crypt.setup(self)
-	crypt.build()
-	crypt.message.connect(_toast)
 	# A nyugati tisztáson a romos ház (benne a tolvaj rejtekszobája).
 	var ruin := Ruin.new()
 	ruin.name = "Ruin"
@@ -553,7 +546,7 @@ func _build_dirt() -> void:
 	for tile in Mine.path_tiles():
 		_dirt[tile] = true
 	# Keskeny ösvények az útról a kórház és a raktár ajtajához, és a tó mólójához.
-	for tiles: Array[Vector2i] in [Hospital.path_tiles(), Warehouse.path_tiles(), Lake.path_tiles(), Crypt.path_tiles()]:
+	for tiles: Array[Vector2i] in [Hospital.path_tiles(), Warehouse.path_tiles(), Lake.path_tiles()]:
 		for tile in tiles:
 			_narrow[tile] = true
 	# Kis sáros ösvény nyugatra (a várossal ellentétes irányba): a tisztásokon kanyarog,
@@ -972,7 +965,7 @@ func _build_trees() -> void:
 			var tile := Vector2i(x, y)
 			if _blocked.has(tile) or Town.blocked_rect().has_point(tile) or _castle_blocked(tile) \
 					or Warehouse.blocked_rect().has_point(tile) \
-					or Graveyard.blocked_rect().has_point(tile) or Chapel.blocked_rect().has_point(tile) 					or Crypt.blocked_rect().has_point(tile) \
+					or Graveyard.blocked_rect().has_point(tile) or Chapel.blocked_rect().has_point(tile) \
 					or Lake.blocked_rect().has_point(tile) or _near_path(tile):
 				continue
 			var edge := mini(mini(x - town.position.x, town.end.x - 1 - x), mini(y - town.position.y, town.end.y - 1 - y))
@@ -1667,9 +1660,6 @@ func _enter_dungeon_now(start_depth: int, cheat: bool, challenge := {}) -> void:
 	else:
 		# Ha kialudtad magad a kocsmai szobádban: extra bájital (egyszer).
 		GameState.potions += Town.take_rest_bonus()
-		# A kripta rituáléjának áldása erre a futásra szól (a próbatételre nem).
-		if challenge.is_empty():
-			Gems.start_run()
 	# A nálad lévő felszereléssel szállsz le; az a táborból "elfogy" (a futásban veszhet el).
 	GameState.saved_inventory = _player.get_node("Inventory").save_data()
 	Progress.camp_inventory = {}

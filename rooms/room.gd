@@ -589,10 +589,6 @@ func _on_boss_defeated(boss: Node2D) -> void:
 		_connect_center_stairs.call_deferred()
 	Audio.play("door_unlock")
 	_drop_boss_loot.call_deferred(boss.position)
-	# Drágakő a kripta rituáléjához (a nagy főellenségtől 3, köztük Csillagkő).
-	if is_instance_valid(_player):
-		Gems.boss_drop(get_parent(), _player.global_position + Vector2(-60, -100),
-			final_boss and not LakeCrypt.is_story_lord(lord))
 	boss_defeated.emit(boss)
 
 
