@@ -212,7 +212,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   "Király" fül a J könyvben az első látogatás után; engedély: `deep_30` jelző, a 30. emelet után a táborban "done").
   A hét király jelentése után: "Mi lesz most, felség?" → új küldetés, a Káosz kapuja (`King.CHAOS_QUEST`: győzd le
   a Káosz Urát a 40. emeleten, a Szörnyek könyve szerint; 3000 tábori arany), és 4 új történet (`King.STORIES`).
-- Szörnyek könyve: állvány a táborban (`BESTIARY_TILE`), adatok: `world/bestiary.gd`, ablak: `ui/bestiary_book.gd`;
+- Szörnyek könyve: állvány a táborban (`BESTIARY_TILE`), adatok: `world/bestiary.gd`, ablak: `ui/bestiary_book.gd`
+  (bejegyzésenként "Megjelenik:" sor: `Bestiary.depth_text` az EnemyTypes min/max_depth-ből, főellenségnél az emelete; `Bestiary.article` = a/az);
   a megölt szörnyek száma `Progress.kills` (a `room.gd` írja, főellenség a saját nevével).
 - Tárgyak könyve: második állvány mellette (`Camp.ITEM_BOOK_TILE`), adatok: `world/item_codex.gd` (`ItemCodex.TABS`:
   közelharci / távolsági fegyver + helyenként), ablak: `ui/item_book.gd` (ikonrács, a meg nem szerzett sötét árnyék;

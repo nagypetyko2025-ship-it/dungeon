@@ -4,6 +4,7 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-31", "items": [
+		"Szörnyek könyve: minden felfedezett szörnynél ott áll, melyik emelettől jöhet (a főellenségeknél az emeletük).",
 		"Három új szörny: a Lidércfény (4. emelettől: cikázik, teleportál, szétrobban), a Múmia (7.-től: mérgez, dühbe gurul) és a Vízköpő (11.-től: rohamoz, kőpajzsot von). Mind benne vannak a Szörnyek könyvében.",
 		"Javítva: ha Vendel már a kocsmában ül, a temetőben nem jelenik meg újra, és nem sétál be a kápolnába.",
 		"Figyelmeztetések: ha egy szörny vagy főellenség teleportálni készül, piros X mutatja, hová érkezik; ha rohamozni készül, piros vonal mutatja az irányát.",

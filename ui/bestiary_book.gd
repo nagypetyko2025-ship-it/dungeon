@@ -228,6 +228,8 @@ func _entry_height(monster: String) -> float:
 	var abilities := Bestiary.abilities_text(monster)
 	if not abilities.is_empty():
 		height += _text_height("Képességek: " + abilities, 13, TEXT_WIDTH)
+	if not Bestiary.depth_text(monster).is_empty():
+		height += _text_height("Megjelenik: " + Bestiary.depth_text(monster), 13, TEXT_WIDTH)
 	return maxf(height, ICON_SIZE.y)
 
 
@@ -290,6 +292,13 @@ func _entry(monster: String) -> HBoxContainer:
 		ability_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		ability_label.custom_minimum_size.x = TEXT_WIDTH
 		text.add_child(ability_label)
+	# Melyik emelettől jöhet (a felfedezett szörnyeknél; a könyv csak azokat mutatja).
+	var depth := Bestiary.depth_text(monster)
+	if not depth.is_empty():
+		var depth_label := UiStyle.label("Megjelenik: " + depth, 13, Color(0.2, 0.38, 0.55))
+		depth_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		depth_label.custom_minimum_size.x = TEXT_WIDTH
+		text.add_child(depth_label)
 	return row
 
 

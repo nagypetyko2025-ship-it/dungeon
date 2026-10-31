@@ -192,6 +192,34 @@ static func discovered(category: int) -> Array[String]:
 	return result
 
 
+## Honnan jöhet (pl. "a 4. emelettől", "a 41–80. emeleten", főellenségnél az emelete); "" ha nem tudni.
+static func depth_text(monster: String) -> String:
+	var type := EnemyTypes.by_name(monster)
+	if type["name"] == monster:
+		var low := int(type.get("min_depth", 1))
+		if type.has("max_depth"):
+			return "%s %d–%d. emeleten" % [article(low), low, int(type["max_depth"])]
+		return "%s %d. emelettől" % [article(low), low]
+	# A szörnykirályok sora a 3. emelettől minden 3. emeleten (Boss.BOSSES), a 20. a Mélység Ura.
+	for i in BOSS_SCRIPT.BOSSES.size():
+		if BOSS_SCRIPT.BOSSES[i]["name"] == monster:
+			return "%s %d. emeleten (főellenség)" % [article(3 * (i + 1)), 3 * (i + 1)]
+	var fixed := {LORD: 20, CHAOS_LORD: 40, ENGINE: 60, GATE: 80, BOSS_SCRIPT.FROST_QUEEN["name"]: BOSS_SCRIPT.FROST_QUEEN_DEPTH}
+	if fixed.has(monster):
+		return "%s %d. emeleten (főellenség)" % [article(int(fixed[monster])), int(fixed[monster])]
+	if monster == LUCIFER:
+		return "a 100. emelet alatt, a pokolban"
+	return ""
+
+
+## Névelő a szám elé: "az" ha magánhangzóval kezdődik (1, 5, 50-59, 500-599, 1000-1999), különben "a".
+static func article(n: int) -> String:
+	var digits := str(n)
+	if n == 1 or digits.begins_with("5") or (n >= 1000 and n < 2000):
+		return "az"
+	return "a"
+
+
 ## A szörny képességei olvashatóan (pl. "méreg, pajzs"); "" ha nincs (vagy főellenség).
 static func abilities_text(monster: String) -> String:
 	var type := EnemyTypes.by_name(monster)
