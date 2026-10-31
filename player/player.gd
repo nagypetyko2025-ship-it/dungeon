@@ -281,6 +281,10 @@ func _apply_equipment() -> void:
 	var permanent := Progress.permanent_bonuses()
 	for stat: String in permanent:
 		bonuses[stat] = bonuses.get(stat, 0.0) + permanent[stat]
+	# A kripta rituáléjának áldása (csak erre a futásra).
+	var blessing := Gems.run_bonuses()
+	for stat: String in blessing:
+		bonuses[stat] = bonuses.get(stat, 0.0) + float(blessing[stat])
 	_stats.set_bonuses(bonuses)
 	var weapon = _inventory.equipment["weapon"]
 	if weapon == null:

@@ -41,3 +41,5 @@ Lövészfelszerelés (32 tárgy, mind CC0, eddig nem használt ikonok):
   "Dungeon Crawl Stone Soup Full" (https://opengameart.org/content/dungeon-crawl-32x32-tiles), árnyék nélkül kivágva, 34x34-be nagyítva: helmet_hunter_cap, helmet_elven_feather, helmet_winged, helmet_sniper, chest_hunter, chest_ringmail, chest_wayfarer, chest_shadowscale, pants_short, pants_white, pants_crimson, pants_marksman (player/legs), boots_trail, boots_low, boots_jack, gloves_archer, gloves_ranger, gloves_falcon, gloves_starshot, ring_robust, ring_jade, ring_flameshard, ring_starsapphire.
 trinket_thirty_names.png: A harminc név gyűrűje — a ring_gold.png másolata (CC0).
 trinket_keeper_key.png: Az Őrző kulcsa — ehhez a projekthez rajzolva (pixel art vaskulcs bőrszíjon, 34×34), CC0.
+
+Drágakövek (gem_ruby, gem_moonstone, gem_sapphire, gem_amethyst, gem_star): "496 pixel art icons for medieval/fantasy RPG" by Henrique Lazarini (7Soul1), CC0 — https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg (I_Ruby, I_Opal, I_Sapphire, I_Amethist, I_Diamond).

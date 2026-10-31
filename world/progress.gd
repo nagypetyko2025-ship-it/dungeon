@@ -80,6 +80,9 @@ static var seen_items := {}
 static var rewards_claimed := {}
 ## A kovács porai (Smithing): ritkaság -> darab (szétszedéssel jön, fejlesztésre megy el).
 static var dust := {}
+## Drágakövek (Gems): id -> darab; és a kripta rituáléjának várakozó áldása a következő futásra ("" = nincs).
+static var gems := {}
+static var blessing := ""
 ## A legmélyebb emelet, ahova valaha lejutottál (csalás és gyakorló pálya nélkül). Ha egy küldetés egy
 ## emeletre küld, és már jártál ott, azonnal mondhatod, hogy megvolt (lásd reached_depth).
 static var deepest := 0
@@ -200,6 +203,10 @@ static func load_game(force := false) -> void:
 		var saved_dust: Variant = config.get_value("camp", "dust", {})
 		if saved_dust is Dictionary:
 			dust = saved_dust
+		var saved_gems: Variant = config.get_value("camp", "gems", {})
+		if saved_gems is Dictionary:
+			gems = saved_gems
+		blessing = String(config.get_value("camp", "blessing", ""))
 		var saved_witch: Variant = config.get_value("camp", "witch_levels", {})
 		if saved_witch is Dictionary:
 			witch_levels = saved_witch
@@ -232,6 +239,8 @@ static func save_game() -> void:
 	config.set_value("camp", "seen_items", seen_items)
 	config.set_value("camp", "rewards_claimed", rewards_claimed)
 	config.set_value("camp", "dust", dust)
+	config.set_value("camp", "gems", gems)
+	config.set_value("camp", "blessing", blessing)
 	config.set_value("camp", "witch_levels", witch_levels)
 	config.set_value("camp", "deepest", deepest)
 	config.save(path())
@@ -292,6 +301,8 @@ static func _clear() -> void:
 	seen_items = {}
 	rewards_claimed = {}
 	dust = {}
+	gems = {}
+	blessing = ""
 	witch_levels = {}
 	deepest = 0
 

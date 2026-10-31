@@ -4,6 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-31", "items": [
+		"Új helyszín: a kápolnától keletre kibővült a temető (új, olvasható sírfeliratok), a sarkában egy régi kripta. Lent a rituálé terme: oltár, izzó kör, arctalan, fekete köpenyes alakok, és Szürke Orsolya, a kripta őre, saját történetekkel.",
+		"Drágakövek: Vérrubin, Holdkő, Viharzafír, Árnyékametiszt és a ritka Csillagkő. Minden főellenség hagy egyet (a nagyok hármat), a 21. emelettől a ládákban is akad. Rituálé: 2 kő + 1 Csillagkő + 1500 tábori arany = erős áldás a következő futásra.",
 		"A megjavított liftekkel felmehetsz a táborba, mintha győztél volna: a ketrecnél [E], a teljes pénzed felkerül, és 2 tárgyat magaddal vihetsz.",
 		"Szörnyek könyve: minden felfedezett szörnynél ott áll, melyik emelettől jöhet (a főellenségeknél az emeletük).",
 		"Három új szörny: a Lidércfény (4. emelettől: cikázik, teleportál, szétrobban), a Múmia (7.-től: mérgez, dühbe gurul) és a Vízköpő (11.-től: rohamoz, kőpajzsot von). Mind benne vannak a Szörnyek könyvében.",
