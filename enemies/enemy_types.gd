@@ -393,6 +393,21 @@ const TYPES: Array[Dictionary] = [
 		"rect": Rect2(0, 0, 23, 32), "run": true, "size": 1.1,
 		"health": [20, 26], "damage": [4, 6], "speed": [85, 100], "dodge": [20, 30],
 		"knockback": [240, 280], "resist": [0.3, 0.4], "xp": [12, 15], "min_depth": 9, "weight": 2},
+	# Múmia: lassú, szívós, mérgez, és ha megsebzed, dühbe gurul (ehhez a projekthez rajzolva, CC0).
+	{"name": "mummy", "abilities": ["poison", "berserk"], "sheet": "res://assets/enemies/mummy.png",
+		"rect": Rect2(0, 0, 20, 26), "run": true, "size": 1.4,
+		"health": [18, 24], "damage": [3, 4], "speed": [50, 62], "dodge": [0, 5],
+		"knockback": [240, 280], "resist": [0.4, 0.5], "xp": [8, 10], "min_depth": 7, "weight": 2},
+	# Lidércfény: kicsi, gyors, cikázik, a semmiből terem melletted, és halálakor szétrobban (saját rajz, CC0).
+	{"name": "wisp", "abilities": ["zigzag", "teleport", "death_burst"], "sheet": "res://assets/enemies/wisp.png",
+		"rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.6,
+		"health": [4, 6], "damage": [2, 3], "speed": [130, 150], "dodge": [25, 35],
+		"knockback": [120, 150], "resist": [0.0, 0.0], "xp": [4, 5], "min_depth": 4, "weight": 2},
+	# Vízköpő: szárnyas kőszobor, nekiront, kőpajzsot von maga köré, alig lehet hátralökni (saját rajz, CC0).
+	{"name": "gargoyle", "abilities": ["shield"], "dash": true, "sheet": "res://assets/enemies/gargoyle.png",
+		"rect": Rect2(0, 0, 24, 24), "run": true, "size": 1.3,
+		"health": [24, 30], "damage": [4, 6], "speed": [70, 85], "dodge": [0, 5],
+		"knockback": [300, 340], "resist": [0.5, 0.6], "xp": [13, 16], "min_depth": 11, "weight": 2},
 	# --- Még több szörny (MiniWorld Sprites, CC0) ---
 	{"name": "club_goblin", "abilities": ["berserk"], "dash": true,
 		"sheet": "res://assets/enemies/club_goblin.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.3,

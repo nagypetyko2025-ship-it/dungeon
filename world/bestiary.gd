@@ -26,10 +26,10 @@ const LUCIFER := "Azazel, a Halálangyal és Démonkirály"
 ## Kategóriák sorrendben: [cím, szörnyek].
 const CATEGORIES := [
 	["Élőholtak", ["tiny_zombie", "zombie", "ice_zombie", "big_zombie", "skelet", "skeleton_legionary",
-		"giant_skeleton", "necromancer", "lich", "blood_wraith"]],
+		"giant_skeleton", "necromancer", "lich", "blood_wraith", "mummy"]],
 	["Zöldbőrűek", ["goblin", "farmer_goblin", "club_goblin", "archer_goblin", "spear_goblin", "kamikaze_goblin", "orc_warrior",
 		"masked_orc", "orc_raider", "orc_shaman", "orc_mage", "ogre"]],
-	["Démonok", ["imp", "wogol", "chort", "big_demon", "armored_demon", "red_demon", "purple_demon"]],
+	["Démonok", ["imp", "wogol", "chort", "big_demon", "armored_demon", "red_demon", "purple_demon", "gargoyle"]],
 	["Nyálkák", ["tiny_slug", "slug", "green_slime", "frost_slime", "muddy", "swampy"]],
 	["Népek", ["archer", "huntress", "dark_mage", "fire_witch", "fallen_knight", "dwarf", "dwarf_berserker",
 		"plague_doctor", "lizard", "lizard_scout", "barbarian", "fire_ninja", "renegade_monk", "crazy_clown"]],
@@ -40,7 +40,7 @@ const CATEGORIES := [
 	["Káosz", ["chaos_spawn", "chaos_hound", "chaos_maw", "chaos_shard", "chaos_weaver"]],
 	["Fagyott lények", ["frost_wraith", "ice_spider", "snow_golem", "frozen_knight"]],
 	["A pokol démonjai", ["hell_hound", "hell_beast", "nightmare", "hell_demon"]],
-	["Különös lények", ["mimic", "pumpkin_dude", "angel", "toadstool"]],
+	["Különös lények", ["mimic", "pumpkin_dude", "angel", "toadstool", "wisp"]],
 	["Főellenségek", KINGS + [LORD] + DEEP_BOSSES + [CHAOS_LORD, ENGINE, GATE, LUCIFER]],
 ]
 ## A képességek neve a könyvben (EnemyAbilities, és a típus "dash" / "ranged" jelzője).
@@ -53,6 +53,9 @@ const ABILITY_NAMES := {
 
 ## szörny -> [név, rövid leírás]
 const ENTRIES := {
+	"mummy": ["Múmia", "Régi királyi sírok lakója, sárgult pólyákba tekerve. Lassan csoszog feléd kinyújtott karral, az érintése mérgez, és ha megsebzed, dühödten rád veti magát."],
+	"wisp": ["Lidércfény", "Zöldeskék, lobogó fénygömb, ami a sötét folyosókon táncol. Cikázik, a semmiből terem melletted, és ha eltalálod, hideg lánggal pukkan szét."],
+	"gargoyle": ["Vízköpő", "Szárnyas kőszobor a régi templomok ereszéről, amit a Mélység életre keltett. Nekiront, kőpajzsot von maga köré, és alig lehet hátralökni."],
 	"tiny_zombie": ["Kis zombi", "Lassú, de sosem fárad el. Csapatostul jön, és a nyakadba liheg."],
 	"zombie": ["Zombi", "Rothadó test, ami újra összeforr: ha nem végzel vele gyorsan, visszagyógyul."],
 	"ice_zombie": ["Jégzombi", "A mélység hidegében fagyott meg. Halálakor jégszilánkokká robban."],

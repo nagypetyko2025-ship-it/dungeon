@@ -35,3 +35,4 @@ gate_hound.png (a Pokolkapu Őre): a fenti hell_hound.png-ből (Gothicvania, ans
 crazy_clown.png: "2D Pixel Clown Spritesheet" (Zacard, CC0, https://iamzacard.itch.io/2d-pixel-clown-spritesheet), 4 álló + 4 futó kocka (32x32) a lapról.
 lucifer.png: a "Gothicvania Patreon's Collection" (ansimuz, CC0) Demon idle kockáiból (160x144, jobbra tükrözve):
   a kék koponya csontfehérre és izzó vörös szemekre festve, a köpeny és a szárnyak sötétebb vörösre, arany korona rajzolva.
+mummy.png, wisp.png, gargoyle.png: Múmia, Lidércfény, Vízköpő — ehhez a projekthez rajzolva (pixel art), CC0. 8 kocka: 4 álló, 4 futás.
