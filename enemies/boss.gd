@@ -134,6 +134,8 @@ var _attack_left := 2.0
 var _busy := false
 var _charge_left := 0.0
 var _charge_dir := Vector2.ZERO
+## A villanás célja (a felvillanáskor dől el, ott jelzi a piros X); INF = nincs.
+var _blink_target := Vector2.INF
 var _enraged := false
 
 
@@ -242,6 +244,13 @@ func _attack(kind: String) -> void:
 		net.broadcast_attack(self, kind)
 	_busy = true
 	var windup: float = MINI_CHARGE_WINDUP if mini_boss and kind == "charge" else WINDUP[kind]
+	# Figyelmeztetés: roham előtt piros vonal az irányába, villanás előtt piros X a célhelyén.
+	if kind == "charge" and is_instance_valid(_player):
+		var charge_speed: float = stats["speed"] * (MINI_CHARGE_MULTIPLIER if mini_boss else CHARGE_MULTIPLIER)
+		DangerMark.line(self, _player, charge_speed * (MINI_CHARGE_TIME if mini_boss else CHARGE_TIME), windup)
+	elif kind == "blink" and is_instance_valid(_player):
+		_blink_target = _pick_blink_target()
+		DangerMark.cross(get_parent(), _blink_target, windup)
 	var flash := create_tween()
 	flash.tween_property(_visual, "modulate", WINDUP_COLORS[kind], windup)
 	await flash.finished
@@ -300,12 +309,19 @@ func _nova() -> void:
 
 ## Elhalványul (áttetsző lesz, de nem tűnik el teljesen, hogy mindig látni és ütni lehessen), és a
 ## játékos egyik oldalán bukkan fel (szabad helyen).
-func _blink() -> void:
-	Audio.play("magic")
+func _pick_blink_target() -> Vector2:
 	var target := _player.global_position + Vector2.from_angle(randf() * TAU) * BLINK_DISTANCE
 	var room := get_parent().get_parent()
 	if room.has_method("safe_spawn_position"):
 		target = room.call("safe_spawn_position", target)
+	return target
+
+
+func _blink() -> void:
+	Audio.play("magic")
+	# A cél a felvillanáskor dőlt el (ott a piros X); ha valamiért nincs, most.
+	var target := _blink_target if _blink_target != Vector2.INF else _pick_blink_target()
+	_blink_target = Vector2.INF
 	var fade := create_tween()
 	fade.tween_property(_visual, "modulate:a", BLINK_ALPHA, 0.12)
 	await fade.finished

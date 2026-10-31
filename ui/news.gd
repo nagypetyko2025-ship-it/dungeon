@@ -4,6 +4,7 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-31", "items": [
+		"Figyelmeztetések: ha egy szörny vagy főellenség teleportálni készül, piros X mutatja, hová érkezik; ha rohamozni készül, piros vonal mutatja az irányát.",
 		"Javítva: a hosszú feliratok és jegyzetek (pl. Lőrinc jegyzetei) görgethetők, nem lógnak ki a képből; Lőrinc új levele felül van.",
 		"Ha Lőrinc már a kocsmába költözött, a rács kulcsát a kút alatti műhelye asztalán hagyja egy levéllel; az Őrző után oda tedd vissza a jutalomért.",
 		"Javítva: Puskás Döme most már ott vár a kút alján, ha a tűzhangyák után nem töltötted újra a tábort (a beomlott járatnál is szólhatsz neki).",

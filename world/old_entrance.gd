@@ -79,12 +79,12 @@ const LETTER_KEY := "[i]Az asztalon, a tintatartó alá csúsztatva, egy frisseb
 	+ "Háromszáz éves vas, de a lakatja olajos, és éjjelente kalapácsolás hallatszik alulról. A királyi levéltár szerint " \
 	+ "I. Aurél őrt állított a legelső kapuhoz, \"aki nem alszik és nem felejt\". Szerintem még mindig ott van.\n\n" \
 	+ "Az iránytűm megmutatta a lakat belsejét, ezt a kulcsot reszeltem hozzá. Én nem merek lemenni. Te igen.\n\n" \
-	+ "Ha legyőzted, ami lent van, tedd vissza a kulcsot az asztalra. A céh jutalmát a fiókban hagyom.\n\n— L.”\n\n" \
+	+ "Ha legyőzted, ami lent van, tedd vissza a kulcsot az asztalra. A céh jutalmát a fiókban hagyom.\n\n— Lőrinc”\n\n" \
 	+ "[color=#7a4a10](A rács mostantól nyitható: %d emelet lefelé. A J könyvben, Lőrinc fülén.)[/color]" % RUN_FLOORS
 const LETTER_DONE := "[i]Visszateszed a rézkulcsot az asztalra. A fiókban egy erszény és egy cetli.[/i]\n\n" \
 	+ "„Gellért volt az, ugye? Aurél fegyvernöke. A krónikában olvastam róla: megesküdött, hogy senki sem megy át a " \
 	+ "kapun a király engedélye nélkül. A király meghalt, az eskü nem.\n\nKöszönöm, hogy leváltottad az őrségből. " \
-	+ "Ha erre jársz a kocsmában, meghívlak egy pohárra, és mindent elmesélsz. — L.”"
+	+ "Ha erre jársz a kocsmában, meghívlak egy pohárra, és mindent elmesélsz. — Lőrinc”"
 
 
 const START_TEXT := "A legrégebbi bejárat: %d emelet lefelé. A lépcsőn friss olajfolt."

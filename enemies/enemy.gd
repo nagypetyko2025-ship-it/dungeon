@@ -476,6 +476,8 @@ func _dash_direction(delta: float, chase: Vector2) -> Vector2:
 				_dash_state = DashState.WINDUP
 				_dash_time = float(_type.get("dash_windup", DASH_WINDUP))
 				create_tween().tween_property(_visual, "modulate", DASH_WARNING_COLOR, _dash_time)
+				# Piros vonal a roham irányába (a játékost követi, amíg el nem indul).
+				DangerMark.line(self, _player, float(stats["speed"]) * DASH_SPEED_MULTIPLIER * DASH_TIME, _dash_time)
 			return chase
 		DashState.WINDUP:
 			_dash_time -= delta

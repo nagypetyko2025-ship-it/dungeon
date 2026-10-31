@@ -55,6 +55,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   `LATER_BOSS_DAMAGE_STEP` (+6% sebzés) főellenségenként (30. emelet: ~110 000, 39.: ~180 000 élet). A sor (`Boss.BOSSES`)
   a 36. emeleten a Skorpiókirállyal zárul (bogár-főellenség, `scorpion_king.png`), utána elölről (39.: Ogrekirály). Vérfarkas:
   `LORD_HEALTH` ×40 = 128 000 (+ feltámadás), `LORD_DAMAGE` ×2 = 32; Káosz Ura: 1 000 000 élet, 120 sebzés.
+  Figyelmeztető jelek: `effects/danger_mark.gd` (`DangerMark.cross` a teleport / blink célján — a cél a felvillanás ELŐTT dől el:
+  `EnemyAbilities._teleport_target`, `Boss._blink_target`; `DangerMark.line` a roham irányába, a játékost követi: Enemy dash, Boss charge).
   Mellé / kikerülés: a szörny `_on_hurt`-ja `hitbox.missed = true`-t állít, a Hurtbox ilyenkor nem hívja az `on_hit`-et,
   a lövedék továbbrepül (az átütést sem fogyasztja; ugyanazt a célt a `skips` miatt nem találja el újra).
 - Találati esély: KIKAPCSOLVA (`Stats.ACCURACY_ENABLED` = false; visszakapcsolás: true). Ilyenkor `Player.hit_chance` = 1, és elrejtve:

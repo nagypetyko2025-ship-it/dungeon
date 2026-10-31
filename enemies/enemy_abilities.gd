@@ -194,6 +194,10 @@ func _worth_using(ability: String) -> bool:
 
 func _use(ability: String, player: Node2D) -> void:
 	_busy = true
+	# A teleport célja már a felvillanás előtt eldől: piros X jelzi, hová ugrik.
+	var target := _teleport_target(player) if ability == "teleport" else Vector2.ZERO
+	if ability == "teleport":
+		DangerMark.cross(enemy.get_parent(), target, WINDUP)
 	var visual: Node2D = enemy.get_node("Visual")
 	var flash := create_tween()
 	flash.tween_property(visual, "modulate", WINDUP_COLORS[ability], WINDUP)
@@ -203,19 +207,23 @@ func _use(ability: String, player: Node2D) -> void:
 	if not enemy.is_physics_processing() or not is_instance_valid(player):
 		return
 	match ability:
-		"teleport": _teleport(player)
+		"teleport": _teleport(target)
 		"summon": _summon()
 		"heal": _heal()
 		"war_cry": _war_cry()
 		"shield": _raise_shield()
 
 
-func _teleport(player: Node2D) -> void:
+func _teleport_target(player: Node2D) -> Vector2:
 	var room := _room()
 	var side := Vector2.from_angle(randf() * TAU)
 	var target := player.global_position + side * randf_range(TELEPORT_DISTANCE.x, TELEPORT_DISTANCE.y)
 	if room != null:
 		target = room.safe_spawn_position(target)
+	return target
+
+
+func _teleport(target: Vector2) -> void:
 	Audio.play("magic", -6.0)
 	_puff(enemy.global_position)
 	enemy.global_position = target
