@@ -1,20 +1,15 @@
 class_name Crypt
 extends Node2D
 ## A temető keleti bővítése a kápolnától jobbra: sötét föld, feliratos sírok (E: olvasás, mint a Graveyard-ban),
-## a sarkában egy régi kripta (mauzóleum kőívvel, két kőszoborral). E-re lemész: lent a rituálé terme
+## a sarkában egy régi kripta (boltíves ajtó). E-re lemész: lent a rituálé terme
 ## (`INTERIOR`): oltár, a padlón izzó kör, körülötte fekete köpenyes, arctalan alakok (az "Arctalanok"),
 ## és Szürke Orsolya, a kripta őre (történetek + a rituálé: `RitualPanel`, `Gems`).
-## (A tábor építi fel: setup(camp) + build(); képek: assets/props/crypt, CC0.)
+## (A tábor építi fel: setup(camp) + build(); csempék: 0x72 DungeonTileset II; az oltár, az alakok: assets/props/crypt, CC0.)
 
 const TILE := 32
 const RPG: Texture2D = preload("res://assets/shop/kenney_rpg.png")
 const DUNGEON: Texture2D = preload("res://assets/0x72_dungeon/0x72_DungeonTilesetII_v1.7.png")
 const ALTAR: Texture2D = preload("res://assets/props/crypt/altar.png")
-const BONE_ALTAR: Texture2D = preload("res://assets/props/crypt/bone_altar.png")
-const FLOORS: Array[Texture2D] = [preload("res://assets/props/crypt/floor0.png"), preload("res://assets/props/crypt/floor1.png")]
-const STAIRS_UP: Texture2D = preload("res://assets/props/crypt/stairs_up.png")
-const ARCH: Texture2D = preload("res://assets/props/crypt/arch.png")
-const STATUE: Texture2D = preload("res://assets/props/crypt/statue.png")
 const HOODED: Texture2D = preload("res://assets/props/crypt/hooded.png")
 const ORSOLYA: Texture2D = preload("res://assets/props/crypt/orsolya.png")
 const COBWEB: Texture2D = preload("res://assets/decor/cobweb.png")
@@ -23,9 +18,18 @@ const COBWEB: Texture2D = preload("res://assets/decor/cobweb.png")
 const RECT := Rect2i(89, 21, 12, 7)
 const MAUSOLEUM := Rect2i(96, 21, 4, 4)
 const STONE := Color(0.5, 0.48, 0.52)
-const SLATE := Color(0.42, 0.42, 0.5)
 const WALL_MID := Rect2(32, 16, 16, 16)
 const WALL_TOP := Rect2(32, 0, 16, 16)
+## 0x72 DungeonTileset II (a kazamata és a kápolna is ebből van).
+const WALL_HOLE := Rect2(48, 32, 16, 16)
+const BANNER := Rect2(16, 32, 16, 16)
+const COLUMN := Rect2(80, 80, 16, 48)
+const SKULL := Rect2(288, 432, 16, 16)
+const STAIRS := Rect2(80, 192, 16, 16)
+const DOOR_TOP := Rect2(32, 224, 32, 16)
+const DOOR_OPEN := Rect2(80, 240, 32, 32)
+const DOOR_FRAME_LEFT := Rect2(16, 240, 16, 32)
+const DOOR_FRAME_RIGHT := Rect2(64, 240, 16, 32)
 const GRAVES: Array[Vector2i] = Graveyard.GRAVES
 const TABLETS: Array[Vector2i] = Graveyard.TABLETS
 ## A bővítés sírjainak feliratai: [név, szöveg].
@@ -237,44 +241,34 @@ func _build_graves() -> void:
 			_body(holder, Vector2(0, -4), Vector2(22, 8))
 
 
-## A kripta: palatető, sötét kőfal, középen a kőív a lefelé vezető lépcsővel, két oldalt kőszobor.
+## A kripta: tömör, sötét kőépület (0x72 fal), középen boltíves ajtókeret a nyitott ajtóval (lefelé vezet), a fal tövében koponyák.
 func _build_mausoleum() -> void:
 	var tl := MAUSOLEUM.position
 	var w := MAUSOLEUM.size.x
 	for x in w:
-		var piece := 0 if x == 0 else (2 if x == w - 1 else 1)
-		_rpg(Town.ROOF_TOP[piece], _center(tl + Vector2i(x, 0)), -6).modulate = SLATE.lightened(0.15)
-		_rpg(Town.ROOF_LOW[piece], _center(tl + Vector2i(x, 1)), -6).modulate = SLATE
-		for y in [2, 3]:
+		_dungeon(WALL_TOP, tl + Vector2i(x, 0), -6).modulate = STONE.lightened(0.1)
+		for y in [1, 2, 3]:
 			_dungeon(WALL_MID, tl + Vector2i(x, y), -6).modulate = STONE.darkened(_rng.randf_range(0.0, 0.15))
-	var arch := Sprite2D.new()
-	arch.texture = ARCH
-	arch.scale = Vector2(2, 2)
-	arch.position = Vector2(tl.x + 2, tl.y + 3) * TILE
-	arch.z_index = -5
-	arch.modulate = Color(0.8, 0.78, 0.85)
-	add_child(arch)
+	# Ajtókeret (0x72): fent a boltív, két oldalt a keret, középen a nyitott, sötét ajtó.
+	var door_left := Vector2(tl.x + 1, tl.y + 2) * TILE
+	# Mögötte a sötét lejárat (a nyitott ajtón át ez látszik, nem a fal).
+	_rect(Rect2(door_left + Vector2(6, 4), Vector2(TILE * 2 - 12, TILE * 2 - 4)), -6, Color(0.03, 0.02, 0.05))
+	_region_sprite(DUNGEON, DOOR_TOP, door_left + Vector2(TILE, -TILE * 0.5), -5).modulate = STONE.lightened(0.1)
+	_region_sprite(DUNGEON, DOOR_OPEN, door_left + Vector2(TILE, TILE), -5).modulate = Color(0.75, 0.7, 0.8)
+	_region_sprite(DUNGEON, DOOR_FRAME_LEFT, door_left + Vector2(-TILE * 0.5, TILE), -4).modulate = STONE.lightened(0.1)
+	_region_sprite(DUNGEON, DOOR_FRAME_RIGHT, door_left + Vector2(TILE * 2.5, TILE), -4).modulate = STONE.lightened(0.1)
 	var web := Sprite2D.new()
 	web.texture = COBWEB
 	web.scale = Vector2(2, 2)
-	web.position = _center(tl + Vector2i(0, 2))
+	web.position = _center(tl + Vector2i(w - 1, 2))
+	web.flip_h = true
 	web.z_index = -4
 	web.modulate = Color(1, 1, 1, 0.7)
 	add_child(web)
 	_solid(Rect2(Vector2(tl) * TILE, Vector2(MAUSOLEUM.size) * TILE - Vector2(0, 6)))
-	for x: int in [tl.x - 1, MAUSOLEUM.end.x]:
-		var holder := Node2D.new()
-		holder.position = _center(Vector2i(x, tl.y + 3)) + Vector2(0, 14)
-		_entities.add_child(holder)
-		var statue := Sprite2D.new()
-		statue.texture = STATUE
-		statue.scale = Vector2(1.5, 1.5)
-		statue.position = Vector2(0, -22)
-		statue.flip_h = x > tl.x
-		statue.modulate = Color(0.7, 0.7, 0.75)
-		holder.add_child(statue)
-		_body(holder, Vector2(0, -6), Vector2(24, 12))
-	# Halvány lila derengés az ívből.
+	for spot: Vector2 in [Vector2(tl.x - 0.3, tl.y + 4.2), Vector2(tl.x + 3.7, tl.y + 4.4), Vector2(tl.x + 4.2, tl.y + 3.9)]:
+		_region_sprite(DUNGEON, SKULL, spot * TILE, -7).modulate = Color(0.8, 0.78, 0.75)
+	# Halvány lila derengés az ajtóból.
 	_light(door_position() + Vector2(0, -24), Color(0.6, 0.35, 0.9), 0.6, 0.5)
 
 
@@ -284,14 +278,15 @@ func _build_interior() -> void:
 	var r := INTERIOR
 	for x in range(r.position.x, r.end.x):
 		for y in range(r.position.y, r.end.y):
-			var floor_tile := Sprite2D.new()
-			floor_tile.texture = FLOORS[0 if _rng.randf() < 0.7 else 1]
-			floor_tile.position = _center(Vector2i(x, y))
-			floor_tile.z_index = -10
-			floor_tile.modulate = Color(0.85, 0.8, 0.9).darkened(_rng.randf_range(0.0, 0.15))
-			add_child(floor_tile)
+			var floor_tile := _region_sprite(DUNGEON, Chapel.FLOOR_TILES[_rng.randi() % Chapel.FLOOR_TILES.size()], _center(Vector2i(x, y)), -10)
+			floor_tile.modulate = Color(0.58, 0.54, 0.62).darkened(_rng.randf_range(0.0, 0.15))
 		_region_sprite(DUNGEON, WALL_TOP, _center(Vector2i(x, r.position.y - 2)), -9).modulate = STONE
-		_region_sprite(DUNGEON, WALL_MID, _center(Vector2i(x, r.position.y - 1)), -9).modulate = STONE.darkened(0.1)
+		var face := WALL_MID
+		if x == r.position.x + 3 or x == r.end.x - 4:
+			face = BANNER
+		elif _rng.randf() < 0.15:
+			face = WALL_HOLE
+		_region_sprite(DUNGEON, face, _center(Vector2i(x, r.position.y - 1)), -9).modulate = STONE.darkened(0.1)
 	var dark := Color(0.06, 0.05, 0.07)
 	_rect(Rect2(Vector2(r.position.x - 1, r.position.y - 3) * TILE, Vector2(1, r.size.y + 4) * TILE), -9, dark)
 	_rect(Rect2(Vector2(r.end.x, r.position.y - 3) * TILE, Vector2(1, r.size.y + 4) * TILE), -9, dark)
@@ -301,17 +296,28 @@ func _build_interior() -> void:
 	_solid(Rect2(Vector2(r.end.x, r.position.y - 2) * TILE, Vector2(1, r.size.y + 3) * TILE))
 	_solid(Rect2(Vector2(r.position.x, r.end.y) * TILE, Vector2(r.size.x, 1) * TILE))
 	# Kijárat: lépcső fel, alul középen.
-	var stairs := Sprite2D.new()
-	stairs.texture = STAIRS_UP
-	stairs.position = _center(EXIT_TILE)
-	stairs.z_index = -9
-	add_child(stairs)
-	# Az oltár (gyertyákkal), mellette két csontoltár, a falnál kőszobrok.
+	_region_sprite(DUNGEON, STAIRS, _center(EXIT_TILE), -9)
+	# Az oltár (gyertyákkal), a sarkokban kőoszlopok, a padlón koponyák és pókhálók.
 	_prop(ALTAR, _altar_at(), Vector2(2, 2), Vector2(56, 24))
-	_prop(BONE_ALTAR, _center(Vector2i(r.position.x + 1, r.position.y)) + Vector2(0, 14), Vector2(1.5, 1.5), Vector2(36, 14))
-	_prop(BONE_ALTAR, _center(Vector2i(r.end.x - 2, r.position.y)) + Vector2(0, 14), Vector2(1.5, 1.5), Vector2(36, 14))
-	for x: int in [r.position.x, r.end.x - 1]:
-		_prop(STATUE, _center(Vector2i(x, r.end.y - 3)) + Vector2(0, 14), Vector2(1.5, 1.5), Vector2(24, 12))
+	for tile: Vector2i in [Vector2i(r.position.x, r.position.y + 1), Vector2i(r.end.x - 1, r.position.y + 1),
+			Vector2i(r.position.x, r.end.y - 2), Vector2i(r.end.x - 1, r.end.y - 2)]:
+		var holder := Node2D.new()
+		holder.position = _center(tile) + Vector2(0, 14)
+		_entities.add_child(holder)
+		_region_sprite(DUNGEON, COLUMN, Vector2(0, -40), 0, holder).modulate = STONE
+		_body(holder, Vector2(0, -6), Vector2(26, 12))
+	for i in 5:
+		var at := _center(r.position + Vector2i(_rng.randi_range(1, r.size.x - 2), _rng.randi_range(2, r.size.y - 2)))
+		_region_sprite(DUNGEON, SKULL, at + Vector2(_rng.randf_range(-8, 8), _rng.randf_range(-6, 6)), -8).modulate = Color(0.75, 0.72, 0.7)
+	for corner: Array in [[Vector2i(r.position.x, r.position.y), false], [Vector2i(r.end.x - 1, r.position.y), true]]:
+		var web := Sprite2D.new()
+		web.texture = COBWEB
+		web.scale = Vector2(2, 2)
+		web.position = _center(corner[0])
+		web.flip_h = corner[1]
+		web.z_index = -7
+		web.modulate = Color(1, 1, 1, 0.6)
+		add_child(web)
 	# A kör a padlón, körülötte az Arctalanok.
 	_circle = RitualCircle.new()
 	_circle.position = _circle_at()
