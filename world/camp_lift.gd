@@ -104,7 +104,8 @@ func _process(delta: float) -> void:
 	if _near_engineer():
 		_prompt.text = "[E] Beszélgetés: %s" % Engineer.NAME
 	elif _near():
-		_prompt.text = "[E] Lift: lefelé utazás"
+		# Főellenség utáni pihenő alatt a lift nem visz le (csak a kék portálon át folytathatod).
+		_prompt.text = "Lift — pihenő közben zárva" if GameState.on_break else "[E] Lift: lefelé utazás"
 	var target := 1.0 if (_near() or _near_engineer()) and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
 
@@ -113,7 +114,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("interact") or GamePause.active(get_tree()):
 		return
 	var talk := _near_engineer()
-	if not talk and not _near():
+	if not talk and (not _near() or GameState.on_break):
 		return
 	get_viewport().set_input_as_handled()
 	Audio.play("ui_open")
@@ -122,6 +123,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_chosen(depth: int) -> void:
 	_camp.get_node("Menus").call("close_current")
+	if GameState.on_break:
+		return
 	Audio.play("door_unlock", -4.0)
 	_camp.call("_enter_dungeon", depth)
 
