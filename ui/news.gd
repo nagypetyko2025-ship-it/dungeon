@@ -4,6 +4,7 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-31", "items": [
+		"Javítva: Puskás Döme most már ott vár a kút alján, ha a tűzhangyák után nem töltötted újra a tábort (a beomlott járatnál is szólhatsz neki).",
 		"Holló Margit, a boszorkány története folytatódik: 4 új küldetés (összesen 5), mindegyik után 3 új beszélgetés. A Test manipulálása mostantól a 3. küldetés után nyílik meg.",
 		"Lőrinc műhelyének rácsos lépcsője kinyílt: kérdezd meg Lőrincet, mi van mögötte. Odalent 5 emelet és egy háromszáz éves őr vár, jutalma egy egyedi talizmán.",
 	]},

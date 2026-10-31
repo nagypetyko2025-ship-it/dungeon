@@ -373,6 +373,9 @@ func enter() -> void:
 func _move(inside: bool, at: Vector2) -> void:
 	_busy = true
 	_inside = inside
+	# Döme a tábor betöltése után is lejöhet (a bányában adod le a mirigyeket): belépéskor újranézzük.
+	if inside:
+		_dome.visible = Blaster.at_well()
 	Audio.play("footstep", -2.0)
 	var limits := _limits() if inside else Rect2()
 	_camp.call("teleport_player", at, limits, CAVE_LIGHT if inside else Color.BLACK)
@@ -457,10 +460,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			var ruin := _camp.get_node("Ruin")
 			_move(false, ruin.call("well_exit_position"))
 		"collapse":
-			Audio.play("door_lock", -6.0)
 			if Blaster.at_well():
-				message.emit("Döme már ott térdel a törmelék mellett. Szólj neki, ha mehet.")
+				# Döme a törmeléknél: a beomlott járatnál is szólhatsz neki.
+				_dome.visible = true
+				Audio.play("ui_open")
+				_dome_dialogue.greeting = Blaster.greeting("well")
+				_camp.get_node("Menus").call("open_menu", _dome_dialogue)
 			else:
+				Audio.play("door_lock", -6.0)
 				message.emit("A járat be van omolva. Mögüle hideg szél fúj... a Mélység felől. "
 					+ "Egy dinamit beomlaszthatná az egészet.")
 		"dome":
