@@ -335,6 +335,10 @@ class InscriptionPanel:
 	var _title: Label
 	var _stone: PanelContainer
 	var _text: RichTextLabel
+	## A hosszú szöveg (pl. Lőrinc jegyzetei + levele) görgethető, hogy az ablak kiférjen a képből.
+	var _scroll: ScrollContainer
+	var _hint: Label
+	const MAX_TEXT_HEIGHT := 440.0
 
 	func _ready() -> void:
 		layer = 15
@@ -378,10 +382,17 @@ class InscriptionPanel:
 		text.add_theme_font_size_override("normal_font_size", 19)
 		text.add_theme_font_size_override("italics_font_size", 19)
 		text.text = INSCRIPTION
+		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_text = text
-		box.add_child(text)
+		_scroll = ScrollContainer.new()
+		_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		_scroll.custom_minimum_size = Vector2(440, 0)
+		_scroll.add_child(text)
+		box.add_child(_scroll)
+		_fit_text.call_deferred()
 		var hint := UiStyle.label("[E] / [Esc] bezárás", 14, Color(0.25, 0.25, 0.3))
 		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_hint = hint
 		box.add_child(hint)
 
 	## Kő helyett sárgás, elázott papír (pl. a fára szögezett levél, lásd HiddenGrave).
@@ -402,9 +413,21 @@ class InscriptionPanel:
 	func show_text(title: String, text: String) -> void:
 		_title.text = title
 		_text.text = text
+		_fit_text.call_deferred()
+
+	## A görgető magassága a szövegé, legfeljebb MAX_TEXT_HEIGHT (afölött görgetni kell).
+	func _fit_text() -> void:
+		# A szöveg tördelése egy képkockával később készül el: addig nincs magassága.
+		if _text.get_content_height() <= 1 and is_inside_tree():
+			await get_tree().process_frame
+		_scroll.custom_minimum_size.y = minf(float(_text.get_content_height()), MAX_TEXT_HEIGHT)
+		_scroll.scroll_vertical = 0
+		var more := "Görgess az egérrel a többiért.   " if _text.get_content_height() > MAX_TEXT_HEIGHT else ""
+		_hint.text = more + "[E] / [Esc] bezárás"
 
 	func open() -> void:
 		visible = true
+		_fit_text.call_deferred()
 
 	func close() -> void:
 		visible = false

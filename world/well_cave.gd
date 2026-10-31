@@ -478,7 +478,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			Audio.play("ui_open")
 			# Ha Lőrinc már nincs a kútnál, a rácsról szóló levele is itt van (OldEntrance.desk_letter).
 			var letter := OldEntrance.desk_letter()
-			_note_panel.show_text(NOTE_TITLE, NOTE_TEXT + ("\n\n" + letter if not letter.is_empty() else ""))
+			# Az új levél felül, alatta a régi jegyzetek.
+			_note_panel.show_text(NOTE_TITLE, (letter + "\n\n" if not letter.is_empty() else "") + NOTE_TEXT)
 			_camp.get_node("Menus").call("open_menu", _note_panel)
 		"chest":
 			_open_chest()
