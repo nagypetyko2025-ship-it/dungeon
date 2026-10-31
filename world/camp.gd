@@ -1432,7 +1432,8 @@ func _show_title() -> void:
 	# A Vérfarkas (vagy a Káosz Ura) után egyszer: győzelmi felirat.
 	if GameState.dungeon_won:
 		GameState.dungeon_won = false
-		var text := "Legyőzted a Káosz Urát! A 40. emelet elcsendesedett." if GameState.won_lord == "chaos" \
+		var text := "Sikeresen visszatértél a lifttel!" if GameState.won_lord == "lift" \
+			else "Legyőzted a Káosz Urát! A 40. emelet elcsendesedett." if GameState.won_lord == "chaos" \
 			else "Leállítottad az Ősgépezetet! A 60. emelet elnémult." if GameState.won_lord == "engine" \
 			else "Legyőzted a Pokolkapu Őrét! A pokol kapuja nyitva áll." if GameState.won_lord == "gate" \
 			else "Legyőzted Azazelt, a Halálangyalt és Démonkirályt! A pokol tüzei kialudtak." if GameState.won_lord == "lucifer" \

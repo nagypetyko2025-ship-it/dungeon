@@ -72,10 +72,12 @@ func _build() -> void:
 	var engine := lord == "engine"
 	var gate := lord == "gate"
 	var lucifer := lord == "lucifer"
-	root.add_child(UiStyle.title_bar("A Káosz Ura elesett — győzelem!" if chaos
+	var lift := lord == "lift"
+	root.add_child(UiStyle.title_bar("Fel a lifttel — sikeres visszatérés!" if lift else "A Káosz Ura elesett — győzelem!" if chaos
 		else "Az Ősgépezet leállt — győzelem!" if engine else "A Pokolkapu Őre elesett — győzelem!" if gate
 		else "Azazel, a Halálangyal és Démonkirály elesett — a történet véget ért!" if lucifer else "A Mélység Ura elesett — győzelem!"))
-	root.add_child(UiStyle.label(("Legyőzted az Ürességfalót, a Káosz Urát a 40. emeleten. A pénzed 100%-át megtartod,\n" if chaos
+	root.add_child(UiStyle.label(("Bertalan liftjével felmész a %d. emeletről a táborba. A pénzed 100%%-át megtartod,\n" % GameState.depth if lift
+		else "Legyőzted az Ürességfalót, a Káosz Urát a 40. emeleten. A pénzed 100%-át megtartod,\n" if chaos
 		else "Leállítottad az Ősgépezetet a 60. emeleten. A pénzed 100%-át megtartod,\n" if engine
 		else "Legyőzted a Pokolkapu Őrét a 80. emeleten. A pénzed 100%-át megtartod,\n" if gate
 		else "Legyőzted Azazelt, a Halálangyalt és Démonkirályt a pokol trónjánál. A kazamata száz emelete elcsendesedik.\n"
@@ -129,7 +131,7 @@ func _build() -> void:
 	buttons.add_theme_constant_override("separation", 20)
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	root.add_child(buttons)
-	var go_out := MenuStyle.button("Vissza a táborba")
+	var go_out := MenuStyle.button("Fel a lifttel" if lord == "lift" else "Vissza a táborba")
 	go_out.custom_minimum_size.x = 380
 	go_out.pressed.connect(_go_to_camp)
 	buttons.add_child(go_out)

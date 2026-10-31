@@ -246,6 +246,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   számít; a `Progress.deepest` is: elvállaláskor és a `camp_options`-ban `note_depth(deepest, true)`) → done (fizetés tábori aranyból, `LIFT_PRICES`; szövegek: `CHAPTERS`). A lift ablaka (`CampLift.LiftPanel`): 2 oszlop,
   `Engineer.floor_open`, a zártak lakattal (`assets/ui/lock.png`). A 80. alá nem visz lift. Lent a nyitott mély aknák emeletein is
   liftszoba van (`Dungeon` deep_lift; nagy főellenség emeletén a kezdőszobában, `Room.lift_offset` = `FINAL_LIFT_OFFSET`), Bertalan nélkül.
+  Kilépés a lifttel: a működő lift ketrecénél (`LiftRoom._near_cage`, nem próbatétel / gyakorlás / pokol / közös játék) E →
+  `Dungeon.open_lift_exit` → VictoryPanel `lord` = "lift" (100% pénz, 2 tárgy, `GameState.won_lord` "lift").
   Mindkét helyen ugyanaz a lift: `LiftRoom.LiftRig` (pixelrácsra rajzolt bakállvány, láncon lógó ketrec, a gerenda végén
   forgó fogaskerék: `assets/props/lift_gear.png`, 8 kocka); lent a szoba közepén, a táborban a kőpadló mellett egy akna fölött (`CampLift.Shaft`).
 - Pihenő a főellenség után (`ui/boss_return_panel.gd`): a kék portál a táborból ugyanoda hoz vissza — `GameState.break_floor`

@@ -15,6 +15,10 @@ var _engineer: Node2D
 var _engineer_body: CollisionShape2D
 var _cage: Sprite2D
 var _riding := false
+## Működik-e a lift (a 10. emeleten a javítás után, a mély aknák emeletein mindig): felmehetsz vele.
+var _working := false
+var _lift_prompt: Label
+const CAGE_RANGE := 70.0
 var _dialogue: DialoguePanel
 var _prompt: Label
 
@@ -25,6 +29,7 @@ func _ready() -> void:
 	y_sort_enabled = true
 	var rig := LiftRig.new()
 	rig.working = Engineer.repaired() or GameState.depth != Engineer.DEPTH
+	_working = rig.working
 	add_child(rig)
 	_cage = rig.cage
 	_engineer = Node2D.new()
@@ -71,6 +76,25 @@ func _ready() -> void:
 	_prompt.offset_right = 500
 	_prompt.modulate.a = 0.0
 	layer.add_child(_prompt)
+	_lift_prompt = MenuStyle.title_label("[E] Felmegyek a lifttel a táborba (a futás vége)", 32, MenuStyle.GOLD)
+	_lift_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_lift_prompt.offset_top = -210
+	_lift_prompt.offset_bottom = -160
+	_lift_prompt.offset_left = -600
+	_lift_prompt.offset_right = 600
+	_lift_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_lift_prompt.modulate.a = 0.0
+	layer.add_child(_lift_prompt)
+
+
+## A megjavított lift ketrecénél: felmehetsz vele a táborba, mintha győztél volna (a Dungeon győzelmi
+## ablaka, "lift"). A próbatételben, a gyakorló pályán, közös játékban és csalt futásban nem.
+func _near_cage() -> bool:
+	if not _working or _riding or _near() or not is_instance_valid(_player):
+		return false
+	if Challenge.active() or GameState.tutorial or GameState.hell or NetLobby.is_playing(get_tree()):
+		return false
+	return _player.global_position.distance_to(global_position) < CAGE_RANGE
 
 
 func _near() -> bool:
@@ -87,6 +111,8 @@ func _process(delta: float) -> void:
 		_ride()
 	var target := 1.0 if _near() and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
+	var lift_target := 1.0 if _near_cage() and not GamePause.active(get_tree()) else 0.0
+	_lift_prompt.modulate.a = move_toward(_lift_prompt.modulate.a, lift_target, delta * 5.0)
 
 
 ## Bertalan a ketrechez sétál, beszáll, a ketrec felhúzódik az aknán; kis idő múlva üresen ereszkedik vissza.
@@ -115,7 +141,14 @@ func _ride() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("interact") or GamePause.active(get_tree()) or not _near():
+	if not event.is_action_pressed("interact") or GamePause.active(get_tree()):
+		return
+	if _near_cage():
+		get_viewport().set_input_as_handled()
+		Audio.play("ui_open")
+		get_tree().current_scene.call("open_lift_exit")
+		return
+	if not _near():
 		return
 	get_viewport().set_input_as_handled()
 	Audio.play("ui_open")

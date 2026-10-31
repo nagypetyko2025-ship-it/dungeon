@@ -591,6 +591,15 @@ func _challenge_won() -> void:
 	get_node("Menus").call("open_menu", panel)
 
 
+## A megjavított lift a táborba visz (LiftRoom): ugyanaz, mint a győzelem — a pénz 100%-a, 2 tárgy.
+func open_lift_exit() -> void:
+	var old := get_node_or_null("VictoryPanel")
+	if old != null and old.get("lord") != "lift":
+		old.free()
+	_victory_lord = "lift"
+	_open_victory_panel()
+
+
 func _open_victory_panel() -> void:
 	var panel := get_node_or_null("VictoryPanel")
 	if panel == null:
