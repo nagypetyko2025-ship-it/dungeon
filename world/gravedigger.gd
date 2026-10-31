@@ -155,9 +155,14 @@ static func leaving() -> bool:
 	return Progress.npc_quest_state(TAVERN_FLAG) == "walking"
 
 
+## Még a temetőben áll (nem költözött se a kápolnába, se a kocsmába).
+static func in_graveyard() -> bool:
+	return not in_chapel() and Progress.npc_quest_state(TAVERN_FLAG) == ""
+
+
 ## El kell-e indulnia a kápolnába (elfogadta a küldetést, de még a temetőben áll).
 static func should_walk() -> bool:
-	return Progress.npc_quest_state(SKELETON_QUEST) != "" and not in_chapel()
+	return Progress.npc_quest_state(SKELETON_QUEST) != "" and in_graveyard()
 
 
 static func skeleton_kills() -> int:

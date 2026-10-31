@@ -214,8 +214,9 @@ func _build_digger() -> void:
 	_digger_body.position = Vector2(0, -6)
 	body.add_child(_digger_body)
 	_digger.add_child(body)
-	_digger.visible = not Gravedigger.in_chapel()
-	_digger_body.disabled = Gravedigger.in_chapel()
+	# A kocsmába költözése után a temetőben sincs (különben újra besétálna a kápolnába).
+	_digger.visible = Gravedigger.in_graveyard()
+	_digger_body.disabled = not Gravedigger.in_graveyard()
 	# Mellette egy frissen ásott gödör, földkupaccal.
 	var pit := Mound.new()
 	pit.position = _center(DIGGER_TILE + Vector2i(-1, 0)) + Vector2(0, 12)
