@@ -3,8 +3,11 @@ extends Control
 ## Szintlépési kártya-szerkesztő (a főmenü bal felső sarkának alig látható gombjáról): saját kártyák
 ## névvel, ritkasággal, adott és elvett statokkal és ikonnal (Upgrades.ICON_DIR). Mentéskor a projekt
 ## `Upgrades.CUSTOM_PATH` fájljába ír, onnantól a kártya a szintlépéskor is jöhet. Esc / Bezárás: vissza a menübe.
+## A lista alján a beépített kártyák (Upgrades.ALL) is megnézhetők; ezekből mentéskor új saját kártya lesz.
 
 const ROWS := 3
+## A lista fejléc-sorainak metaadata (nem kártya).
+const HEADER := 1 << 30
 const ICON_COLUMNS := 11
 const ICON_SIZE := Vector2(40, 40)
 ## Ikoncsoportok a fájlnév eleje szerint ("496 pixel art icons").
@@ -66,11 +69,11 @@ func _build_list_column() -> VBoxContainer:
 	column.custom_minimum_size.x = 230
 	column.add_theme_constant_override("separation", 8)
 	column.add_child(_text("Kártya-szerkesztő", 24, UiStyle.TEXT_GOLD))
-	column.add_child(_text("Saját kártyáid:", 15, UiStyle.TEXT_LIGHT))
+	column.add_child(_text("Kártyák:", 15, UiStyle.TEXT_LIGHT))
 	_card_list = ItemList.new()
 	_card_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_card_list.fixed_icon_size = Vector2i(24, 24)
-	_card_list.item_selected.connect(_load_card)
+	_card_list.item_selected.connect(_on_list_selected)
 	column.add_child(_card_list)
 	column.add_child(_small_button("Új kártya", _new_card))
 	_delete_button = _small_button("Kártya törlése", _delete_card)
@@ -253,17 +256,34 @@ func _new_card() -> void:
 	_update_preview()
 
 
+## A lista elemének metaadata: >= 0 saját kártya indexe, -1-i a beépített i. kártya.
+func _on_list_selected(item: int) -> void:
+	var index: int = _card_list.get_item_metadata(item)
+	if index >= 0:
+		_load_card(index)
+		return
+	var card: Dictionary = Upgrades.ALL[-1 - index]
+	_fill_form(card)
+	_editing = -1
+	_delete_button.disabled = true
+	_status.text = "Beépített kártya: %s. Csak megnézni lehet; ha átírod és mented, új saját kártya lesz belőle." % card["title"]
+
+
 func _load_card(index: int) -> void:
 	_editing = index
 	var card: Dictionary = _list[index]
+	_fill_form(card)
+	_delete_button.disabled = false
+	_status.text = "Szerkesztés: %s" % card["title"]
+
+
+func _fill_form(card: Dictionary) -> void:
 	_name.text = card["title"]
 	_rarity.select(maxi(Items.RARITY_ORDER.find(card["rarity"]), 0))
 	_set_rows(_gain_rows, card["gain"])
 	_set_rows(_cost_rows, card["cost"])
 	_icon = card["icon"]
 	_fill_icons()
-	_delete_button.disabled = false
-	_status.text = "Szerkesztés: %s" % card["title"]
 	_update_preview()
 
 
@@ -297,7 +317,9 @@ func _save() -> void:
 	if not _write():
 		return
 	_refresh_list()
-	_card_list.select(_editing)
+	for item in _card_list.item_count:
+		if _card_list.get_item_metadata(item) == _editing:
+			_card_list.select(item)
 	_delete_button.disabled = false
 	_status.text = "Elmentve: %s" % card["title"]
 
@@ -323,9 +345,27 @@ func _write() -> bool:
 
 func _refresh_list() -> void:
 	_card_list.clear()
-	for card in _list:
-		var index := _card_list.add_item(card["title"], Upgrades.icon(card))
-		_card_list.set_item_custom_fg_color(index, Upgrades.rarity_color(card))
+	_header("— Saját kártyáid —" if not _list.is_empty() else "— Nincs saját kártyád —")
+	for i in _list.size():
+		_add_card_item(_list[i], i)
+	_header("— Beépített kártyák —")
+	for i in Upgrades.ALL.size():
+		_add_card_item(Upgrades.ALL[i], -1 - i)
+
+
+func _add_card_item(card: Dictionary, meta: int) -> void:
+	var item := _card_list.add_item(card["title"], Upgrades.icon(card))
+	_card_list.set_item_custom_fg_color(item, Upgrades.rarity_color(card))
+	_card_list.set_item_metadata(item, meta)
+	_card_list.set_item_tooltip(item, "%s — %s" % [Upgrades.rarity_name(card),
+		", ".join(Upgrades.lines(card).map(func(line: Array) -> String: return line[0]))])
+
+
+func _header(text: String) -> void:
+	var item := _card_list.add_item(text, null, false)
+	_card_list.set_item_custom_fg_color(item, Color(0.7, 0.64, 0.58))
+	_card_list.set_item_metadata(item, HEADER)
+	_card_list.set_item_disabled(item, true)
 
 
 func close() -> void:

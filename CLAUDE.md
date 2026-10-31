@@ -68,7 +68,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   (`assets/cards/icons/<név>.png`, mind a 496 CC0 ikon). Szöveg: `Upgrades.lines` / `STAT_INFO`; a stat saját jele (Tab-statok,
   tábori fejlesztések): `Upgrades.stat_icon` (`STAT_ICONS`). Nem jön a kártya, ha a gain stat maxon van, vagy a cost a stat
   alapértékét `Stats.LIMITS` minimuma alá vinné. Megjelenés: `ui/upgrade_card.gd` (`UpgradeCard.build`, ritkaság-szín, a
-  legendás/mítikus izzik). Kártya-szerkesztő: főmenü bal felső ✎ (alig látható) → `ui/card_editor.gd` (`CardEditor.open`,
+  legendás/mítikus izzik). Kártya-szerkesztő: főmenü bal felső ✎ (alig látható) → `ui/card_editor.gd` (`CardEditor.open`, a lista alján a beépítettek is megnézhetők,
   saját CanvasLayer), a felhasználó kártyái a `data/custom_cards.json`-ba (`Upgrades.CUSTOM_PATH`, res://) — **ezeket is
   commitold és pushold**, mintha te csináltad volna.
   Ritkaságok: common → rare → epic → legendary → mythic (Mítikus, piros: 17 saját tárgy, fegyverfajtánként / helyenként
