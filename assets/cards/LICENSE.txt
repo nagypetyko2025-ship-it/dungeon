@@ -1,0 +1,4 @@
+Szintlépési kártyák ikonjai (icons/, mind a 496, a kártya-szerkesztőben választhatók):
+"496 pixel art icons for medieval/fantasy RPG" by Henrique Lazarini (7Soul1), CC0
+https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg
+A fájlnevek kisbetűsítve (pl. S_Holy01.png -> s_holy01.png), egyébként változatlanok.

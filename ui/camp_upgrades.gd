@@ -163,10 +163,7 @@ func _make_row(id: String) -> PanelContainer:
 
 ## A stat ikonja a szintlépés-kártyák közül (ugyanaz a jel mindenhol).
 func _icon_for(stat: String) -> Texture2D:
-	for upgrade in Upgrades.ALL:
-		if upgrade["stat"] == stat:
-			return Upgrades.icon(upgrade)
-	return null
+	return Upgrades.stat_icon(stat)
 
 
 ## Rövid felirat a kártyára (a tárgyleírások hosszabb szövegei nem férnének ki).

@@ -63,6 +63,14 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Pontosság kártya (`Upgrades._available`), Céllövölde (camp_upgrades / witch_panel), Tab-statok, HUD, tárgyleírás és összevetés.
 - Láda: `pickups/chest.gd` — `NEVER_EMPTY_UNTIL` (15) emeletig sosem üres, utána `EMPTY_CHANCE`.
 - Tárgyak: `items/items.gd` (DEFINITIONS; a bolti áru emeletenként erősebb: `Items.for_depth`); statok: `components/stats.gd`; szintlépés-kártyák: `components/upgrades.gd`.
+- Kártyák (a felhasználó "kártya"-ként hivatkozik rájuk): `Upgrades.ALL` elemei `gain` / `cost` (stat -> érték; a cost levonás),
+  `rarity` (Items.RARITY_ORDER; kártyahelyenként előbb ritkaság a `RARITY_WEIGHTS` szerint, azon belül "weight"), `icon`
+  (`assets/cards/icons/<név>.png`, mind a 496 CC0 ikon). Szöveg: `Upgrades.lines` / `STAT_INFO`; a stat saját jele (Tab-statok,
+  tábori fejlesztések): `Upgrades.stat_icon` (`STAT_ICONS`). Nem jön a kártya, ha a gain stat maxon van, vagy a cost a stat
+  alapértékét `Stats.LIMITS` minimuma alá vinné. Megjelenés: `ui/upgrade_card.gd` (`UpgradeCard.build`, ritkaság-szín, a
+  legendás/mítikus izzik). Kártya-szerkesztő: főmenü bal felső ✎ (alig látható) → `ui/card_editor.gd` (`CardEditor.open`,
+  saját CanvasLayer), a felhasználó kártyái a `data/custom_cards.json`-ba (`Upgrades.CUSTOM_PATH`, res://) — **ezeket is
+  commitold és pushold**, mintha te csináltad volna.
   Ritkaságok: common → rare → epic → legendary → mythic (Mítikus, piros: 17 saját tárgy, fegyverfajtánként / helyenként
   egy, a DEFINITIONS végén). Mítikus csak két helyről jön: a nagy főellenség (Vérfarkas, Káosz Ura) fő dobása
   `MYTHIC_LORD_CHANCE` (1%) eséllyel, és a bolt a `MYTHIC_SHOP_DEPTH` (21.) emelettől, áruhelyenként `MYTHIC_SHOP_CHANCE`
@@ -71,8 +79,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   több a ritkább (`rarity_weight`, RARITIES "per_floor"); a boltban (`random_shop_item`) a fegyverek közül a karakter
   harcmódjához illők gyakoribbak (`weapon_style`, `STYLE_MATCH` / `STYLE_MISMATCH`), a szörnyek és ládák dobásában nem. Íjfajták: bow, shortbow (gyors,
   rövid), warbow (lassú, átütő nyíl: `PlayerArrow.pierce`, a Hurtbox `skips`-szel kérdezi), crossbow (`Player.WEAPON_TYPES`).
-  Átütés stat (`Stats.pierce`, max `MAX_PIERCE` = 1): csak a legendás "Átütés" szintlépési kártya adja (íjjal, a
-  Nyílzápornál 3× ritkább: `Upgrades.LEGENDARY` "weight"), a fegyver saját átütéséhez adódik.
+  Átütés stat (`Stats.pierce`, max `MAX_PIERCE` = 1): csak a legendás "Átütés" kártya adja (íjjal, a
+  Nyílzápornál 3× ritkább: "weight"), a fegyver saját átütéséhez adódik.
 - Zene: `audio/audio.gd` (`Audio.music`): főmenü "menu" (halk ambient), főellenség "boss"; a tábor és a kazamata
   helyszínenként saját listát játszik (`PLACE_TRACKS`: camp, town, cave, dungeon (1-20.), depths (21-40.), abyss (41.-től),
   trial), mindegyikben ott vannak a mindenhol szólók is (`GENERAL_TRACKS`); keverve egymás után, ismétlés nélkül.

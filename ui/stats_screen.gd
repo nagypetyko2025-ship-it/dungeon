@@ -336,9 +336,7 @@ func _stat_row(stat: String, title: String, value: String, detail: String) -> vo
 	icon.custom_minimum_size = ICON_SIZE
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	for upgrade in Upgrades.ALL + Upgrades.LEGENDARY:
-		if upgrade["stat"] == stat:
-			icon.texture = Upgrades.icon(upgrade)
+	icon.texture = Upgrades.stat_icon(stat)
 	if special:
 		icon.texture = Items.icon(Items.create(SPECIAL_ICONS[stat]))
 	_left.add_child(icon)

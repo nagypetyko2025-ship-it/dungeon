@@ -6,16 +6,14 @@ extends CanvasLayer
 ## és akkor választasz, amikor neked jó (a gombra kattintva vagy az L-lel).
 
 const CARD_COUNT := 3
-const CARD_SIZE := Vector2(210, 250)
+const CARD_SIZE := UpgradeCard.SIZE
 ## A kártyák legfeljebb ilyen magasra nőnek (egy rosszul mért felirat se nyújthassa a képernyő aljáig).
 const MAX_CARD_HEIGHT := 420.0
 ## A kártya tartalma ennyire van a szélétől.
-const CARD_PADDING := 18
+const CARD_PADDING := UpgradeCard.PADDING
 ## Ennyi ideig nem fogad kattintást, hogy egy harc közbeni kattintás
 ## ne válasszon véletlenül.
 const INPUT_DELAY := 0.4
-const PANEL: Texture2D = preload("res://assets/ui/panel.png")
-const PANEL_HOVER: Texture2D = preload("res://assets/ui/panel_hover.png")
 
 var _level_queue: Array[int] = []
 var _options: Array[Dictionary] = []
@@ -26,7 +24,6 @@ var _reroll_button: Button
 var _pending_layer: CanvasLayer
 var _pending_button: Button
 
-const LEGENDARY_COLOR := Color(1, 0.6, 0.15)
 const REROLL_BASE := 5.0
 const REROLL_GROWTH := 1.6
 
@@ -251,94 +248,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 
+## A kártya kinézete: UpgradeCard (ritkaság szerinti szín; legendás / mítikus kártyánál hang is).
 func _make_card(index: int, upgrade: Dictionary) -> Button:
-	var card := Button.new()
-	card.custom_minimum_size = CARD_SIZE
-	card.focus_mode = Control.FOCUS_NONE
-	card.add_theme_stylebox_override("normal", _panel_style(PANEL))
-	card.add_theme_stylebox_override("hover", _panel_style(PANEL_HOVER))
-	card.add_theme_stylebox_override("pressed", _panel_style(PANEL_HOVER))
+	var card := UpgradeCard.build(index, upgrade)
 	card.pressed.connect(_choose.bind(index))
-
-	var box := VBoxContainer.new()
-	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, CARD_PADDING)
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 10)
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	card.add_child(box)
-
-	box.add_child(_label("[%d]" % (index + 1), 14, Color(0.75, 0.68, 0.6)))
-	var icon := TextureRect.new()
-	icon.texture = Upgrades.icon(upgrade)
-	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.custom_minimum_size = Vector2(72, 72)
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(icon)
-	# A varázslat- és idézés-kártyák szövege hosszabb: kisebb ikon és betű, hogy beférjen a kártyába.
-	var spell := upgrade.has("spell") or upgrade.has("necromancy")
-	if spell:
-		icon.custom_minimum_size = Vector2(52, 52)
-		box.add_theme_constant_override("separation", 6)
-	var title := _label(upgrade["title"], 20 if spell else 24, Color(1, 0.88, 0.55))
-	var text := _label(upgrade["text"], 14 if spell else 16, Color(0.9, 0.86, 0.8))
-	for label in [title, text]:
-		label.custom_minimum_size.x = CARD_SIZE.x - 36
-	box.add_child(title)
-	box.add_child(text)
-	# A tördelt sorok szélessége rögzítve: enélkül a Label nagyon keskenynek és nagyon magasnak számolja magát,
-	# és az egész kártyasort a képernyő aljáig nyújtja.
-	if upgrade.has("note"):
-		var note := _label(upgrade["note"], 13, Color(0.6, 0.85, 1.0))
-		note.custom_minimum_size.x = CARD_SIZE.x - 36
-		box.add_child(note)
-	# Karakter-bónusz (pl. Gáspár kikerülése): külön, zöldes sorban.
-	if upgrade.has("bonus_note"):
-		var bonus := _label(upgrade["bonus_note"], 15, Color(0.55, 1.0, 0.6))
-		bonus.custom_minimum_size.x = CARD_SIZE.x - 36
-		box.add_child(bonus)
-	if upgrade.get("legendary", false):
-		_make_legendary(card, box, icon)
+	if upgrade.get("rarity", "") in ["legendary", "mythic"]:
+		Audio.play("boss_defeated", -14.0)
 	return card
-
-
-## Legendás kártya: izzó arany-narancs keret, "LEGENDÁS" felirat, lüktető fény, csillogás.
-func _make_legendary(card: Button, box: VBoxContainer, icon: TextureRect) -> void:
-	for state in ["normal", "hover", "pressed"]:
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color(0.22, 0.1, 0.03) if state == "normal" else Color(0.32, 0.15, 0.04)
-		style.border_color = LEGENDARY_COLOR if state == "normal" else Color(1, 0.85, 0.4)
-		style.set_border_width_all(5)
-		style.set_corner_radius_all(6)
-		style.shadow_color = Color(1, 0.55, 0.1, 0.55)
-		style.shadow_size = 14
-		style.set_content_margin_all(16)
-		card.add_theme_stylebox_override(state, style)
-	var banner := _label("★ LEGENDÁS ★", 16, LEGENDARY_COLOR)
-	box.add_child(banner)
-	box.move_child(banner, 1)
-	icon.custom_minimum_size = Vector2(88, 88)
-	# Lüktetés és szikrák.
-	var glow := card.create_tween().set_loops()
-	glow.tween_property(card, "self_modulate", Color(1.35, 1.15, 0.85), 0.6).set_trans(Tween.TRANS_SINE)
-	glow.tween_property(card, "self_modulate", Color.WHITE, 0.6).set_trans(Tween.TRANS_SINE)
-	var sparks := CPUParticles2D.new()
-	sparks.amount = 24
-	sparks.lifetime = 1.4
-	sparks.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
-	sparks.emission_rect_extents = CARD_SIZE / 2.0
-	sparks.position = CARD_SIZE / 2.0
-	sparks.direction = Vector2(0, -1)
-	sparks.spread = 30.0
-	sparks.gravity = Vector2(0, -25)
-	sparks.initial_velocity_min = 10.0
-	sparks.initial_velocity_max = 30.0
-	sparks.scale_amount_min = 2.0
-	sparks.scale_amount_max = 3.5
-	sparks.color = Color(1, 0.75, 0.3)
-	card.add_child(sparks)
-	Audio.play("boss_defeated", -14.0)
 
 
 func _label(text: String, size: int, color: Color) -> Label:
@@ -352,11 +268,3 @@ func _label(text: String, size: int, color: Color) -> Label:
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 4)
 	return label
-
-
-func _panel_style(texture: Texture2D) -> StyleBoxTexture:
-	var style := StyleBoxTexture.new()
-	style.texture = texture
-	style.set_texture_margin_all(12)
-	style.set_content_margin_all(16)
-	return style

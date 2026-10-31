@@ -1,38 +1,117 @@
 class_name Upgrades
-## Szintlépéskor választható fejlesztések. Mindegyik egy Stats-értéket növel
-## (ezen felül szintenként minden stat magától is nő egy kicsit: Stats.LEVEL_GROWTH).
-## Az ikon vagy a sprite-lapról (`region`), vagy külön fájlból (`icon_path`) jön.
+## Szintlépéskor választható kártyák. Mindegyik ad valamit ("gain": stat -> érték), és cserébe elvesz egy
+## másik statból ("cost": stat -> érték, pozitív szám = ennyivel kevesebb). A szöveget a statokból rakjuk össze
+## (`lines`). Ritkaság (Items.RARITY_ORDER): ez szabja meg, milyen gyakran jön (`RARITY_WEIGHTS`) és a színét.
+## A beépítettek (`ALL`) mellé a kártya-szerkesztőben (főmenü, bal felső sarok) készítettek jönnek a
+## `CUSTOM_PATH` fájlból (a projektben, így a gitre is felmegy). Az ikonok: `ICON_DIR` (496 CC0 ikon).
+## Ezen felül szintenként minden stat magától is nő egy kicsit: Stats.LEVEL_GROWTH.
+
+const ICON_DIR := "res://assets/cards/icons/"
+const CUSTOM_PATH := "res://data/custom_cards.json"
 
 const ALL: Array[Dictionary] = [
-	{"stat": "damage", "title": "Erő", "text": "+1 közelharci sebzés (a fegyvered skálázása szerint)", "amount": 1,
-		"region": Rect2(339, 98, 10, 29)},
-	{"stat": "ranged_damage", "title": "Íjászat", "text": "+1 távolsági sebzés (az íjakat erősíti)", "amount": 1,
-		"icon_path": "res://assets/ui/icon_ranged.png"},
-	{"stat": "damage_percent", "title": "Pusztítás", "text": "+5% sebzés (minden találat)", "amount": 5,
-		"region": Rect2(291, 137, 10, 22)},
-	{"stat": "max_health", "title": "Vitalitás", "text": "+3 max élet", "amount": 3,
-		"region": Rect2(289, 370, 13, 12)},
-	{"stat": "health_regen", "title": "Regeneráció", "text": "+0.3 élet / mp", "amount": 0.3,
-		"region": Rect2(288, 336, 16, 16)},
-	{"stat": "dodge", "title": "Kikerülés", "text": "+5% kikerülési esély", "amount": 5,
-		"icon_path": "res://assets/ui/icon_dodge.png"},
-	{"stat": "move_speed", "title": "Gyorsaság", "text": "+10% mozgási sebesség", "amount": 10,
-		"icon_path": "res://assets/ui/icon_boot.png"},
-	{"stat": "attack_speed", "title": "Fürgeség", "text": "+5% ütési sebesség", "amount": 5,
-		"region": Rect2(293, 66, 6, 29)},
-	{"stat": "crit_chance", "title": "Precizitás", "text": "+4% kritikus esély", "amount": 4,
-		"icon_path": "res://assets/ui/icon_crit.png"},
-	{"stat": "defense", "title": "Páncélzat", "text": "+2% védelem (a sebzés ennyi %-át kivéded)", "amount": 2,
-		"icon_path": "res://assets/ui/icon_defense.png"},
-	{"stat": "accuracy", "title": "Pontosság", "text": "+3% találati esély (ritkábban mész mellé)", "amount": 3,
-		"icon_path": "res://assets/ui/icon_accuracy.png"},
-	{"stat": "elemental_damage", "title": "Elemi erő", "text": "+1 elemi sebzés (a varázslatokat erősíti)",
-		"amount": 1, "icon_path": "res://assets/ui/spell_bolt.png", "only": "wizard"},
-	{"stat": "attack_range", "title": "Hosszú karok", "text": "+6% hatótáv (messzebbre ér a kardod)", "amount": 6,
-		"icon_path": "res://assets/ui/icon_range.png"},
+	# Átlagos
+	{"id": "iron_fist", "title": "Vasököl", "rarity": "common", "gain": {"damage": 2}, "cost": {"attack_range": 5},
+		"icon": "s_buff08"},
+	{"id": "hawk_eye", "title": "Íjászszem", "rarity": "common", "gain": {"ranged_damage": 2},
+		"cost": {"move_speed": 5}, "icon": "s_bow09"},
+	{"id": "bloodlust", "title": "Vérszomj", "rarity": "common", "gain": {"damage_percent": 8},
+		"cost": {"max_health": 2}, "icon": "s_sword07"},
+	{"id": "thick_skin", "title": "Vastag bőr", "rarity": "common", "gain": {"max_health": 4},
+		"cost": {"move_speed": 4}, "icon": "s_holy01"},
+	{"id": "herbs", "title": "Gyógyfű", "rarity": "common", "gain": {"health_regen": 0.4},
+		"cost": {"damage_percent": 3}, "icon": "s_holy03"},
+	{"id": "shadow_step", "title": "Árnyéklépés", "rarity": "common", "gain": {"dodge": 6}, "cost": {"max_health": 1},
+		"icon": "s_shadow11"},
+	{"id": "wind_rush", "title": "Szélroham", "rarity": "common", "gain": {"move_speed": 12},
+		"cost": {"crit_chance": 2}, "icon": "s_wind06"},
+	{"id": "blade_dance", "title": "Pengetánc", "rarity": "common", "gain": {"attack_speed": 8},
+		"cost": {"damage_percent": 4}, "icon": "s_dagger03"},
+	{"id": "eagle_eye", "title": "Sasszem", "rarity": "common", "gain": {"crit_chance": 5},
+		"cost": {"attack_speed": 5}, "icon": "s_dagger05"},
+	{"id": "shield_wall", "title": "Pajzsfal", "rarity": "common", "gain": {"defense": 3}, "cost": {"move_speed": 6},
+		"icon": "s_holy09"},
+	{"id": "long_blade", "title": "Hosszú penge", "rarity": "common", "gain": {"attack_range": 8},
+		"cost": {"attack_speed": 4}, "icon": "s_ice09"},
+	{"id": "mana_spring", "title": "Mágiaforrás", "rarity": "common", "gain": {"elemental_damage": 2},
+		"cost": {"max_health": 2}, "icon": "s_magic02"},
+	# Ritka
+	{"id": "berserker", "title": "Berzerker", "rarity": "rare", "gain": {"damage": 3, "damage_percent": 5},
+		"cost": {"health_regen": 0.15}, "icon": "s_buff14"},
+	{"id": "stone_skin", "title": "Kőbőr", "rarity": "rare", "gain": {"defense": 5}, "cost": {"attack_speed": 8},
+		"icon": "s_earth05"},
+	{"id": "giant_blood", "title": "Óriásvér", "rarity": "rare", "gain": {"max_health": 7},
+		"cost": {"move_speed": 8}, "icon": "s_holy08"},
+	{"id": "hunter_instinct", "title": "Vadászösztön", "rarity": "rare", "gain": {"ranged_damage": 3, "crit_chance": 3},
+		"cost": {"max_health": 3}, "icon": "s_bow13"},
+	{"id": "snake_reflex", "title": "Kígyóreflex", "rarity": "rare", "gain": {"dodge": 10},
+		"cost": {"damage_percent": 5}, "icon": "s_wind05"},
+	# Epikus
+	{"id": "dragon_heart", "title": "Sárkányszív", "rarity": "epic", "gain": {"max_health": 10, "health_regen": 0.3},
+		"cost": {"damage_percent": 10}, "icon": "s_fire06"},
+	{"id": "storm_blade", "title": "Viharpenge", "rarity": "epic", "gain": {"attack_speed": 12, "crit_chance": 6},
+		"cost": {"max_health": 4}, "icon": "s_thunder02"},
+	{"id": "executioner", "title": "Hóhér", "rarity": "epic", "gain": {"damage_percent": 15}, "cost": {"dodge": 6},
+		"icon": "s_sword16"},
+	{"id": "storm_thorn", "title": "Vihartüske", "rarity": "epic", "gain": {"elemental_damage": 4},
+		"cost": {"move_speed": 10}, "icon": "s_thunder03"},
+	# Legendás ("needs_bow": csak íjjal; "weight": a saját ritkaságán belül milyen gyakran)
+	{"id": "arrow_storm", "title": "Nyílzápor", "rarity": "legendary", "gain": {"multishot": 1},
+		"cost": {"damage_percent": 10}, "icon": "s_bow06", "needs_bow": true, "weight": 3.0},
+	{"id": "pierce", "title": "Átütés", "rarity": "legendary", "gain": {"pierce": 1}, "cost": {"attack_speed": 5},
+		"icon": "s_bow11", "needs_bow": true},
+	{"id": "titan", "title": "Titánerő", "rarity": "legendary", "gain": {"damage": 5, "attack_range": 10},
+		"cost": {"move_speed": 15}, "icon": "s_earth07"},
+	# Mítikus
+	{"id": "abyss_blessing", "title": "A Mélység áldása", "rarity": "mythic",
+		"gain": {"damage_percent": 20, "max_health": 8, "attack_speed": 10},
+		"cost": {"move_speed": 15, "health_regen": 0.2}, "icon": "s_shadow14"},
+	{"id": "phantom_blood", "title": "Fantomvér", "rarity": "mythic", "gain": {"dodge": 15, "move_speed": 15},
+		"cost": {"max_health": 5}, "icon": "s_shadow07"},
 ]
 
-## Melyik stat meddig fejleszthető (ami elérte, nem kerül fel választásnak).
+## A ritkaságok súlya: egy kártyahelyre előbb ritkaságot sorsolunk ezek szerint (csak a választhatók közül),
+## aztán azon belül egy kártyát.
+const RARITY_WEIGHTS := {"common": 55.0, "rare": 27.0, "epic": 12.0, "legendary": 4.5, "mythic": 1.5}
+
+## A kártyákon választható statok: [név, mértékegység ("%" vagy ""), tizedes jegyek]. A sorrend a szerkesztőé.
+const STAT_INFO := {
+	"damage": ["közelharci sebzés", "", 0],
+	"ranged_damage": ["távolsági sebzés", "", 0],
+	"elemental_damage": ["elemi sebzés", "", 0],
+	"damage_percent": ["sebzés", "%", 0],
+	"max_health": ["max élet", "", 0],
+	"health_regen": ["élet / mp", "", 2],
+	"defense": ["védelem", "%", 0],
+	"dodge": ["kikerülés", "%", 0],
+	"move_speed": ["mozgási sebesség", "%", 0],
+	"attack_speed": ["ütési sebesség", "%", 0],
+	"crit_chance": ["kritikus esély", "%", 0],
+	"attack_range": ["hatótáv", "%", 0],
+	"multishot": ["nyíl lövésenként", "", 0],
+	"pierce": ["átütés (szörnyön át)", "", 0],
+}
+
+## A statok saját jele (Tab-statok, tábori fejlesztések): ugyanaz marad, mint a régi kártyákon.
+const STAT_ICONS := {
+	"damage": Rect2(339, 98, 10, 29),
+	"ranged_damage": "res://assets/ui/icon_ranged.png",
+	"damage_percent": Rect2(291, 137, 10, 22),
+	"max_health": Rect2(289, 370, 13, 12),
+	"health_regen": Rect2(288, 336, 16, 16),
+	"dodge": "res://assets/ui/icon_dodge.png",
+	"move_speed": "res://assets/ui/icon_boot.png",
+	"attack_speed": Rect2(293, 66, 6, 29),
+	"crit_chance": "res://assets/ui/icon_crit.png",
+	"defense": "res://assets/ui/icon_defense.png",
+	"accuracy": "res://assets/ui/icon_accuracy.png",
+	"elemental_damage": "res://assets/ui/spell_bolt.png",
+	"attack_range": "res://assets/ui/icon_range.png",
+	"multishot": "res://assets/ui/icon_multishot.png",
+	"pierce": "res://assets/ui/icon_pierce.png",
+}
+
+## Melyik stat meddig fejleszthető (ami elérte, az azt adó kártya nem kerül fel választásnak).
 const LIMITS := {
 	"dodge": Stats.MAX_DODGE,
 	"move_speed": Stats.MAX_MOVE_SPEED,
@@ -45,88 +124,225 @@ const LIMITS := {
 	"accuracy": Stats.MAX_ACCURACY,
 }
 
-## Legendás fejlesztések: ritkábbak a többinél (LEGENDARY_CHANCE eséllyel kerül egy a
-## választhatók közé), és különleges, arany kártyán jelennek meg. "weight": melyik milyen gyakran jön
-## a legendások közül (az Átütés ritkább a Nyílzápornál).
-const LEGENDARY: Array[Dictionary] = [
-	{"stat": "multishot", "title": "Nyílzápor", "text": "+1 nyíl lövésenként", "amount": 1,
-		"icon_path": "res://assets/ui/icon_multishot.png", "legendary": true, "needs_bow": true, "weight": 3.0},
-	{"stat": "pierce", "title": "Átütés", "text": "+1 szörnyön átmegy",
-		"amount": 1, "icon_path": "res://assets/ui/icon_pierce.png", "legendary": true, "needs_bow": true,
-		"weight": 1.0},
-]
-const LEGENDARY_CHANCE := 0.1
+## A szerkesztőben készült kártyák (betöltve; `reload_custom` frissíti).
+static var _custom: Array[Dictionary] = []
+static var _custom_loaded := false
 
 
-## `count` darab különböző fejlesztés véletlenszerűen; ami már maxon van, kimarad.
-## `has_bow`: íjjal (vagy íjászként) a Nyílzápor és az Átütés legendás kártya is felbukkanhat, ritkán.
+## Minden kártya: a beépítettek és a szerkesztőben készültek.
+static func cards() -> Array[Dictionary]:
+	var result: Array[Dictionary] = ALL.duplicate()
+	result.append_array(custom_cards())
+	return result
+
+
+static func custom_cards() -> Array[Dictionary]:
+	if not _custom_loaded:
+		reload_custom()
+	return _custom
+
+
+static func reload_custom() -> void:
+	_custom_loaded = true
+	_custom.clear()
+	if not FileAccess.file_exists(CUSTOM_PATH):
+		return
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(CUSTOM_PATH))
+	if not parsed is Array:
+		return
+	for entry: Variant in parsed:
+		if entry is Dictionary and _valid(entry):
+			_custom.append(_clean(entry))
+
+
+## A szerkesztő menti: a teljes saját lista a projekt `CUSTOM_PATH` fájljába. Igaz, ha sikerült.
+static func save_custom(list: Array[Dictionary]) -> bool:
+	DirAccess.make_dir_recursive_absolute(CUSTOM_PATH.get_base_dir())
+	var file := FileAccess.open(CUSTOM_PATH, FileAccess.WRITE)
+	if file == null:
+		return false
+	file.store_string(JSON.stringify(list, "\t"))
+	file.close()
+	reload_custom()
+	return true
+
+
+static func _valid(entry: Dictionary) -> bool:
+	return entry.get("gain") is Dictionary and not (entry["gain"] as Dictionary).is_empty() \
+		and String(entry.get("title", "")) != ""
+
+
+## A JSON számai float-ok: az egész értékű statokat (és a ritkaságot, ikont) rendbe tesszük.
+static func _clean(entry: Dictionary) -> Dictionary:
+	var result := {"id": String(entry.get("id", "")), "title": String(entry["title"]), "custom": true,
+		"rarity": String(entry.get("rarity", "common")), "icon": String(entry.get("icon", "s_buff01"))}
+	if not result["rarity"] in RARITY_WEIGHTS:
+		result["rarity"] = "common"
+	for key: String in ["gain", "cost"]:
+		var stats := {}
+		var source: Variant = entry.get(key, {})
+		if source is Dictionary:
+			for stat: Variant in source:
+				if STAT_INFO.has(stat) and float(source[stat]) > 0.0:
+					stats[String(stat)] = float(source[stat])
+		result[key] = stats
+	if (result["gain"] as Dictionary).has("multishot") or (result["gain"] as Dictionary).has("pierce"):
+		result["needs_bow"] = true
+	return result
+
+
+## `count` darab különböző kártya: kártyahelyenként ritkaság (RARITY_WEIGHTS), azon belül egy kártya ("weight").
+## Ami nem választható (max stat, nem elég a levonandó stat, más karakteré), kimarad.
+## `has_bow`: íjjal (vagy íjászként) a csak íjas kártyák (Nyílzápor, Átütés) is jöhetnek.
 static func roll(stats: Stats, count: int, has_bow := false) -> Array[Dictionary]:
+	var by_rarity := {}
+	for card in cards():
+		if _available(stats, card) and (has_bow or not card.get("needs_bow", false)):
+			var rarity: String = card["rarity"]
+			if not by_rarity.has(rarity):
+				by_rarity[rarity] = [] as Array[Dictionary]
+			(by_rarity[rarity] as Array[Dictionary]).append(card)
 	var options: Array[Dictionary] = []
-	for upgrade in ALL:
-		if _available(stats, upgrade):
-			options.append(upgrade)
-	options.shuffle()
-	options = options.slice(0, count)
-	var legendary: Array[Dictionary] = []
-	for upgrade in LEGENDARY:
-		if _available(stats, upgrade) and (has_bow or not upgrade.get("needs_bow", false)):
-			legendary.append(upgrade)
-	if not legendary.is_empty() and randf() < LEGENDARY_CHANCE and not options.is_empty():
-		options[randi() % options.size()] = _pick_weighted(legendary)
-	for i in options.size():
-		options[i] = _with_character_bonus(options[i])
+	while options.size() < count and not by_rarity.is_empty():
+		var rarity := _pick_rarity(by_rarity.keys())
+		var pool: Array[Dictionary] = by_rarity[rarity]
+		var card := _pick_weighted(pool)
+		pool.erase(card)
+		if pool.is_empty():
+			by_rarity.erase(rarity)
+		options.append(_with_character_bonus(card))
 	return options
+
+
+static func _pick_rarity(rarities: Array) -> String:
+	var total := 0.0
+	for rarity: String in rarities:
+		total += float(RARITY_WEIGHTS[rarity])
+	var ticket := randf() * total
+	for rarity: String in rarities:
+		ticket -= float(RARITY_WEIGHTS[rarity])
+		if ticket <= 0.0:
+			return rarity
+	return rarities[-1]
 
 
 ## Egy a listából a "weight" szerint súlyozva.
 static func _pick_weighted(list: Array[Dictionary]) -> Dictionary:
 	var total := 0.0
-	for upgrade in list:
-		total += float(upgrade.get("weight", 1.0))
+	for card in list:
+		total += float(card.get("weight", 1.0))
 	var ticket := randf() * total
-	for upgrade in list:
-		ticket -= float(upgrade.get("weight", 1.0))
+	for card in list:
+		ticket -= float(card.get("weight", 1.0))
 		if ticket <= 0.0:
-			return upgrade
+			return card
 	return list[-1]
 
 
 ## A karakter saját kártya-bónusza ("card_bonus": stat -> szorzó-többlet, pl. Gáspárnál a
-## kikerülés +25%): a kártya másolata nagyobb értékkel, a szövegben is, és egy megjegyzéssel.
-static func _with_character_bonus(upgrade: Dictionary) -> Dictionary:
+## kikerülés +25%): a kártya másolata nagyobb nyereséggel, és egy megjegyzéssel.
+static func _with_character_bonus(card: Dictionary) -> Dictionary:
 	var character := Characters.data(Progress.character)
 	var bonuses: Dictionary = character.get("card_bonus", {})
-	var stat: String = upgrade["stat"]
-	if not bonuses.has(stat):
-		return upgrade
-	var extra: float = bonuses[stat]
-	var result := upgrade.duplicate()
-	result["amount"] = float(upgrade["amount"]) * (1.0 + extra)
-	var shown := str(snappedf(result["amount"], 0.01))
-	result["text"] = String(upgrade["text"]).replace(str(upgrade["amount"]), shown)
-	result["bonus_note"] = "%s: +%d%% (csak neki)" % [character["name"], roundi(extra * 100)]
+	var gain: Dictionary = card["gain"]
+	var result := card
+	var copied := false
+	for stat: String in gain:
+		if not bonuses.has(stat):
+			continue
+		var extra: float = bonuses[stat]
+		if not copied:
+			result = card.duplicate(true)
+			copied = true
+		result["gain"][stat] = float(gain[stat]) * (1.0 + extra)
+		result["bonus_note"] = "%s: +%d%% (csak neki)" % [character["name"], roundi(extra * 100)]
 	return result
 
 
-static func _available(stats: Stats, upgrade: Dictionary) -> bool:
-	var stat: String = upgrade["stat"]
-	# Karakterhez kötött kártya (pl. Elemi erő: csak a varázsló); a varázslónak a sebzés-kártyák nem kellenek.
-	var only: String = upgrade.get("only", "")
-	if not only.is_empty() and only != Progress.character:
+static func _available(stats: Stats, card: Dictionary) -> bool:
+	var gain: Dictionary = card["gain"]
+	var cost: Dictionary = card.get("cost", {})
+	var spells: bool = Characters.data(Progress.character).get("spells", false)
+	# Az elemi sebzés csak a varázslónak kell, a közelharci / távolsági sebzés neki nem.
+	if gain.has("elemental_damage") and not spells:
 		return false
-	if Characters.data(Progress.character).get("spells", false) and stat in ["damage", "ranged_damage"]:
+	if spells and (gain.has("damage") or gain.has("ranged_damage")):
 		return false
-	if stat == "accuracy" and not Stats.ACCURACY_ENABLED:
-		return false
-	return not (LIMITS.has(stat) and stats.get(stat) >= LIMITS[stat])
+	for stat: String in gain:
+		if stat == "accuracy" and not Stats.ACCURACY_ENABLED:
+			return false
+		if LIMITS.has(stat) and stats.get(stat) >= LIMITS[stat]:
+			return false
+	# A levonás nem viheti a statot a legkisebb értéke alá (amiből nincs elég, az a kártya nem jön).
+	for stat: String in cost:
+		if stats.get_base(stat) - float(cost[stat]) < float(Stats.LIMITS[stat][0]):
+			return false
+	return true
 
 
-static func apply(stats: Stats, upgrade: Dictionary) -> void:
-	var stat: String = upgrade["stat"]
-	stats.add_base(stat, upgrade["amount"])
+static func apply(stats: Stats, card: Dictionary) -> void:
+	var gain: Dictionary = card["gain"]
+	var cost: Dictionary = card.get("cost", {})
+	for stat: String in gain:
+		stats.add_base(stat, float(gain[stat]))
+	for stat: String in cost:
+		stats.add_base(stat, -float(cost[stat]))
 
 
-static func icon(upgrade: Dictionary) -> Texture2D:
-	if upgrade.has("icon_path"):
-		return load(upgrade["icon_path"])
-	return SpriteSheet.region(upgrade["region"])
+## A kártya sorai: [szöveg, nyereség-e] (pl. ["+4 max élet", true], ["−4% mozgási sebesség", false]).
+static func lines(card: Dictionary) -> Array:
+	var result := []
+	for key: String in ["gain", "cost"]:
+		var stats: Dictionary = card.get(key, {})
+		for stat: String in stats:
+			result.append([stat_text(stat, float(stats[stat]), key == "gain"), key == "gain"])
+	return result
+
+
+static func stat_text(stat: String, amount: float, positive: bool) -> String:
+	var info: Array = STAT_INFO.get(stat, [stat, "", 0])
+	var shown := str(snappedf(amount, 0.01)) if int(info[2]) > 0 or amount != roundf(amount) else str(roundi(amount))
+	return "%s%s%s %s" % ["+" if positive else "−", shown, info[1], info[0]]
+
+
+static func rarity_color(card: Dictionary) -> Color:
+	return Items.RARITIES[card.get("rarity", "common")]["color"]
+
+
+static func rarity_name(card: Dictionary) -> String:
+	return Items.RARITIES[card.get("rarity", "common")]["name"]
+
+
+static func icon(card: Dictionary) -> Texture2D:
+	if card.has("icon"):
+		return icon_texture(card["icon"])
+	if card.has("icon_path"):
+		return load(card["icon_path"])
+	if card.has("region"):
+		return SpriteSheet.region(card["region"])
+	return null
+
+
+static func icon_texture(name: String) -> Texture2D:
+	var path := ICON_DIR + name + ".png"
+	return load(path) if ResourceLoader.exists(path) else null
+
+
+## A választható ikonok nevei (kiterjesztés nélkül, ábécérendben).
+static func icon_names() -> PackedStringArray:
+	var names := PackedStringArray()
+	for file in ResourceLoader.list_directory(ICON_DIR):
+		if file.ends_with(".png"):
+			names.append(file.get_basename())
+	names.sort()
+	return names
+
+
+## Egy stat saját jele (Tab-statok, tábori fejlesztések).
+static func stat_icon(stat: String) -> Texture2D:
+	var source: Variant = STAT_ICONS.get(stat)
+	if source is Rect2:
+		return SpriteSheet.region(source)
+	if source is String:
+		return load(source)
+	return null

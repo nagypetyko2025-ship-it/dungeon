@@ -4,6 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-10-31", "items": [
+		"Új szintlépési kártyák: mindegyik ad valamit, de cserébe elvesz egy másik statból (pl. +4 max élet, −4% mozgási sebesség). 26 kártya új nevekkel és ikonokkal.",
+		"A kártyáknak ritkasága van (átlagos, ritka, epikus, legendás, mítikus): ettől függ, milyen gyakran jönnek, és ilyen színűek.",
 		"Kivettük a temető új részét, a kriptát és a rituálét (a drágakövekkel együtt): nem lett jó, majd máshogy jön vissza.",
 		"A főellenség utáni pihenő alatt a tábori lift zárva: csak a kék portálon át folytathatod a futást.",
 		"A megjavított liftekkel felmehetsz a táborba, mintha győztél volna: a ketrecnél [E], a teljes pénzed felkerül, és 2 tárgyat magaddal vihetsz.",

@@ -76,6 +76,7 @@ func _ready() -> void:
 	_build_footer()
 	_build_profiles()
 	_build_news()
+	_build_card_editor_button()
 	_buttons.get_child(0).grab_focus()
 	# Van-e újabb változat a GitHubon (indításonként egyszer; ha van, magától frissít, lásd Updater).
 	add_child(Updater.new())
@@ -292,6 +293,22 @@ func _build_footer() -> void:
 	_place(footer, Vector2(1.0, 1.0), Vector2(-260, -26), Vector2(240, 20))
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(footer)
+
+
+## A szintlépési kártya-szerkesztő (CardEditor): pici, alig látható gomb a bal felső sarokban.
+func _build_card_editor_button() -> void:
+	var button := Button.new()
+	button.text = "✎"
+	button.flat = true
+	button.focus_mode = Control.FOCUS_NONE
+	button.tooltip_text = "Kártya-szerkesztő"
+	button.add_theme_font_size_override("font_size", 14)
+	button.modulate.a = 0.15
+	button.mouse_entered.connect(func() -> void: button.modulate.a = 0.6)
+	button.mouse_exited.connect(func() -> void: button.modulate.a = 0.15)
+	_place(button, Vector2.ZERO, Vector2(4, 4), Vector2(22, 22))
+	button.pressed.connect(func() -> void: CardEditor.open(self))
+	add_child(button)
 
 
 ## Újdonságok a jobb oldalon (a cím alatt, a profilválasztó fölött): görgethető lista, a legújabb felül (News).
