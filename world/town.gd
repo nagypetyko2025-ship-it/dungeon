@@ -744,10 +744,12 @@ func _build_intro() -> void:
 	_intro = PanelContainer.new()
 	_intro.add_theme_stylebox_override("panel", UiStyle.decorated_panel())
 	_intro.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
-	_intro.offset_left = -470
-	_intro.offset_right = -30
+	_intro.offset_left = -530
+	_intro.offset_right = -20
 	_intro.offset_top = -260
 	_intro.offset_bottom = 260
+	# Hosszabb leírásnál fel és le is egyformán nő (lásd _fit_intro), nem lóg ki alul.
+	_intro.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_intro.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_intro.modulate.a = 0.0
 	_intro.visible = false
@@ -772,7 +774,7 @@ func _build_intro() -> void:
 	_intro_text.bbcode_enabled = true
 	_intro_text.fit_content = true
 	_intro_text.scroll_active = false
-	_intro_text.custom_minimum_size.x = 390
+	_intro_text.custom_minimum_size.x = 430
 	_intro_text.add_theme_color_override("default_color", UiStyle.INK_LIGHT)
 	_intro_text.add_theme_font_size_override("normal_font_size", 15)
 	box.add_child(_intro_text)
@@ -788,6 +790,19 @@ func _fill_intro(id: String) -> void:
 	for trait_text: String in definition.get("traits", []):
 		lines.append("[color=#3c6a32]•[/color] " + trait_text)
 	_intro_text.text = "\n".join(lines)
+	_fit_intro(id)
+
+
+## Ha a panel nem fér ki a képernyőre (pl. Vendel hosszú leírása), kisebb betűvel írja ki.
+func _fit_intro(id: String) -> void:
+	for font_size: int in [15, 14, 13, 12, 11]:
+		_intro_text.add_theme_font_size_override("normal_font_size", font_size)
+		_intro_text.add_theme_font_size_override("italics_font_size", font_size)
+		await get_tree().process_frame
+		if _intro_for != id:
+			return
+		if _intro.get_combined_minimum_size().y <= get_viewport().get_visible_rect().size.y - 60:
+			return
 
 
 func _unhandled_input(event: InputEvent) -> void:

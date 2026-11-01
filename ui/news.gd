@@ -4,6 +4,7 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-01", "items": [
+		"Javítva: a kocsmában Vendel (és minden hosszabb leírású karakter) bemutatkozó lapja kilógott a képernyőből, most kifér.",
 		"A kocsmában ülő karakterekkel beszélgetni is lehet (E): mindenki mesél magáról, Gáspár, Bence, Vendel és Lőrinc a régi "
 			+ "történeteit is elmondja (Lőrinc a kút és a legrégebbi bejárat utániakat is, amiket eddig nem lehetett meghallgatni, ha "
 			+ "már a kocsmában ült), a lovagnak és az íjásznak új történetei vannak. Az első válasz, \"Indulunk?\", átveszi az irányítást.",
