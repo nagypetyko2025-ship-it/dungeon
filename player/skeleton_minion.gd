@@ -72,6 +72,9 @@ var _rising := true
 var _path := PackedVector2Array()
 var _path_index := 0
 var _repath_left := 0.0
+## A sugár kizárásai (önmaga és az ajtók), egyszer összegyűjtve.
+var _ray_exclude: Array[RID] = []
+const PATH_RETRY := 0.15
 
 
 func _ready() -> void:
@@ -243,15 +246,18 @@ func _speed() -> float:
 ## Merre induljon: egyenesen, ha szabad az út (a zárakon át is), különben az útkereső háló szerint.
 func _direction_to(target: Vector2, delta: float) -> Vector2:
 	var query := PhysicsRayQueryParameters2D.create(global_position, target, 1)
-	var exclude: Array[RID] = [get_rid()]
-	for door in get_tree().get_nodes_in_group("doors"):
-		exclude.append((door as CollisionObject2D).get_rid())
-	query.exclude = exclude
+	if _ray_exclude.is_empty():
+		# Az ajtók az emelet elején készülnek: egyszer gyűjti össze (ezeken át mindig "szabad" az út).
+		_ray_exclude.append(get_rid())
+		for door in get_tree().get_nodes_in_group("doors"):
+			_ray_exclude.append((door as CollisionObject2D).get_rid())
+	query.exclude = _ray_exclude
 	if get_world_2d().direct_space_state.intersect_ray(query).is_empty():
 		_path = PackedVector2Array()
 		return global_position.direction_to(target)
 	_repath_left -= delta
-	if _repath_left <= 0.0 or _path_index >= _path.size():
+	# Elfogyott út: legfeljebb PATH_RETRY-onként tervez újra (nem minden képkockán, csontvázanként).
+	if _repath_left <= 0.0 or (_path_index >= _path.size() and _repath_left <= 0.4 - PATH_RETRY):
 		_repath_left = 0.4
 		var scene := get_tree().current_scene
 		_path = scene.call("nav_path", global_position, target) if scene.has_method("nav_path") else PackedVector2Array()

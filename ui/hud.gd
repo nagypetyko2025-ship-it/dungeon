@@ -16,6 +16,8 @@ var _stats: Stats
 var _message_tween: Tween
 var _fade: ColorRect
 var _dash_label: Label
+## A képesség-felirat színe utoljára: 1 kész, 0 töltődik, -1 még nincs beállítva.
+var _skill_state := -1
 var _boss_box: VBoxContainer
 var _boss_name: Label
 var _boss_bar: ProgressBar
@@ -65,14 +67,15 @@ func _process(_delta: float) -> void:
 		if _dash_label == null:
 			_create_skill_label()
 		_dash_label.visible = true
-		_update_skill_label("Csontvázak", player.call("summon_cooldown_left"), "Bal klikk")
 		# A másodlagos idézés (jobb klikk: íjászok vagy óriás) állapota is mellette, ha már választotta.
+		var extra := ""
 		if Necromancy.has_archers():
 			var archers_left: float = player.call("archer_cooldown_left")
-			_dash_label.text += "   ·   Íjászok [Jobb klikk]: " + ("kész" if archers_left <= 0.0 else "%.1f mp" % archers_left)
+			extra += "   ·   Íjászok [Jobb klikk]: " + ("kész" if archers_left <= 0.0 else "%.1f mp" % archers_left)
 		if Necromancy.has_giant():
 			var giant_left: float = player.call("giant_cooldown_left")
-			_dash_label.text += "   ·   Óriás [Jobb klikk]: " + ("kész" if giant_left <= 0.0 else "%.1f mp" % giant_left)
+			extra += "   ·   Óriás [Jobb klikk]: " + ("kész" if giant_left <= 0.0 else "%.1f mp" % giant_left)
+		_update_skill_label("Csontvázak", player.call("summon_cooldown_left"), "Bal klikk", extra)
 		return
 	if player != null and Characters.data(Progress.character).get("shadow_step", false):
 		_update_skill_label("Árnyéklépés", player.call("shadow_step_cooldown_ratio") * player.SHADOW_STEP_COOLDOWN)
@@ -88,16 +91,19 @@ func _process(_delta: float) -> void:
 
 
 ## A Ctrl-képesség felirata (suhanás / hadi kiáltás): kész, vagy mennyi idő van még hátra.
-func _update_skill_label(skill: String, left: float, key := "Ctrl") -> void:
+## (Csak akkor írja át, ha változott: a felirat átírása minden képkockán újratördelést okoz.)
+func _update_skill_label(skill: String, left: float, key := "Ctrl", extra := "") -> void:
 	if _dash_label == null:
 		_create_skill_label()
 	_dash_label.visible = true
-	if left <= 0.0:
-		_dash_label.text = "%s [%s]: kész" % [skill, key]
-		_dash_label.add_theme_color_override("font_color", Color(0.6, 0.95, 1.0))
-	else:
-		_dash_label.text = "%s [%s]: %.1f mp" % [skill, key, left]
-		_dash_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
+	var ready := left <= 0.0
+	var text := ("%s [%s]: kész" % [skill, key] if ready else "%s [%s]: %.1f mp" % [skill, key, left]) + extra
+	if _dash_label.text != text:
+		_dash_label.text = text
+	var state := 1 if ready else 0
+	if state != _skill_state:
+		_skill_state = state
+		_dash_label.add_theme_color_override("font_color", Color(0.6, 0.95, 1.0) if ready else Color(0.7, 0.7, 0.75))
 
 
 func _create_skill_label() -> void:

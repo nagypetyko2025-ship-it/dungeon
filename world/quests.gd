@@ -265,7 +265,8 @@ static func notify(kind: String, value: Variant = 1) -> void:
 		Progress.quest_progress[id] = mini(amount, int(definition["goal"]))
 		changed = true
 	if changed:
-		Progress.save_game()
+		# Ölésenként, pénzfelvételenként jön: nem azonnal ír a lemezre, hanem összevárva (lásd Progress.save_soon).
+		Progress.save_soon()
 
 
 static func progress(id: String) -> int:

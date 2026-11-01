@@ -143,6 +143,10 @@ func _ready() -> void:
 		if Audio.saved_fullscreen():
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	Audio.music(_music_place())
+	FramePacing.apply()
+	# A főellenség zenéje előre betöltve (a harc kezdetén ne akadjon).
+	if GameState.depth % 3 == 0 or GameState.depth in [FINAL_DEPTH, CHAOS_DEPTH]:
+		Audio.warm_music("boss")
 	GameCursor.apply()
 	var tile_set := _build_tile_set()
 	_floor_layer.tile_set = tile_set

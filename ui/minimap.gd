@@ -31,6 +31,8 @@ var _player: Node2D
 var _cell := Vector2i.ONE
 var _anchors := {}
 var _expanded := false
+const REDRAW_RATE := 30.0
+var _redraw_left := 0.0
 var _small_offsets: Array[float] = []
 var _small_style := UiStyle.plain_panel()
 var _big_style := UiStyle.decorated_panel()
@@ -53,8 +55,13 @@ func _ready() -> void:
 	add_child(_title)
 
 
-func _process(_delta: float) -> void:
-	queue_redraw()
+## Másodpercenként REDRAW_RATE-szer rajzol újra (nem minden képkockán: 160 Hz-en ez a térkép minden csíkját
+## és szobáját képkockánként újrarajzolta).
+func _process(delta: float) -> void:
+	_redraw_left -= delta
+	if _redraw_left <= 0.0:
+		_redraw_left = 1.0 / REDRAW_RATE
+		queue_redraw()
 
 
 func open() -> void:

@@ -250,7 +250,16 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   tábor szkriptjeinek betöltése ~0,8 mp volt). A tábor díszerdeje (~8500 fa) `world/forest_batch.gd` (ForestBatch: csempesoronként
   16 csempés darab egy node, _draw-val; `Camp._forest_tree`, HiddenGrave is) — ne tegyél vissza fánként node-ot. A DialoguePanel
   az első `open()`-kor épül fel (`_build`). Gyakori apró mentés: `Progress.save_soon()`
-  (add_kill, reached_depth; 1 mp után egyben, `flush()` újratöltés / profilváltás / bezárás előtt). A csalómenü tárgyrácsa csak
+  (add_kill, reached_depth, `Quests.notify` — ölés / pénzfelvétel; 1 mp után egyben, `flush()` újratöltés / profilváltás / bezárás előtt).
+  Egyenletes mozgás: `world/frame_pacing.gd` (`FramePacing.apply`, főmenü / tábor / kazamata / teljes képernyő váltás): a fizika
+  annyiszor fut mp-enként, ahányszor a monitor frissít (max 165; Sim monitora 160 Hz). 60 Hz-es fizikával 160 Hz-en a képkockák
+  62%-án állt a karakter, aztán ugrott (rángás). A logika delta-alapú legyen (ne képkockánkénti szorzó / számláló)!
+  Physics interpolation NINCS (sok tween és _process mozgat Node2D-t, azokat elrontaná). Hangok: az effektek az `Audio._init`-ben
+  háttérben töltődnek (`_warm_effects`), a lejátszási lista következő száma előre (`_next_song`), a boss-zene a boss-emeleteken
+  (`Audio.warm_music`); az `_load` a ResourceWarmer-en át. Képkockánként NEM: minitérkép (30/mp), küldetéskövető (0,25 mp),
+  kocsmáros "?" (0,5 mp), HUD képesség-felirat (csak ha változik); a szörny-képesség, aminek épp nincs értelme (gyógyítás
+  sebesült nélkül stb.), `RECHECK_DELAY`-enként néz újra; a csontváz-minionok útkeresése `PATH_RETRY`-onként; `Enemy.MAX_ORBS` 6.
+  Mérőrobot (a scratchpadben volt): vsync nélkül képkockaidő-statisztika + vsync mellett "álló képkockák aránya" séta közben. A csalómenü tárgyrácsa csak
   ritkaságváltáskor épül újra (`_built_rarity`), a fajta-szűrő csak elrejt.
 - Csalómenü: [0], kód nélkül (`ui/cheat_menu.gd`): teleport a 10. / 20. vagy a beírt emeletre (1–99; `cheat_teleport` a Dungeon/Camp jeleneten),
   halhatatlanság (`GameState.god_mode`), karakterváltás a táborban (zároltakra is; `cheat_select_character` a Camp-en →

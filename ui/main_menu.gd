@@ -51,6 +51,7 @@ const MENU_BUTTON_SIZE := Vector2(340, 54)
 
 
 func _ready() -> void:
+	FramePacing.apply()
 	# Háttérbetöltés: a tárgyikonok már a főmenüben elkezdenek betöltődni (lásd ResourceWarmer).
 	Items.warm_icons()
 	# A tábor és a kazamata jelenete (a sok szkripttel) a háttérben töltődik: a Folytatás / Új játék után

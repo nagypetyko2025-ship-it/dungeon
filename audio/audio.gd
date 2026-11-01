@@ -329,6 +329,31 @@ func _init() -> void:
 		_music_players.append(player)
 	_build_now_playing()
 	_load_settings()
+	_warm_effects()
+
+
+## Az effektek háttérbetöltése (különben mindegyik az első lejátszáskor, harc közben töltődne be lemezről).
+func _warm_effects() -> void:
+	var paths: Array[String] = []
+	for effect: String in VARIANTS:
+		var count: int = VARIANTS[effect]
+		var files: Array[String] = []
+		if count == 0:
+			files.append(effect)
+		for i in count:
+			files.append("%s_%d" % [effect, i + 1])
+		for file in files:
+			for extension in [".ogg", ".wav"]:
+				if ResourceLoader.exists(SFX_DIR + file + extension):
+					paths.append(SFX_DIR + file + extension)
+					break
+	ResourceWarmer.warm(paths)
+
+
+## Egy zene (MUSIC_TRACKS neve) háttérbetöltése, hogy amikor szólnia kell, ne akadjon meg a játék.
+static func warm_music(track: String) -> void:
+	if MUSIC_TRACKS.has(track):
+		ResourceWarmer.warm([MUSIC_TRACKS[track]])
 
 
 func _ensure_bus(bus_name: String) -> void:
@@ -435,6 +460,9 @@ func _next_song(place: String) -> AudioStream:
 		queue.append(queue.pop_front())
 	_last_song = queue.pop_front()
 	_queues[place] = queue
+	# A soron következő szám már most a háttérben betöltődik (a 3-9 MB-os zene betöltése különben akaszt).
+	if not queue.is_empty() and not _cache.has(queue[0]):
+		ResourceWarmer.warm([queue[0]])
 	var stream := _load(_last_song)
 	_set_loop(stream, false)
 	return stream
@@ -495,7 +523,8 @@ func _set_loop(stream: AudioStream, on: bool) -> void:
 
 func _load(path: String) -> AudioStream:
 	if not _cache.has(path):
-		_cache[path] = load(path) if ResourceLoader.exists(path) else null
+		# A ResourceWarmer-en át: ha már háttérben betöltődött (effektek, a következő szám), nem olvas lemezről.
+		_cache[path] = ResourceWarmer.fetch(path) as AudioStream if ResourceLoader.exists(path) else null
 	return _cache[path]
 
 
@@ -551,3 +580,4 @@ static func toggle_fullscreen() -> void:
 	DisplayServer.window_set_mode(
 		DisplayServer.WINDOW_MODE_WINDOWED if is_fullscreen() else DisplayServer.WINDOW_MODE_FULLSCREEN)
 	_node().save_settings()
+	FramePacing.apply()

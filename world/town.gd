@@ -147,6 +147,7 @@ var _vacant_note: Array[CanvasItem] = []
 var _busy := false
 var _quest_panel: CanvasLayer
 var _quest_mark: Label
+var _mark_left := 0.0
 
 const QUEST_PANEL := preload("res://ui/quest_panel.gd")
 const TROPHY_PANEL := preload("res://ui/trophy_panel.gd")
@@ -705,8 +706,10 @@ func _process(delta: float) -> void:
 		_prompt.text = focus[1]
 	var target := 1.0 if not focus.is_empty() and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
-	if _quest_mark:
-		# Zöld "?" a kocsmáros fölött, ha van átvehető jutalom.
+	_mark_left -= delta
+	if _quest_mark and _mark_left <= 0.0:
+		# Zöld "?" a kocsmáros fölött, ha van átvehető jutalom (fél mp-enként nézi, nem minden képkockán).
+		_mark_left = 0.5
 		_quest_mark.visible = not Quests.ready_ids().is_empty()
 		_quest_mark.text = "?"
 		_quest_mark.add_theme_color_override("font_color", Color(0.55, 1.0, 0.55))

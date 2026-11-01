@@ -4,6 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-01", "items": [
+		"Simább mozgás nagy frissítésű (pl. 144 / 160 Hz-es) monitoron: a karakter és a szörnyek minden képkockán mozdulnak, "
+			+ "nem rángatnak; kevesebb apró akadás harc közben (nem ment minden ölésnél, a hangok és a következő zene előre betöltődnek).",
 		"Gyorsabb betöltés: a tábor és a kazamata a főmenüben előre betöltődik, és a tábor erdeje egyben rajzolódik, így belépéskor sokkal kevesebbet akad a játék.",
 		"Kilenc synthwave rock zene került a régiek mellé: minden helyszínen szól pár (a táborban nyugodtabbak, lent pörgősek, "
 			+ "a mélyben sötétek); a zeneválasztóban külön \"Synthwave rock\" csoportban.",

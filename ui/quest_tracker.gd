@@ -12,6 +12,8 @@ var top_offset := 420.0
 var _box: PanelContainer
 var _label: Label
 var _last := "-"
+const UPDATE_INTERVAL := 0.25
+var _update_left := 0.0
 
 
 func _ready() -> void:
@@ -53,8 +55,12 @@ func _ready() -> void:
 	_update()
 
 
-func _process(_delta: float) -> void:
-	_update()
+## A 100 küldetés állapotát nem minden képkockán számolja újra, csak UPDATE_INTERVAL-onként.
+func _process(delta: float) -> void:
+	_update_left -= delta
+	if _update_left <= 0.0:
+		_update_left = UPDATE_INTERVAL
+		_update()
 
 
 func _update() -> void:

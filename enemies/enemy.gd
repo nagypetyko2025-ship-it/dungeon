@@ -21,7 +21,7 @@ const PUPPET_HP_HOLD := 0.35
 const XP_ORB := preload("res://pickups/xp_orb.tscn")
 const XP_ORB_SCRIPT := preload("res://pickups/xp_orb.gd")
 ## Ennél több gömb nem pattan ki; a maradék XP az utolsóba kerül.
-const MAX_ORBS := 12
+const MAX_ORBS := 6
 const ITEM_DROP := preload("res://pickups/item_drop.tscn")
 ## Tárgy-dobás esélye: minden szörnynél ugyanannyi.
 const ITEM_DROP_CHANCE := 0.01

@@ -36,6 +36,8 @@ const COOLDOWNS := {
 }
 ## Ennél messzebbről nem használja a képességeit.
 const ACTIVE_RANGE := 420.0
+## Ha egy képességnek épp nincs értelme (pl. nincs kit gyógyítani), ennyi mp múlva nézi újra.
+const RECHECK_DELAY := 0.5
 const ZIGZAG_ANGLE := 0.9
 const ZIGZAG_FREQUENCY := 6.0
 const TELEPORT_DISTANCE := Vector2(90, 140)
@@ -176,11 +178,17 @@ func _physics_process(delta: float) -> void:
 		if not _cooldowns.has(ability):
 			continue
 		_cooldowns[ability] -= delta
-		if _cooldowns[ability] <= 0.0 and _worth_using(ability):
-			var range_pair: Vector2 = COOLDOWNS[ability]
-			_cooldowns[ability] = randf_range(range_pair.x, range_pair.y)
-			_use(ability, player)
-			return
+		if _cooldowns[ability] > 0.0:
+			continue
+		if not _worth_using(ability):
+			# Nincs értelme (nincs sebesült / közeli társ, áll a pajzs): fél mp múlva nézi újra, nem minden képkockán
+			# (a társak keresése a szoba összes gyerekén végigmegy).
+			_cooldowns[ability] = RECHECK_DELAY
+			continue
+		var range_pair: Vector2 = COOLDOWNS[ability]
+		_cooldowns[ability] = randf_range(range_pair.x, range_pair.y)
+		_use(ability, player)
+		return
 
 
 func _worth_using(ability: String) -> bool:
