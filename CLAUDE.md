@@ -100,7 +100,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   (2026-10-31, Sim kérésére a régiek mellé, lehet, hogy később csak ezek maradnak): `SYNTH_PLACE_TRACKS` / `SYNTH_GENERAL_TRACKS`
   (9 CC0 szám, a `place_songs` fűzi össze; a régiek kivételéhez elég a PLACE_TRACKS listáit és a GENERAL_TRACKS-et üríteni),
   a zeneválasztóban "Synthwave rock" kategória. `PLAYLIST_TRACKS`: 23 CC0
-  szám hangereje (dB-igazítás kb. -20 dBFS-re, mérve). Hangerő: Beállítások "Zene" csúszka (Music busz). Új szám: mérd meg a hangosságát.
+  szám hangereje (dB-igazítás kb. -20 dBFS-re, mérve) (a Lights at Night néma 9 mp-es elejét kivágtuk a fájlból). Hangerő: Beállítások "Zene" csúszka (Music busz). Új szám: mérd meg a hangosságát.
   Zeneválasztó: a szünet menüben jobb oldalt "♪ Zene" (`ui/music_panel.gd`, `Audio.music_categories / play_song / current_song`): kategóriánként (bárhol szól, helyszínek, egyéb) bármelyik szám lejátszható; a kiválasztott szám (`Audio._pinned`, `pinned_song`) ismétlődik helyváltáskor és főellenség után is, újra rákattintva `stop_song` → a hely listája folytatódik.
   Bal alul (az XP-sáv fölött) kiírja, mi szól (`MUSIC_TITLES`, a főmenüben nem). Áttűnés lejátszónként (`_fade`): a
   régit le kell állítani újrahasználat előtt, különben egy elhalkítás vége az új számot is leállítja.
