@@ -46,10 +46,12 @@ func _ready() -> void:
 	layer = 15
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
-	_build()
 
 
+## A felület csak az első megnyitáskor épül fel (a tábor sok beszélgetőablaka így nem lassítja a belépést).
 func open() -> void:
+	if _options_box == null:
+		_build()
 	_name_label.text = npc_name
 	_portrait_rect.texture = portrait
 	_say(greeting)

@@ -153,6 +153,7 @@ func _ready() -> void:
 	# Háttérbetöltés: az itteni szörnyek lapjai és a tárgyikonok (lásd ResourceWarmer), hogy az első harc ne akadjon.
 	EnemyTypes.warm_sheets(depth)
 	Items.warm_icons()
+	ResourceWarmer.warm(["res://world/camp.tscn"])
 	# Pihenőből visszatérve (a főellenség után a táborba mentél): ugyanez az emelet, a kitisztított
 	# szobákkal, és ugyanott állsz, ahonnan kimentél.
 	var resume: Dictionary = GameState.break_floor if int(GameState.break_floor.get("depth", -1)) == depth else {}

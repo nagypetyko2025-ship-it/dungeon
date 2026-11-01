@@ -127,9 +127,13 @@ func _build_forest() -> void:
 			if outside <= 0:
 				continue
 			var shade := clampf(1.0 - outside * 0.07, 0.4, 1.0)
-			var tree := _tree(tile, randf() < 0.75)
-			tree.position += Vector2(randf_range(-8, 8), randf_range(-6, 6))
-			tree.modulate = Color(shade, shade, shade * 1.05)
+			# Díszfa: ForestBatch rajzolja (lásd Camp._forest_tree).
+			var at := _center(tile) + Vector2(0, TILE / 2.0 - 4) + Vector2(randf_range(-8, 8), randf_range(-6, 6))
+			var index := randi() % TALL_TREES.size()
+			var tiles := [[SMALL_TREES[index], Vector2(0, -TILE / 2.0 + 4)]]
+			if randf() < 0.75:
+				tiles = [[TALL_TREES[index], Vector2(0, -TILE / 2.0 + 4)], [TALL_TREES[index] + Vector2i(0, -1), Vector2(0, -TILE * 1.5 + 4)]]
+			ForestBatch.plant(_entities, at, tiles, Color(shade, shade, shade * 1.05))
 	# A tisztáson néhány bokor és virág.
 	for i in 6:
 		var tile := Vector2i(randi_range(GLADE.position.x + 1, GLADE.end.x - 2), randi_range(GLADE.position.y + 1, GLADE.end.y - 2))

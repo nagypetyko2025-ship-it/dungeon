@@ -246,7 +246,10 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   történet a régi "menu" (menu_ambience) zenét használja.
 - Teljesítmény: `world/resource_warmer.gd` (ResourceWarmer): `fetch(path)` gyorsítótár (tárgyikonok `Items.icon`, a Szörnyek
   könyve képei, a szörnylapok `Enemy._own_frames`), `warm(paths)` háttérbetöltés (`Items.warm_icons` a főmenüben / táborban /
-  kazamatában, `EnemyTypes.warm_sheets(depth)`, a tábor a dungeon.tscn-t is). Gyakori apró mentés: `Progress.save_soon()`
+  kazamatában, `EnemyTypes.warm_sheets(depth)`; a camp.tscn és dungeon.tscn a főmenüben, és egymást is melegítik — a
+  tábor szkriptjeinek betöltése ~0,8 mp volt). A tábor díszerdeje (~8500 fa) `world/forest_batch.gd` (ForestBatch: csempesoronként
+  16 csempés darab egy node, _draw-val; `Camp._forest_tree`, HiddenGrave is) — ne tegyél vissza fánként node-ot. A DialoguePanel
+  az első `open()`-kor épül fel (`_build`). Gyakori apró mentés: `Progress.save_soon()`
   (add_kill, reached_depth; 1 mp után egyben, `flush()` újratöltés / profilváltás / bezárás előtt). A csalómenü tárgyrácsa csak
   ritkaságváltáskor épül újra (`_built_rarity`), a fajta-szűrő csak elrejt.
 - Csalómenü: [0], kód nélkül (`ui/cheat_menu.gd`): teleport a 10. / 20. vagy a beírt emeletre (1–99; `cheat_teleport` a Dungeon/Camp jeleneten),

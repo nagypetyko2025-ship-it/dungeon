@@ -168,7 +168,7 @@ func _ready() -> void:
 	# Háttérbetöltés: a tárgyikonok (csalómenü, könyvek, láda) és a kazamata jelenete a képeivel, hogy a
 	# lejutás se akadjon (lásd ResourceWarmer).
 	Items.warm_icons()
-	ResourceWarmer.warm(["res://world/dungeon.tscn"])
+	ResourceWarmer.warm(["res://world/dungeon.tscn", "res://world/camp.tscn"])
 	RenderingServer.set_default_clear_color(Color(0.04, 0.06, 0.05))
 	if not GameState.display_initialized:
 		GameState.display_initialized = true
@@ -1056,9 +1056,17 @@ func _build_forest() -> void:
 			var depth := mini(mini(mini(mini(_outside_distance(tile, Rect2i(Vector2i.ZERO, SIZE)), _outside_distance(tile, Town.RECT)),
 				_outside_distance(tile, WEST_RECT)), _outside_distance(tile, Castle.RECT)), _outside_distance(tile, Mine.RECT))
 			var shade := clampf(1.0 - depth * 0.06, 0.35, 1.0)
-			var tree := _tree(tile, randf() < 0.75, false)
-			tree.position += Vector2(randf_range(-8, 8), randf_range(-6, 6))
-			tree.modulate = Color(shade, shade, shade * 1.05)
+			_forest_tree(tile, randf() < 0.75, Color(shade, shade, shade * 1.05))
+
+
+## Díszfa az erdőben (nem ütközik): ugyanaz, mint a `_tree`, de ForestBatch rajzolja (több ezer van belőle).
+func _forest_tree(tile: Vector2i, tall: bool, color: Color) -> void:
+	var at := _tile_center(tile) + Vector2(0, TILE / 2.0 - 4) + Vector2(randf_range(-8, 8), randf_range(-6, 6))
+	var index := randi() % TALL_TREES.size()
+	var tiles := [[SMALL_TREES[index], Vector2(0, -TILE / 2.0 + 4)]]
+	if tall:
+		tiles = [[TALL_TREES[index], Vector2(0, -TILE / 2.0 + 4)], [TALL_TREES[index] + Vector2i(0, -1), Vector2(0, -TILE * 1.5 + 4)]]
+	ForestBatch.plant(_entities, at, tiles, color)
 
 
 ## Útjelző tábla az út mellett, a tisztás keleti szélén: "Város →" (a város felé mutat).
