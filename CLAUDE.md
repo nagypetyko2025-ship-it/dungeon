@@ -85,7 +85,10 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   helyszínenként saját listát játszik (`PLACE_TRACKS`: camp, town, cave, dungeon (1-20.), depths (21-40.), abyss (41.-től),
   trial), mindegyikben ott vannak a mindenhol szólók is (`GENERAL_TRACKS`); keverve egymás után, ismétlés nélkül.
   Helyváltáskor a szóló szám marad, ha az új helyen is szólhat. A táborban a helyet `Camp.music_place(pozíció)` adja
-  (fél mp-enként), a kazamatában `Dungeon._music_place()`; "epic" = az utoljára kért hely. `PLAYLIST_TRACKS`: 14 CC0
+  (fél mp-enként), a kazamatában `Dungeon._music_place()`; "epic" = az utoljára kért hely. Synthwave rock kiegészítés
+  (2026-10-31, Sim kérésére a régiek mellé, lehet, hogy később csak ezek maradnak): `SYNTH_PLACE_TRACKS` / `SYNTH_GENERAL_TRACKS`
+  (9 CC0 szám, a `place_songs` fűzi össze; a régiek kivételéhez elég a PLACE_TRACKS listáit és a GENERAL_TRACKS-et üríteni),
+  a zeneválasztóban "Synthwave rock" kategória. `PLAYLIST_TRACKS`: 23 CC0
   szám hangereje (dB-igazítás kb. -20 dBFS-re, mérve). Hangerő: Beállítások "Zene" csúszka (Music busz). Új szám: mérd meg a hangosságát.
   Zeneválasztó: a szünet menüben jobb oldalt "♪ Zene" (`ui/music_panel.gd`, `Audio.music_categories / play_song / current_song`): kategóriánként (bárhol szól, helyszínek, egyéb) bármelyik szám lejátszható; a kiválasztott szám (`Audio._pinned`, `pinned_song`) ismétlődik helyváltáskor és főellenség után is, újra rákattintva `stop_song` → a hely listája folytatódik.
   Bal alul (az XP-sáv fölött) kiírja, mi szól (`MUSIC_TITLES`, a főmenüben nem). Áttűnés lejátszónként (`_fade`): a

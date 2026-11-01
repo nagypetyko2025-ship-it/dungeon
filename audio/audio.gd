@@ -82,6 +82,18 @@ const PLACE_TRACKS := {
 	"abyss": ["res://assets/audio/music/evil_awaits.mp3", "res://assets/audio/music/dark_forest_theme.mp3", "res://assets/audio/music/the_final_battle.ogg", "res://assets/audio/music/ancient_mysteries.ogg"],
 	"trial": ["res://assets/audio/music/battle_theme_a.mp3", "res://assets/audio/music/ancient_mysteries.ogg", "res://assets/audio/music/the_final_battle.ogg", "res://assets/audio/music/medieval_battle.mp3"],
 }
+## Synthwave rock kiegészítés: helyszínenként (SYNTH_PLACE_TRACKS) és mindenhol (SYNTH_GENERAL_TRACKS) a fenti
+## számok mellé (place_songs). Ha a régi számok kikerülnek, elég a PLACE_TRACKS listáit és a GENERAL_TRACKS-et üríteni.
+const SYNTH_GENERAL_TRACKS: Array[String] = ["res://assets/audio/music/midnight_drive.ogg", "res://assets/audio/music/synth_wave_80s.mp3"]
+const SYNTH_PLACE_TRACKS := {
+	"camp": ["res://assets/audio/music/lights_at_night.mp3"],
+	"town": ["res://assets/audio/music/space_city.ogg"],
+	"cave": ["res://assets/audio/music/space_dungeon.ogg", "res://assets/audio/music/lights_at_night.mp3"],
+	"dungeon": ["res://assets/audio/music/midnight_explosion.mp3", "res://assets/audio/music/codename_granny_2.ogg"],
+	"depths": ["res://assets/audio/music/space_dungeon.ogg", "res://assets/audio/music/bio_hazard.ogg"],
+	"abyss": ["res://assets/audio/music/open_warfare.mp3", "res://assets/audio/music/bio_hazard.ogg", "res://assets/audio/music/space_dungeon.ogg"],
+	"trial": ["res://assets/audio/music/codename_granny_2.ogg", "res://assets/audio/music/midnight_explosion.mp3", "res://assets/audio/music/open_warfare.mp3"],
+}
 ## Szám -> hangerő-igazítás (dB): mind kb. -20 dBFS átlagra (mérve), hogy ne ugráljon a hangerő; a
 ## főellenség zenéje (-17.5) kicsit hangosabb marad.
 const PLAYLIST_TRACKS := {
@@ -99,6 +111,15 @@ const PLAYLIST_TRACKS := {
 	"res://assets/audio/music/dark_forest_theme.mp3": -2.1,
 	"res://assets/audio/music/the_final_battle.ogg": -1.9,
 	"res://assets/audio/music/evil_awaits.mp3": -2.8,
+	"res://assets/audio/music/lights_at_night.mp3": 3.4,
+	"res://assets/audio/music/space_city.ogg": -5.5,
+	"res://assets/audio/music/midnight_drive.ogg": -5.2,
+	"res://assets/audio/music/midnight_explosion.mp3": 1.1,
+	"res://assets/audio/music/synth_wave_80s.mp3": -8.0,
+	"res://assets/audio/music/codename_granny_2.ogg": -2.0,
+	"res://assets/audio/music/bio_hazard.ogg": 6.7,
+	"res://assets/audio/music/open_warfare.mp3": -2.9,
+	"res://assets/audio/music/space_dungeon.ogg": -5.9,
 }
 ## A játék közbeni zenék címe és szerzője: a bal alsó sarokban kiírja, mi szól éppen (lásd _show_now_playing;
 ## a főmenü zenéjénél nem, ott a Tutorial gomb van).
@@ -130,6 +151,15 @@ const MUSIC_TITLES := {
 	"res://assets/audio/music/dark_forest_theme.mp3": "Dark Forest Theme — cynicmusic",
 	"res://assets/audio/music/the_final_battle.ogg": "The Final Battle — skrjablin",
 	"res://assets/audio/music/evil_awaits.mp3": "Evil Awaits — bosslevelaudio",
+	"res://assets/audio/music/lights_at_night.mp3": "Lights at Night — Tsorthan Grove",
+	"res://assets/audio/music/space_city.ogg": "Space City — MintoDog",
+	"res://assets/audio/music/midnight_drive.ogg": "Midnight Drive — congusbongus",
+	"res://assets/audio/music/midnight_explosion.mp3": "Midnight Explosion — iamoneabe",
+	"res://assets/audio/music/synth_wave_80s.mp3": "80's Synth Wave — Pro Sensory",
+	"res://assets/audio/music/codename_granny_2.ogg": "Codename Granny II — Kistol",
+	"res://assets/audio/music/bio_hazard.ogg": "Bio-Hazard — Centurion_of_war",
+	"res://assets/audio/music/open_warfare.mp3": "Open Warfare — Ruskerdax",
+	"res://assets/audio/music/space_dungeon.ogg": "Space Dungeon — MintoDog",
 }
 ## Új szám után ennyi ideig élénk a felirat, utána halványabb.
 const NOW_PLAYING_BRIGHT := 6.0
@@ -186,6 +216,13 @@ const PLACE_NAMES := {
 
 static func music_categories() -> Array:
 	var categories: Array = [["Bárhol szól", GENERAL_TRACKS.duplicate()]]
+	# A synthwave rock számok egy helyen (a helyszínek kategóriáiban a régiek maradnak).
+	var synth: Array = SYNTH_GENERAL_TRACKS.duplicate()
+	for place: String in SYNTH_PLACE_TRACKS:
+		for song: String in SYNTH_PLACE_TRACKS[place]:
+			if not synth.has(song):
+				synth.append(song)
+	categories.append(["Synthwave rock", synth])
 	for place: String in PLACE_TRACKS:
 		var own: Array = []
 		for song: String in PLACE_TRACKS[place]:
@@ -376,13 +413,13 @@ func _fade(index: int, to_db: float, stop_after: bool) -> void:
 	_fades[index] = tween
 
 
-## Egy helyszín összes száma: a sajátjai és a mindenhol szólók.
+## Egy helyszín összes száma: a sajátjai, a synthwave számai és a mindenhol szólók (a synthwave-ek is).
 static func place_songs(place: String) -> Array[String]:
 	var songs: Array[String] = []
-	songs.assign(PLACE_TRACKS[place])
-	for song in GENERAL_TRACKS:
-		if not songs.has(song):
-			songs.append(song)
+	for list: Array in [PLACE_TRACKS[place], SYNTH_PLACE_TRACKS.get(place, []), GENERAL_TRACKS, SYNTH_GENERAL_TRACKS]:
+		for song: String in list:
+			if not songs.has(song):
+				songs.append(song)
 	return songs
 
 

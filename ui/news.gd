@@ -3,6 +3,10 @@ class_name News
 ## rövid, játékosnak szóló sor a legfrissebb dátum alá (a legújabb van felül).
 
 const ENTRIES: Array[Dictionary] = [
+	{"date": "2026-11-01", "items": [
+		"Kilenc synthwave rock zene került a régiek mellé: minden helyszínen szól pár (a táborban nyugodtabbak, lent pörgősek, "
+			+ "a mélyben sötétek); a zeneválasztóban külön \"Synthwave rock\" csoportban.",
+	]},
 	{"date": "2026-10-31", "items": [
 		"Új szintlépési kártyák: mindegyik ad valamit, de cserébe elvesz egy másik statból (pl. +4 max élet, −4% mozgási sebesség). 26 kártya új nevekkel és ikonokkal.",
 		"A kártyáknak ritkasága van (átlagos, ritka, epikus, legendás, mítikus): ettől függ, milyen gyakran jönnek, és ilyen színűek.",

@@ -71,5 +71,16 @@ A pokol zenéje (csak a pokolban, folyamatosan ismételve):
 A rossz befejezés (ha Azazel ellen elestél):
   bad_ending_9th_circle.mp3 = "The 9th Circle" (V2) by Joth, CC0 1.0 - https://opengameart.org/content/the-9th-circle
 
+Synthwave rock (a helyszínek lejátszási listáin a régiek mellé, Audio.SYNTH_*), mind CC0 1.0 Universal:
+  lights_at_night.mp3 = "Lights at Night" by Tsorthan Grove - https://opengameart.org/content/lights-at-night
+  space_city.ogg = "Space City" by MintoDog - https://opengameart.org/content/space-city
+  midnight_drive.ogg = "Midnight Drive" by congusbongus - https://opengameart.org/content/midnight-drive
+  midnight_explosion.mp3 = "Midnight Explosion" by iamoneabe - https://opengameart.org/content/midnight-explosion
+  synth_wave_80s.mp3 = "80's Synth Wave" by Pro Sensory - https://opengameart.org/content/80s-synth-wave
+  codename_granny_2.ogg = "Codename Granny II" by Kistol - https://opengameart.org/content/codename-granny-ii
+  bio_hazard.ogg = "Bio-Hazard (Menu/Stage)" by Centurion_of_war - https://opengameart.org/content/bio-hazard-menustage
+  open_warfare.mp3 = "Open Warfare" by Ruskerdax - https://opengameart.org/content/open-warfare
+  space_dungeon.ogg = "Space Dungeon" by MintoDog - https://opengameart.org/content/space-dungeon
+
 A főmenü zenéje:
   main_menu_theme.ogg = "Epic Main Menu Theme ~ Loop" (Übermensch [Main Menu]) by Cleyton Kauffman, CC0 1.0 - https://opengameart.org/content/epic-main-menu-theme-loop
