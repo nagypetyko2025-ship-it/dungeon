@@ -171,6 +171,21 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 	return list
 
 
+## A kocsmában (a király levele után oda költözött, a kút mellől eltűnt): a régi kérdések és a kút, a legrégebbi
+## bejárat utáni történetek. (A küldetések nem innen mennek: a rácsét a műhely asztala intézi, lásd OldEntrance.)
+static func tavern_options() -> Array[Dictionary]:
+	var list: Array[Dictionary] = [
+		{"id": "name", "text": "Mi a neved?", "on_choose": func() -> String: return _ask_name()},
+		{"id": "how", "text": "Hogy kerültél oda le?", "on_choose": func() -> String: return _ask_how()},
+		{"id": "who", "text": "Ki vagy te?", "on_choose": func() -> String: return _ask_who()},
+	]
+	if Blaster.well_open():
+		list.append_array(WELL_STORIES)
+	if Progress.npc_quest_state(OldEntrance.QUEST) == "done":
+		list.append_array(ENTRANCE_STORIES)
+	return list
+
+
 ## A talizmán után (a beszélgetés bezárásakor a Ruin lövi ki a tűzgolyót): rákérdezel, és Főnixtollat kér.
 static func _ask_phoenix() -> String:
 	Progress.mark_asked(ID, "fireball")

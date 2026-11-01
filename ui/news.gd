@@ -4,6 +4,10 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-01", "items": [
+		"A kocsmában ülő karakterekkel beszélgetni is lehet (E): mindenki mesél magáról, Gáspár, Bence, Vendel és Lőrinc a régi "
+			+ "történeteit is elmondja (Lőrinc a kút és a legrégebbi bejárat utániakat is, amiket eddig nem lehetett meghallgatni, ha "
+			+ "már a kocsmában ült), a lovagnak és az íjásznak új történetei vannak. Az első válasz, \"Indulunk?\", átveszi az irányítást.",
+		"Javítva: a gyakorlás indításakor a tiszta lap sosem kerülhet a mentésedbe.",
 		"Végigjátszottuk a játékot mind a 6 karakterrel (történetek, küldetések), és amit találtunk, javítottuk:",
 		"Javítva: Ábel csónakja a kis kulcs után azonnal ott van a mólónál (eddig csak a tábor újratöltése után jelent meg).",
 		"Javítva: Vendel nem kéri el az egyedi sztori talizmánokat (Lőrinc iránytűje, a tófenék gyöngye...), a mítikusat viszont elfogadja; "

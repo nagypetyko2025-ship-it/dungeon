@@ -96,7 +96,7 @@ const DEATH := "Ha az életed elfogy, [b]véget ér a futás[/b]: a szinted, a s
 const PEOPLE := "A táborban és a környéken [b]emberek élnek[/b]. Ha odamész hozzájuk, [b]E[/b]-vel beszélgethetsz " \
 	+ "velük: kérdezhetsz tőlük, és a válaszaid számítanak. Van, aki [b]feladatot[/b] ad, van, aki segítséget kér; ha " \
 	+ "segítesz nekik, megbíznak benned — és van, aki ezután [b]játszható karakterként[/b] csatlakozik hozzád. Az új " \
-	+ "karaktereket a városi kocsmában választhatod ki: odamész, E, és átveszed az irányítást. Mindegyik másként " \
+	+ "karaktereket a városi kocsmában választhatod ki: odamész, E, beszélgetsz vele, és az első válasszal átveszed az irányítást. Mindegyik másként " \
 	+ "harcol, más fegyvert foghat, és saját képessége lehet.\n\n" \
 	+ "A [b]küldetések könyve[/b] (J) mutatja a futó küldetéseidet és a haladásukat (pl. ennyi szörnyet győzz le, " \
 	+ "juss el valahány emeletre). A kész küldetések jutalmát a [b]kocsmárosnál[/b] veheted át.\n\n" \

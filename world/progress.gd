@@ -107,7 +107,7 @@ static var _dirty := false
 
 
 static func save_soon() -> void:
-	if GameState.tutorial or _dirty:
+	if GameState.tutorial or _in_tutorial or _dirty:
 		return
 	_dirty = true
 	var tree := Engine.get_main_loop() as SceneTree
@@ -213,7 +213,9 @@ static func load_game(force := false) -> void:
 
 
 static func save_game() -> void:
-	if GameState.tutorial:
+	# A gyakorlás homokozója (begin_tutorial) sosem ír: a tiszta lap felülírná az igazi mentést (akkor is, ha a
+	# GameState.tutorial jelző épp nincs bekapcsolva, pl. a gyakorlás indítása és a pálya betöltése között).
+	if GameState.tutorial or _in_tutorial:
 		return
 	_dirty = false
 	_all_inventories[character] = camp_inventory
@@ -311,6 +313,8 @@ static func discard_tutorial_changes() -> void:
 	if not _in_tutorial:
 		return
 	_in_tutorial = false
+	# (Ami a gyakorlásból függőben maradt, az se íródjon ki az újratöltés előtt.)
+	_dirty = false
 	load_game(true)
 
 

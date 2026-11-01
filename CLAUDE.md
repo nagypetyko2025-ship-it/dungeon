@@ -204,6 +204,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   ágy (alvás → `RESTED_FLAG`, a következő futás elején +1 HP-bájital: `Town.take_rest_bonus`, a Camp `_enter_dungeon_now`-ja),
   láda (a tábori láda ablaka), trófeafal (E: `ui/trophy_panel.gd`, a keretre kattintva a karakter véleménye: `world/trophy_notes.gd`
   `TrophyNotes.NOTES` főellenség -> {default, karakter id}; `Town.trophies()`: 18 főellenség, annyi sorban, ahány kell (most 2×9), a le nem győzöttek sötét árnyékként).
+  Az ülő karakterek (a kocsmában): E-re beszélgetés (`Town._talk`, `TavernTalk`: üdvözlés, történetek; a régi NPC-k a saját
+  opcióikat hozzák ugyanazzal az npc_id-vel, Lőrinc `Stranger.tavern_options`; a lovag és az íjász történetei a TavernTalk-ban),
+  az első opció ("Indulunk?") vált karaktert.
 - Próbatétel (random kazamata): `world/challenge.gd` (`Challenge`). A bánya túlpartján a régi tárna (`Mine.DEEP_DOOR`,
   csak a híd után) → lyukas terem (`Mine.DEEP_ROOM`, x 640-től), a lépcsőnél E: `ui/challenge_panel.gd` (ajánlat / eredmény).
   1-20 emelet, 1-3 könnyítés (`BOONS`, 15) és 1-3 nehezítés (`BANES`, 15), ütköző hatás nem jön együtt, a súlyok
@@ -337,7 +340,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   alján, az ablakok fölött egy sáv mutatja a teendőt röviden (lépésenként "short", ha a lépés saját ablaka ("window")
   van nyitva; különben "csukd be ezt az ablakot"). Homokozó: a gyakorlás tiszta lappal indul (`Progress.begin_tutorial`:
   mint egy új játék, csak a memóriában; a mentés arany/fejlesztés/tárgy/küldetés stb. nem látszik), közben
-  `Progress.save_game` nem ír, és a főmenübe lépve (`Progress.discard_tutorial_changes`) visszatöltődik a mentés. Szövegek:
+  `Progress.save_game` / `save_soon` nem ír (a `GameState.tutorial` ÉS a `Progress._in_tutorial` is tiltja; 2026-11-01-ig csak az
+  előbbi tiltotta, egy teszt így felülírta Sim mentését), és a főmenübe lépve (`Progress.discard_tutorial_changes`) visszatöltődik a mentés. Szövegek:
   `ui/tutorial_manual.gd` (CHAPTERS a főmenüben, az irányítás a Beállítások fülön is). A karakterek történetét nem
   árulja el. Teszt: robot, ami minden karakterrel végigjátssza a pályát és a tábort (lépésenként elvégzi a feladatot).
 - Automatikus frissítés: `ui/updater.gd` (a főmenü teszi be, indításonként egyszer; headless és exportált játékban nem fut).

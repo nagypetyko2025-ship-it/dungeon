@@ -139,6 +139,9 @@ var _dialogue: DialoguePanel
 ## Puskás Döme (lásd Blaster): első kopogásra kijön, és a kettes szoba ajtaja előtt áll, amíg a bányába nem megy.
 var _dome: AnimatedSprite2D
 var _dome_dialogue: DialoguePanel
+## A kocsmában ülő karakterek beszélgetése (lásd TavernTalk): kivel beszélsz épp.
+var _seat_dialogue: DialoguePanel
+var _talk_id := ""
 ## A trófeafal közelről (ui/trophy_panel.gd: a karaktered véleménye a főellenségekről).
 var _trophy_panel: CanvasLayer
 var _in_room := false
@@ -191,6 +194,15 @@ func setup(camp: Node2D) -> void:
 	_dome_dialogue.portrait = Blaster.portrait()
 	_dome_dialogue.options_provider = func() -> Array[Dictionary]: return Blaster.options("room")
 	camp.add_child.call_deferred(_dome_dialogue)
+	# Az ülő karakterek: E-re beszélgetés, az első opció átveszi az irányítást (lásd _talk).
+	_seat_dialogue = DialoguePanel.new()
+	_seat_dialogue.name = "SeatDialogue"
+	_seat_dialogue.options_provider = func() -> Array[Dictionary]:
+		var list: Array[Dictionary] = [{"id": "take_over", "text": "Indulunk? (átveszed az irányítást)",
+			"on_choose": _take_over}]
+		list.append_array(TavernTalk.options(_talk_id, _player.get_node("Inventory")))
+		return list
+	camp.add_child.call_deferred(_seat_dialogue)
 
 
 ## A kocsma ajtaja előtti földút (a tábor rajzolja ki a többi földdel együtt).
@@ -690,7 +702,7 @@ func _focus() -> Array:
 		return ["barkeep", "[E] Beszélgetés: %s" % BARKEEP_NAME]
 	for id: String in _seated:
 		if at.distance_to(_seated[id].position) < INTERACT_RANGE:
-			return [id, "[E] %s" % Characters.data(id)["name"]]
+			return [id, "[E] Beszélgetés: %s" % Characters.data(id)["name"]]
 	return []
 
 
@@ -764,7 +776,7 @@ func _build_intro() -> void:
 	_intro_text.add_theme_color_override("default_color", UiStyle.INK_LIGHT)
 	_intro_text.add_theme_font_size_override("normal_font_size", 15)
 	box.add_child(_intro_text)
-	box.add_child(UiStyle.label("[E] Átveszed az irányítást", 15, UiStyle.INK))
+	box.add_child(UiStyle.label("[E] Beszélgetés (onnan átveheted az irányítást)", 15, UiStyle.INK))
 
 
 func _fill_intro(id: String) -> void:
@@ -810,7 +822,26 @@ func _unhandled_input(event: InputEvent) -> void:
 			if str(focus[0]).begins_with("room_"):
 				_knock(int(str(focus[0]).trim_prefix("room_")))
 			else:
-				_switch_to(focus[0])
+				_talk(focus[0])
+
+
+## Beszélgetés egy ülő karakterrel (a saját történetei, lásd TavernTalk); az első opció átveszi az irányítást.
+func _talk(id: String) -> void:
+	_talk_id = id
+	_seat_dialogue.npc_id = TavernTalk.npc_id(id)
+	_seat_dialogue.npc_name = Characters.data(id)["name"]
+	_seat_dialogue.portrait = Characters.frames(id).get_frame_texture("idle", 0)
+	_seat_dialogue.greeting = TavernTalk.GREETINGS.get(id, "")
+	Audio.play("ui_open")
+	_camp.get_node("Menus").call("open_menu", _seat_dialogue)
+
+
+## "Indulunk?": a beszélgetés bezárul, és vele játszol tovább.
+func _take_over() -> String:
+	_camp.get_node("Menus").call("close_current")
+	if _seated.has(_talk_id):
+		_switch_to.call_deferred(_talk_id)
+	return ""
 
 
 ## Kopogás egy szoba ajtaján. Döme ajtaján először: felébred és kijön (onnantól az ajtaja előtt áll).
