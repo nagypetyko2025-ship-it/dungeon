@@ -710,10 +710,12 @@ func _random_spawn_point(avoid: Vector2, taken := {}) -> Vector2:
 func _on_enemy_died(enemy: Node2D) -> void:
 	GameState.kills += 1
 	var type: Variant = enemy.get("_type")
-	Quests.notify("kill", type["name"] if type is Dictionary else "")
-	# A Szörnyek könyvébe a főellenségek a saját nevükkel kerülnek.
-	Progress.add_kill(str(enemy.get("boss_name")) if enemy.is_in_group("boss") \
-		else (str(type["name"]) if type is Dictionary else ""))
+	# A magától felrobbant robbanó goblint nem te győzted le: se a küldetésekbe, se a Szörnyek könyvébe nem számít.
+	if not enemy.has_meta("self_destruct"):
+		Quests.notify("kill", type["name"] if type is Dictionary else "")
+		# A Szörnyek könyvébe a főellenségek a saját nevükkel kerülnek.
+		Progress.add_kill(str(enemy.get("boss_name")) if enemy.is_in_group("boss") \
+			else (str(type["name"]) if type is Dictionary else ""))
 	if enemy.is_in_group("boss"):
 		_on_boss_defeated(enemy)
 	# Előbb az osztódás, hogy a harc ne érjen véget, mielőtt a kicsik megjelennek.

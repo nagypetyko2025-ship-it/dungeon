@@ -52,7 +52,7 @@ const QUESTS := {
 	WELL_QUEST: {"name": "A kút alatti járat",
 		"text": "A kút alján, Lőrinc régi barlangjában egy beomlott járat vezet kelet felé. Döme felrobbantaná, de a "
 			+ "nedves barlangban a kanóc nem gyullad: tűzhangya-mirigy kell a gyújtáshoz. Győzz le [b]%d tűzhangyát[/b] " % WELL_GOAL
-			+ "(a küldetés elfogadása óta), aztán szólj Döménak a bányában. Utána a kút alján vár, a törmeléknél.",
+			+ "(a küldetés elfogadása óta), aztán szólj Dömének a bányában. Utána a kút alján vár, a törmeléknél.",
 		"reward": "átjárás a beomlott járaton", "doing": "győzz le tűzhangyákat",
 		"done": "a kút alatti járat nyitva"},
 }
@@ -177,7 +177,7 @@ static func options(place: String, blast: Callable = Callable()) -> Array[Dictio
 					"on_choose": func() -> String: return "Eddig %d hordó. Még %d kell. A robbanó goblinok a " \
 						% [kills_since(POWDER_TARGET, POWDER_BASE, POWDER_GOAL),
 							POWDER_GOAL - kills_since(POWDER_TARGET, POWDER_BASE, POWDER_GOAL)] \
-						+ "3. emelet alatt kezdenek szaladgálni. Leszedd őket, mielőtt odaérnek, különben nincs " \
+						+ "3. emelet alatt kezdenek szaladgálni. Szedd le őket, mielőtt odaérnek, különben nincs " \
 						+ "mit hoznod. Meg téged sem."})
 		"done":
 			match Progress.npc_quest_state(FUSE_QUEST):

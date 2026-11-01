@@ -492,6 +492,10 @@ func _on_boss_defeated(boss: Node2D) -> void:
 ## győzelmi ablakot nyitja (2 tárgy, a pénz 100%-a, aztán a táborba).
 func _on_final_boss_defeated(room: Room) -> void:
 	_victory_lord = room.lord
+	# Gáspár küldetése: bosszú a fiaiért (a jutalmat majd ő mondja meg). A 20 emeletes próbatétel Vérfarkasa is számít.
+	if room.lord == "werewolf" and Progress.npc_quest_state("slay_lord") == "active" and not GameState.cheated:
+		Progress.set_npc_quest("slay_lord", "done")
+		FloatingText.spawn(room, room.global_position + Vector2(0, -90), "Gáspár emberei megbosszulva", Color(1, 0.85, 0.4), 22)
 	# A próbatételben a nagy főellenség után sincs portál: a lépcső visz tovább (az utolsó emeleten: győzelem).
 	if Challenge.active():
 		_hud.show_message(LakeCrypt.story_won_text(room.lord) if LakeCrypt.is_story_lord(room.lord)
@@ -518,10 +522,6 @@ func _on_final_boss_defeated(room: Room) -> void:
 		room.open_stairs.call_deferred(room.anchor + Vector2i(DEEPER_STAIRS_OFFSET, 0))
 		return
 	_hud.show_message("A Mélység Ura legyőzve! Lépj a portálba — végigértél a kazamatán!")
-	# Gáspár küldetése: bosszú a fiaiért (a jutalmat majd ő mondja meg).
-	if Progress.npc_quest_state("slay_lord") == "active" and not GameState.cheated:
-		Progress.set_npc_quest("slay_lord", "done")
-		FloatingText.spawn(room, room.global_position + Vector2(0, -90), "Gáspár emberei megbosszulva", Color(1, 0.85, 0.4), 22)
 	var portal: Node2D = RETURN_PORTAL.new()
 	portal.position = Room.tile_center(room.anchor) - room.position
 	portal.set("prompt_text", "[E] Győzelem — vissza a táborba")

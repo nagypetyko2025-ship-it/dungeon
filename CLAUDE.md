@@ -29,6 +29,11 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
    utána *feltétel nélkül* vissza (ha a szkript elszáll, a GDScript-es visszaállítás nem fut le — egyszer már így
    íródott felül a felhasználó mentése). A tesztben ne írj a felhasználó táskájának foglalt helyére.
 4. A végén a "2 RID allocations ... leaked" és a RenderingServer hibák ártalmatlanok.
+5. Játszó robot (nem a repóban; 2026-11-01): fej nélkül, valódi bemenettel játszik (mozgás `Dungeon.nav_path`-szal, célzás
+   `InputEventMouseMotion`-nel, `Engine.time_scale` 4-6). Fej nélkül a viewport egérhelye ≈ az esemény helye × 20: két ponttal
+   kalibráld (esemény → `root.get_mouse_position()`), különben mellé céloz. Az út első pontja a saját csempe közepe (fal mellett
+   elérhetetlen): hagyd ki. Mérő mód: `Health.cannot_die`, és 1 HP-n "virtuális halál" (feltöltés). Több példány párhuzamosan:
+   profilonként (`Profiles._current`), egyetlen mentés/visszaállítással körülöttük.
 - Képernyő: 1280×720 alap (canvas_items, expand); az ablakoknak ebbe bele kell férniük.
 
 ## Felépítés (fő fájlok)
@@ -52,17 +57,23 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   soldier_ant (6.), hornet (10.), scorpion (13.), CC0 képekből), `enemy.gd`, `boss.gd`, `werewolf_boss.gd`, `chaos_lord_boss.gd`;
   képességek: `enemies/enemy_abilities.gd` (méreg/fagy/fosztogatás a `Player.apply_poison/apply_slow/lose_gold`-on át).
   Főellenségek: az első 3 (3., 6., 9. emelet) változatlan; a 12.-től `Boss.LATER_BOSS_GROWTH` (×1.3 élet) és
-  `LATER_BOSS_DAMAGE_STEP` (+6% sebzés) főellenségenként (30. emelet: ~110 000, 39.: ~180 000 élet). A sor (`Boss.BOSSES`)
+  `LATER_BOSS_DAMAGE_STEP` (+6% sebzés) főellenségenként (30. emelet: ~110 000, 39.: ~170 000 élet). A Káosz Ura után (`DEEP_BOSS_FROM` 40) a ×1.3 elszállna (72.: 13 millió, 99.: 158 millió, több a nagy főellenségeknél), ezért ott legfeljebb `DEEP_BOSS_SHARE` (240) átlagos szörnynyi élet (`EnemyTypes.average_health(depth)`): 45.: 360 000, 60.: 480 000, 81.: 1,8 millió, 99.: 4 millió. A sor (`Boss.BOSSES`)
   a 36. emeleten a Skorpiókirállyal zárul (bogár-főellenség, `scorpion_king.png`), utána elölről (39.: Ogrekirály). Vérfarkas:
   `LORD_HEALTH` ×40 = 128 000 (+ feltámadás), `LORD_DAMAGE` ×2 = 32; Káosz Ura: 1 000 000 élet, 120 sebzés.
   Figyelmeztető jelek: `effects/danger_mark.gd` (`DangerMark.cross` a teleport / blink célján — a cél a felvillanás ELŐTT dől el:
   `EnemyAbilities._teleport_target`, `Boss._blink_target`; `DangerMark.line` a roham irányába, a játékost követi: Enemy dash, Boss charge).
   Mellé / kikerülés: a szörny `_on_hurt`-ja `hitbox.missed = true`-t állít, a Hurtbox ilyenkor nem hívja az `on_hit`-et,
   a lövedék továbbrepül (az átütést sem fogyasztja; ugyanazt a célt a `skips` miatt nem találja el újra).
+  Sebezhetetlenség találat után: a játékosé közös (0.8 mp, bármi találja), a szörnyeké forrásonként (`Hurtbox.per_source`,
+  enemy.tscn / boss.tscn: ugyanaz a Hitbox 0.2 mp-ig nem sebez újra, egy másik igen). Régen közös volt: egy főellenséget mp-enként
+  legfeljebb 5 találat ért, akárhány nyíl / varázslat, a Többlövés ott elveszett (az íjász 8 perc alatt sem ölte meg a Vérfarkast).
+  A többlövés sorozatának többi nyila ugyanazt a szörnyet fele erővel sebzi (`PlayerArrow.volley` / `VOLLEY_SHARE`), egy varázslás
+  földtüskéi együtt csak egyszer (`EarthSpike.struck`). Vérfarkas életlopása: a sebzés 8×-a, legalább a max élet 0,2%-a
+  (`LIFESTEAL_MIN`; az 1% a ×40-es élettel találatonként 1280 lett, közelharcban legyőzhetetlen volt).
 - Találati esély: KIKAPCSOLVA (`Stats.ACCURACY_ENABLED` = false; visszakapcsolás: true). Ilyenkor `Player.hit_chance` = 1, és elrejtve:
   Pontosság kártya (`Upgrades._available`), Céllövölde (camp_upgrades / witch_panel), Tab-statok, HUD, tárgyleírás és összevetés.
 - Láda: `pickups/chest.gd` — `NEVER_EMPTY_UNTIL` (15) emeletig sosem üres, utána `EMPTY_CHANCE`.
-- Tárgyak: `items/items.gd` (DEFINITIONS; a bolti áru emeletenként erősebb: `Items.for_depth`); statok: `components/stats.gd`; szintlépés-kártyák: `components/upgrades.gd`.
+- Tárgyak: `items/items.gd` (DEFINITIONS; a bolti áru emeletenként erősebb: `Items.for_depth`; a kezdőfegyverek (rozsdás kard, régi íj) skálázása 0.7, a többi átlagosénál kisebb: 1.0-val közepes sebzés-stat mellett az epikusig minden kardot / íjat vertek); statok: `components/stats.gd`; szintlépés-kártyák: `components/upgrades.gd`.
 - Kártyák (a felhasználó "kártya"-ként hivatkozik rájuk): `Upgrades.ALL` elemei `gain` / `cost` (stat -> érték; a cost levonás),
   `rarity` (Items.RARITY_ORDER; kártyahelyenként előbb ritkaság a `RARITY_WEIGHTS` szerint, azon belül "weight"), `icon`
   (`assets/cards/icons/<név>.png`, mind a 496 CC0 ikon). Szöveg: `Upgrades.lines` / `STAT_INFO`; a stat saját jele (Tab-statok,
@@ -227,7 +238,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   a Káosz Urát a 40. emeleten, a Szörnyek könyve szerint; 3000 tábori arany), és 4 új történet (`King.STORIES`).
 - Szörnyek könyve: állvány a táborban (`BESTIARY_TILE`), adatok: `world/bestiary.gd`, ablak: `ui/bestiary_book.gd`
   (bejegyzésenként "Megjelenik:" sor: `Bestiary.depth_text` az EnemyTypes min/max_depth-ből, főellenségnél az emelete; `Bestiary.article` = a/az);
-  a megölt szörnyek száma `Progress.kills` (a `room.gd` írja, főellenség a saját nevével).
+  a megölt szörnyek száma `Progress.kills` (a `room.gd` írja, főellenség a saját nevével; csalt futásban és a magától felrobbant
+  robbanó goblinnál (`self_destruct` meta, EnemyAbilities) nem számít — az NPC-k ölős küldetései ebből számolnak).
 - Tárgyak könyve: második állvány mellette (`Camp.ITEM_BOOK_TILE`), adatok: `world/item_codex.gd` (`ItemCodex.TABS`:
   közelharci / távolsági fegyver + helyenként), ablak: `ui/item_book.gd` (ikonrács, a meg nem szerzett sötét árnyék;
   jobb lap: statok a saját ritkaságban + leírás). Felfedezett: `Progress.seen_items` (az `Inventory.changed` jegyzi be a
@@ -240,7 +252,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   után; Ctrl: íjász suhanás, Gáspár hadi kiáltás, Bence árnyéklépés a `player.gd`-ben; Lőrinc/"wizard" varázsló a küldetései után ("lorinc_tavern"): `player/spells.gd`; Vendel/"gravedigger" (ásó magától üt; bal klikk: csontváz-idézés, `player/skeleton_minion.gd`; 5 szintenként a stat-kártyák helyett
   idézés-fejlesztés: `player/necromancy.gd` (4 véletlen kártya) — +1 csontváz (max 12, MINDEN fajta együtt számít), +2 mp élet (max 60),
   +1 sebzés, csontváz-erősítés, gyors idézés, jobb klikkre a másodlagos idézés: 3 íjász VAGY óriás csontváz (kizárják egymást); idézéskor szabad helyre kelnek (`_free_spawn_spot`); a csontvázak statjai és a töltési idők a
-  szinttel / Vendel statjaival NEM nőnek; a szörnyek (a főellenség nem) a közelebbi csontvázra is rátámadnak, a csontváz `hits`
+  szinttel / Vendel statjaival NEM nőnek (a sebzésük az emelettel igen: `Necromancy.DEPTH_DAMAGE`, 12% / emelet; nélküle a 9. után egy emelet
+  8 perc alatt sem lett kész); a szörnyek (a főellenség nem) a közelebbi csontvázra is rátámadnak, a csontváz `hits`
   találatot bír ki (saját Hurtbox); `GameState.necromancy`; Tab-ban "Idézés" oldal), választó: `ui/spell_picker.gd`). Kocsmai székek: `world/town.gd`.
 - Főmenü zenéje: Audio "main_menu" (main_menu_theme.ogg, csak a főmenü kéri; a zeneválasztóban "Egyéb"). A bevezető
   történet a régi "menu" (menu_ambience) zenét használja.

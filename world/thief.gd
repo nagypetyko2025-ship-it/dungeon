@@ -217,7 +217,7 @@ static func _pay() -> String:
 	if Progress.camp_gold < GOLD_AMOUNT:
 		Audio.play("ui_error")
 		return "[i]Megrázza az erszényedet, aztán visszadobja.[/i]\n\nEz nem %d arany. " % GOLD_AMOUNT \
-			+ "Nekem is tudok számolni, barátom. (Tábori aranyad: %d)" % Progress.camp_gold
+			+ "Én is tudok számolni, barátom. (Tábori aranyad: %d)" % Progress.camp_gold
 	Progress.camp_gold -= GOLD_AMOUNT
 	var item := Items.mark_story(Items.random_item("epic", "epic"))
 	Progress.add_to_stash(item)

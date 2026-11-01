@@ -327,7 +327,8 @@ static func add_dust(rarity: String, amount: int) -> void:
 
 ## Egy megölt szörny a Szörnyek könyvébe (a gyakorló pályán nem számít).
 static func add_kill(monster: String) -> void:
-	if monster.is_empty() or GameState.tutorial:
+	# Csalt futásból semmi nem mentődik: az NPC-k ölős küldetései (a kills különbségéből) se haladjanak.
+	if monster.is_empty() or GameState.tutorial or GameState.cheated:
 		return
 	load_game()
 	kills[monster] = int(kills.get(monster, 0)) + 1

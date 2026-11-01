@@ -497,6 +497,26 @@ static func warm_sheets(depth: int) -> void:
 	ResourceWarmer.warm(paths)
 
 
+## Egy átlagos szörny élete ezen az emeleten (a típusok súlyával, a tartományok közepével, az emelet és a hirtelen
+## erősödések szorzóival; a próbatétel nélkül). A mély főellenségek életének felső korlátjához (Boss).
+static var _average_health := {}
+
+
+static func average_health(depth: int) -> float:
+	if _average_health.has(depth):
+		return _average_health[depth]
+	var total := 0.0
+	var weights := 0.0
+	for type in TYPES:
+		if type["min_depth"] <= depth and int(type.get("max_depth", 9999)) >= depth:
+			var range_pair: Array = type["health"]
+			total += (float(range_pair[0]) + float(range_pair[1])) / 2.0 * float(type["weight"])
+			weights += float(type["weight"])
+	var result := total / maxf(weights, 1.0) * (1.0 + HEALTH_PER_DEPTH * (depth - 1)) * pow(SURGE_HEALTH, surges(depth))
+	_average_health[depth] = result
+	return result
+
+
 static func by_name(type_name: String) -> Dictionary:
 	for type in TYPES:
 		if type["name"] == type_name:

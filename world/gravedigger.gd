@@ -307,8 +307,10 @@ static func _give_talisman_quest() -> String:
 		+ "[color=#7a4a10](Új küldetés a J könyvben.)[/color]"
 
 
+## Legendás (vagy mítikus) talizmán; a sztori tárgyakat (Lőrinc iránytűje, a tófenék gyöngye...) nem kéri el.
 static func is_legendary_talisman(item: Variant) -> bool:
-	return item is Dictionary and item.get("slot", "") == "trinket" and item.get("rarity", "") == "legendary"
+	return item is Dictionary and item.get("slot", "") == "trinket" \
+		and Items.at_least(str(item.get("rarity", "")), "legendary") and Items.can_sell(item)
 
 
 static func has_legendary_talisman(inventory: Inventory) -> bool:
@@ -331,7 +333,7 @@ static func _give_talisman(inventory: Inventory) -> String:
 		Progress.change_trust(ID, 30)
 		Progress.save_game()
 		Audio.play("level_up")
-		return "[i]Vendel két kézzel veszi át a(z) %s. A talizmán felizzik a csontujjai között, " % item["name"] \
+		return "[i]Vendel két kézzel veszi át a(z) %s talizmánt. Felizzik a csontujjai között, " % item["name"] \
 			+ "és a fény lassan végigkúszik a karján, egészen a szemgödreiig.[/i]\n\n" \
 			+ "Érzed? Meleg. Húsz éve nem éreztem meleget.\n\n" \
 			+ "Tudod, mit mondott Ambrus, amikor utoljára láttam? Hogy a halottaknak nem az a dolguk, hogy " \

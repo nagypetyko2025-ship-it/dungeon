@@ -22,9 +22,11 @@ const SHEET := "res://assets/enemies/werewolf.png"
 ## 20 000 élet, 24 sebzés; 21. emelet: kb. 30 000, 37).
 const LORD_HEALTH := 40.0
 const LORD_DAMAGE := 2.0
-## Életlopás: a játékosnak okozott sebzés ennyiszeresét gyógyítja (de legalább a max élet ennyi részét).
+## Életlopás: a játékosnak okozott sebzés ennyiszeresét gyógyítja (de legalább a max élet ennyi részét). A minimum
+## 1% volt, de a 40-szeres élet mellett az találatonként 1280 lett: közelharcban (ahol sokszor megüt) a farkas
+## gyorsabban gyógyult, mint ahogy a lovag sebezte (a robot 8 perc alatt 360 000-et ütött rá, és nem halt meg).
 const LIFESTEAL_MULTIPLIER := 8.0
-const LIFESTEAL_MIN := 0.01
+const LIFESTEAL_MIN := 0.002
 ## Feltámadás: ennyi ideig fekszik, és ennyi élettel kel fel.
 const REVIVE_DELAY := 3.0
 const REVIVE_HEALTH := 0.75

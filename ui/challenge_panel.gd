@@ -16,6 +16,8 @@ var _timer_label: Label
 var _challenge := {}
 var _on_start: Callable
 var _offer := false
+## Már indul a tábor felé (a gomb és a bezárás ne váltson kétszer jelenetet).
+var _leaving := false
 
 
 func _ready() -> void:
@@ -29,6 +31,9 @@ func open() -> void:
 
 
 func close() -> void:
+	# Az eredmény után nincs más teendő (a lépcső már nem visz tovább): bezáráskor (Esc, X) is a táborba.
+	if visible and not _offer and not _challenge.is_empty() and not _leaving:
+		_go_to_camp.call_deferred()
 	visible = false
 
 
@@ -49,7 +54,9 @@ func show_result(challenge: Dictionary, item: Dictionary, gold: int) -> void:
 	_offer = false
 	_challenge = challenge
 	_clear()
-	_body.add_child(UiStyle.title_bar("Próbatétel teljesítve!"))
+	var story := challenge.has("story")
+	_body.add_child(UiStyle.title_bar("%s — győzelem!" % challenge.get("title", "A régi tárnák") if story
+		else "Próbatétel teljesítve!"))
 	_body.add_child(_line("Végigértél mind a %d emeleten (%s nehézség)." % [challenge["floors"], challenge["difficulty"]],
 		18, UiStyle.INK))
 	if item.is_empty():
@@ -67,8 +74,8 @@ func show_result(challenge: Dictionary, item: Dictionary, gold: int) -> void:
 		details.text = Items.describe_bbcode(item)
 		_body.add_child(details)
 		_body.add_child(_line("+%d tábori arany (a lent szerzett aranyad egésze)" % gold, 18, GOLD))
-	_body.add_child(_line("A lent szerzett és levitt tárgyak lent maradtak. Új próbatétel vár a bánya mélyén.", 15,
-		UiStyle.INK_LIGHT))
+	_body.add_child(_line("A lent szerzett és levitt tárgyak lent maradtak." + ("" if story
+		else " Új próbatétel vár a bánya mélyén."), 15, UiStyle.INK_LIGHT))
 	var back := _button("Vissza a táborba", _go_to_camp)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_body.add_child(back)
@@ -202,6 +209,9 @@ func _start() -> void:
 
 
 func _go_to_camp() -> void:
+	if _leaving:
+		return
+	_leaving = true
 	GameState.reset()
 	Audio.play("level_up")
 	GamePause.set_paused(get_tree(), false)

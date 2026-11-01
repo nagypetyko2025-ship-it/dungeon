@@ -98,7 +98,7 @@ const DEFINITIONS := {
 	# sebzés hányszorosa adódik hozzá, "crit" = kritikus szorzó. A "stats" további bónuszok.
 	# Kardok (a felszerelt kard látszik suhintáskor)
 	"sword_rusty": {"name": "Rozsdás kard", "slot": "weapon", "rarity": "common", "shop": false,
-		"region": Rect2(307, 10, 10, 21), "base": [1, 1], "scaling": 1.0, "crit": 1.5, "stats": {},
+		"region": Rect2(307, 10, 10, 21), "base": [1, 1], "scaling": 0.7, "crit": 1.5, "stats": {},
 		"description": "Kicsorbult, rozsdás penge. Jobb a semminél."},
 	"sword_knight": {"name": "Lovagkard", "slot": "weapon", "rarity": "common",
 		"region": Rect2(339, 98, 10, 29), "base": [2, 2], "scaling": 0.8, "crit": 1.5,
@@ -127,7 +127,7 @@ const DEFINITIONS := {
 		"stats": {"attack_range": [18, 26], "attack_speed": [8, 15], "crit_chance": [8, 12], "damage_percent": [5, 8]}},
 	# Íjak: nyilat lőnek a kurzor felé, a Távolsági sebzés erősíti őket (az íjász bónuszt kap rájuk).
 	"bow_old": {"name": "Régi íj", "slot": "weapon", "rarity": "common", "weapon_type": "bow", "shop": false,
-		"base": [1, 1], "scaling": 1.0, "crit": 1.5, "stats": {},
+		"base": [1, 1], "scaling": 0.7, "crit": 1.5, "stats": {},
 		"description": "Kopott, de még feszül a húrja. Az íjász első íja."},
 	"bow_hunter": {"name": "Vadászíj", "slot": "weapon", "rarity": "common", "weapon_type": "bow",
 		"base": [2, 2], "scaling": 0.8, "crit": 1.5, "stats": {"attack_range": [5, 10], "accuracy": [2, 4]}},

@@ -514,7 +514,8 @@ static func _report_chaos() -> String:
 static func _give_legendary(inventory: Inventory) -> String:
 	for i in inventory.bag.size():
 		var item: Variant = inventory.bag[i]
-		if item is Dictionary and item.get("rarity", "") == "legendary":
+		# (A sztori tárgyakat — Gáspár kardja, az egyedi talizmánok — nem viszi el, azok nem pótolhatók.)
+		if item is Dictionary and item.get("rarity", "") == "legendary" and Items.can_sell(item):
 			inventory.take_from_bag(i)
 			Progress.camp_gold += TREASURY_GOLD
 			Progress.set_npc_quest(TREASURY_QUEST, "done")
@@ -522,7 +523,7 @@ static func _give_legendary(inventory: Inventory) -> String:
 			Progress.change_trust(ID, 15)
 			Progress.save_game()
 			Audio.play("coin")
-			return "[i]A király a kezébe veszi a(z) %s, és sokáig nézi a fáklyák fényében.[/i]\n\n" % item["name"] \
+			return "[i]A király a kezébe veszi a legendás tárgyat (%s), és sokáig nézi a fáklyák fényében.[/i]\n\n" % item["name"] \
 				+ "Ilyet már régen láttam. A kincstárban a helye. A kincstárnokom kifizet.\n\n" \
 				+ "[color=#7a4a10](+%d tábori arany)[/color]" % TREASURY_GOLD
 	Audio.play("ui_error")
@@ -546,6 +547,15 @@ static func _betray() -> String:
 
 
 static func _protect() -> String:
+	# Ha Bence már a kocsmában lakik, a romos házban nem tudja megköszönni: az Árnyékpengét a tábori ládába teszi.
+	var thanks := ""
+	if Ruin.thief_gone() and not Progress.asked_topics(Thief.ID).has("king_secret"):
+		Progress.add_to_stash(Items.mark_story(Items.create("dagger_shadow")))
+		Progress.mark_asked(Thief.ID, "king_secret")
+		Progress.change_trust(Thief.ID, 30)
+		thanks = "\n\n[i]Este a tábori ládád tetején egy fekete kendőbe csavart penge vár, mellette egy cetli: " \
+			+ "„Hallottam, mit mondtál a királynak. Köszönöm. — B.”[/i]\n\n" \
+			+ "[color=#7a4a10](Az Árnyékpenge a tábori ládádba került.)[/color]"
 	Progress.set_npc_quest(THIEF_QUEST, "done")
 	Progress.set_npc_quest(THIEF_FATE, "protected")
 	Progress.mark_asked(ID, "protect")
@@ -553,7 +563,7 @@ static func _protect() -> String:
 	Progress.save_game()
 	return "[i]A király hosszan a szemedbe néz, mintha a gondolataidban olvasna.[/i]\n\n" \
 		+ "Semmit? Hm. Kár. Pedig azt hittem, a Mélység hőse a korona szeme és füle is lehet.\n\n" \
-		+ "[i]Legyint.[/i] Rendben. Előbb-utóbb úgyis hibázik. Mindenki hibázik."
+		+ "[i]Legyint.[/i] Rendben. Előbb-utóbb úgyis hibázik. Mindenki hibázik." + thanks
 
 
 static func portrait() -> Texture2D:

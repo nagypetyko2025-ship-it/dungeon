@@ -18,6 +18,7 @@ var _riding := false
 ## Működik-e a lift (a 10. emeleten a javítás után, a mély aknák emeletein mindig): felmehetsz vele.
 var _working := false
 var _lift_prompt: Label
+var _rig: LiftRig
 const CAGE_RANGE := 70.0
 var _dialogue: DialoguePanel
 var _prompt: Label
@@ -30,6 +31,7 @@ func _ready() -> void:
 	var rig := LiftRig.new()
 	rig.working = Engineer.repaired() or GameState.depth != Engineer.DEPTH
 	_working = rig.working
+	_rig = rig
 	add_child(rig)
 	_cage = rig.cage
 	_engineer = Node2D.new()
@@ -138,6 +140,9 @@ func _ride() -> void:
 	down.tween_property(_cage, "position", start, 2.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	down.parallel().tween_property(_cage, "modulate:a", 1.0, 1.0)
 	_riding = false
+	# Megjavítva: már most is felmehetsz vele (nem csak az emelet újratöltése után).
+	_working = true
+	_rig.working = true
 
 
 func _unhandled_input(event: InputEvent) -> void:

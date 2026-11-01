@@ -19,6 +19,12 @@ var pierce := 0
 ## Közös játék: a lövés sorszáma a társaknál (lásd Player.share_shot); 0 = nincs megosztva.
 var net_id := 0
 var _pierced: Array[Area2D] = []
+## Többlövés: egy sorozat nyilainak közös listája (szörny Hurtbox azonosító -> igaz). Ugyanazt a szörnyet a sorozat
+## első nyila teljes, a többi VOLLEY_SHARE erővel sebzi. (A szörnyek forrásonként sebezhetők, lásd Hurtbox.per_source:
+## enélkül egy főellenséget minden nyíl teljes erővel érne, és az 5 nyíl ötszörös sebzés lenne.)
+const VOLLEY_SHARE := 0.5
+var volley := {}
+var _repeat := false
 var _started := false
 
 var _travelled := 0.0
@@ -122,7 +128,18 @@ func skips(hurtbox: Area2D) -> bool:
 	if hurtbox in _pierced:
 		return true
 	_pierced.append(hurtbox)
+	var id := hurtbox.get_instance_id()
+	_repeat = volley.has(id)
+	volley[id] = true
 	return false
+
+
+## A sorozat többi nyila ugyanazt a szörnyet kisebb erővel sebzi (lásd VOLLEY_SHARE).
+func roll_hit() -> Dictionary:
+	var hit := super.roll_hit()
+	if _repeat:
+		hit["damage"] = maxi(1, roundi(int(hit["damage"]) * VOLLEY_SHARE))
+	return hit
 
 
 ## A Hurtbox hívja, ha a nyíl talált. Ha eltűnik, a társak gépén repülő mása is itt áll meg (a falba

@@ -147,6 +147,8 @@ static func _spikes(player: Node2D, direction: Vector2, hit: int, count: int) ->
 	Audio.play("boss_slam", -8.0, 0.2)
 	var parent := player.get_parent()
 	var start := player.global_position + Vector2(0, -4)
+	# Egy varázslás tüskéi közösen: egy szörnyet csak egyszer sebeznek (lásd EarthSpike.skips).
+	var struck := {}
 	for i in count:
 		var at := start + direction * (52.0 + i * 46.0)
 		var query := PhysicsPointQueryParameters2D.new()
@@ -155,6 +157,7 @@ static func _spikes(player: Node2D, direction: Vector2, hit: int, count: int) ->
 		if not player.get_world_2d().direct_space_state.intersect_point(query, 1).is_empty():
 			break
 		var spike := EarthSpike.new()
+		spike.struck = struck
 		spike.damage = hit
 		spike.knockback = 460.0
 		spike.set_meta("source", player)
@@ -333,6 +336,17 @@ static func pick_first(spell: String) -> void:
 ## Kinövő földtüske (0x72 tüskecsapda-kockák, 2x-es): egy pillanatig sebez és ellök.
 class EarthSpike:
 	extends Hitbox
+
+	## A varázslás közös listája (szörny Hurtbox -> az őt eltaláló tüske): a nagy szörnyet több tüske is fedi,
+	## de csak az első sebzi (a szörnyek forrásonként sebezhetők, lásd Hurtbox.per_source).
+	var struck := {}
+
+	func skips(hurtbox: Node) -> bool:
+		var id := hurtbox.get_instance_id()
+		if struck.has(id):
+			return int(struck[id]) != get_instance_id()
+		struck[id] = get_instance_id()
+		return false
 
 	func _ready() -> void:
 		collision_layer = 8

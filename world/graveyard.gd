@@ -327,6 +327,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not digger:
 		var tablet := _nearest_tablet()
 		_panel.show_text(tablet["title"], tablet["text"])
+	else:
+		_dialogue.greeting = Gravedigger.greeting()
 	_camp.get_node("Menus").call("open_menu", _dialogue if digger else _panel)
 
 

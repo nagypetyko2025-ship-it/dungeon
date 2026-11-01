@@ -97,7 +97,8 @@ const QUESTS := {
 		"text": "Ábel csónakja a móló végén ringatózik: azzal átjutsz a szigetre. A rácsos lépcső alatt az "
 			+ "elárasztott kripta, a legalján az, ami a tó fényeit gyújtja. [b]Győzd le[/b], aztán meséld el Ábelnek.",
 		"reward": "A tófenék gyöngye (egyedi talizmán) és %d tábori arany" % CRYPT_GOLD,
-		"doing": "kelj át a csónakkal a szigetre, és menj le a lépcsőn", "done": "a tó elcsendesült"},
+		"doing": "kelj át a csónakkal a szigetre, és menj le a lépcsőn",
+		"doing_slain": "meséld el Ábelnek, mi volt a kripta alján", "done": "a tó elcsendesült"},
 }
 ## A tárgy átadása után: még három történet (a régiek is maradnak; a beszélgetés lapozható).
 const MORE_STORIES: Array[Dictionary] = [
@@ -213,6 +214,13 @@ func _options() -> Array[Dictionary]:
 
 
 # ---------------------------------------------------------------- a tó titka (lásd LakeCrypt)
+
+## A J könyv Horgász fülén a kalóz-számláló (mint a többi ölős küldetésnél).
+static func doing_text(id: String, fallback: String) -> String:
+	if id == KEY_QUEST and Progress.npc_quest_state(KEY_QUEST) == "active":
+		return "%s: %d / %d" % [fallback, key_progress(), KEY_GOAL]
+	return fallback
+
 
 ## Hány kalózt győztél le a kulcs-küldetés óta.
 static func key_progress() -> int:
@@ -347,7 +355,8 @@ func _take_item() -> String:
 		return "[i]Megnézi a táskádat, és megrázza a fejét.[/i]\n\nNem látok benne semmi neki valót."
 	var inventory: Inventory = _player.get_node("Inventory")
 	var item: Dictionary = inventory.take_from_bag(index)
-	Progress.camp_inventory = inventory.save_data()
+	if not GameState.on_break:
+		Progress.camp_inventory = inventory.save_data()
 	Progress.set_npc_quest(ITEM_QUEST, "done")
 	Progress.mark_asked(ID, "bring")
 	Progress.change_trust(ID, 15)

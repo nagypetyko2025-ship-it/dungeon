@@ -4,6 +4,30 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-01", "items": [
+		"Végigjátszottuk a játékot mind a 6 karakterrel (történetek, küldetések), és amit találtunk, javítottuk:",
+		"Javítva: Ábel csónakja a kis kulcs után azonnal ott van a mólónál (eddig csak a tábor újratöltése után jelent meg).",
+		"Javítva: Vendel nem kéri el az egyedi sztori talizmánokat (Lőrinc iránytűje, a tófenék gyöngye...), a mítikusat viszont elfogadja; "
+			+ "a király kincstára sem viszi el a sztori legendás tárgyakat.",
+		"Javítva: ha a királynál hallgattál Bencéről, de ő már a kocsmában lakik, az Árnyékpengét a tábori ládádba teszi (eddig sehol nem kaptad meg).",
+		"Javítva: a főellenség utáni pihenő alatt nem indulhatsz próbatételre / történet-futásra (eddig elveszett a félbehagyott futás, "
+			+ "és a tárgyak megkettőződhettek), a boszorkány sem fejleszt, és Lőrinc műhelyének, a rejtett sírnak a ládája ilyenkor a tábori ládába tesz.",
+		"Javítva: ha a próbatétel vagy a történet-futás eredményablakát bezárod, akkor is a táborba jutsz (eddig az utolsó emeleten ragadtál); "
+			+ "a történet-futásoknál a saját címük látszik. Közös játékban a történet-futások nem indulnak.",
+		"Javítva: Bence árnyéklépése nem visz át falon és zárt ajtón (eddig a szomszéd szobába vagy a falba is léphetett).",
+		"Csalt futás ölései nem számítanak a küldetésekbe és a Szörnyek könyvébe; a magától felrobbanó robbanó goblin sem (ahogy Döme mondja).",
+		"Javítva: a 20 emeletes próbatétel Vérfarkasa is beszámít Gáspár küldetésébe; Bertalan javítása után a lift azonnal használható.",
+		"Javítva: Vendel a temetőben is köszön; a Küldetések könyvének Horgász fülén látszik a kalózszámláló, és a kripta után a helyes teendő.",
+		"Balansz: a szörnyek eddig minden találat után 0,2 mp-ig sebezhetetlenek voltak, akármi találta őket: a főellenséget "
+			+ "másodpercenként legfeljebb 5 találat érte, a Többlövés nyilai elvesztek (az íjász 8 perc alatt sem ölte meg a Vérfarkast). "
+			+ "Mostantól minden nyíl és varázslat külön sebez; a sorozat többi nyila ugyanazt a szörnyet fele erővel éri.",
+		"Balansz: a Vérfarkas életlopása találatonként legalább 256 (eddig 1280): közelharcban eddig gyorsabban gyógyult, mint ahogy sebezték.",
+		"Balansz: a 40. emelet után a sima főellenségek élete nem nő az égig (a 72.-en 13 millió helyett ~570 000, a 99.-en "
+			+ "158 millió helyett ~4 millió); a nagy főellenségek (Ősgépezet, Pokolkapu Őre, Azazel) mindig erősebbek maradnak.",
+		"Balansz: a rozsdás kard és a régi íj a sebzésed kisebb részét adja (skálázás 0,7), így a talált kardok és íjak tényleg jobbak.",
+		"Balansz: Vendel csontvázai emeletenként 12%-kal többet sebeznek (a szinttel továbbra sem nőnek): eddig a 9. emelet után "
+			+ "szinte nem lehetett vele végezni egy emelettel.",
+		"Szövegek: a boszorkány megmondja, hol találsz Vámpírfogat (vámpír nincs a Mélységben); Bertalan liftes szövegei illenek a mélység "
+			+ "kinézetéhez (a 30. Káoszkő, a 70. jeges); néhány elírás.",
 		"Simább mozgás nagy frissítésű (pl. 144 / 160 Hz-es) monitoron: a karakter és a szörnyek minden képkockán mozdulnak, "
 			+ "nem rángatnak; kevesebb apró akadás harc közben (nem ment minden ölésnél, a hangok és a következő zene előre betöltődnek).",
 		"Gyorsabb betöltés: a tábor és a kazamata a főmenüben előre betöltődik, és a tábor erdeje egyben rajzolódik, így belépéskor sokkal kevesebbet akad a játék.",

@@ -32,8 +32,8 @@ const QUESTS := {
 			+ "[b]1500 tábori aranyat[/b] a kötélre és a csigákra.",
 		"reward": "a lift a 20. emeletre is levisz", "doing": "juss le a 20. emeletre",
 		"doing_reached": "leértél: vigyél Bertalannak 1500 tábori aranyat", "done": "a lift a 20. emeletig jár"},
-	"lift_30": {"name": "A vérkő-ér",
-		"text": "A harmincadik emeleten vöröslő kő fut a falakban, és Bertalan szerint megeszi a vasat. Juss le " \
+	"lift_30": {"name": "A káoszkő-ér",
+		"text": "A harmincadik emeleten lilán izzó obszidián fut a falakban, és Bertalan szerint megeszi a vasat. Juss le " \
 			+ "egy futásban a [b]30. emeletre[/b], és fizess [b]2500 tábori aranyat[/b] a rézzel bevont kötélre.",
 		"reward": "a lift a 30. emeletre is levisz", "doing": "juss le a 30. emeletre",
 		"doing_reached": "leértél: vigyél Bertalannak 2500 tábori aranyat", "done": "a lift a 30. emeletig jár"},
@@ -53,8 +53,8 @@ const QUESTS := {
 			+ "ezer évig bírta, az ő lifte is fogja. Juss le a [b]60. emeletre[/b], és fizess [b]7000 tábori aranyat[/b].",
 		"reward": "a lift a 60. emeletre is levisz", "doing": "juss le a 60. emeletre",
 		"doing_reached": "leértél: vigyél Bertalannak 7000 tábori aranyat", "done": "a lift a 60. emeletig jár"},
-	"lift_70": {"name": "Ahol a kötél ég",
-		"text": "A hetvenedik emeleten olyan forró a levegő, hogy a kender meggyullad. Bertalan láncot kovácsoltat " \
+	"lift_70": {"name": "Ahol a kötél elpattan",
+		"text": "A hetvenedik emeleten olyan hideg van, hogy a kender üvegként pattan el. Bertalan láncot kovácsoltat " \
 			+ "kötél helyett. Juss le a [b]70. emeletre[/b], és fizess [b]9000 tábori aranyat[/b] a láncra.",
 		"reward": "a lift a 70. emeletre is levisz", "doing": "juss le a 70. emeletre",
 		"doing_reached": "leértél: vigyél Bertalannak 9000 tábori aranyat", "done": "a lift a 70. emeletig jár"},
@@ -90,9 +90,9 @@ const CHAPTERS := {
 			+ "olajozta senki! Juss le, mondd el, milyen hangja van, és hozz %d aranyat.",
 		"[i]Áhítattal hallgatja, ahogy leírod a gépezet dübörgését.[/i]\n\nTudtam! Ellensúly! Az egész ellensúlyon " \
 			+ "jár! Na, ezt beépítettem. A hatvanadik a tiéd."],
-	70: ["A hetvenediken ég a levegő. Szó szerint: a kender meggyullad. Láncot kovácsoltatok Ambrussal " \
-			+ "kötél helyett. Előbb nézd meg, mennyire forró, aztán %d arany a láncra.",
-		"[i]A ketrec fölött vastag, kormos lánc feszül.[/i]\n\nAmbrus három éjjel kalapálta. Azt mondja, ez a " \
+	70: ["A hetvenediken fagy a levegő. Szó szerint: a kender üvegként pattan el. Láncot kovácsoltatok Ambrussal " \
+			+ "kötél helyett. Előbb nézd meg, mennyire hideg, aztán %d arany a láncra.",
+		"[i]A ketrec fölött vastag, deres lánc feszül.[/i]\n\nAmbrus három éjjel kalapálta. Azt mondja, ez a " \
 			+ "legszebb lánc, amit valaha csinált, és ha elszakad, engem kovácsol bele a következőbe. A hetvenedik nyitva."],
 	80: ["Az utolsó szakasz. A nyolcvanadik emelet, a Pokolkapu Őre. Ennél lejjebb nem viszem: ami a " \
 			+ "kapu mögött van, ahhoz nem építek liftet. Juss le, és hozz %d aranyat. Ez lesz a mesterművem.",
@@ -251,8 +251,8 @@ static func options(player: Node) -> Array[Dictionary]:
 	if repaired():
 		list.append({"id": "running", "text": "Működik a lift?",
 			"on_choose": func() -> String: return "[i]Megpaskolja a zúgó fogaskereket.[/i]\n\n" \
-				+ "Mint a svájci óra. A táborból bármikor lejöhetsz vele ide, a tizedik emeletre. Fölfelé is " \
-				+ "visz, ha meghalsz... na jó, az csak vicc volt. Fölfelé a lépcső vagy a portál."})
+				+ "Mint a svájci óra. A táborból bármikor lejöhetsz vele ide, a tizedik emeletre. És fölfelé is " \
+				+ "visz: a ketrecnél felmehetsz vele a táborba, ha elég volt odalent."})
 	elif Progress.npc_quest_state(OFFER_FLAG) != "done":
 		list.append({"id": "repair", "text": "Meg lehet javítani a liftet?",
 			"on_choose": func() -> String: return _offer()})

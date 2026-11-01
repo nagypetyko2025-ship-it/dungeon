@@ -299,10 +299,12 @@ func _open_chest() -> void:
 	var to_stash := false
 	for id in CHEST_ITEMS:
 		var item := Items.mark_story(Items.create(id))
-		if not inventory.add_item(item):
+		# Pihenő közben a futás táskája van nálad: a tárgyak a tábori ládába mennek (lásd WellCave._open_chest).
+		if GameState.on_break or not inventory.add_item(item):
 			Progress.stash.append(item)
 			to_stash = true
-	Progress.camp_inventory = inventory.save_data()
+	if not GameState.on_break:
+		Progress.camp_inventory = inventory.save_data()
 	Progress.save_game()
 	_camp.call("_update_gold")
 	var text := "+%d tábori arany, Görbe kés, Ismétlő számszeríj" % CHEST_GOLD

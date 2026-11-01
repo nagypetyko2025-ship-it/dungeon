@@ -172,8 +172,9 @@ const ASK := {
 ## Amíg a küldetés fut: kérdés és válasz (a haladás a végén).
 const WAIT := {
 	FANG_QUEST: ["Hol találok vámpírfogat?",
-		"[i]Meg sem fordul.[/i]\n\nAhol a vámpírok. Lent, a Mélységben, ahol a fáklya is fázik. Ha megölsz egyet, "
-		+ "és szerencséd van, a foga a porban marad. Hozd ide, mielőtt eladod valami ostoba kereskedőnek."],
+		"[i]Meg sem fordul.[/i]\n\nLent, a Mélységben, ahol a fáklya is fázik. Vámpír ott már nem jár, de a fogukat "
+		+ "a sötét még őrzi: néha egy szörny hagyja a porban, gyakrabban egy főellenség, és a boltos is árulhat egyet. "
+		+ "Hozd ide, mielőtt eladod valami ostoba kereskedőnek."],
 	SISTERS_QUEST: ["Hogyan ismerem fel a nővéreidet?",
 		"Sehogy. A Tűzboszorkány mind egyforma: piros ruha, öt tűzgolyó legyezőben. A nővéreim nem fognak "
 		+ "megszólítani. Csak öld meg őket, gyermekem, mindet, akit látsz. A lélek majd tudja, hová menjen."],
@@ -367,6 +368,10 @@ static func options(inventory: Inventory) -> Array[Dictionary]:
 
 
 func _open_panel() -> String:
+	# Pihenő közben (a főellenség után) a kiképzősátorhoz hasonlóan zárva: a fejlesztés a futó futásra is hatna.
+	if GameState.on_break:
+		Audio.play("ui_error")
+		return "Most nem, gyermekem. A tested még odalent jár: előbb fejezd be, amit elkezdtél, aztán gyere vissza."
 	Audio.play("ui_open")
 	var menus := _camp.get_node("Menus")
 	menus.call("close_current")

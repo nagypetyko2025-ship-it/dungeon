@@ -267,6 +267,9 @@ func _focus() -> String:
 func _process(delta: float) -> void:
 	if _prompt == null:
 		return
+	# A kis kulcs leadása után (a táborban, újratöltés nélkül) is ott legyen a csónak.
+	if _boat == null and Fisherman.can_cross():
+		_build_boat()
 	var focus := _focus()
 	match focus:
 		"boat": _prompt.text = "[E] Átevezés a szigetre"

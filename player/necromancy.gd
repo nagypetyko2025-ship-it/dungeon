@@ -1,7 +1,8 @@
 class_name Necromancy
 ## Vendel (a csontváz sírásó) idézésének fejlesztései: minden LEVEL_EVERY. szintlépéskor a stat-kártyák
 ## helyett ezek közül választ (lásd LevelUp; ha több a lehetőség, CARD_COUNT véletlenül, újradobható).
-## A csontvázak statjai NEM nőnek maguktól (sem a szinttel, sem Vendel sebzésével): csak ezekkel.
+## A csontvázak statjai NEM nőnek maguktól (sem a szinttel, sem Vendel sebzésével): csak ezekkel, és a sebzésük az
+## emelettel (DEPTH_DAMAGE).
 ## A futáshoz tartoznak (GameState.necromancy, a félbehagyott futással együtt mentődnek):
 ##   count     +1 csontváz lehet egyszerre — minden fajta együtt számít (alapból BASE_MAX, legfeljebb MAX_MAX)
 ##   life      +LIFE_STEP mp élettartam (alapból BASE_LIFE, legfeljebb MAX_LIFE)
@@ -32,6 +33,9 @@ const GIANT_HITS := 3
 const GIANT_SPEED := 0.7
 ## Csontváz-erősítés szintenként.
 const POWER_DAMAGE := 0.2
+## Az emelettel viszont nő a sebzésük (a szinttel és Vendel statjaival továbbra sem): emeletenként ennyivel. Nélküle a
+## 9. emelet után Vendel egy emeletet sem tisztított ki 8 perc alatt (a szörnyek élete emeletenként +60%).
+const DEPTH_DAMAGE := 0.12
 const POWER_HITS := 1
 const POWER_ATTACK_SPEED := 0.08
 const MAX_POWER := 10
@@ -73,7 +77,8 @@ static func power() -> int:
 
 ## Egy csontváz sebzése ("skeleton" / "archer" / "giant").
 static func damage(kind: String) -> int:
-	var amount := float(BASE_DAMAGE + bonus_damage()) * (1.0 + POWER_DAMAGE * power())
+	var amount := float(BASE_DAMAGE + bonus_damage()) * (1.0 + POWER_DAMAGE * power()) \
+		* (1.0 + DEPTH_DAMAGE * maxi(GameState.depth - 1, 0))
 	return maxi(1, roundi(amount * (GIANT_DAMAGE if kind == "giant" else 1.0)))
 
 

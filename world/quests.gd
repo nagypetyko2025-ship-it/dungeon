@@ -55,7 +55,7 @@ const ALL := {
 	"pumpkin_patch": {"name": "Tökfejek", "kind": "kill", "goal": 4, "target": ["pumpkin_dude"], "tier": "easy",
 		"text": "Ölj meg 4 töklámpást.", "reward": {"item": "rare"}},
 	"chest_trap": {"name": "Ládacsapda", "kind": "kill", "goal": 2, "target": ["mimic"], "tier": "easy",
-		"text": "Ölj meg 2 mimikét (a ládának álcázott szörnyet).", "reward": {"gold": 70}},
+		"text": "Ölj meg 2 mimiket (a ládának álcázott szörnyet).", "reward": {"gold": 70}},
 	"graveyard_keeper": {"name": "Temetőőr", "kind": "kill", "goal": 20, "tier": "easy",
 		"target": ["tiny_zombie", "zombie", "skelet"],
 		"text": "Ölj meg 20 élőhalottat (zombi, csontváz).", "reward": {"gold": 70}},

@@ -581,10 +581,13 @@ func _open_chest() -> void:
 	var inventory: Inventory = _player.get_node("Inventory")
 	var item := Items.mark_story(Items.create(CHEST_ITEM))
 	var text := "+%d tábori arany, Lőrinc iránytűje" % CHEST_GOLD
-	if not inventory.add_item(item):
+	# Pihenő közben a futás táskája van nálad: az iránytű a tábori ládába megy, és a futás felszerelése nem kerül a
+	# tábori felszerelésbe (különben halál után megkettőződne).
+	if GameState.on_break or not inventory.add_item(item):
 		Progress.stash.append(item)
 		text += " (a tábori ládádba került)"
-	Progress.camp_inventory = inventory.save_data()
+	if not GameState.on_break:
+		Progress.camp_inventory = inventory.save_data()
 	Progress.save_game()
 	_camp.call("_update_gold")
 	FloatingText.spawn(self, _center(CHEST_TILE) + Vector2(0, -30), text, Color(1, 0.85, 0.3), 18)

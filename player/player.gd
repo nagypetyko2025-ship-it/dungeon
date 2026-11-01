@@ -732,19 +732,29 @@ func _shadow_step(cursor: Vector2) -> void:
 		var body := enemy as Node2D
 		if body == null or body.global_position.distance_to(global_position) > SHADOW_STEP_RANGE:
 			continue
+		# Csak látható szörnyre: a fal, a zárt ajtó vagy az oszlop mögöttire (pl. a szomszéd szobában) nem.
+		if not _clear_line(global_position, body.global_position):
+			continue
 		var to_cursor := body.global_position.distance_to(cursor)
 		if to_cursor < best:
 			best = to_cursor
 			target = body
 	if target == null:
 		return
-	_shadow_left = SHADOW_STEP_COOLDOWN
 	var away := (target.global_position - global_position).normalized()
 	if away == Vector2.ZERO:
 		away = Vector2.RIGHT
-	# A háta mögé; ha ott fal van, elé.
+	# A háta mögé; ha ott fal van (vagy a fal / ajtó túloldala lenne), elé; ha az sem jó, nem lép.
 	var behind := target.global_position + away * 30.0
-	var destination := behind if _point_free(behind) else target.global_position - away * 30.0
+	var front := target.global_position - away * 30.0
+	var destination := Vector2.INF
+	for spot: Vector2 in [behind, front]:
+		if _point_free(spot) and _clear_line(target.global_position, spot):
+			destination = spot
+			break
+	if destination == Vector2.INF:
+		return
+	_shadow_left = SHADOW_STEP_COOLDOWN
 	_shadow_puff(global_position)
 	global_position = destination
 	_knockback = Vector2.ZERO
@@ -756,6 +766,12 @@ func _shadow_step(cursor: Vector2) -> void:
 	_apply_stats()
 	Audio.play("dodge")
 	FloatingText.spawn(get_parent(), global_position + Vector2(0, -60), "Orvtámadás!", Color(0.75, 0.5, 1.0), 20)
+
+
+## Nincs-e fal, ajtó vagy oszlop (a "world" réteg) a két pont között (a testek közepe: kicsit a talp fölött).
+func _clear_line(from: Vector2, to: Vector2) -> bool:
+	var ray := PhysicsRayQueryParameters2D.create(from + Vector2(0, -8), to + Vector2(0, -8), 1)
+	return get_world_2d().direct_space_state.intersect_ray(ray).is_empty()
 
 
 func _point_free(at: Vector2) -> bool:
@@ -964,9 +980,12 @@ func _shoot(aim_angle: float) -> void:
 	# és szétfelé repülnek (sosem keresztezik egymást).
 	var side := direction.rotated(PI / 2.0)
 	var type_data: Dictionary = WEAPON_TYPES[_weapon_type]
+	# A sorozat közös listája: ugyanazt a szörnyet csak az első nyíl sebzi teljes erővel (lásd PlayerArrow.volley).
+	var volley := {}
 	for i in count:
 		var k := i - (count - 1) / 2.0
 		var arrow: Area2D = PLAYER_ARROW.new()
+		arrow.volley = volley
 		arrow.direction = direction.rotated(deg_to_rad(spread) * k)
 		arrow.speed = ARROW_SPEED * float(type_data.get("arrow_speed", 1.0))
 		arrow.max_distance = BOW_RANGE * _stats.attack_range / 100.0 * float(type_data.get("range", 1.0))

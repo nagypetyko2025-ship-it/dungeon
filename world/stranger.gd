@@ -342,7 +342,7 @@ static func _give_talisman(inventory: Inventory) -> String:
 			Progress.camp_gold += TALISMAN_GOLD
 			Progress.save_game()
 			Audio.play("level_up")
-			return "[i]Két kézzel veszi át a(z) %s, és sokáig hallgatja, mintha beszélne hozzá.[/i]\n\n" % item["name"] \
+			return "[i]Két kézzel veszi át a talizmánt (%s), és sokáig hallgatja, mintha beszélne hozzá.[/i]\n\n" % item["name"] \
 				+ "Igen... ez az. Érzed? Zümmög.\n\n" \
 				+ "[i]Suttog valamit. A levegő megremeg körülöttetek, és a kút kávája halványkék fényben izzik " \
 				+ "fel egy pillanatra.[/i]\n\n" \

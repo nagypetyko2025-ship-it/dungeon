@@ -79,6 +79,9 @@ const BOSS_EVERY := 3
 const LATER_BOSS_HEALTH := 4.0
 const LATER_BOSS_GROWTH := 1.3
 const LATER_BOSS_DAMAGE_STEP := 0.06
+## Ettől az emelettől (a Káosz Ura után) a sima főellenség élete legfeljebb ennyi átlagos szörnyé (EnemyTypes.average_health).
+const DEEP_BOSS_FROM := 40
+const DEEP_BOSS_SHARE := 240.0
 const BOSS_SCALE := 1.8
 const ATTACK_INTERVAL := Vector2(2.2, 3.2)
 const ENRAGE_SPEED := 1.2
@@ -183,6 +186,11 @@ func setup_boss(depth: int, special := {}) -> void:
 	if later > 0:
 		stats["health"] = roundi(stats["health"] * pow(LATER_BOSS_GROWTH, later))
 		stats["damage"] = roundi(stats["damage"] * (1.0 + LATER_BOSS_DAMAGE_STEP * later))
+	# A Káosz Ura után a ×1.3-as növekedés elszállna (a 72. emeleten 13 millió, a 99.-en 158 millió élet: több, mint
+	# az Ősgépezeté vagy Azazelé). Innen a sima főellenség legfeljebb DEEP_BOSS_SHARE átlagos szörnynyi életet kap
+	# (kb. 12 teli terem), így a szörnyekkel együtt nő, és a nagy főellenségek alatt marad.
+	if depth > DEEP_BOSS_FROM and special.is_empty():
+		stats["health"] = mini(stats["health"], roundi(EnemyTypes.average_health(depth) * DEEP_BOSS_SHARE))
 	# Próbatétel (lásd Challenge): a főellenség élete, a szörnyek sebzése és a tapasztalat szorzója.
 	if Challenge.active():
 		stats["health"] = maxi(1, roundi(stats["health"] * Challenge.mult("boss_health")))

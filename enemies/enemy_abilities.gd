@@ -332,6 +332,8 @@ func _explode(player: Node2D) -> void:
 		player.call("_on_hurt", blast)
 		blast.queue_free()
 	_busy = false
+	# Magától robbant fel: ez nem a te győzelmed (Döme goblinpora, a Szörnyek könyve nem számolja, lásd Room).
+	enemy.set_meta("self_destruct", true)
 	enemy.get_node("Health").damage(99999, false)
 
 

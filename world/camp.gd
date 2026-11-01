@@ -1648,6 +1648,19 @@ func enter_dungeon_now(start_depth: int) -> void:
 
 ## A próbatétel indítása (a bánya mélyén, a lyuk lépcsőjénél; lásd Mine és ChallengePanel).
 func enter_challenge(challenge: Dictionary) -> void:
+	# Pihenő közben nem: az új futás eldobná a félbehagyottat (a mentett pihenő viszont megmaradna, így a tárgyak
+	# megkettőződnének). Előbb a kék portálon vissza, és fejezd be.
+	if _on_break:
+		Audio.play("ui_error")
+		get_node("Menus").call("close_current")
+		_toast("Pihenő közben nem indulhatsz új útra: előbb fejezd be a futásodat (kék portál).")
+		return
+	# Közös játékban a próbatétel és a történet-futások nem érhetők el (a csapat közös emeleteit összezavarnák).
+	if NetLobby.is_playing(get_tree()):
+		Audio.play("ui_error")
+		get_node("Menus").call("close_current")
+		_toast("Közös játékban ez az út nem járható.")
+		return
 	if not _leaving:
 		_enter_dungeon_now(1, false, challenge)
 
