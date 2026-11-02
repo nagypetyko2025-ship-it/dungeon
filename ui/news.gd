@@ -4,6 +4,10 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-02", "items": [
+		"30 új, egyszerű szintlépési kártya: kis bónusz, és nincs (vagy csak egy apró) hátrányuk, így az elején is szépen "
+			+ "lehet erősödni (pl. +2 max élet, +3% ütési sebesség, +2% kritikus esély; ritkán két-három ilyen egyszerre). "
+			+ "Szintlépéskor most szinte mindig van legalább egy hátrány nélküli kártya.",
+		"Kártyák: az íjász nem kap közelharci, a többiek nem kapnak távolsági sebzés kártyát (semmi hasznuk nem volt).",
 		"Kártya-szerkesztő: a beépített kártyák is átírhatók (✎ jelöli az átírtakat, az eredeti visszaállítható), és minden "
 			+ "kártyán beállítható, egy futásban hányszor vehető ki (vagy végtelenszer). Ha elérted a korlátot, a kártya többet nem jön.",
 		"Ritkább legendás és mítikus kártyák: eddig szintlépésenként kb. 9-13% eséllyel jött legendás és 4-5% eséllyel "

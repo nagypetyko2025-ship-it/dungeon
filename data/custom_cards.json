@@ -1,1 +1,33 @@
-[]
+[
+	{
+		"cost": {},
+		"custom": true,
+		"gain": {
+			"move_speed": 3.0
+		},
+		"icon": "s_buff04",
+		"id": "custom_1793628380",
+		"rarity": "common",
+		"title": "Sebesség"
+	},
+	{
+		"cost": {},
+		"gain": {
+			"damage": 1.0
+		},
+		"icon": "s_buff01",
+		"id": "custom_1793628438",
+		"rarity": "common",
+		"title": "Erő"
+	},
+	{
+		"cost": {},
+		"gain": {
+			"damage_percent": 3.0
+		},
+		"icon": "w_axe007",
+		"id": "custom_1793628508",
+		"rarity": "common",
+		"title": "Sebzés"
+	}
+]

@@ -72,6 +72,65 @@ const ALL: Array[Dictionary] = [
 		"cost": {"move_speed": 15, "health_regen": 0.2}, "icon": "s_shadow14"},
 	{"id": "phantom_blood", "title": "Fantomvér", "rarity": "mythic", "gain": {"dodge": 15, "move_speed": 15},
 		"cost": {"max_health": 5}, "icon": "s_shadow07"},
+	# Egyszerű kártyák: kis bónusz, nincs (vagy csak egy apró) hátrányuk, hogy az elején is lehessen erősödni
+	# anélkül, hogy minden választás elvenne valamit. Átlagos: tiszta előny.
+	{"id": "simple_bowstring", "title": "Feszes húr", "rarity": "common", "gain": {"ranged_damage": 1}, "cost": {},
+		"icon": "w_bow03"},
+	{"id": "simple_spark", "title": "Szikra", "rarity": "common", "gain": {"elemental_damage": 1}, "cost": {},
+		"icon": "s_magic05"},
+	{"id": "simple_meal", "title": "Jó falat", "rarity": "common", "gain": {"max_health": 2}, "cost": {},
+		"icon": "i_c_meat"},
+	{"id": "simple_fresh_air", "title": "Friss levegő", "rarity": "common", "gain": {"health_regen": 0.1}, "cost": {},
+		"icon": "i_leaf"},
+	{"id": "simple_vest", "title": "Bőrmellény", "rarity": "common", "gain": {"defense": 1}, "cost": {},
+		"icon": "a_clothing01"},
+	{"id": "simple_light_feet", "title": "Könnyű láb", "rarity": "common", "gain": {"dodge": 2}, "cost": {},
+		"icon": "a_shoes02"},
+	{"id": "simple_quick_hands", "title": "Gyors kéz", "rarity": "common", "gain": {"attack_speed": 3}, "cost": {},
+		"icon": "w_fist001"},
+	{"id": "simple_sharp_eye", "title": "Éles szem", "rarity": "common", "gain": {"crit_chance": 2}, "cost": {},
+		"icon": "i_eye"},
+	{"id": "simple_long_grip", "title": "Hosszabb nyél", "rarity": "common", "gain": {"attack_range": 3}, "cost": {},
+		"icon": "w_spear002"},
+	{"id": "simple_clover", "title": "Szerencse", "rarity": "common", "gain": {"crit_chance": 1, "dodge": 1}, "cost": {},
+		"icon": "i_clover"},
+	# Átlagos, kicsit több, apró hátránnyal.
+	{"id": "simple_hammer", "title": "Kovácskalapács", "rarity": "common", "gain": {"damage": 2},
+		"cost": {"attack_speed": 2}, "icon": "w_mace002"},
+	{"id": "simple_archer_glove", "title": "Íjászkesztyű", "rarity": "common", "gain": {"ranged_damage": 2},
+		"cost": {"move_speed": 2}, "icon": "s_bow03"},
+	{"id": "simple_rune", "title": "Rúnakő", "rarity": "common", "gain": {"elemental_damage": 2},
+		"cost": {"move_speed": 2}, "icon": "i_crystal01"},
+	{"id": "simple_feast", "title": "Kiadós vacsora", "rarity": "common", "gain": {"max_health": 4},
+		"cost": {"move_speed": 2}, "icon": "i_c_pie"},
+	{"id": "simple_tea", "title": "Gyógytea", "rarity": "common", "gain": {"health_regen": 0.2},
+		"cost": {"attack_speed": 2}, "icon": "p_green02"},
+	# Ritka: két kis bónusz, hátrány nélkül.
+	{"id": "simple_wanderer", "title": "Vándor szerencséje", "rarity": "rare", "gain": {"crit_chance": 2, "dodge": 2},
+		"cost": {}, "icon": "i_rabbitpaw"},
+	{"id": "simple_swordplay", "title": "Kardforgató", "rarity": "rare", "gain": {"damage": 1, "attack_speed": 3},
+		"cost": {}, "icon": "w_sword003"},
+	{"id": "simple_marksman", "title": "Céllövő", "rarity": "rare", "gain": {"ranged_damage": 1, "crit_chance": 2},
+		"cost": {}, "icon": "w_bow08"},
+	{"id": "simple_focus", "title": "Mágusfókusz", "rarity": "rare", "gain": {"elemental_damage": 1, "crit_chance": 2},
+		"cost": {}, "icon": "w_staff02"},
+	{"id": "simple_endurance", "title": "Kitartás", "rarity": "rare", "gain": {"max_health": 3, "health_regen": 0.1},
+		"cost": {}, "icon": "p_red02"},
+	{"id": "simple_chainmail", "title": "Láncing", "rarity": "rare", "gain": {"defense": 2, "max_health": 2},
+		"cost": {}, "icon": "a_armour02"},
+	{"id": "simple_wind_runner", "title": "Szélfutó", "rarity": "rare", "gain": {"move_speed": 4, "dodge": 2},
+		"cost": {}, "icon": "s_wind02"},
+	{"id": "simple_momentum", "title": "Lendület", "rarity": "rare", "gain": {"damage_percent": 4, "attack_speed": 2},
+		"cost": {}, "icon": "s_buff06"},
+	# Epikus: három kis bónusz, hátrány nélkül (gyengébb a hátrányos epikusoknál).
+	{"id": "simple_brave_heart", "title": "Hősi szív", "rarity": "epic",
+		"gain": {"max_health": 5, "defense": 2, "health_regen": 0.1}, "cost": {}, "icon": "s_holy05"},
+	{"id": "simple_weapon_master", "title": "Fegyvermester", "rarity": "epic", "gain": {"damage": 2, "damage_percent": 4},
+		"cost": {}, "icon": "w_gold_sword"},
+	{"id": "simple_falcon_eye", "title": "Sólyomszem", "rarity": "epic", "gain": {"ranged_damage": 2, "crit_chance": 3},
+		"cost": {}, "icon": "i_feather01"},
+	{"id": "simple_arcane", "title": "Arkán tudás", "rarity": "epic", "gain": {"elemental_damage": 2, "damage_percent": 4},
+		"cost": {}, "icon": "w_book03"},
 ]
 
 ## A ritkaságok súlya: egy kártyahelyre előbb ritkaságot sorsolunk ezek szerint (mindig mind az öt közül), aztán
@@ -254,6 +313,10 @@ static func _clean(entry: Dictionary) -> Dictionary:
 static func roll(stats: Stats, count: int, has_bow := false) -> Array[Dictionary]:
 	var by_rarity := {}
 	for card in cards():
+		# Íjjal a közelharci sebzés, íj nélkül a távolsági sebzés kártyája nem jön (annak semmi haszna nem lenne).
+		var gain: Dictionary = card["gain"]
+		if (has_bow and gain.has("damage")) or (not has_bow and gain.has("ranged_damage")):
+			continue
 		if _available(stats, card) and (has_bow or not card.get("needs_bow", false)):
 			var rarity: String = card["rarity"]
 			if not by_rarity.has(rarity):
