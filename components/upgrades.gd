@@ -406,7 +406,12 @@ static func picks_left(card: Dictionary) -> int:
 	var limit := int(card.get("max_picks", 0))
 	if limit <= 0:
 		return -1
-	return maxi(limit - int(GameState.card_picks.get(card.get("id", ""), 0)), 0)
+	return maxi(limit - picks_taken(card), 0)
+
+
+## Ebben a futásban hányszor vetted már ki.
+static func picks_taken(card: Dictionary) -> int:
+	return int(GameState.card_picks.get(card.get("id", ""), 0))
 
 
 static func _available(stats: Stats, card: Dictionary) -> bool:

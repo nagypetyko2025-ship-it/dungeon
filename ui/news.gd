@@ -4,6 +4,7 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-02", "items": [
+		"A korlátos kártyákon szintlépéskor látszik, hányszor vetted már ki ebben a futásban (pl. \"Kivéve: 2 / 5\").",
 		"A játék elején (a 10. karakterszintig) szintlépéskor csak átlagos kártyák jönnek, ritka és epikus csak utána.",
 		"Olcsóbb újradobás szintlépéskor: 3 aranyról indul, és lassan drágul (a 10. kb. 7, a 20. kb. 18 arany; eddig a 10. "
 			+ "már 344 aranyba került).",
