@@ -81,7 +81,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   alapértékét `Stats.LIMITS` minimuma alá vinné. Megjelenés: `ui/upgrade_card.gd` (`UpgradeCard.build`, ritkaság-szín, a
   legendás/mítikus izzik). Kártya-szerkesztő: főmenü bal felső ✎ (alig látható) → `ui/card_editor.gd` (`CardEditor.open`, a lista alján a beépítettek is megnézhetők,
   saját CanvasLayer), a felhasználó kártyái a `data/custom_cards.json`-ba (`Upgrades.CUSTOM_PATH`, res://), a beépítettek
-  átírásai a `data/card_overrides.json`-ba (`OVERRIDES_PATH`, id -> kártya; `Upgrades.builtin_cards()` alkalmazza, a "weight"
+  átírásai a `data/card_overrides.json`-ba (`OVERRIDES_PATH`, id -> kártya; `Upgrades.builtin_cards()` alkalmazza; "Összes beépített visszaállítása" = üres {}; a "weight"
   az eredetié) — **ezeket is commitold és pushold**, mintha te csináltad volna. Kivehetőségi korlát: a kártya "max_picks"
   (0 = végtelen), a futásban kivettek `GameState.card_picks` (RunSave is menti), `Upgrades.picks_left`; elérve nem jön.
   Ritkaságok: common → rare → epic → legendary → mythic (Mítikus, piros: 17 saját tárgy, fegyverfajtánként / helyenként

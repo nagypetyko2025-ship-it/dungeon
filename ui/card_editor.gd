@@ -83,6 +83,7 @@ func _build_list_column() -> VBoxContainer:
 	column.add_child(_small_button("Új kártya", _new_card))
 	_delete_button = _small_button("Kártya törlése", _delete_card)
 	column.add_child(_delete_button)
+	column.add_child(_small_button("Összes beépített visszaállítása", _ask_reset_all))
 	column.add_child(_small_button("Bezárás (Esc)", close))
 	return column
 
@@ -385,6 +386,38 @@ func _select_meta(meta: int) -> void:
 	for item in _card_list.item_count:
 		if _card_list.get_item_metadata(item) == meta:
 			_card_list.select(item)
+
+
+## Minden beépített kártya vissza az eredeti statjaira (megerősítés után); a saját kártyák maradnak.
+func _ask_reset_all() -> void:
+	if Upgrades.overrides().is_empty():
+		_status.text = "Egyik beépített kártya sincs átírva."
+		return
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "Visszaállítás"
+	dialog.dialog_text = "Mind a %d átírt beépített kártya visszakapja az eredeti statjait.\nA saját kártyáid megmaradnak. Biztos?" \
+		% Upgrades.overrides().size()
+	dialog.ok_button_text = "Visszaállítás"
+	dialog.cancel_button_text = "Mégse"
+	dialog.confirmed.connect(_reset_all)
+	dialog.visibility_changed.connect(func() -> void:
+		if not dialog.visible:
+			dialog.queue_free())
+	add_child(dialog)
+	dialog.popup_centered()
+
+
+func _reset_all() -> void:
+	var count := Upgrades.overrides().size()
+	if not Upgrades.save_overrides({}):
+		_status.text = "Nem sikerült menteni (%s)." % Upgrades.OVERRIDES_PATH
+		return
+	var index := _builtin
+	_refresh_list()
+	if index >= 0:
+		_select_meta(-1 - index)
+		_load_builtin(index)
+	_status.text = "Visszaállítva: %d beépített kártya az eredeti statjaira." % count
 
 
 ## Saját kártyánál törlés, beépítettnél az eredeti visszaállítása.
