@@ -3,6 +3,10 @@ class_name News
 ## rövid, játékosnak szóló sor a legfrissebb dátum alá (a legújabb van felül).
 
 const ENTRIES: Array[Dictionary] = [
+	{"date": "2026-11-02", "items": [
+		"Kártya-szerkesztő: a beépített kártyák is átírhatók (✎ jelöli az átírtakat, az eredeti visszaállítható), és minden "
+			+ "kártyán beállítható, egy futásban hányszor vehető ki (vagy végtelenszer). Ha elérted a korlátot, a kártya többet nem jön.",
+	]},
 	{"date": "2026-11-01", "items": [
 		"Javítva: a \"Lights at Night\" zene eleje 9 mp-ig néma volt, így kiválasztva úgy tűnt, nem szól — a néma részt kivágtuk.",
 		"Javítva: a kocsmában Vendel (és minden hosszabb leírású karakter) bemutatkozó lapja kilógott a képernyőből, most kifér.",

@@ -3,7 +3,8 @@ extends Control
 ## Szintlépési kártya-szerkesztő (a főmenü bal felső sarkának alig látható gombjáról): saját kártyák
 ## névvel, ritkasággal, adott és elvett statokkal és ikonnal (Upgrades.ICON_DIR). Mentéskor a projekt
 ## `Upgrades.CUSTOM_PATH` fájljába ír, onnantól a kártya a szintlépéskor is jöhet. Esc / Bezárás: vissza a menübe.
-## A lista alján a beépített kártyák (Upgrades.ALL) is megnézhetők; ezekből mentéskor új saját kártya lesz.
+## A lista alján a beépített kártyák (Upgrades.ALL) is: ezek is átírhatók (`Upgrades.OVERRIDES_PATH`), és az
+## eredeti visszaállítható. Minden kártyán: egy futásban hányszor vehető ki (vagy végtelenszer).
 
 const ROWS := 3
 ## A lista fejléc-sorainak metaadata (nem kártya).
@@ -15,8 +16,12 @@ const CATEGORIES := [["Képességek", ["s_"]], ["Bájitalok", ["p_"]], ["Fegyver
 	["Felszerelés", ["a_", "ac_", "c_"]], ["Tárgyak", ["i_", "e_"]], ["Mind", [""]]]
 
 var _list: Array[Dictionary] = []
-## A szerkesztett kártya indexe a listában (-1: új).
+## A szerkesztett saját kártya indexe a listában (-1: új vagy beépített).
 var _editing := -1
+## A szerkesztett beépített kártya indexe (Upgrades.ALL; -1: nem beépítettet szerkesztünk).
+var _builtin := -1
+var _max_picks: SpinBox
+var _infinite: CheckBox
 var _icon := "s_buff01"
 var _card_list: ItemList
 var _name: LineEdit
@@ -103,6 +108,23 @@ func _build_form_column() -> VBoxContainer:
 	_rarity.item_selected.connect(func(_index: int) -> void: _update_preview())
 	top.add_child(_rarity)
 	column.add_child(top)
+	var picks := HBoxContainer.new()
+	picks.add_theme_constant_override("separation", 8)
+	picks.add_child(_text("Egy futásban legfeljebb:", 16, UiStyle.TEXT_LIGHT))
+	_max_picks = SpinBox.new()
+	_max_picks.min_value = 1
+	_max_picks.max_value = 99
+	_max_picks.suffix = "×"
+	_max_picks.value_changed.connect(func(_value: float) -> void: _update_preview())
+	picks.add_child(_max_picks)
+	_infinite = CheckBox.new()
+	_infinite.text = "Végtelen"
+	_infinite.focus_mode = Control.FOCUS_NONE
+	_infinite.toggled.connect(func(on: bool) -> void:
+		_max_picks.editable = not on
+		_update_preview())
+	picks.add_child(_infinite)
+	column.add_child(picks)
 	column.add_child(_text("Ad (nyereség):", 16, UpgradeCard.GAIN_COLOR))
 	for i in ROWS:
 		_gain_rows.append(_stat_row(column))
@@ -143,7 +165,8 @@ func _build_preview_column() -> VBoxContainer:
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status.custom_minimum_size.x = 220
 	column.add_child(_status)
-	var hint := _text("A kártya a mentés után a szintlépéskor is jöhet (a ritkasága szerinti gyakorisággal).",
+	var hint := _text("A kártya a mentés után a szintlépéskor is jöhet (a ritkasága szerinti gyakorisággal). "
+		+ "Ha egy futásban már annyiszor kivetted, ahány a korlát, többet nem jön. ✎ = átírt beépített kártya.",
 		13, Color(0.7, 0.64, 0.58))
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size.x = 220
@@ -210,8 +233,11 @@ func _pick_icon(icon_name: String) -> void:
 ## Az űrlapból összerakott kártya (ugyanolyan szerkezet, mint az Upgrades.ALL elemei).
 func _current() -> Dictionary:
 	var card := {"title": _name.text.strip_edges(), "rarity": _rarity.get_selected_metadata(), "icon": _icon,
-		"gain": _read_rows(_gain_rows), "cost": _read_rows(_cost_rows)}
-	if _editing >= 0:
+		"gain": _read_rows(_gain_rows), "cost": _read_rows(_cost_rows),
+		"max_picks": 0 if _infinite.button_pressed else int(_max_picks.value)}
+	if _builtin >= 0:
+		card["id"] = Upgrades.ALL[_builtin]["id"]
+	elif _editing >= 0:
 		card["id"] = _list[_editing].get("id", "")
 	else:
 		card["id"] = "custom_%d" % int(Time.get_unix_time_from_system())
@@ -246,11 +272,14 @@ func _update_preview() -> void:
 
 func _new_card() -> void:
 	_editing = -1
+	_builtin = -1
 	_card_list.deselect_all()
 	_name.text = ""
 	_rarity.select(0)
 	_set_rows(_gain_rows, {})
 	_set_rows(_cost_rows, {})
+	_set_picks(0)
+	_delete_button.text = "Kártya törlése"
 	_delete_button.disabled = true
 	_status.text = "Új kártya."
 	_update_preview()
@@ -262,17 +291,27 @@ func _on_list_selected(item: int) -> void:
 	if index >= 0:
 		_load_card(index)
 		return
-	var card: Dictionary = Upgrades.ALL[-1 - index]
-	_fill_form(card)
+	_load_builtin(-1 - index)
+
+
+func _load_builtin(index: int) -> void:
 	_editing = -1
-	_delete_button.disabled = true
-	_status.text = "Beépített kártya: %s. Csak megnézni lehet; ha átírod és mented, új saját kártya lesz belőle." % card["title"]
+	_builtin = index
+	var card: Dictionary = Upgrades.builtin_cards()[index]
+	_fill_form(card)
+	var changed: bool = card.get("changed", false)
+	_delete_button.text = "Eredeti visszaállítása"
+	_delete_button.disabled = not changed
+	_status.text = "Beépített kártya: %s%s. Átírhatod, a mentés felülírja." % [card["title"],
+		" (módosítva)" if changed else ""]
 
 
 func _load_card(index: int) -> void:
 	_editing = index
+	_builtin = -1
 	var card: Dictionary = _list[index]
 	_fill_form(card)
+	_delete_button.text = "Kártya törlése"
 	_delete_button.disabled = false
 	_status.text = "Szerkesztés: %s" % card["title"]
 
@@ -282,9 +321,17 @@ func _fill_form(card: Dictionary) -> void:
 	_rarity.select(maxi(Items.RARITY_ORDER.find(card["rarity"]), 0))
 	_set_rows(_gain_rows, card["gain"])
 	_set_rows(_cost_rows, card["cost"])
+	_set_picks(int(card.get("max_picks", 0)))
 	_icon = card["icon"]
 	_fill_icons()
 	_update_preview()
+
+
+## 0: végtelen.
+func _set_picks(limit: int) -> void:
+	_infinite.set_pressed_no_signal(limit <= 0)
+	_max_picks.editable = limit > 0
+	_max_picks.set_value_no_signal(maxi(limit, 1))
 
 
 func _set_rows(rows: Array, stats: Dictionary) -> void:
@@ -309,6 +356,18 @@ func _save() -> void:
 	if (card["gain"] as Dictionary).is_empty():
 		_status.text = "Legalább egy statot adnia kell."
 		return
+	if _builtin >= 0:
+		var changed := Upgrades.overrides().duplicate(true)
+		changed[card["id"]] = card
+		if not Upgrades.save_overrides(changed):
+			_status.text = "Nem sikerült menteni (%s)." % Upgrades.OVERRIDES_PATH
+			return
+		var index := _builtin
+		_refresh_list()
+		_select_meta(-1 - index)
+		_load_builtin(index)
+		_status.text = "Elmentve (beépített, módosítva): %s" % card["title"]
+		return
 	if _editing >= 0:
 		_list[_editing] = card
 	else:
@@ -317,14 +376,31 @@ func _save() -> void:
 	if not _write():
 		return
 	_refresh_list()
-	for item in _card_list.item_count:
-		if _card_list.get_item_metadata(item) == _editing:
-			_card_list.select(item)
+	_select_meta(_editing)
 	_delete_button.disabled = false
 	_status.text = "Elmentve: %s" % card["title"]
 
 
+func _select_meta(meta: int) -> void:
+	for item in _card_list.item_count:
+		if _card_list.get_item_metadata(item) == meta:
+			_card_list.select(item)
+
+
+## Saját kártyánál törlés, beépítettnél az eredeti visszaállítása.
 func _delete_card() -> void:
+	if _builtin >= 0:
+		var index := _builtin
+		var changed := Upgrades.overrides().duplicate(true)
+		changed.erase(Upgrades.ALL[index]["id"])
+		if not Upgrades.save_overrides(changed):
+			_status.text = "Nem sikerült menteni (%s)." % Upgrades.OVERRIDES_PATH
+			return
+		_refresh_list()
+		_select_meta(-1 - index)
+		_load_builtin(index)
+		_status.text = "Visszaállítva az eredeti: %s" % Upgrades.ALL[index]["title"]
+		return
 	if _editing < 0:
 		return
 	var title: String = _list[_editing]["title"]
@@ -349,12 +425,14 @@ func _refresh_list() -> void:
 	for i in _list.size():
 		_add_card_item(_list[i], i)
 	_header("— Beépített kártyák —")
-	for i in Upgrades.ALL.size():
-		_add_card_item(Upgrades.ALL[i], -1 - i)
+	var builtin := Upgrades.builtin_cards()
+	for i in builtin.size():
+		_add_card_item(builtin[i], -1 - i)
 
 
 func _add_card_item(card: Dictionary, meta: int) -> void:
-	var item := _card_list.add_item(card["title"], Upgrades.icon(card))
+	var title: String = card["title"] + (" ✎" if card.get("changed", false) else "")
+	var item := _card_list.add_item(title, Upgrades.icon(card))
 	_card_list.set_item_custom_fg_color(item, Upgrades.rarity_color(card))
 	_card_list.set_item_metadata(item, meta)
 	_card_list.set_item_tooltip(item, "%s — %s" % [Upgrades.rarity_name(card),

@@ -24,6 +24,8 @@ static var spells: Array = []
 static var spell_levels := {}
 ## Vendel idézésének fejlesztései ebben a futásban (lásd Necromancy): fejlesztés -> szint.
 static var necromancy := {}
+## Ebben a futásban kivett kártyák: kártya id -> hányszor (a kártya "max_picks" korlátjához, lásd Upgrades).
+static var card_picks := {}
 ## Játékidő másodpercben (szünet alatt nem nő).
 static var run_time := 0.0
 ## A futás már bekerült az eredménytáblába (halálkor vagy feladáskor egyszer).
@@ -107,6 +109,7 @@ static func reset() -> void:
 	spells = []
 	spell_levels = {}
 	necromancy = {}
+	card_picks = {}
 	run_time = 0.0
 	run_recorded = false
 	lift_used_floor = 0

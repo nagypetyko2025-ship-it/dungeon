@@ -80,8 +80,10 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   tábori fejlesztések): `Upgrades.stat_icon` (`STAT_ICONS`). Nem jön a kártya, ha a gain stat maxon van, vagy a cost a stat
   alapértékét `Stats.LIMITS` minimuma alá vinné. Megjelenés: `ui/upgrade_card.gd` (`UpgradeCard.build`, ritkaság-szín, a
   legendás/mítikus izzik). Kártya-szerkesztő: főmenü bal felső ✎ (alig látható) → `ui/card_editor.gd` (`CardEditor.open`, a lista alján a beépítettek is megnézhetők,
-  saját CanvasLayer), a felhasználó kártyái a `data/custom_cards.json`-ba (`Upgrades.CUSTOM_PATH`, res://) — **ezeket is
-  commitold és pushold**, mintha te csináltad volna.
+  saját CanvasLayer), a felhasználó kártyái a `data/custom_cards.json`-ba (`Upgrades.CUSTOM_PATH`, res://), a beépítettek
+  átírásai a `data/card_overrides.json`-ba (`OVERRIDES_PATH`, id -> kártya; `Upgrades.builtin_cards()` alkalmazza, a "weight"
+  az eredetié) — **ezeket is commitold és pushold**, mintha te csináltad volna. Kivehetőségi korlát: a kártya "max_picks"
+  (0 = végtelen), a futásban kivettek `GameState.card_picks` (RunSave is menti), `Upgrades.picks_left`; elérve nem jön.
   Ritkaságok: common → rare → epic → legendary → mythic (Mítikus, piros: 17 saját tárgy, fegyverfajtánként / helyenként
   egy, a DEFINITIONS végén). Mítikus csak két helyről jön: a nagy főellenség (Vérfarkas, Káosz Ura) fő dobása
   `MYTHIC_LORD_CHANCE` (1%) eséllyel, és a bolt a `MYTHIC_SHOP_DEPTH` (21.) emelettől, áruhelyenként `MYTHIC_SHOP_CHANCE`

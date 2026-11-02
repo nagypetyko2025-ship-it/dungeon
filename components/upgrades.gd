@@ -4,10 +4,14 @@ class_name Upgrades
 ## (`lines`). Ritkaság (Items.RARITY_ORDER): ez szabja meg, milyen gyakran jön (`RARITY_WEIGHTS`) és a színét.
 ## A beépítettek (`ALL`) mellé a kártya-szerkesztőben (főmenü, bal felső sarok) készítettek jönnek a
 ## `CUSTOM_PATH` fájlból (a projektben, így a gitre is felmegy). Az ikonok: `ICON_DIR` (496 CC0 ikon).
+## A beépítettek is átírhatók a szerkesztőben: az eltérések az `OVERRIDES_PATH` fájlba kerülnek (id -> kártya).
+## "max_picks": egy futásban legfeljebb ennyiszer vehető ki (0 / hiányzik = végtelen; `GameState.card_picks`
+## számolja), utána nem is jön.
 ## Ezen felül szintenként minden stat magától is nő egy kicsit: Stats.LEVEL_GROWTH.
 
 const ICON_DIR := "res://assets/cards/icons/"
 const CUSTOM_PATH := "res://data/custom_cards.json"
+const OVERRIDES_PATH := "res://data/card_overrides.json"
 
 const ALL: Array[Dictionary] = [
 	# Átlagos
@@ -127,13 +131,48 @@ const LIMITS := {
 ## A szerkesztőben készült kártyák (betöltve; `reload_custom` frissíti).
 static var _custom: Array[Dictionary] = []
 static var _custom_loaded := false
+## A beépített kártyák szerkesztőben átírt változatai: id -> kártya.
+static var _overrides := {}
 
 
-## Minden kártya: a beépítettek és a szerkesztőben készültek.
+## Minden kártya: a beépítettek (az átírásokkal) és a szerkesztőben készültek.
 static func cards() -> Array[Dictionary]:
-	var result: Array[Dictionary] = ALL.duplicate()
+	var result := builtin_cards()
 	result.append_array(custom_cards())
 	return result
+
+
+## A beépített kártyák, a szerkesztőben átírtak az átírt alakjukban (a "weight" az eredetié marad).
+static func builtin_cards() -> Array[Dictionary]:
+	if not _custom_loaded:
+		reload_custom()
+	var result: Array[Dictionary] = []
+	for card in ALL:
+		if not _overrides.has(card["id"]):
+			result.append(card)
+			continue
+		var changed: Dictionary = (_overrides[card["id"]] as Dictionary).duplicate(true)
+		changed.erase("custom")
+		changed["id"] = card["id"]
+		changed["changed"] = true
+		if card.has("weight"):
+			changed["weight"] = card["weight"]
+		result.append(changed)
+	return result
+
+
+static func overrides() -> Dictionary:
+	if not _custom_loaded:
+		reload_custom()
+	return _overrides
+
+
+## A szerkesztő menti: a beépítettek átírásai (id -> kártya) az `OVERRIDES_PATH` fájlba. Igaz, ha sikerült.
+static func save_overrides(changed: Dictionary) -> bool:
+	if not _write_json(OVERRIDES_PATH, changed):
+		return false
+	reload_custom()
+	return true
 
 
 static func custom_cards() -> Array[Dictionary]:
@@ -145,6 +184,13 @@ static func custom_cards() -> Array[Dictionary]:
 static func reload_custom() -> void:
 	_custom_loaded = true
 	_custom.clear()
+	_overrides.clear()
+	if FileAccess.file_exists(OVERRIDES_PATH):
+		var changed: Variant = JSON.parse_string(FileAccess.get_file_as_string(OVERRIDES_PATH))
+		if changed is Dictionary:
+			for id: Variant in changed:
+				if changed[id] is Dictionary and _valid(changed[id]):
+					_overrides[String(id)] = _clean(changed[id])
 	if not FileAccess.file_exists(CUSTOM_PATH):
 		return
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(CUSTOM_PATH))
@@ -157,13 +203,19 @@ static func reload_custom() -> void:
 
 ## A szerkesztő menti: a teljes saját lista a projekt `CUSTOM_PATH` fájljába. Igaz, ha sikerült.
 static func save_custom(list: Array[Dictionary]) -> bool:
-	DirAccess.make_dir_recursive_absolute(CUSTOM_PATH.get_base_dir())
-	var file := FileAccess.open(CUSTOM_PATH, FileAccess.WRITE)
+	if not _write_json(CUSTOM_PATH, list):
+		return false
+	reload_custom()
+	return true
+
+
+static func _write_json(path: String, data: Variant) -> bool:
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
 		return false
-	file.store_string(JSON.stringify(list, "\t"))
+	file.store_string(JSON.stringify(data, "\t"))
 	file.close()
-	reload_custom()
 	return true
 
 
@@ -175,7 +227,8 @@ static func _valid(entry: Dictionary) -> bool:
 ## A JSON számai float-ok: az egész értékű statokat (és a ritkaságot, ikont) rendbe tesszük.
 static func _clean(entry: Dictionary) -> Dictionary:
 	var result := {"id": String(entry.get("id", "")), "title": String(entry["title"]), "custom": true,
-		"rarity": String(entry.get("rarity", "common")), "icon": String(entry.get("icon", "s_buff01"))}
+		"rarity": String(entry.get("rarity", "common")), "icon": String(entry.get("icon", "s_buff01")),
+		"max_picks": maxi(int(entry.get("max_picks", 0)), 0)}
 	if not result["rarity"] in RARITY_WEIGHTS:
 		result["rarity"] = "common"
 	for key: String in ["gain", "cost"]:
@@ -259,7 +312,17 @@ static func _with_character_bonus(card: Dictionary) -> Dictionary:
 	return result
 
 
+## Ebben a futásban még hányszor vehető ki (-1: végtelen).
+static func picks_left(card: Dictionary) -> int:
+	var limit := int(card.get("max_picks", 0))
+	if limit <= 0:
+		return -1
+	return maxi(limit - int(GameState.card_picks.get(card.get("id", ""), 0)), 0)
+
+
 static func _available(stats: Stats, card: Dictionary) -> bool:
+	if picks_left(card) == 0:
+		return false
 	var gain: Dictionary = card["gain"]
 	var cost: Dictionary = card.get("cost", {})
 	var spells: bool = Characters.data(Progress.character).get("spells", false)
@@ -281,6 +344,9 @@ static func _available(stats: Stats, card: Dictionary) -> bool:
 
 
 static func apply(stats: Stats, card: Dictionary) -> void:
+	var id: String = card.get("id", "")
+	if not id.is_empty():
+		GameState.card_picks[id] = int(GameState.card_picks.get(id, 0)) + 1
 	var gain: Dictionary = card["gain"]
 	var cost: Dictionary = card.get("cost", {})
 	for stat: String in gain:

@@ -57,6 +57,13 @@ static func build(index: int, card: Dictionary) -> Button:
 		texts.append(label(card.get("text", ""), 14 if spell else 16, Color(0.9, 0.86, 0.8)))
 	if card.has("note"):
 		texts.append(label(card["note"], 13, Color(0.6, 0.85, 1.0)))
+	# Korlátozott kártya: egy futásban hányszor vehető ki, és (szintlépéskor) még hányszor; a szerkesztő
+	# előnézetében (index < 0) csak a korlát.
+	if card.has("gain") and int(card.get("max_picks", 0)) > 0:
+		var limit := "Futásonként %d×" % int(card["max_picks"])
+		if index >= 0:
+			limit += " (még %d×)" % Upgrades.picks_left(card)
+		texts.append(label(limit, 13, Color(0.85, 0.75, 0.55)))
 	# Karakter-bónusz (pl. Gáspár kikerülése): külön, zöldes sorban.
 	if card.has("bonus_note"):
 		texts.append(label(card["bonus_note"], 14, Color(0.55, 1.0, 0.6)))
