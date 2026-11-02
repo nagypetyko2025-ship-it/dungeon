@@ -74,9 +74,13 @@ const ALL: Array[Dictionary] = [
 		"cost": {"max_health": 5}, "icon": "s_shadow07"},
 ]
 
-## A ritkaságok súlya: egy kártyahelyre előbb ritkaságot sorsolunk ezek szerint (csak a választhatók közül),
-## aztán azon belül egy kártyát.
-const RARITY_WEIGHTS := {"common": 55.0, "rare": 27.0, "epic": 12.0, "legendary": 4.5, "mythic": 1.5}
+## A ritkaságok súlya: egy kártyahelyre előbb ritkaságot sorsolunk ezek szerint (mindig mind az öt közül), aztán
+## azon belül egy kártyát. Ha a kisorsolt ritkaságból nincs választható kártya, egy közönségesebb jön (nem ritkább:
+## régen a hiányzó ritkaság esélye a többi közt oszlott el, így pl. a varázslónál a legendás helyett mítikus jött).
+## Egy szintlépésen legfeljebb egy legendás vagy mítikus (`HIGH_RARITIES`). Szintlépésenként (3 hely) kb.:
+## legendás 4,5%, mítikus 1,2% (régen 9-13% és 4-5,5%).
+const RARITY_WEIGHTS := {"common": 60.0, "rare": 27.0, "epic": 11.0, "legendary": 1.6, "mythic": 0.4}
+const HIGH_RARITIES: Array[String] = ["legendary", "mythic"]
 
 ## A kártyákon választható statok: [név, mértékegység ("%" vagy ""), tizedes jegyek]. A sorrend a szerkesztőé.
 const STAT_INFO := {
@@ -256,8 +260,12 @@ static func roll(stats: Stats, count: int, has_bow := false) -> Array[Dictionary
 				by_rarity[rarity] = [] as Array[Dictionary]
 			(by_rarity[rarity] as Array[Dictionary]).append(card)
 	var options: Array[Dictionary] = []
-	while options.size() < count and not by_rarity.is_empty():
-		var rarity := _pick_rarity(by_rarity.keys())
+	var high_taken := false
+	while options.size() < count:
+		var rarity := _pick_rarity(by_rarity, high_taken)
+		if rarity.is_empty():
+			break
+		high_taken = high_taken or rarity in HIGH_RARITIES
 		var pool: Array[Dictionary] = by_rarity[rarity]
 		var card := _pick_weighted(pool)
 		pool.erase(card)
@@ -267,16 +275,30 @@ static func roll(stats: Stats, count: int, has_bow := false) -> Array[Dictionary
 	return options
 
 
-static func _pick_rarity(rarities: Array) -> String:
+## Egy kártyahely ritkasága mind az öt közül sorsolva; ha abból nincs választható kártya (`by_rarity`), a következő
+## közönségesebb, és csak ha az sincs, a ritkább. `no_high`: legendás / mítikus már nem jöhet. "" = nincs semmi.
+static func _pick_rarity(by_rarity: Dictionary, no_high := false) -> String:
+	var allowed: Array[String] = []
+	for rarity in Items.RARITY_ORDER:
+		if RARITY_WEIGHTS.has(rarity) and not (no_high and rarity in HIGH_RARITIES):
+			allowed.append(rarity)
 	var total := 0.0
-	for rarity: String in rarities:
+	for rarity in allowed:
 		total += float(RARITY_WEIGHTS[rarity])
 	var ticket := randf() * total
-	for rarity: String in rarities:
-		ticket -= float(RARITY_WEIGHTS[rarity])
+	var chosen := allowed.size() - 1
+	for i in allowed.size():
+		ticket -= float(RARITY_WEIGHTS[allowed[i]])
 		if ticket <= 0.0:
-			return rarity
-	return rarities[-1]
+			chosen = i
+			break
+	for i in range(chosen, -1, -1):
+		if by_rarity.has(allowed[i]):
+			return allowed[i]
+	for i in range(chosen + 1, allowed.size()):
+		if by_rarity.has(allowed[i]):
+			return allowed[i]
+	return ""
 
 
 ## Egy a listából a "weight" szerint súlyozva.

@@ -6,6 +6,9 @@ const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-02", "items": [
 		"Kártya-szerkesztő: a beépített kártyák is átírhatók (✎ jelöli az átírtakat, az eredeti visszaállítható), és minden "
 			+ "kártyán beállítható, egy futásban hányszor vehető ki (vagy végtelenszer). Ha elérted a korlátot, a kártya többet nem jön.",
+		"Ritkább legendás és mítikus kártyák: eddig szintlépésenként kb. 9-13% eséllyel jött legendás és 4-5% eséllyel "
+			+ "mítikus (ha egy ritkaságból nem volt választható kártya, az esélye a ritkábbakhoz adódott), most kb. 4,5% és 1%, "
+			+ "és egy szintlépésen legfeljebb egy legendás vagy mítikus lehet.",
 		"Kártya-szerkesztő: \"Összes beépített visszaállítása\" gomb — minden átírt alap kártya visszakapja az eredeti statjait.",
 	]},
 	{"date": "2026-11-01", "items": [
