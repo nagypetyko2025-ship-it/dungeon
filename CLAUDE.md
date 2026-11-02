@@ -77,7 +77,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Kártyák (a felhasználó "kártya"-ként hivatkozik rájuk): `Upgrades.ALL` elemei `gain` / `cost` (stat -> érték; a cost levonás;
   a `simple_*` kártyák (Sim kérésére, 2026-11-02): kis bónusz, üres vagy apró cost, hogy az elején ne kelljen mindig veszíteni —
   mérve a felkínált kártyák ~50%-a hátrány nélküli, a szintlépések ~87%-án van ilyen; `roll` íjjal a "damage", íj nélkül a
-  "ranged_damage" kártyát nem adja),
+  "ranged_damage" kártyát nem adja; `COMMON_ONLY_BELOW` (10) alatti karakterszinten csak átlagos jön — a `roll` `level`
+  paramétere, a LevelUp adja; újradobás: `LevelUp.REROLL_BASE` 3, `REROLL_GROWTH` 1.1 futásonként),
   `rarity` (Items.RARITY_ORDER; kártyahelyenként előbb ritkaság a `RARITY_WEIGHTS` szerint mind az ötből — ha abból nincs választható, közönségesebb jön, nem ritkább; szintlépésenként legfeljebb egy `HIGH_RARITIES`; mérve: legendás ~4,5%, mítikus ~1% szintlépésenként —, azon belül "weight"), `icon`
   (`assets/cards/icons/<név>.png`, mind a 496 CC0 ikon). Szöveg: `Upgrades.lines` / `STAT_INFO`; a stat saját jele (Tab-statok,
   tábori fejlesztések): `Upgrades.stat_icon` (`STAT_ICONS`). Nem jön a kártya, ha a gain stat maxon van, vagy a cost a stat

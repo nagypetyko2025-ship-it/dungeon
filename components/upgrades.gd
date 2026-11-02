@@ -140,6 +140,8 @@ const ALL: Array[Dictionary] = [
 ## legendás 4,5%, mítikus 1,2% (régen 9-13% és 4-5,5%).
 const RARITY_WEIGHTS := {"common": 60.0, "rare": 27.0, "epic": 11.0, "legendary": 1.6, "mythic": 0.4}
 const HIGH_RARITIES: Array[String] = ["legendary", "mythic"]
+## A játék elején (ez alatti karakterszinten) csak átlagos kártya jön (ha abból nincs választható, a szokásos sorsolás).
+const COMMON_ONLY_BELOW := 10
 
 ## A kártyákon választható statok: [név, mértékegység ("%" vagy ""), tizedes jegyek]. A sorrend a szerkesztőé.
 const STAT_INFO := {
@@ -310,7 +312,9 @@ static func _clean(entry: Dictionary) -> Dictionary:
 ## `count` darab különböző kártya: kártyahelyenként ritkaság (RARITY_WEIGHTS), azon belül egy kártya ("weight").
 ## Ami nem választható (max stat, nem elég a levonandó stat, más karakteré), kimarad.
 ## `has_bow`: íjjal (vagy íjászként) a csak íjas kártyák (Nyílzápor, Átütés) is jöhetnek.
-static func roll(stats: Stats, count: int, has_bow := false) -> Array[Dictionary]:
+static func roll(stats: Stats, count: int, has_bow := false, level := 0) -> Array[Dictionary]:
+	# `level`: a szint, amire lépett (0 = nem számít); COMMON_ONLY_BELOW alatt csak átlagos kártya.
+	var only_common := level > 0 and level < COMMON_ONLY_BELOW
 	var by_rarity := {}
 	for card in cards():
 		# Íjjal a közelharci sebzés, íj nélkül a távolsági sebzés kártyája nem jön (annak semmi haszna nem lenne).
@@ -325,7 +329,7 @@ static func roll(stats: Stats, count: int, has_bow := false) -> Array[Dictionary
 	var options: Array[Dictionary] = []
 	var high_taken := false
 	while options.size() < count:
-		var rarity := _pick_rarity(by_rarity, high_taken)
+		var rarity := "common" if only_common and by_rarity.has("common") else _pick_rarity(by_rarity, high_taken)
 		if rarity.is_empty():
 			break
 		high_taken = high_taken or rarity in HIGH_RARITIES

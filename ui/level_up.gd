@@ -24,8 +24,10 @@ var _reroll_button: Button
 var _pending_layer: CanvasLayer
 var _pending_button: Button
 
-const REROLL_BASE := 5.0
-const REROLL_GROWTH := 1.6
+## Az újradobás ára (futásonként nő). Régen 5 és ×1.6 volt: a 10. újradobás már 344 aranyba került; az egyszerű
+## kártyák óta többet kell újradobni, ezért 3-ról indul, és csak ×1.1-gyel nő (10.: 7, 20.: 18, 30.: 48 arany).
+const REROLL_BASE := 3.0
+const REROLL_GROWTH := 1.1
 
 @onready var _title: Label = $Center/Box/Title
 @onready var _cards: HBoxContainer = $Center/Box/Cards
@@ -167,7 +169,7 @@ func _roll_options() -> Array[Dictionary]:
 	if Characters.data(Progress.character).get("summon", false) and not _level_queue.is_empty() \
 			and _level_queue[0] % Necromancy.LEVEL_EVERY == 0:
 		return Necromancy.level_options()
-	return Upgrades.roll(_stats, CARD_COUNT, _has_bow())
+	return Upgrades.roll(_stats, CARD_COUNT, _has_bow(), _level_queue[0] if not _level_queue.is_empty() else 0)
 
 
 func _open() -> void:

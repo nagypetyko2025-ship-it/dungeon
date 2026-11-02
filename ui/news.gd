@@ -4,6 +4,9 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-02", "items": [
+		"A játék elején (a 10. karakterszintig) szintlépéskor csak átlagos kártyák jönnek, ritka és epikus csak utána.",
+		"Olcsóbb újradobás szintlépéskor: 3 aranyról indul, és lassan drágul (a 10. kb. 7, a 20. kb. 18 arany; eddig a 10. "
+			+ "már 344 aranyba került).",
 		"30 új, egyszerű szintlépési kártya: kis bónusz, és nincs (vagy csak egy apró) hátrányuk, így az elején is szépen "
 			+ "lehet erősödni (pl. +2 max élet, +3% ütési sebesség, +2% kritikus esély; ritkán két-három ilyen egyszerre). "
 			+ "Szintlépéskor most szinte mindig van legalább egy hátrány nélküli kártya.",
