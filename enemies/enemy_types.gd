@@ -383,6 +383,16 @@ const TYPES: Array[Dictionary] = [
 		"rect": Rect2(0, 0, 26, 30), "run": true, "size": 0.85,
 		"health": [3, 5], "damage": [1, 2], "speed": [140, 160], "dodge": [25, 35],
 		"knockback": [140, 170], "resist": [0.0, 0.0], "xp": [2, 3], "min_depth": 2, "weight": 3},
+	# Szürke farkas: gyors, cikázik, és nekiront (Gothicvania "wolf running cycle", ansimuz, CC0).
+	{"name": "grey_wolf", "voice": "hound", "abilities": ["zigzag"], "dash": true, "sheet": "res://assets/enemies/grey_wolf.png",
+		"rect": Rect2(0, 0, 46, 23), "run": true, "size": 0.75,
+		"health": [10, 14], "damage": [3, 4], "speed": [155, 175], "dodge": [15, 25],
+		"knockback": [240, 280], "resist": [0.2, 0.3], "xp": [7, 9], "min_depth": 5, "weight": 2},
+	# Lángkoponya: lángoló, repülő koponya; cikázva ront rád, és halálakor szétrobban (Gothicvania "Fire Skull", ansimuz, CC0).
+	{"name": "flame_skull", "abilities": ["zigzag", "death_burst"], "dash": true, "sheet": "res://assets/enemies/flame_skull.png",
+		"rect": Rect2(0, 0, 30, 33), "run": true, "size": 0.9,
+		"health": [28, 36], "damage": [7, 9], "speed": [135, 155], "dodge": [25, 35],
+		"knockback": [220, 260], "resist": [0.3, 0.4], "xp": [20, 24], "min_depth": 17, "weight": 2},
 	# Mérges gombaszörny: lassú, szívós, mérgez, és halálakor spórafelhővé robban (ScratchIO, CC0).
 	{"name": "toadstool", "abilities": ["poison", "death_burst"], "sheet": "res://assets/enemies/toadstool.png",
 		"rect": Rect2(0, 0, 22, 24), "run": true, "size": 1.25,

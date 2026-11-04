@@ -539,6 +539,12 @@ const DEFINITIONS := {
 		"stats": {"move_speed": [4, 7], "max_health": [1, 2]}},
 	"pants_emerald": {"name": "Smaragd lábvért", "slot": "pants", "rarity": "epic",
 		"stats": {"defense": [4, 6], "dodge": [4, 6], "health_regen": [0.2, 0.3]}},
+	"pants_marsh": {"name": "Lápjáró nadrág", "slot": "pants", "rarity": "rare",
+		"stats": {"dodge": [3, 5], "health_regen": [0.1, 0.2], "move_speed": [3, 5]},
+		"description": "Viaszolt, mohazöld posztó. Aki ebben kel át a mocsáron, száraz lábbal ér a túlpartra."},
+	"pants_flame": {"name": "Lángtáncos nadrág", "slot": "pants", "rarity": "legendary",
+		"stats": {"damage_percent": [6, 9], "move_speed": [6, 9], "dodge": [5, 7], "defense": [-2, -1]},
+		"description": "A déli tűztáncosok viselete: könnyű, mint a füst, de a vasat nem állja."},
 	# Cipők
 	"boots_stripe": {"name": "Csíkos vándorcsizma", "slot": "boots", "rarity": "common",
 		"stats": {"move_speed": [7, 10], "dodge": [1, 2]}},

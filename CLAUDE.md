@@ -147,6 +147,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   A történet-futások közös elosztója: `LakeCrypt.story_boss / story_reward / story_*_text` (a Dungeon, a Room és a
   ChallengePanel már nem csak a "knocker"-t ismeri; új történetnél ide kell felvenni).
 - Saját rajzú szörnyek (8 kocka): wisp (Lidércfény, Különös lények, 4.-től), mummy (Múmia, Élőholtak, 7.-től), gargoyle (Vízköpő, Démonok, 11.-től);
+  Gothicvania (CC0) képekből: grey_wolf (Szürke farkas, Fenevadak, 5.-től), flame_skull (Lángkoponya, Élőholtak, 17.-től; a csomag a régi
+  scratchpad gv/g.zip-jében, a Ghost még nincs felhasználva). Új szörny: EnemyTypes.TYPES + Bestiary CATEGORIES és leírás, más nem kell;
   a rajzoló szkript nincs a repóban.
 - Őrült bohóc (crazy_clown, Népek, 14.-től): az EnemyTypes "dash_cooldown" / "dash_windup" kulcsa sűrű rohamot ad.
 - A Fagykő lakói (41-80.): frost_wraith, ice_spider, snow_golem, frozen_knight (`"max_depth"` az EnemyTypes-ban: eddig az

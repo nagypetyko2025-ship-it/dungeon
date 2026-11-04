@@ -3,6 +3,12 @@ class_name News
 ## rövid, játékosnak szóló sor a legfrissebb dátum alá (a legújabb van felül).
 
 const ENTRIES: Array[Dictionary] = [
+	{"date": "2026-11-04", "items": [
+		"Két új nadrág: Lápjáró nadrág (ritka: kikerülés, regeneráció, gyorsaság) és Lángtáncos nadrág (legendás: sebzés, "
+			+ "gyorsaság, kikerülés, de kevesebb védelem).",
+		"Két új szörny: a Szürke farkas (az 5. emelettől, gyors, cikázik és nekiront) és a Lángkoponya (a 17. emelettől, "
+			+ "lángoló repülő koponya, ami halálakor szétrobban). Mindkettő bekerült a Szörnyek könyvébe.",
+	]},
 	{"date": "2026-11-02", "items": [
 		"A korlátos kártyákon szintlépéskor látszik, hányszor vetted már ki ebben a futásban (pl. \"Kivéve: 2 / 5\").",
 		"A játék elején (a 10. karakterszintig) szintlépéskor csak átlagos kártyák jönnek, ritka és epikus csak utána.",

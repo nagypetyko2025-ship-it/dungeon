@@ -43,3 +43,4 @@ trinket_thirty_names.png: A harminc név gyűrűje — a ring_gold.png másolata
 trinket_keeper_key.png: Az Őrző kulcsa — ehhez a projekthez rajzolva (pixel art vaskulcs bőrszíjon, 34×34), CC0.
 
 Drágakövek (gem_ruby, gem_moonstone, gem_sapphire, gem_amethyst, gem_star): "496 pixel art icons for medieval/fantasy RPG" by Henrique Lazarini (7Soul1), CC0 — https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg (I_Ruby, I_Opal, I_Sapphire, I_Amethist, I_Diamond).
+pants_marsh, pants_flame (Lápjáró nadrág, Lángtáncos nadrág): "Dungeon Crawl Stone Soup Full" (CC0, https://opengameart.org/content/dungeon-crawl-32x32-tiles), player/legs/pants_darkgreen.png és long_red.png, kivágva, 34x34-be nagyítva.
