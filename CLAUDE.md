@@ -70,6 +70,14 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   A többlövés sorozatának többi nyila ugyanazt a szörnyet fele erővel sebzi (`PlayerArrow.volley` / `VOLLEY_SHARE`), egy varázslás
   földtüskéi együtt csak egyszer (`EarthSpike.struck`). Vérfarkas életlopása: a sebzés 8×-a, legalább a max élet 0,2%-a
   (`LIFESTEAL_MIN`; az 1% a ×40-es élettel találatonként 1280 lett, közelharcban legyőzhetetlen volt).
+  A Vérfarkas képe (2026-11-04): Mattz Art "Werewolf 2D Pixel Art" (Sim megvette, nem CC0; a zip-ben `outline` és
+  `without_outline`, ez utóbbi van bent), `assets/enemies/werewolf.png`: soronként egy mozdulat, 158×88-as kockák, a test a kocka
+  közepén (`WerewolfBoss.POSES`: idle, run, swipe, slam, death, rise = death visszafelé, transform, human; kockánkénti időtartam:
+  a lecsapó kocka a felvillanás végére esik). "scale" 1 (a régi 24×32-es rajz ×3 volt: 9 képernyőpixel / rajzpixel), az ütközők a
+  testhez (`BODY`, a Szörnyek könyve képe is), nem a kockához. Saját `_own_frames`; a mozdulat alatt (`_posing`) a `Boss._play_walk`
+  nem írja felül; megjelenéskor ember → átváltozás (`_intro`, `_busy`), az első "halál" a death mozdulat (régen 90°-os forgatás),
+  az igazi halál után a tetem fekszik, aztán elhalványul (`Enemy._vanish` felülírva). A NetEnemies ANIMATIONS-ában nincsenek
+  ezek a mozdulatok: a gazda közben üreset küld, a báb a saját `_attack`-jával játssza.
 - Találati esély: KIKAPCSOLVA (`Stats.ACCURACY_ENABLED` = false; visszakapcsolás: true). Ilyenkor `Player.hit_chance` = 1, és elrejtve:
   Pontosság kártya (`Upgrades._available`), Céllövölde (camp_upgrades / witch_panel), Tab-statok, HUD, tárgyleírás és összevetés.
 - Láda: `pickups/chest.gd` — `NEVER_EMPTY_UNTIL` (15) emeletig sosem üres, utána `EMPTY_CHANCE`.

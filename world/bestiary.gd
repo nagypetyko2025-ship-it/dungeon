@@ -268,7 +268,7 @@ static func icon(monster: String) -> Array:
 			return [chaos, Color.WHITE]
 		var sheet := AtlasTexture.new()
 		sheet.atlas = ResourceWarmer.fetch(WEREWOLF_SCRIPT.SHEET) as Texture2D
-		sheet.region = WEREWOLF_SCRIPT.WEREWOLF["rect"]
+		sheet.region = WEREWOLF_SCRIPT.BODY
 		return [sheet, Color.WHITE]
 	if type.has("sheet"):
 		var texture := AtlasTexture.new()

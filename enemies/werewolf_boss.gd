@@ -7,16 +7,44 @@ extends "res://enemies/boss.gd"
 ##   feltámadás  ha először legyőzöd, a földre rogy, aztán 75% élettel feltámad, dühöngve:
 ##               gyorsabb, nagyobbat üt, és több kört idéz
 ## A szoba a `final_died` jelzésre figyel (nem a Health.died-re), mert az első "halál" nem igazi.
+## Megjelenéskor emberként áll, aztán átváltozik; a támadásainak és a halálának saját mozdulata van.
 
 ## Csak a második (igazi) halálnál jelez.
 signal final_died
 
+## A "rect" egy kocka a lapon; a "scale" 1, így egy rajzpixele akkora, mint a lovagé (a régi, 24×32-es
+## rajz háromszorosra nagyítva nagyon kockás volt).
 const WEREWOLF := {
-	"name": "Vérfarkas, a Mélység Ura", "rect": Rect2(0, 0, 24, 32), "scale": 3.0,
+	"name": "Vérfarkas, a Mélység Ura", "rect": Rect2(0, 0, 158, 88), "scale": 1.0,
 	"health": 3200, "damage": 16, "speed": 95.0, "xp": 600,
 	"attacks": ["circles", "circles", "charge", "slam"], "minion": "",
 }
+## Mattz Art "Werewolf 2D Pixel Art" (without_outline): soronként egy mozdulat, a kockák a "rect" méretűek,
+## a test a kocka közepén (tükrözéskor nem ugrik). A test az álló kockán: BODY (ütközők, Szörnyek könyve).
 const SHEET := "res://assets/enemies/werewolf.png"
+const BODY := Rect2(42, 18, 73, 67)
+## Mozdulatok: sor a lapon, kockánként az időtartam (1/POSE_FPS mp egységben), ismétlődik-e. A lecsapó kocka
+## a felvillanás végére esik: "swipe" (karmos körök) 0,5 mp, "slam" (Boss.WINDUP) 0,75 mp. A "rise" a
+## "death" visszafelé (feltámadás).
+const POSE_FPS := 10.0
+const POSES := {
+	"idle": {"row": 0, "durations": [1.4, 1.4, 1.4, 1.4, 1.4, 1.4], "loop": true},
+	"run": {"row": 1, "durations": [0.8, 0.8, 0.8, 0.8, 0.8, 0.8], "loop": true},
+	"swipe": {"row": 2, "durations": [1.0, 2.0, 2.0, 1.0, 1.0, 1.0, 2.0], "loop": false},
+	"slam": {"row": 3, "durations": [3.0, 4.5, 1.0, 1.0, 1.5, 1.5], "loop": false},
+	"death": {"row": 4, "durations": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], "loop": false},
+	"rise": {"row": 4, "durations": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], "loop": false, "reverse": true},
+	"transform": {"row": 5, "durations": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0], "loop": false},
+	"human": {"row": 6, "durations": [1.4, 1.4, 1.4, 1.4, 1.4, 1.4], "loop": true},
+}
+## Megjelenéskor ennyi ideig áll emberként, mielőtt átváltozik.
+const INTRO_HUMAN := 0.7
+## Roham közben gyorsabban szedi a lábát.
+const CHARGE_RUN_SPEED := 1.8
+## A tetem ennyi ideig fekszik, aztán elhalványul.
+const CORPSE_TIME := 1.2
+const CORPSE_FADE := 0.6
+static var _pose_frames: SpriteFrames
 ## A Mélység Ura szívósabb: a WEREWOLF életerejének ennyiszerese (128 000, és egyszer feltámad), a sebzése
 ## pedig ennyiszerese (32), hogy jóval erősebb legyen a körülötte lévő főellenségeknél (18. emelet: kb.
 ## 20 000 élet, 24 sebzés; 21. emelet: kb. 30 000, 37).
@@ -44,6 +72,8 @@ const CIRCLE_FUSE := 3.0
 
 var _revived := false
 var _raging := false
+## Saját mozdulat (átváltozás, támadás) megy: a futás / állás nem írja felül.
+var _posing := false
 
 
 ## A vérfarkas beállítása a fába kerülés előtt (a setup_boss helyett).
@@ -69,6 +99,75 @@ func setup_boss(depth: int, _special := {}) -> void:
 	setup_werewolf(depth)
 
 
+func _ready() -> void:
+	super._ready()
+	_sprite.animation_finished.connect(func() -> void: _posing = false)
+	_intro()
+
+
+## A Mélység Ura emberként jelenik meg, aztán átváltozik (közben nem mozdul és nem támad).
+func _intro() -> void:
+	_busy = true
+	_posing = true
+	_sprite.play("human")
+	_pick_target(0.0)
+	_face_player()
+	await get_tree().create_timer(INTRO_HUMAN, false).timeout
+	if _revived or _health.is_dead():
+		return
+	_pose("transform")
+	await _sprite.animation_finished
+	if _revived or _health.is_dead():
+		return
+	_busy = false
+	_attack_left = maxf(_attack_left, 0.8)
+
+
+## A lap mozdulatai (POSES); a lap mindegyik példánynál ugyanaz.
+func _own_frames(_sheet: String, frame_size: Vector2) -> SpriteFrames:
+	if _pose_frames != null:
+		return _pose_frames
+	var texture := ResourceWarmer.fetch(SHEET) as Texture2D
+	_pose_frames = SpriteFrames.new()
+	_pose_frames.remove_animation("default")
+	for pose: String in POSES:
+		var def: Dictionary = POSES[pose]
+		var durations: Array = def["durations"]
+		_pose_frames.add_animation(pose)
+		_pose_frames.set_animation_speed(pose, POSE_FPS)
+		_pose_frames.set_animation_loop(pose, def["loop"])
+		for i in durations.size():
+			var index: int = durations.size() - 1 - i if def.get("reverse", false) else i
+			var frame := AtlasTexture.new()
+			frame.atlas = texture
+			frame.region = Rect2(Vector2(index * frame_size.x, int(def["row"]) * frame_size.y), frame_size)
+			_pose_frames.add_frame(pose, frame, float(durations[i]))
+	return _pose_frames
+
+
+## Az ütközők a testhez igazodnak, nem a (széles, a karmolásnak is helyet hagyó) kockához.
+func _fit_shapes(_size: Vector2) -> void:
+	super._fit_shapes(BODY.size * 2.0 * _size_scale)
+
+
+func _pose(pose: String) -> void:
+	_posing = true
+	_sprite.speed_scale = 1.0
+	_sprite.play(pose)
+
+
+func _play_walk(moving: bool) -> void:
+	if _posing:
+		return
+	_sprite.speed_scale = CHARGE_RUN_SPEED if _charge_left > 0.0 else 1.0
+	super._play_walk(moving)
+
+
+func _face_player() -> void:
+	if is_instance_valid(_player):
+		_sprite.flip_h = _player.global_position.x < global_position.x
+
+
 ## A játékos hívja, ha a vérfarkas megsebezte: életlopás.
 func on_hit_player(amount: int) -> void:
 	if _health.is_dead() or not is_physics_processing():
@@ -79,6 +178,9 @@ func on_hit_player(amount: int) -> void:
 
 
 func _attack(kind: String) -> void:
+	if kind == "slam":
+		_face_player()
+		_pose("slam")
 	if kind != "circles":
 		await super._attack(kind)
 		if _raging:
@@ -88,6 +190,8 @@ func _attack(kind: String) -> void:
 	if net != null and net.is_host():
 		net.broadcast_attack(self, kind)
 	_busy = true
+	_face_player()
+	_pose("swipe")
 	var flash := create_tween()
 	flash.tween_property(_visual, "modulate", Color(2.4, 0.6, 0.6), 0.5)
 	await flash.finished
@@ -141,6 +245,17 @@ func _on_died() -> void:
 	_fall_and_revive()
 
 
+## Az igazi halál: összerogy, egy ideig ott fekszik, aztán elhalványul.
+func _vanish() -> void:
+	$CollisionShape2D.set_deferred("disabled", true)
+	_pose("death")
+	await _sprite.animation_finished
+	var fade := create_tween()
+	fade.tween_interval(CORPSE_TIME)
+	fade.tween_property(_visual, "modulate:a", 0.0, CORPSE_FADE)
+	fade.tween_callback(queue_free)
+
+
 ## Báb: a gazdánál a földre rogyott (és majd feltámad).
 func net_fall() -> void:
 	if _revived:
@@ -166,12 +281,8 @@ func _fall_and_revive() -> void:
 	_health.current = 1
 	_health.changed.emit(_health.current, _health.max_health)
 	Audio.play("boss_defeated")
-	_sprite.play("idle")
-	_sprite.stop()
-	var fall := create_tween().set_parallel()
-	fall.tween_property(_visual, "rotation", PI / 2.0 * (-1.0 if _sprite.flip_h else 1.0), 0.45) \
-		.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
-	fall.tween_property(_visual, "modulate", Color(0.5, 0.45, 0.45), 0.45)
+	_pose("death")
+	create_tween().tween_property(_visual, "modulate", Color(0.5, 0.45, 0.45), 0.8)
 	FloatingText.spawn(get_parent(), global_position + Vector2(0, -60), "Legyőzted...?", Color(0.85, 0.8, 0.75), 22)
 	await get_tree().create_timer(REVIVE_DELAY * 0.6, false).timeout
 	# Rángatózik, mielőtt felkel.
@@ -194,16 +305,15 @@ func _revive() -> void:
 	_health.current = roundi(_health.max_health * REVIVE_HEALTH)
 	_health.changed.emit(_health.current, _health.max_health)
 	_sprite.self_modulate = Color(1.35, 0.7, 0.7)
-	var rise := create_tween().set_parallel()
-	rise.tween_property(_visual, "rotation", 0.0, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	rise.tween_property(_visual, "modulate", Color.WHITE, 0.3)
+	_pose("rise")
+	create_tween().tween_property(_visual, "modulate", Color.WHITE, 0.3)
 	Audio.play("boss_roar")
 	var ring := Shockwave.new()
 	ring.radius = SLAM_RADIUS * 1.4
 	ring.position = position
 	get_parent().add_child(ring)
 	FloatingText.spawn(get_parent(), _head_position(), "Feltámadt — dühöng!", Color(1, 0.25, 0.2), 26)
-	await rise.finished
+	await _sprite.animation_finished
 	_hurtbox.set_deferred("monitoring", true)
 	_hitbox.set_deferred("monitorable", true)
 	_busy = false

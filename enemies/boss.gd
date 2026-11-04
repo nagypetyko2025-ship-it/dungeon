@@ -241,7 +241,12 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if dir.x != 0.0:
 		_sprite.flip_h = dir.x < 0.0
-	_sprite.play("run" if dir != Vector2.ZERO else "idle")
+	_play_walk(dir != Vector2.ZERO)
+
+
+## Futás / állás; a Vérfarkas a saját mozdulatai (támadás, átváltozás) alatt nem írja felül.
+func _play_walk(moving: bool) -> void:
+	_sprite.play("run" if moving else "idle")
 
 
 ## Felvillanás (ilyenkor áll), aztán a támadás.

@@ -674,6 +674,11 @@ func _on_died() -> void:
 		if randf() < ITEM_DROP_CHANCE * Challenge.mult("drop_chance"):
 			_drop_item.call_deferred()
 	_abilities.on_died()
+	_vanish()
+
+
+## Halál után összezsugorodik és eltűnik (a Vérfarkas felülírja: összerogy).
+func _vanish() -> void:
 	var tween := create_tween()
 	tween.tween_property(_visual, "scale", Vector2.ZERO, 0.2)
 	tween.tween_callback(queue_free)

@@ -3,6 +3,11 @@ class_name News
 ## rövid, játékosnak szóló sor a legfrissebb dátum alá (a legújabb van felül).
 
 const ENTRIES: Array[Dictionary] = [
+	{"date": "2026-11-04", "items": [
+		"Új külsőt kapott a Vérfarkas, a Mélység Ura (20. emelet): a régi, erősen kockás rajz helyett részletes, sötét "
+			+ "bundájú farkas. Emberként jelenik meg és előtted változik át, karmol és lecsap (látszik a mozdulat), rohamnál "
+			+ "nekiiramodik, legyőzve összerogy, aztán feltápászkodik, és az igazi halála után egy ideig ott fekszik.",
+	]},
 	{"date": "2026-11-02", "items": [
 		"A korlátos kártyákon szintlépéskor látszik, hányszor vetted már ki ebben a futásban (pl. \"Kivéve: 2 / 5\").",
 		"A játék elején (a 10. karakterszintig) szintlépéskor csak átlagos kártyák jönnek, ritka és epikus csak utána.",
