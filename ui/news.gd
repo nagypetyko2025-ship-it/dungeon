@@ -4,6 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-04", "items": [
+		"A Vérfarkas kisebb lett (túl nagy volt), és a karmolás vagy a csapás után már nem csúszik állva a padlón: a "
+			+ "mozdulata végéig áll, csak utána indul el.",
 		"Új külsőt kapott a Vérfarkas, a Mélység Ura (20. emelet): a régi, erősen kockás rajz helyett részletes, sötét "
 			+ "bundájú farkas. Emberként jelenik meg és előtted változik át, karmol és lecsap (látszik a mozdulat), rohamnál "
 			+ "nekiiramodik, legyőzve összerogy, aztán feltápászkodik, és az igazi halála után egy ideig ott fekszik.",

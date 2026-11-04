@@ -12,10 +12,10 @@ extends "res://enemies/boss.gd"
 ## Csak a második (igazi) halálnál jelez.
 signal final_died
 
-## A "rect" egy kocka a lapon; a "scale" 1, így egy rajzpixele akkora, mint a lovagé (a régi, 24×32-es
-## rajz háromszorosra nagyítva nagyon kockás volt).
+## A "rect" egy kocka a lapon. A "scale" 2/3: egy rajzpixele 1,5-ös kameranagyítással pont 2 képernyőpixel, így
+## éles (1-gyel túl nagy volt, a régi, 24×32-es rajz háromszorosra nagyítva pedig nagyon kockás).
 const WEREWOLF := {
-	"name": "Vérfarkas, a Mélység Ura", "rect": Rect2(0, 0, 158, 88), "scale": 1.0,
+	"name": "Vérfarkas, a Mélység Ura", "rect": Rect2(0, 0, 158, 88), "scale": 2.0 / 3.0,
 	"health": 3200, "damage": 16, "speed": 95.0, "xp": 600,
 	"attacks": ["circles", "circles", "charge", "slam"], "minion": "",
 }
@@ -24,14 +24,14 @@ const WEREWOLF := {
 const SHEET := "res://assets/enemies/werewolf.png"
 const BODY := Rect2(42, 18, 73, 67)
 ## Mozdulatok: sor a lapon, kockánként az időtartam (1/POSE_FPS mp egységben), ismétlődik-e. A lecsapó kocka
-## a felvillanás végére esik: "swipe" (karmos körök) 0,5 mp, "slam" (Boss.WINDUP) 0,75 mp. A "rise" a
-## "death" visszafelé (feltámadás).
+## a felvillanás végére esik: "swipe" (karmos körök) 0,5 mp, "slam" (Boss.WINDUP) 0,75 mp; utána még 0,36 mp-ig
+## tart, addig áll (`_finish_pose`). A "rise" a "death" visszafelé (feltámadás).
 const POSE_FPS := 10.0
 const POSES := {
 	"idle": {"row": 0, "durations": [1.4, 1.4, 1.4, 1.4, 1.4, 1.4], "loop": true},
-	"run": {"row": 1, "durations": [0.8, 0.8, 0.8, 0.8, 0.8, 0.8], "loop": true},
-	"swipe": {"row": 2, "durations": [1.0, 2.0, 2.0, 1.0, 1.0, 1.0, 2.0], "loop": false},
-	"slam": {"row": 3, "durations": [3.0, 4.5, 1.0, 1.0, 1.5, 1.5], "loop": false},
+	"run": {"row": 1, "durations": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0], "loop": true},
+	"swipe": {"row": 2, "durations": [1.0, 2.0, 2.0, 1.0, 0.8, 0.8, 1.0], "loop": false},
+	"slam": {"row": 3, "durations": [3.0, 4.5, 1.0, 0.8, 0.8, 1.0], "loop": false},
 	"death": {"row": 4, "durations": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], "loop": false},
 	"rise": {"row": 4, "durations": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], "loop": false, "reverse": true},
 	"transform": {"row": 5, "durations": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0], "loop": false},
@@ -156,6 +156,13 @@ func _pose(pose: String) -> void:
 	_sprite.play(pose)
 
 
+## Megvárja a mozdulat végét: amíg tart, nem indul el (különben állva csúszna a padlón). A báb nem vár: a
+## helyét a gazdától kapja, és a gazda futása félbe is szakíthatja a mozdulatot (akkor sosem érne véget).
+func _finish_pose() -> void:
+	if _posing and not net_puppet:
+		await _sprite.animation_finished
+
+
 func _play_walk(moving: bool) -> void:
 	if _posing:
 		return
@@ -183,6 +190,12 @@ func _attack(kind: String) -> void:
 		_pose("slam")
 	if kind != "circles":
 		await super._attack(kind)
+		# A Boss._attack a csapás után elengedi (_busy): a mozdulat végéig még álljon.
+		if _posing and is_physics_processing():
+			_busy = true
+			await _finish_pose()
+			if is_physics_processing():
+				_busy = false
 		if _raging:
 			_attack_left *= RAGE_INTERVAL
 		return
@@ -199,6 +212,9 @@ func _attack(kind: String) -> void:
 	if not is_physics_processing():
 		return
 	_spawn_circles()
+	await _finish_pose()
+	if not is_physics_processing():
+		return
 	_busy = false
 	var interval := randf_range(ATTACK_INTERVAL.x, ATTACK_INTERVAL.y)
 	_attack_left = interval * (RAGE_INTERVAL if _raging else (ENRAGE_INTERVAL if _enraged else 1.0))

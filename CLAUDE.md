@@ -73,9 +73,11 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   A Vérfarkas képe (2026-11-04): Mattz Art "Werewolf 2D Pixel Art" (Sim megvette, nem CC0; a zip-ben `outline` és
   `without_outline`, ez utóbbi van bent), `assets/enemies/werewolf.png`: soronként egy mozdulat, 158×88-as kockák, a test a kocka
   közepén (`WerewolfBoss.POSES`: idle, run, swipe, slam, death, rise = death visszafelé, transform, human; kockánkénti időtartam:
-  a lecsapó kocka a felvillanás végére esik). "scale" 1 (a régi 24×32-es rajz ×3 volt: 9 képernyőpixel / rajzpixel), az ütközők a
-  testhez (`BODY`, a Szörnyek könyve képe is), nem a kockához. Saját `_own_frames`; a mozdulat alatt (`_posing`) a `Boss._play_walk`
-  nem írja felül; megjelenéskor ember → átváltozás (`_intro`, `_busy`), az első "halál" a death mozdulat (régen 90°-os forgatás),
+  a lecsapó kocka a felvillanás végére esik). "scale" 2/3: egy rajzpixel pont 2 képernyőpixel (az 1 Sim szerint túl nagy volt; a régi
+  24×32-es rajz ×3 volt: 9 képernyőpixel / rajzpixel), az ütközők a testhez (`BODY`, a Szörnyek könyve képe is), nem a kockához.
+  Saját `_own_frames`; a mozdulat alatt (`_posing`) a `Boss._play_walk` nem írja felül, és a lecsapás után a mozdulat végéig
+  `_busy` marad (`_finish_pose`; a báb nem vár) — különben állva csúszott a padlón (a mozgó kockák 14%-án). A `Boss._physics_process`
+  a támadás indulásának kockájában már nem lép (dir = 0, ha az `_attack` `_busy`-t állított). Megjelenéskor ember → átváltozás (`_intro`, `_busy`), az első "halál" a death mozdulat (régen 90°-os forgatás),
   az igazi halál után a tetem fekszik, aztán elhalványul (`Enemy._vanish` felülírva). A NetEnemies ANIMATIONS-ában nincsenek
   ezek a mozdulatok: a gazda közben üreset küld, a báb a saját `_attack`-jával játssza.
 - Találati esély: KIKAPCSOLVA (`Stats.ACCURACY_ENABLED` = false; visszakapcsolás: true). Ilyenkor `Player.hit_chance` = 1, és elrejtve:
