@@ -505,10 +505,10 @@ func _spawn_boss() -> void:
 		boss.position = Vector2(rect.size.x * 0.25, 0) * TILE
 		boss.get_node("Health").died.connect(_on_enemy_died.bind(boss))
 	elif final_boss:
-		# A Vérfarkas a terem túlsó (keleti) felén vár; csak az igazi halála számít.
+		# A Vérfarkas a terem közepén vár (ott változik át, amikor a játékos rálát); csak az igazi halála számít.
 		boss.set_script(WEREWOLF)
 		boss.setup_werewolf(depth)
-		boss.position = Vector2(rect.size.x * 0.25, 0) * TILE
+		boss.position = tile_center(anchor) - position
 		boss.connect("final_died", _on_enemy_died.bind(boss))
 	else:
 		boss.setup_boss(depth)
@@ -523,7 +523,9 @@ func _spawn_boss() -> void:
 	_enemies.add_child.call_deferred(boss)
 	if net != null:
 		net.register(boss, self, lord if final_boss else "boss")
-	Audio.play("boss_roar")
+	# A Vérfarkas emberként jelenik meg: az átváltozásakor üvölt.
+	if not (final_boss and lord == "werewolf"):
+		Audio.play("boss_roar")
 	boss_fight_started.emit(boss)
 
 
@@ -569,7 +571,12 @@ func _point_free(world_position: Vector2) -> bool:
 	var query := PhysicsPointQueryParameters2D.new()
 	query.position = world_position
 	query.collision_mask = 1
-	return get_world_2d().direct_space_state.intersect_point(query, 1).is_empty()
+	# A "ward" csoport (pl. a Vérfarkas védőköre) csak a játékost állítja meg, nem számít falnak: különben a
+	# biztonsági háló (_physics_process) a körben álló főellenséget "beszorultnak" látná, és odébb tenné.
+	for hit in get_world_2d().direct_space_state.intersect_point(query, 4):
+		if not (hit["collider"] as Node).is_in_group("ward"):
+			return false
+	return true
 
 
 func _on_boss_defeated(boss: Node2D) -> void:

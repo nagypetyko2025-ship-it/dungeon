@@ -236,12 +236,20 @@ func _physics_process(delta: float) -> void:
 		_attack_left -= delta
 		if _attack_left <= 0.0:
 			_attack(_def["attacks"].pick_random())
+			# A felvillanás alatt áll: már ebben a kockában se lépjen (a Vérfarkas mozdulata már megy).
+			if _busy:
+				dir = Vector2.ZERO
 	var speed: float = stats["speed"] * (ENRAGE_SPEED if _enraged else 1.0) * (MINI_WALK if mini_boss else 1.0)
 	velocity = dir * speed
 	move_and_slide()
 	if dir.x != 0.0:
 		_sprite.flip_h = dir.x < 0.0
-	_sprite.play("run" if dir != Vector2.ZERO else "idle")
+	_play_walk(dir != Vector2.ZERO)
+
+
+## Futás / állás; a Vérfarkas a saját mozdulatai (támadás, átváltozás) alatt nem írja felül.
+func _play_walk(moving: bool) -> void:
+	_sprite.play("run" if moving else "idle")
 
 
 ## Felvillanás (ilyenkor áll), aztán a támadás.

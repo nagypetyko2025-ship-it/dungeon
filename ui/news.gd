@@ -8,6 +8,13 @@ const ENTRIES: Array[Dictionary] = [
 			+ "gyorsaság, kikerülés, de kevesebb védelem).",
 		"Két új szörny: a Szürke farkas (az 5. emelettől, gyors, cikázik és nekiront) és a Lángkoponya (a 17. emelettől, "
 			+ "lángoló repülő koponya, ami halálakor szétrobban). Mindkettő bekerült a Szörnyek könyvébe.",
+		"A Vérfarkas a terem közepén vár emberként, piros védőkörben: amíg át nem változik, nem lehet megsebezni, és nem "
+			+ "lehet a közelébe menni. Csak akkor kezd átváltozni, amikor már látod, így mindig végignézheted.",
+		"A Vérfarkas kisebb lett (túl nagy volt), és a karmolás vagy a csapás után már nem csúszik állva a padlón: a "
+			+ "mozdulata végéig áll, csak utána indul el.",
+		"Új külsőt kapott a Vérfarkas, a Mélység Ura (20. emelet): a régi, erősen kockás rajz helyett részletes, sötét "
+			+ "bundájú farkas. Emberként jelenik meg és előtted változik át, karmol és lecsap (látszik a mozdulat), rohamnál "
+			+ "nekiiramodik, legyőzve összerogy, aztán feltápászkodik, és az igazi halála után egy ideig ott fekszik.",
 	]},
 	{"date": "2026-11-02", "items": [
 		"A korlátos kártyákon szintlépéskor látszik, hányszor vetted már ki ebben a futásban (pl. \"Kivéve: 2 / 5\").",
