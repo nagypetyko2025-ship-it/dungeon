@@ -37,8 +37,13 @@ const POSES := {
 	"transform": {"row": 5, "durations": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0], "loop": false},
 	"human": {"row": 6, "durations": [1.4, 1.4, 1.4, 1.4, 1.4, 1.4], "loop": true},
 }
-## Megjelenéskor ennyi ideig áll emberként, mielőtt átváltozik.
+## Megjelenés: a terem közepén emberként áll, védőkörrel (WARD_RADIUS: a játékos és a lövedékei nem jutnak át rajta,
+## és nem sebezhető), amíg a játékos nem látja az egész alakját (a képernyő szélétől legalább SEEN_MARGIN-re). Onnan
+## még INTRO_HUMAN mp, és átváltozik; a védőkör csak utána tűnik el. (Ha a célpontja a körhöz ér, a képtől függetlenül
+## kezd: közös játékban a gazda a társak képét nem látja.)
 const INTRO_HUMAN := 0.7
+const WARD_RADIUS := 150.0
+const SEEN_MARGIN := 24.0
 ## Roham közben gyorsabban szedi a lábát.
 const CHARGE_RUN_SPEED := 1.8
 ## A tetem ennyi ideig fekszik, aztán elhalványul.
@@ -74,6 +79,11 @@ var _revived := false
 var _raging := false
 ## Saját mozdulat (átváltozás, támadás) megy: a futás / állás nem írja felül.
 var _posing := false
+## A megjelenés tart (emberként vár vagy átváltozik): védőkör, nem sebezhető, nem mozdul.
+var _in_intro := false
+## (Gazda / egyjátékos) még arra vár, hogy a játékos lássa.
+var _waiting := false
+var _ward: Ward
 
 
 ## A vérfarkas beállítása a fába kerülés előtt (a setup_boss helyett).
@@ -105,20 +115,79 @@ func _ready() -> void:
 	_intro()
 
 
-## A Mélység Ura emberként jelenik meg, aztán átváltozik (közben nem mozdul és nem támad).
+## A Mélység Ura emberként jelenik meg a terem közepén, védőkörrel és sebezhetetlenül; átváltozni csak akkor
+## kezd, amikor a játékos látja (lásd _physics_process). Közben nem mozdul és nem támad.
 func _intro() -> void:
+	_in_intro = true
+	_waiting = not net_puppet
 	_busy = true
 	_posing = true
 	_sprite.play("human")
 	_pick_target(0.0)
 	_face_player()
-	await get_tree().create_timer(INTRO_HUMAN, false).timeout
-	if _revived or _health.is_dead():
+	_hurtbox.set_deferred("monitoring", false)
+	_hitbox.set_deferred("monitorable", false)
+	_ward = Ward.new()
+	_ward.radius = WARD_RADIUS
+	add_child(_ward)
+	add_collision_exception_with(_ward)
+
+
+func _physics_process(delta: float) -> void:
+	super._physics_process(delta)
+	if not _in_intro:
 		return
+	if net_puppet:
+		# A báb a gazda jelére változik át (_attack "transform"); ha előbb a gazda futása jön, a harc már megy.
+		if _sprite.animation != "human" and _sprite.animation != "transform":
+			_end_intro()
+	elif _waiting:
+		_face_player()
+		if _seen():
+			_transform(INTRO_HUMAN)
+
+
+## Látja-e a játékos: az egész alakja a képen van (a kamera szerint), vagy a célpontja már a védőkörnél jár.
+func _seen() -> bool:
+	var viewport := get_viewport()
+	var view := viewport.get_canvas_transform().affine_inverse() * viewport.get_visible_rect()
+	if view.grow(-SEEN_MARGIN).encloses(_body_rect()):
+		return true
+	return is_instance_valid(_player) and global_position.distance_to(_player.global_position) < WARD_RADIUS + 60.0
+
+
+## A test helye a világban (a talpa a global_position-ön; a kocka alja ott van, lásd BODY).
+func _body_rect() -> Rect2:
+	var frame: Rect2 = WEREWOLF["rect"]
+	var size := BODY.size * 2.0 * _size_scale
+	var top := (frame.size.y - BODY.position.y) * 2.0 * _size_scale
+	return Rect2(global_position + Vector2(-size.x / 2.0, -top), size)
+
+
+## `delay` mp múlva átváltozik (a gazda a bábnak is szól), utána indul a harc.
+func _transform(delay: float) -> void:
+	_waiting = false
+	if delay > 0.0:
+		await get_tree().create_timer(delay, false).timeout
+	var net := NetEnemies.active(get_tree())
+	if net != null and net.is_host():
+		net.broadcast_attack(self, "transform")
 	_pose("transform")
+	Audio.play("boss_roar")
 	await _sprite.animation_finished
-	if _revived or _health.is_dead():
+	_end_intro()
+
+
+## Vége a megjelenésnek: a védőkör feloldódik, sebezhető, és indul.
+func _end_intro() -> void:
+	if not _in_intro:
 		return
+	_in_intro = false
+	_waiting = false
+	if is_instance_valid(_ward):
+		_ward.dismiss()
+	_hurtbox.set_deferred("monitoring", true)
+	_hitbox.set_deferred("monitorable", true)
 	_busy = false
 	_attack_left = maxf(_attack_left, 0.8)
 
@@ -185,6 +254,11 @@ func on_hit_player(amount: int) -> void:
 
 
 func _attack(kind: String) -> void:
+	# A gazda szól: a báb most változik át (lásd _transform).
+	if kind == "transform":
+		if net_puppet and _in_intro and _sprite.animation == "human":
+			_transform(0.0)
+		return
 	if kind == "slam":
 		_face_player()
 		_pose("slam")
@@ -399,3 +473,39 @@ class GroundCircle:
 		for i in 3:
 			var x := (i - 1) * radius * 0.28
 			draw_line(Vector2(x - 6, -radius * 0.35), Vector2(x + 6, radius * 0.35), Color(mark_color, 0.7 * blink), 3.0)
+
+
+## A megjelenés védőköre: falként (1-es réteg) állja útját a játékosnak és a lövedékeinek, halványan lüktet.
+## A "ward" csoport: a Room._point_free nem tekinti falnak (a farkas nem "szorult be").
+class Ward:
+	extends StaticBody2D
+	var radius := 150.0
+	var _t := 0.0
+
+	func _ready() -> void:
+		add_to_group("ward")
+		z_index = -3
+		collision_layer = 1
+		collision_mask = 0
+		var shape := CollisionShape2D.new()
+		var circle := CircleShape2D.new()
+		circle.radius = radius
+		shape.shape = circle
+		add_child(shape)
+
+	func _process(delta: float) -> void:
+		_t += delta
+		queue_redraw()
+
+	## Feloldódik: már nem áll útba, elhalványul és eltűnik.
+	func dismiss() -> void:
+		set_deferred("collision_layer", 0)
+		var fade := create_tween()
+		fade.tween_property(self, "modulate:a", 0.0, 0.5)
+		fade.tween_callback(queue_free)
+
+	func _draw() -> void:
+		var pulse := 0.5 + 0.5 * sin(_t * 3.0)
+		draw_circle(Vector2.ZERO, radius, Color(0.5, 0.03, 0.08, 0.10 + 0.06 * pulse))
+		draw_arc(Vector2.ZERO, radius, 0, TAU, 72, Color(0.95, 0.2, 0.25, 0.45 + 0.35 * pulse), 3.0)
+		draw_arc(Vector2.ZERO, radius - 8.0, 0, TAU, 72, Color(0.95, 0.2, 0.25, 0.15 + 0.15 * pulse), 2.0)
