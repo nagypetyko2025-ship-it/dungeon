@@ -42,6 +42,14 @@ var _entities: Node2D
 var _prompt: Label
 var _inside := false
 var _busy := false
+var _lieutenant_position := Vector2.INF
+var _dialogue: DialoguePanel
+var _orders: CanvasLayer
+var _ready_mark: Label
+var _mark_left := 0.0
+
+const QUEST_PANEL := preload("res://ui/quest_panel.gd")
+const TALK_RANGE := 84.0
 
 
 func setup(camp: Node2D) -> void:
@@ -146,8 +154,9 @@ func _build_interior() -> void:
 		var mug := _rpg(Town.DRINKS[i], _center(Vector2i(r.position.x + 6 + i, table_y)) + Vector2(10, -8), _entities)
 		mug.scale = Vector2(1.3, 1.3)
 		mug.z_index = 1
-	for spot: Array in [[Vector2i(5, 4), false], [Vector2i(10, 4), true], [Vector2i(7, 3), false], [Vector2i(8, 5), true]]:
+	for spot: Array in [[Vector2i(5, 4), false], [Vector2i(10, 4), true], [Vector2i(8, 5), true]]:
 		_soldier(_center(Vector2i(r.position.x, r.position.y) + spot[0]) + Vector2(0, 10), spot[1])
+	_build_lieutenant(_center(Vector2i(r.position.x + 7, r.position.y + 3)) + Vector2(16, 10))
 	# A jobb falnak döntött lándzsák, mellettük egy őr; hordók a bal sarokban.
 	var lean := Vector2(r.end.x, r.position.y + 4) * TILE + Vector2(-8, 0)
 	for i in 4:
@@ -179,6 +188,57 @@ func _bed(tile: Vector2i, sleeper: bool) -> void:
 	head.scale = Vector2(1.6, 1.6)
 	head.position = Vector2(-TILE * 0.38, -TILE * 0.8)
 	holder.add_child(head)
+
+
+## Vas Szilárd hadnagy az asztalfőn (Lieutenant): beszélgetés, a parancsai (QuestPanel "lieutenant"), fölötte
+## "!" az első beszélgetésig (TalkMark), zöld "?" ha van leadható parancs.
+func _build_lieutenant(at: Vector2) -> void:
+	_lieutenant_position = at
+	var holder := Node2D.new()
+	holder.position = at
+	_entities.add_child(holder)
+	var figure := AnimatedSprite2D.new()
+	figure.sprite_frames = Lieutenant.frames()
+	figure.scale = Vector2(2, 2)
+	figure.offset = Vector2(0, -14)
+	figure.play()
+	holder.add_child(figure)
+	TalkMark.attach(figure, Lieutenant.ID)
+	_ready_mark = MenuStyle.title_label("?", 40, Color(0.55, 1.0, 0.55))
+	_ready_mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_ready_mark.custom_minimum_size = Vector2(40, 0)
+	_ready_mark.position = Vector2(-20, -100)
+	_ready_mark.z_index = 5
+	_ready_mark.visible = false
+	holder.add_child(_ready_mark)
+	var body := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	var box := RectangleShape2D.new()
+	box.size = Vector2(20, 10)
+	shape.shape = box
+	shape.position = Vector2(0, -5)
+	body.add_child(shape)
+	holder.add_child(body)
+	_orders = QUEST_PANEL.new()
+	_orders.name = "LieutenantOrders"
+	_orders.set("giver", Lieutenant.ID)
+	_camp.add_child.call_deferred(_orders)
+	_dialogue = DialoguePanel.new()
+	_dialogue.name = "LieutenantDialogue"
+	_dialogue.npc_id = Lieutenant.ID
+	_dialogue.npc_name = Lieutenant.NAME
+	_dialogue.portrait = Lieutenant.portrait()
+	_dialogue.greeting = Lieutenant.GREETING
+	_dialogue.options_provider = func() -> Array[Dictionary]: return Lieutenant.options(_open_orders)
+	_camp.add_child.call_deferred(_dialogue)
+
+
+## "Mi a parancs?": a beszélgetés helyett a parancsok ablaka (itt lehet leadni is őket).
+func _open_orders() -> String:
+	var menus := _camp.get_node("Menus")
+	menus.call("close_current")
+	menus.call_deferred("open_menu", _orders)
+	return ""
 
 
 ## Álló / ülő őr (lassan lélegzik), ütközővel.
@@ -254,6 +314,8 @@ func _focus() -> Array:
 		return []
 	if at.distance_to(_center(INTERIOR_DOOR) + Vector2(TILE / 2.0, -TILE / 2.0)) < INTERACT_RANGE:
 		return ["leave", "[E] Kilépés a szabadba"]
+	if at.distance_to(_lieutenant_position) < TALK_RANGE:
+		return ["talk", "[E] Beszélgetés: %s" % Lieutenant.NAME]
 	return []
 
 
@@ -263,6 +325,11 @@ func _process(delta: float) -> void:
 		_prompt.text = focus[1]
 	var target := 1.0 if not focus.is_empty() and not GamePause.active(get_tree()) else 0.0
 	_prompt.modulate.a = move_toward(_prompt.modulate.a, target, delta * 5.0)
+	# Zöld "?" a hadnagy fölött, ha van leadható parancs (fél mp-enként nézi).
+	_mark_left -= delta
+	if is_instance_valid(_ready_mark) and _mark_left <= 0.0:
+		_mark_left = 0.5
+		_ready_mark.visible = Progress.has_talked(Lieutenant.ID) and not Quests.ready_ids(Lieutenant.ID).is_empty()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -277,6 +344,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_move(true, _center(INTERIOR_DOOR) + Vector2(TILE / 2.0, -TILE * 1.2))
 		"leave":
 			_move(false, door_position() + Vector2(0, 30))
+		"talk":
+			Audio.play("ui_open")
+			_camp.get_node("Menus").call("open_menu", _dialogue)
 
 
 func _move(inside: bool, at: Vector2) -> void:

@@ -10,3 +10,4 @@ gravedigger_side.png: ugyanabból a "Skeletons Rework" (antumdeluge, CC0) csontv
 engineer.png: "Mechanic (Animated)" (DezrasDragons, CC0, https://opengameart.org/content/mechanic-animated), az álló kockák, átlátszó háttérrel.
 old_fisherman.png: a 0x72 DungeonTileset II (CC0) wizzard_m kockái (álló + futó, 16x28), a kék kalap és köpeny zöldre átszínezve (öreg horgász).
 miner.png: a "Superpowers Asset Packs" (CC0, https://opengameart.org/node/70178) ninja-adventure/characters/8.png figurája, koszosabbra (sötétebb, kormos foltok) színezve, sárga sisaklámpával.
+officer.png: a 0x72 DungeonTileset II (CC0, https://0x72.itch.io/dungeontileset-ii) knight_m álló kockái, Vas Szilárd hadnagynak átszínezve (feketített acél, sötétkék forgó). CC0.

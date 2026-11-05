@@ -4,6 +4,8 @@ extends CanvasLayer
 ## átvenni (egyenként vagy mindet egyszerre). Megnyitását/bezárását a Menus kezeli.
 
 const DONE_COLOR := Color(0.24, 0.5, 0.2)
+## Kinek a küldetései (Quests.GIVERS): "barkeep" (a kocsmáros) vagy "lieutenant" (Vas Szilárd hadnagy, a barakkban).
+var giver := "barkeep"
 
 var _list: VBoxContainer
 var _summary: RichTextLabel
@@ -50,9 +52,10 @@ func _build() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 10)
 	window.add_child(root)
-	root.add_child(UiStyle.title_bar("Küldetések — a kocsmáros táblája"))
-	root.add_child(UiStyle.label("„Minden munkát rád bízok, nem kell kérni. Ha kész vagy, gyere a jutalomért!”",
-		15, UiStyle.INK_LIGHT))
+	var lieutenant := giver == "lieutenant"
+	root.add_child(UiStyle.title_bar("Parancsok — Vas Szilárd hadnagy" if lieutenant else "Küldetések — a kocsmáros táblája"))
+	root.add_child(UiStyle.label("„Nem kérdezel, végrehajtod. Ha kész, jelentkezel. Lelépni!”" if lieutenant
+		else "„Minden munkát rád bízok, nem kell kérni. Ha kész vagy, gyere a jutalomért!”", 15, UiStyle.INK_LIGHT))
 
 	var summary_box := PanelContainer.new()
 	summary_box.add_theme_stylebox_override("panel", UiStyle.plain_panel())
@@ -109,14 +112,19 @@ func _small_button(text: String, action: Callable) -> Button:
 
 
 func _refresh() -> void:
-	var ready := Quests.ready_ids().size()
-	_summary.text = "[b]Teljesítve: %d / %d[/b]   ·   %s" % [Progress.quests_done.size(), Quests.ALL.size(),
+	var ids := Quests.ids_of(giver)
+	var ready := Quests.ready_ids(giver).size()
+	var done_count := 0
+	for id in ids:
+		if Progress.quests_done.has(id):
+			done_count += 1
+	_summary.text = "[b]Teljesítve: %d / %d[/b]   ·   %s" % [done_count, ids.size(),
 		("[color=#3c6a32]%d jutalom vár rád![/color]" % ready) if ready > 0
 		else "Minden küldetés fut — a kazamatában számol."]
 	_take_all.disabled = ready == 0
 	for child in _list.get_children():
 		child.queue_free()
-	for id: String in Quests.ALL:
+	for id: String in ids:
 		_list.add_child(_make_row(id))
 
 
@@ -181,7 +189,7 @@ func _on_turn_in(id: String) -> void:
 
 func _on_take_all() -> void:
 	var rewards: Array[String] = []
-	for id in Quests.ready_ids():
+	for id in Quests.ready_ids(giver):
 		rewards.append(Quests.turn_in(id))
 	if rewards.is_empty():
 		return

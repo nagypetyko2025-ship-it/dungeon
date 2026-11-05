@@ -14,6 +14,8 @@ const ENTRIES: Array[Dictionary] = [
 			+ "pontosabbak lettek (a 21-40. emelet Káoszkő, a 41.-től Fagykő).",
 		"Kikerült a hordágyas katonák bejátszása.",
 		"Új épület: katonai barakk a királyi vár alatt, az úttól balra (nagy zöld sátor priccsekkel és katonákkal).",
+		"A barakkban Vas Szilárd hadnagy vár: 8 nehéz és elit parancs (a kocsmárosénál keményebbek), és mindegyik után "
+			+ "új történeteket mesél az ezredről, a határról, a királyról és Gáspárról.",
 	]},
 	{"date": "2026-11-04", "items": [
 		"Két új nadrág: Lápjáró nadrág (ritka: kikerülés, regeneráció, gyorsaság) és Lángtáncos nadrág (legendás: sebzés, "

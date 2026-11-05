@@ -17,7 +17,10 @@ const TIERS := {
 	"easy": {"name": "Könnyű", "color": Color(0.24, 0.5, 0.2)},
 	"medium": {"name": "Közepes", "color": Color(0.72, 0.4, 0.05)},
 	"hard": {"name": "Nehéz", "color": Color(0.7, 0.14, 0.12)},
+	"elite": {"name": "Elit", "color": Color(0.45, 0.12, 0.55)},
 }
+## Megbízók: a küldetés "giver" kulcsa (nincs = a kocsmáros) -> hol veszed át a jutalmat.
+const GIVERS := {"barkeep": "a kocsmárosnál", "lieutenant": "Vas Szilárd hadnagynál"}
 
 const ALL := {
 	# ---- Könnyű
@@ -233,6 +236,27 @@ const ALL := {
 		"text": "Érd el a 20. karakterszintet egy futásban.", "reward": {"gold": 500}},
 	"doomsday": {"name": "Végítélet", "kind": "kill", "goal": 2000, "target": [], "tier": "hard",
 		"text": "Ölj meg összesen 2000 szörnyet.", "reward": {"gold": 800}},
+	# ---- Vas Szilárd hadnagy (a barakkban; "giver": "lieutenant"): nehezebbek a kocsmárosénál, ugyanígy futnak,
+	# a jutalmat nála veszed át, és mindegyik után új történeteket mond (Lieutenant.AFTER_STORIES).
+	"lt_drill": {"name": "Gyakorlatozás", "kind": "room", "goal": 150, "tier": "hard", "giver": "lieutenant",
+		"text": "Tisztíts ki 150 szobát. A hadnagy szerint a fegyelem ismétlésből születik.", "reward": {"gold": 700}},
+	"lt_frost_line": {"name": "A fagyvonal", "kind": "kill", "goal": 40, "tier": "hard", "giver": "lieutenant",
+		"target": ["frost_wraith", "ice_spider", "snow_golem", "frozen_knight", "ice_zombie", "frost_slime", "frost_dragon"],
+		"text": "Ölj meg 40 fagykő-lényt (a 41. emelet alatt).", "reward": {"item": "legendary"}},
+	"lt_war_chest": {"name": "Hadikassza", "kind": "gold", "goal": 15000, "tier": "elite", "giver": "lieutenant",
+		"text": "Szedj fel összesen 15000 aranyat a kazamatában.", "reward": {"gold": 1000}},
+	"lt_officer": {"name": "Tiszti rang", "kind": "level", "goal": 25, "tier": "elite", "giver": "lieutenant",
+		"text": "Érd el a 25. karakterszintet egy futásban.", "reward": {"item": "legendary"}},
+	"lt_fiftieth": {"name": "Az ötvenedik", "kind": "floor", "goal": 50, "tier": "elite", "giver": "lieutenant",
+		"text": "Juss le az 50. emeletre.", "reward": {"gold": 1200}},
+	"lt_bosses": {"name": "Hadjárat", "kind": "boss", "goal": 40, "tier": "elite", "giver": "lieutenant",
+		"text": "Győzz le összesen 40 főellenséget.", "reward": {"item": "legendary"}},
+	"lt_engine": {"name": "A gépezet ura", "kind": "floor", "goal": 61, "tier": "elite", "giver": "lieutenant",
+		"text": "Juss túl a 60. emeleten (az Ősgépezet termén): érd el a 61. emeletet.", "reward": {"gold": 1500}},
+	"lt_hellfire": {"name": "Pokoltűz", "kind": "kill", "goal": 30, "tier": "elite", "giver": "lieutenant",
+		"target": ["hell_hound", "hell_beast", "nightmare", "hell_demon"],
+		"text": "Ölj meg 30 vérkő-lényt (pokolkutya, pokolfajzat, lidércló, pokolúr; a 81. emelet alatt).",
+		"reward": {"item": "legendary"}},
 	"abyss_executioner": {"name": "A Mélység hóhéra", "kind": "boss", "goal": 20, "tier": "hard",
 		"text": "Győzz le összesen 20 főellenséget.", "reward": {"item": "legendary"}},
 }
@@ -284,11 +308,24 @@ static func is_complete(id: String) -> bool:
 	return not Progress.quests_done.has(id) and progress(id) >= int(ALL[id]["goal"])
 
 
-## A kész, átvehető jutalmú küldetések.
-static func ready_ids() -> Array[String]:
+## A kész, átvehető jutalmú küldetések (`giver`: csak az övéi; "" = mindenkié).
+static func ready_ids(giver := "") -> Array[String]:
 	var ids: Array[String] = []
 	for id: String in ALL:
-		if is_complete(id):
+		if is_complete(id) and (giver.is_empty() or giver_of(id) == giver):
+			ids.append(id)
+	return ids
+
+
+static func giver_of(id: String) -> String:
+	return str(ALL[id].get("giver", "barkeep"))
+
+
+## A megbízó küldetései (a felsorolás sorrendjében).
+static func ids_of(giver: String) -> Array[String]:
+	var ids: Array[String] = []
+	for id: String in ALL:
+		if giver_of(id) == giver:
 			ids.append(id)
 	return ids
 
@@ -296,10 +333,19 @@ static func ready_ids() -> Array[String]:
 ## Rövid szöveg a kijelzőnek: ha van átvehető jutalom, az; különben a teljesítéshez
 ## legközelebb álló futó küldetés, pl. "Goblinvadász: 3 / 8" ("" ha minden kész).
 static func tracker_text() -> String:
-	var ready := ready_ids().size()
+	var ready_list := ready_ids()
+	var ready := ready_list.size()
 	if ready > 0:
-		return ("Küldetés kész! Jutalom a kocsmárosnál." if ready == 1
-			else "%d küldetés kész! Jutalmak a kocsmárosnál." % ready)
+		var where := "a kocsmárosnál"
+		var givers := {}
+		for id in ready_list:
+			givers[giver_of(id)] = true
+		if givers.size() > 1:
+			where = "a kocsmárosnál és a hadnagynál"
+		else:
+			where = str(GIVERS.get(givers.keys()[0], where))
+		return ("Küldetés kész! Jutalom %s." % where if ready == 1
+			else "%d küldetés kész! Jutalmak %s." % [ready, where])
 	var best := ""
 	var best_ratio := -1.0
 	for id: String in ALL:

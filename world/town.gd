@@ -724,7 +724,7 @@ func _process(delta: float) -> void:
 	if _quest_mark and _mark_left <= 0.0:
 		# Zöld "?" a kocsmáros fölött, ha van átvehető jutalom (fél mp-enként nézi, nem minden képkockán).
 		_mark_left = 0.5
-		_quest_mark.visible = not Quests.ready_ids().is_empty()
+		_quest_mark.visible = not Quests.ready_ids("barkeep").is_empty()
 		_quest_mark.text = "?"
 		_quest_mark.add_theme_color_override("font_color", Color(0.55, 1.0, 0.55))
 	# Egy ülő karakter mellett oldalt megjelenik a bemutatkozása.

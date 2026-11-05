@@ -34,7 +34,7 @@ const WITCH_TAB := 11
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 ## Az általános fül szűrői: [kulcs, felirat].
 const STATUS_FILTERS := [["all", "Mind"], ["ready", "Leadható"], ["active", "Folyamatban"], ["done", "Teljesítve"]]
-const TIER_FILTERS := [["all", "Minden nehézség"], ["easy", "Könnyű"], ["medium", "Közepes"], ["hard", "Nehéz"]]
+const TIER_FILTERS := [["all", "Minden nehézség"], ["easy", "Könnyű"], ["medium", "Közepes"], ["hard", "Nehéz"], ["elite", "Elit"]]
 
 var _ids: Array = []
 var _tab := 0
