@@ -180,7 +180,12 @@ func _go_to_camp() -> void:
 	if not GameState.cheated:
 		for index in _chosen:
 			Progress.add_to_stash(_items[index])
-	Records.submit_run(player)
+	var rank := Records.submit_run(player)
+	# Futás végi összesítő (ui/run_summary.gd), a "Tovább" után megy a futás a táborba.
+	visible = false
+	var summary := RunSummary.overlay(player, "GYŐZELEM", rank)
+	get_parent().add_child(summary[0])
+	await (summary[1] as Button).pressed
 	Progress.rescue_gold(int(player.get("gold")) + GameState.break_gold_left, 1.0)
 	GameState.reset()
 	GameState.dungeon_won = true

@@ -1048,6 +1048,10 @@ func _on_hurt(hitbox: Hitbox) -> void:
 		_thorns(hitbox)
 		# Életlopó támadó (a Vérfarkas): a sebzésből gyógyul.
 		var attacker: Variant = hitbox.get_meta("source", hitbox.owner)
+		# A futás végi összesítőhöz: ki talált el utoljára (ha belehalsz, ő ölt meg).
+		var monster := RunSummary.monster_key(attacker if attacker is Node else hitbox)
+		if not monster.is_empty():
+			GameState.killer = monster
 		if is_instance_valid(attacker) and attacker.has_method("on_hit_player"):
 			attacker.call("on_hit_player", amount)
 

@@ -721,8 +721,10 @@ func _on_enemy_died(enemy: Node2D) -> void:
 	if not enemy.has_meta("self_destruct"):
 		Quests.notify("kill", type["name"] if type is Dictionary else "")
 		# A Szörnyek könyvébe a főellenségek a saját nevükkel kerülnek.
-		Progress.add_kill(str(enemy.get("boss_name")) if enemy.is_in_group("boss") \
-			else (str(type["name"]) if type is Dictionary else ""))
+		var monster := RunSummary.monster_key(enemy)
+		Progress.add_kill(monster)
+		if not monster.is_empty():
+			GameState.kill_counts[monster] = int(GameState.kill_counts.get(monster, 0)) + 1
 	if enemy.is_in_group("boss"):
 		_on_boss_defeated(enemy)
 	# Előbb az osztódás, hogy a harc ne érjen véget, mielőtt a kicsik megjelennek.

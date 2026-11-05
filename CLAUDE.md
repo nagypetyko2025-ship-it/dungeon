@@ -103,6 +103,10 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   átírásai a `data/card_overrides.json`-ba (`OVERRIDES_PATH`, id -> kártya; `Upgrades.builtin_cards()` alkalmazza; "Összes beépített visszaállítása" = üres {}; a "weight"
   az eredetié) — **ezeket is commitold és pushold**, mintha te csináltad volna. Kivehetőségi korlát: a kártya "max_picks"
   (0 = végtelen), a futásban kivettek `GameState.card_picks` (RunSave is menti), `Upgrades.picks_left`; elérve nem jön.
+- Futás végi összesítő: `ui/run_summary.gd` (RunSummary). `build()` panel a halálképernyő statjai mellé
+  (DeathScreen._add_summary), `overlay()` győzelemkor (VictoryPanel._go_to_camp a "Tovább"-ra vár). Adatok:
+  `GameState.kill_counts` (Room._on_enemy_died, RunSave is menti), `GameState.killer` (Player._on_hurt: utolsó támadó),
+  `card_picks`, felszerelés. `RunSummary.monster_key(node)` = a Szörnyek könyve kulcsa (főellenség: boss_name).
   Ritkaságok: common → rare → epic → legendary → mythic (Mítikus, piros: 17 saját tárgy, fegyverfajtánként / helyenként
   egy, a DEFINITIONS végén). Mítikus csak két helyről jön: a nagy főellenség (Vérfarkas, Káosz Ura) fő dobása
   `MYTHIC_LORD_CHANCE` (1%) eséllyel, és a bolt a `MYTHIC_SHOP_DEPTH` (21.) emelettől, áruhelyenként `MYTHIC_SHOP_CHANCE`

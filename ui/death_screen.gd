@@ -67,6 +67,7 @@ func show_for(player: Node) -> void:
 		_stats_label.text += "\n\nA pénzed %d%%-a (%d arany) a táborba került." % [roundi(DEATH_GOLD_RATIO * 100), rescued]
 	if rank > 0:
 		_stats_label.text += "\n\n★ Új eredmény: %d. hely! ★" % rank
+	_add_summary(player)
 	visible = true
 	GamePause.set_paused(get_tree(), true)
 
@@ -78,6 +79,23 @@ func show_for(player: Node) -> void:
 	tween.tween_property(_dim, "modulate:a", 1.0, 0.6)
 	tween.tween_property(_content, "modulate:a", 1.0, 0.3)
 	tween.parallel().tween_property(_skull, "scale", Vector2.ONE, 0.45).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+
+
+## A futás végi összesítő (ui/run_summary.gd) a statisztikák mellé; a koponya kisebb lesz, hogy kiférjen.
+func _add_summary(player: Node) -> void:
+	if GameState.tutorial:
+		return
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 24)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_content.add_child(row)
+	_content.move_child(row, _stats_label.get_index())
+	_stats_label.reparent(row)
+	_stats_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_stats_label.custom_minimum_size.x = 300
+	_stats_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	row.add_child(RunSummary.build(player, true))
+	_skull.custom_minimum_size = Vector2(96, 127)
 
 
 func _unhandled_input(event: InputEvent) -> void:

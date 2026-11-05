@@ -3,6 +3,10 @@ class_name News
 ## rövid, játékosnak szóló sor a legfrissebb dátum alá (a legújabb van felül).
 
 const ENTRIES: Array[Dictionary] = [
+	{"date": "2026-11-05", "items": [
+		"Futás végi összesítő: halálkor és győzelem után látod, ki ölt meg, melyik szörnyből győztél le a legtöbbet, "
+			+ "milyen kártyákat vettél fel (ritkaság szerint színezve) és mi volt rajtad a végén.",
+	]},
 	{"date": "2026-11-04", "items": [
 		"Két új nadrág: Lápjáró nadrág (ritka: kikerülés, regeneráció, gyorsaság) és Lángtáncos nadrág (legendás: sebzés, "
 			+ "gyorsaság, kikerülés, de kevesebb védelem).",

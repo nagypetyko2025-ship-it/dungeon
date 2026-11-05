@@ -26,6 +26,9 @@ static var spell_levels := {}
 static var necromancy := {}
 ## Ebben a futásban kivett kártyák: kártya id -> hányszor (a kártya "max_picks" korlátjához, lásd Upgrades).
 static var card_picks := {}
+## Futás végi összesítőhöz (ui/run_summary.gd): szörny -> hányat ölt meg, és ki talált el utoljára.
+static var kill_counts := {}
+static var killer := ""
 ## Játékidő másodpercben (szünet alatt nem nő).
 static var run_time := 0.0
 ## A futás már bekerült az eredménytáblába (halálkor vagy feladáskor egyszer).
@@ -110,6 +113,8 @@ static func reset() -> void:
 	spell_levels = {}
 	necromancy = {}
 	card_picks = {}
+	kill_counts = {}
+	killer = ""
 	run_time = 0.0
 	run_recorded = false
 	lift_used_floor = 0
