@@ -100,7 +100,8 @@ func _build_exterior() -> void:
 			var banner := _rpg(BANNER_TOP + Vector2i(0, i), Vector2(side * 50, -118 + i * 32), holder)
 			banner.z_index = 1
 	var body := StaticBody2D.new()
-	for rect: Rect2 in [Rect2(-80, -60, 60, 58), Rect2(20, -60, 60, 58), Rect2(-80, -150, 160, 92)]:
+	# Az egész sátor tömör (a bejárat előtt E-vel lehet belépni, besétálni nem).
+	for rect: Rect2 in [Rect2(-80, -150, 160, 146)]:
 		var shape := CollisionShape2D.new()
 		var box := RectangleShape2D.new()
 		box.size = rect.size
