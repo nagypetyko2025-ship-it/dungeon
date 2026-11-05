@@ -523,6 +523,9 @@ func _build_dirt() -> void:
 	# Út a kocsma mellett északra, a királyi vár kapujáig.
 	for tile in Castle.path_tiles():
 		_dirt[tile] = true
+	# Kétsávos földút a barakk bejáratától keletre, a vár útjáig (mint a városi út).
+	for tile in Barracks.path_tiles():
+		_dirt[tile] = true
 	# Földút az úttól le a temetőhöz (a kocsma alatt).
 	for tile in Graveyard.path_tiles():
 		_dirt[tile] = true
@@ -532,7 +535,7 @@ func _build_dirt() -> void:
 	for tile in Mine.path_tiles():
 		_dirt[tile] = true
 	# Keskeny ösvények az útról a kórház és a raktár ajtajához, és a tó mólójához.
-	for tiles: Array[Vector2i] in [Hospital.path_tiles(), Warehouse.path_tiles(), Lake.path_tiles(), Barracks.path_tiles()]:
+	for tiles: Array[Vector2i] in [Hospital.path_tiles(), Warehouse.path_tiles(), Lake.path_tiles()]:
 		for tile in tiles:
 			_narrow[tile] = true
 	# Kis sáros ösvény nyugatra (a várossal ellentétes irányba): a tisztásokon kanyarog,

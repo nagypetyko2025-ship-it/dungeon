@@ -323,8 +323,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Pihenő a főellenség után (`ui/boss_return_panel.gd`): a kék portál a táborból ugyanoda hoz vissza — `GameState.break_floor`
   (`Dungeon.break_snapshot`: mag (`_floor_seed`, egyjátékosban is rögzítve), kitisztított/bejárt szobák, zárt ládák, hely),
   visszatéréskor `Room.restore_cleared`; a RunSave is menti. Új portál nem nyílik újra (egy pihenő főellenségenként).
-- Katonai barakk: `world/barracks.gd` (`Barracks`), a vár tisztásán az úttól balra (`TENT_BASE` (70, 0), a Kenney RPG zöld
-  sátra 5× nagyítva, zöld hadi zászlók; keskeny ösvény a vár útjáig). Belül `INTERIOR` (690, 0, 16×10): Kenney Indoor
+- Katonai barakk: `world/barracks.gd` (`Barracks`), a vár tisztásán az úttól balra (`TENT_BASE` (70, 0), kétsávos földút (`_dirt`) a vár útjáig; a Kenney RPG zöld
+  sátra 5× nagyítva, zöld hadi zászlók). Belül `INTERIOR` (690, 0, 16×10): Kenney Indoor
   (`assets/shop/kenney_indoor.png`, a kocsma és a bolt is ezt használja) zöld fémpriccsek alvó őrökkel, zöld csíkos vászonfal, pajzsok; asztal, őrök,
   lándzsák. Az asztalfőn Vas Szilárd hadnagy: `world/lieutenant.gd` (kemény, szigorú veterán, nem sebesült; Gáspár
   alatt kezdett, tiszteli; kép: `assets/characters/officer.png`, átszínezett 0x72 knight_m). FEJLESZTÉST NEM AD (a

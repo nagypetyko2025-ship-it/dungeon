@@ -67,11 +67,12 @@ static func door_position() -> Vector2:
 	return Vector2(DOOR_TILE.x, DOOR_TILE.y + 0.4) * TILE
 
 
-## Keskeny ösvény a sátor bejáratától keletre, a vár útjáig.
+## Kétsávos földút (a tábor _dirt rétegében, mint a városi út) a sátor bejáratától keletre, a vár útjáig.
 static func path_tiles() -> Array[Vector2i]:
 	var tiles: Array[Vector2i] = []
 	for x in range(DOOR_TILE.x - 1, Castle.PATH_COLUMN):
-		tiles.append(Vector2i(x, DOOR_TILE.y + 1))
+		for y in [DOOR_TILE.y + 1, DOOR_TILE.y + 2]:
+			tiles.append(Vector2i(x, y))
 	return tiles
 
 
