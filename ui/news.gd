@@ -13,6 +13,7 @@ const ENTRIES: Array[Dictionary] = [
 		"Bertalan minden liftszint után 1-3 új történetet mesél (a már megnyitott szintekét rögtön), és a liftes szövegei "
 			+ "pontosabbak lettek (a 21-40. emelet Káoszkő, a 41.-től Fagykő).",
 		"Kikerült a hordágyas katonák bejátszása.",
+		"Új épület: katonai barakk a királyi vár alatt, az úttól balra (nagy zöld sátor priccsekkel és katonákkal).",
 	]},
 	{"date": "2026-11-04", "items": [
 		"Két új nadrág: Lápjáró nadrág (ritka: kikerülés, regeneráció, gyorsaság) és Lángtáncos nadrág (legendás: sebzés, "

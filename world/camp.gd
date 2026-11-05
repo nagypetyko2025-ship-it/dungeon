@@ -217,6 +217,12 @@ func _ready() -> void:
 	castle.setup(self)
 	castle.build()
 	castle.message.connect(_toast)
+	# A vár alatt, az úttól balra: katonai barakk (nagy sátor).
+	var barracks := Barracks.new()
+	barracks.name = "Barracks"
+	add_child(barracks)
+	barracks.setup(self)
+	barracks.build()
 	# A kocsmától jobbra a kalandorok kórháza (ide viszik a sebesülteket).
 	var hospital := Hospital.new()
 	hospital.name = "Hospital"
@@ -526,7 +532,7 @@ func _build_dirt() -> void:
 	for tile in Mine.path_tiles():
 		_dirt[tile] = true
 	# Keskeny ösvények az útról a kórház és a raktár ajtajához, és a tó mólójához.
-	for tiles: Array[Vector2i] in [Hospital.path_tiles(), Warehouse.path_tiles(), Lake.path_tiles()]:
+	for tiles: Array[Vector2i] in [Hospital.path_tiles(), Warehouse.path_tiles(), Lake.path_tiles(), Barracks.path_tiles()]:
 		for tile in tiles:
 			_narrow[tile] = true
 	# Kis sáros ösvény nyugatra (a várossal ellentétes irányba): a tisztásokon kanyarog,
@@ -1673,7 +1679,7 @@ func _castle_blocked(tile: Vector2i) -> bool:
 	for rect in Castle.blocked_rects():
 		if rect.has_point(tile):
 			return true
-	return false
+	return Barracks.blocked_rect().has_point(tile)
 
 
 ## Az út melletti csempe (ide se kerüljön ütköző fa, hogy kényelmesen el lehessen menni).
