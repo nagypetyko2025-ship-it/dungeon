@@ -331,7 +331,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   felhasználó kérése: elég a 2 fejlődési mód). Küldetései a `Quests.ALL`-ban "giver": "lieutenant" (lt_*, "hard" és új
   "elite" fokozat), ugyanúgy futnak, mint a kocsmárosé; `Quests.ids_of / ready_ids(giver) / GIVERS`; a QuestPanel `giver`
   változója (a barakk "lieutenant"-tal hozza létre). Minden leadott lt_ küldetés után 2 történet (`Lieutenant.AFTER_STORIES`),
-  plusz 3 alap (`STORIES`). Fölötte zöld "?" ha van leadható (csak az első beszélgetés után).
+  plusz 3 alap (`STORIES`). Fölötte zöld "?" ha van leadható (csak az első beszélgetés után). J könyv: "Hadnagy" fül
+  (`QuestBook.LIEUTENANT_TAB`, az első beszélgetés után; ugyanolyan szűrős lista, mint az Általános, ami most csak a kocsmárosé).
 - A hordágyas bejátszás (stretcher_scene) a felhasználó kérésére törölve (2026-11-05); a kórházi hordágy kellék és a doktor
   "ablak melletti ágy" kérdése maradt.
 - "!" az NPC-k feje fölött: `world/talk_mark.gd` (`TalkMark.attach(sprite_vagy_tartó, npc_id)`), amíg először nem beszéltél

@@ -13,7 +13,7 @@ const PAGE_SIZE := Vector2(400, 400)
 ## 2 = a tolvaj küldetései (Thief), 3 = a király küldetései (Castle; csak a vár kapujánál
 ## tett első látogatás után látszik).
 const TAB_NAMES: Array[String] = ["Általános", "Veterán", "Tolvaj", "Király", "Kutas idegen", "Csontváz sírásó", "Doktor",
-	"Mérnök", "Horgász", "Robbantómester", "Bányász", "Boszorkány"]
+	"Mérnök", "Horgász", "Robbantómester", "Bányász", "Boszorkány", "Hadnagy"]
 const KING_TAB := 3
 ## 4 = a kútba esett idegen küldetései (Stranger).
 const WELL_TAB := 4
@@ -31,6 +31,9 @@ const BLASTER_TAB := 9
 const MINER_TAB := 10
 ## 11 = Holló Margit, a boszorkány küldetése (WitchHut; csak az első kérés után látszik).
 const WITCH_TAB := 11
+## 12 = Vas Szilárd hadnagy parancsai (Quests, "giver": "lieutenant"): ugyanolyan lista szűrőkkel, mint az általános
+## (a kocsmárosé); csak az első beszélgetés után látszik.
+const LIEUTENANT_TAB := 12
 const SCROLL: Texture2D = preload("res://assets/ui/quest_scroll.png")
 ## Az általános fül szűrői: [kulcs, felirat].
 const STATUS_FILTERS := [["all", "Mind"], ["ready", "Leadható"], ["active", "Folyamatban"], ["done", "Teljesítve"]]
@@ -62,9 +65,9 @@ func _ready() -> void:
 
 ## A fül lapjai: az általános küldetések a szűrők szerint; az NPC-kéből csak amit már kért.
 func _load_ids() -> void:
-	if _tab == 0:
+	if _is_board():
 		_ids = []
-		for id: String in Quests.ALL:
+		for id: String in Quests.ids_of(_board_giver()):
 			if _passes(id):
 				_ids.append(id)
 		return
@@ -105,6 +108,15 @@ func _npc_name() -> String:
 	return Dialogues.VETERAN_NAME
 
 
+## Táblás fül (lista szűrőkkel): az általános (a kocsmárosé) és a hadnagyé.
+func _is_board() -> bool:
+	return _tab == 0 or _tab == LIEUTENANT_TAB
+
+
+func _board_giver() -> String:
+	return Lieutenant.ID if _tab == LIEUTENANT_TAB else "barkeep"
+
+
 ## Az általános küldetés átmegy-e a szűrőkön (állapot, nehézség).
 func _passes(id: String) -> bool:
 	var quest: Dictionary = Quests.ALL[id]
@@ -140,12 +152,12 @@ func _refilter() -> void:
 
 ## A kiválasztott szűrő világos, a többi halvány; a "Leadható" gombon a kész küldetések száma.
 func _update_filters() -> void:
-	_filter_row.visible = _tab == 0
+	_filter_row.visible = _is_board()
 	for i in STATUS_FILTERS.size():
 		_status_buttons[i].modulate = Color.WHITE if STATUS_FILTERS[i][0] == _status else Color(0.6, 0.55, 0.5)
 	for i in TIER_FILTERS.size():
 		_tier_buttons[i].modulate = Color.WHITE if TIER_FILTERS[i][0] == _tier else Color(0.6, 0.55, 0.5)
-	var ready := Quests.ready_ids().size()
+	var ready := Quests.ready_ids(_board_giver()).size()
 	_status_buttons[1].text = "Leadható (%d)" % ready if ready > 0 else "Leadható"
 
 
@@ -169,12 +181,16 @@ func open() -> void:
 	_tab_buttons[WITCH_TAB].visible = Progress.npc_quest_state(WitchHut.FANG_QUEST) != ""
 	if _tab == WITCH_TAB and not _tab_buttons[WITCH_TAB].visible:
 		_set_tab(0)
+	# A Hadnagy fül csak az első beszélgetés után.
+	_tab_buttons[LIEUTENANT_TAB].visible = Progress.has_talked(Lieutenant.ID)
+	if _tab == LIEUTENANT_TAB and not _tab_buttons[LIEUTENANT_TAB].visible:
+		_set_tab(0)
 	# Ha van leadható küldetés, rögtön azokat mutatja.
-	if not Quests.ready_ids().is_empty():
+	if not Quests.ready_ids(_board_giver()).is_empty():
 		_status = "ready"
 	_load_ids()
 	_update_filters()
-	if _tab != 0:
+	if not _is_board():
 		_spread = 0
 		_show_spread()
 		visible = true
@@ -369,7 +385,7 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 		elif _tab == FISHER_TAB and _ids.is_empty() and index == 0:
 			empty_text = "Öreg Ábel még nem kért tőled semmit.\n\n" \
 				+ "A város keleti rétjén, a tó partján horgászik. Kérdezd meg, segíthetsz-e neki."
-		elif _tab == 0 and _ids.is_empty() and index == 0:
+		elif _is_board() and _ids.is_empty() and index == 0:
 			empty_text = "Ebben a szűrésben nincs küldetés."
 		elif _tab == MINER_TAB and _ids.is_empty() and index == 0:
 			empty_text = "Kormos Gyula, a bányász még nem kért tőled semmit.\n\n" \
@@ -389,7 +405,7 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 		page.add_child(end)
 		return
 	var id: String = _ids[index]
-	if _tab != 0:
+	if not _is_board():
 		_fill_npc_page(page, id)
 		return
 	var quest: Dictionary = Quests.ALL[id]
@@ -443,7 +459,7 @@ func _fill_page(page: VBoxContainer, index: int) -> void:
 		state_text = "✔ TELJESÍTVE — jutalom átvéve"
 		state_color = Color(0.24, 0.5, 0.2)
 	elif progress >= goal:
-		state_text = "KÉSZ — a jutalom a kocsmárosnál vár!"
+		state_text = "KÉSZ — a jutalom %s vár!" % Quests.GIVERS.get(Quests.giver_of(id), "a kocsmárosnál")
 		state_color = Color(0.24, 0.5, 0.2)
 	var state := UiStyle.label(state_text, 19, state_color)
 	state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
