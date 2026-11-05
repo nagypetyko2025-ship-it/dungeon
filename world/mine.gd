@@ -276,6 +276,7 @@ func _build_interior() -> void:
 	_dome.play("idle")
 	_dome.visible = Blaster.at_mine()
 	_entities.add_child(_dome)
+	TalkMark.attach(_dome, Blaster.ID)
 	_apply_bridge_state()
 	_build_deep_room()
 
@@ -807,6 +808,7 @@ func _build_knocking() -> void:
 	_gyula = Node2D.new()
 	_gyula.position = GYULA_SPOT
 	_entities.add_child(_gyula)
+	TalkMark.attach(_gyula, Warehouse.MINER_ID)
 	var body := Sprite2D.new()
 	var atlas := AtlasTexture.new()
 	atlas.atlas = Warehouse.MINER_SHEET

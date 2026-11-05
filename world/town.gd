@@ -459,6 +459,7 @@ func _build_corridor() -> void:
 	_dome.play("idle")
 	_dome.visible = false
 	_entities.add_child(_dome)
+	TalkMark.attach(_dome, Blaster.ID)
 	# Az ajtó vissza a kocsmába (a déli falon), két cserepes növény és egy szék a fal mellett.
 	_tile(DOOR_TILE, CORRIDOR_DOOR, -8).modulate = Color(0.85, 0.78, 0.72)
 	_sprite(INDOOR, Rect2(16 * 17, 0, 16, 16), _center(Vector2i(r.position.x, r.position.y)) + Vector2(0, -6), 0, _entities)
@@ -588,6 +589,7 @@ func _sit(id: String) -> AnimatedSprite2D:
 	sprite.play("idle")
 	_entities.add_child(sprite)
 	_seated[id] = sprite
+	TalkMark.attach(sprite, TavernTalk.npc_id(id))
 	return sprite
 
 

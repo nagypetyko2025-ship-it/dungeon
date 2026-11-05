@@ -205,6 +205,7 @@ func _build_digger() -> void:
 	_digger.position = _center(DIGGER_TILE) + Vector2(16, 14)
 	_entities.add_child(_digger)
 	Gravedigger.build_figure(_digger)
+	TalkMark.attach(_digger, Gravedigger.ID)
 	_digger_position = _digger.position
 	var body := StaticBody2D.new()
 	_digger_body = CollisionShape2D.new()

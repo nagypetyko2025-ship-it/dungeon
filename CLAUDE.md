@@ -323,7 +323,14 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Pihenő a főellenség után (`ui/boss_return_panel.gd`): a kék portál a táborból ugyanoda hoz vissza — `GameState.break_floor`
   (`Dungeon.break_snapshot`: mag (`_floor_seed`, egyjátékosban is rögzítve), kitisztított/bejárt szobák, zárt ládák, hely),
   visszatéréskor `Room.restore_cleared`; a RunSave is menti. Új portál nem nyílik újra (egy pihenő főellenségenként).
-- Bejátszás az első visszatéréskor a kazamatából: `world/stretcher_scene.gd` (hordágyas katonák, `GameState.visited_dungeon`).
+- A hordágyas bejátszás (stretcher_scene) a felhasználó kérésére törölve (2026-11-05); a kórházi hordágy kellék és a doktor
+  "ablak melletti ágy" kérdése maradt.
+- "!" az NPC-k feje fölött: `world/talk_mark.gd` (`TalkMark.attach(sprite_vagy_tartó, npc_id)`), amíg először nem beszéltél
+  vele (`Progress.talked` / `has_talked`: a régi mentésnél a trust / asked is számít; a `DialoguePanel.open` jegyzi fel).
+  Bencénél (Thief.ID) szándékosan nincs (az ajtaját nem árulja el). A kocsmárosnak saját !/? jele van, Zoltánnak (árus) nincs.
+  Új NPC-nél: a sprite létrehozása után `TalkMark.attach(...)`.
+- Bertalan liftszintenkénti történetei: `Engineer.FLOOR_STORIES` (10-80, szintenként 1-3), a táborban a nyitott szintekéi
+  (`floor_open`) jönnek, a legmélyebbtől. Emelet-témák a szövegekhez: 1-20 régi kő, 21-40 Káoszkő, 41-80 Fagykő, 81- Vérkő.
 - Többjátékos: `network/` — `net_session.gd` (beállítások, fix név: user://player.cfg, kód), `net_lobby.gd` (/root/NetLobby:
   váró, LAN-bejelentés UDP-n (kód + a gazda neve); a csatlakozó listázza a várókat (`browse` → `games`, `join_game`),
   kódot nem kell beírni; ENet, RPC-k, indítás → mindenki a táborba), `net_avatars.gd` (a többiek a táborban

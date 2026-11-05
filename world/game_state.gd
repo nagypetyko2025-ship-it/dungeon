@@ -62,9 +62,6 @@ static var tutorial := false
 ## A gyakorló pálya kovács-porai (a valódiak a Progress.dust-ban; lásd Smithing.dust_of).
 static var tutorial_dust := {}
 
-## Jártál-e lent a kazamatában (a gyakorló pályán kívül), mióta utoljára a táborba értél: a tábor
-## ebből tudja, hogy most jöttél vissza (pl. a hordágyas bejátszáshoz). A reset() nem törli.
-static var visited_dungeon := false
 
 ## Épp most győzted le a Vérfarkast (20. emelet): a tábor egyszer kiírja a győzelmet.
 ## (A reset() nem törli: a futás vége után állítjuk be.)

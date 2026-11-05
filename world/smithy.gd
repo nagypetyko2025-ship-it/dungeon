@@ -212,6 +212,7 @@ func _build_smith() -> void:
 	_smith.offset = Vector2(0, -14)
 	_smith.play()
 	holder.add_child(_smith)
+	TalkMark.attach(_smith, SMITH_ID)
 	_hammer_pivot = Node2D.new()
 	_hammer_pivot.position = Vector2(8, -12)
 	_hammer_pivot.rotation = RAISED

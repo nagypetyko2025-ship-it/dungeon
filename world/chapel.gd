@@ -276,6 +276,7 @@ func _build_interior() -> void:
 	_vendel.position = _center(VENDEL_TILE) + Vector2(0, 14)
 	_entities.add_child(_vendel)
 	Gravedigger.build_figure(_vendel)
+	TalkMark.attach(_vendel, Gravedigger.ID)
 	_vendel.visible = Gravedigger.in_chapel()
 
 

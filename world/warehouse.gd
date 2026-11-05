@@ -254,6 +254,7 @@ func _build_miner(chair: Vector2i) -> void:
 	_miner.position = _center(chair) + Vector2(2, 6)
 	_miner.rotation = deg_to_rad(12)
 	_entities.add_child(_miner)
+	TalkMark.attach(_miner, MINER_ID)
 	_miner_stand = _center(chair + Vector2i.DOWN) + Vector2(-4, 12)
 	_pickaxe = Sprite2D.new()
 	_pickaxe.texture = PICKAXE

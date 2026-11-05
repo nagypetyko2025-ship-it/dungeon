@@ -346,8 +346,6 @@ func _ready() -> void:
 	var cheats := CheatMenu.new()
 	cheats.name = "CheatMenu"
 	add_child(cheats)
-	if not tutorial:
-		GameState.visited_dungeon = true
 	# Közös játékban a csapattársak is itt vannak (ugyanazon az emeleten; lásd NetAvatars).
 	if NetLobby.is_playing(get_tree()):
 		var avatars := NetAvatars.new()

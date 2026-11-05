@@ -119,7 +119,7 @@ const SMALL_TALK: Array[Dictionary] = [
 		"answer": "Kálmán. A tábor doktora, mióta az előző... nos, mióta ő is lement. Régen a pestises falvakat " \
 			+ "jártam, onnan a maszk. A Mélység szaga sem sokkal jobb, úgyhogy rajtam maradt.\n\n" \
 			+ "Rozi nővér segít. Nélküle a fele már a temetőben feküdne, Vendel nagy örömére."},
-	{"id": "stretcher", "text": "Mi lett azzal, akit a katonák hoztak?", "trust": 3,
+	{"id": "stretcher", "text": "Ki fekszik az ablak melletti ágyon?", "trust": 3,
 		"answer": "[i]Az ablak melletti ágy felé biccent.[/i]\n\n" \
 			+ "Ott fekszik. A kilencedik emeleten egy bukott lovag kardja találta el, a katonák a lépcső aljáról " \
 			+ "hozták fel. Sok vért vesztett, de él. Ha a láz lemegy, talán reggel már a nevét is megmondja.\n\n" \

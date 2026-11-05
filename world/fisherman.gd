@@ -146,6 +146,7 @@ func _ready() -> void:
 	_sprite.scale = Vector2(SCALE, SCALE)
 	_sprite.offset = Vector2(0, -FRAME.y / 2.0)
 	add_child(_sprite)
+	TalkMark.attach(_sprite, ID)
 	_rod = Sprite2D.new()
 	_rod.texture = ROD
 	_rod.centered = false

@@ -369,27 +369,6 @@ func _ready() -> void:
 		add_child(avatars)
 		avatars.setup(self)
 		avatars.message.connect(_toast)
-	# Az első visszatéréskor a kazamatából: két katona hordágyon visz egy sebesültet az orvoshoz.
-	var returned := GameState.visited_dungeon
-	GameState.visited_dungeon = false
-	if returned and not _on_break and StretcherScene.should_play():
-		var scene := StretcherScene.new()
-		scene.name = "StretcherScene"
-		add_child(scene)
-		scene.start(self, _stretcher_path())
-
-
-## A hordágyas katonák útja: a kazamata lépcsőjétől le a tábor közepén, a tűz fölött kelet felé
-## az útra, végig az úton a városba, a kocsma melletti lakóház (az orvos) ajtajáig.
-func _stretcher_path() -> Array[Vector2]:
-	var road_y := (ROAD_ROW + 0.6) * TILE
-	var house := Castle.HOUSE_TOP_LEFT
-	var door := Vector2(house.x + Castle.HOUSE_SIZE.x / 2 + 0.5, house.y + Castle.HOUSE_SIZE.y) * TILE
-	return [
-		_tile_center(STAIRS_TILE + Vector2i(0, 1)), Vector2(22.5 * TILE, 14.8 * TILE),
-		Vector2(26.5 * TILE, 15.6 * TILE), Vector2(28.5 * TILE, road_y), Vector2(door.x, road_y),
-		door + Vector2(0, 6),
-	]
 
 
 ## Pihenő: rács a lépcsőn, kék portál a lépcső mellett (vissza a kazamatába, a főellenség termébe).
@@ -718,6 +697,7 @@ func _build_veteran() -> void:
 		_veteran_sprite.position = seat + Vector2(0, 6)
 		_veteran_sprite.play("idle")
 		_entities.add_child(_veteran_sprite)
+		TalkMark.attach(_veteran_sprite, Dialogues.VETERAN_ID)
 	# A rönk, amin ül (előtte, hogy takarja a lábát).
 	var log_holder := Node2D.new()
 	log_holder.position = seat + Vector2(0, 12)

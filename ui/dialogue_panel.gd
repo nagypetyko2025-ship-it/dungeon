@@ -58,6 +58,8 @@ func open() -> void:
 	_page = 0
 	_refresh_options()
 	_update_trust(false)
+	# Az első beszélgetés után eltűnik a feje fölötti "!" (TalkMark).
+	Progress.mark_talked(npc_id)
 	visible = true
 
 

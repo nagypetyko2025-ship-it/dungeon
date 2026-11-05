@@ -74,16 +74,18 @@ const CHAPTERS := {
 			+ "huszadikig és élve visszajössz, ők is lemennek. Aztán kell még %d arany a csigákra.",
 		"[i]A munkások éljeneznek, amikor meglátják a pénzt. Három nap kalapálás, és a lift lecsúszik a " \
 			+ "huszadikig.[/i]\n\nTe vagy a legjobb reklám, amit egy lift kaphat. Mostantól a huszadik is a menüben van."],
-	30: ["A harmincadikon a fal vörös, és megeszi a vasat. A kötélre réz kell, a rézhez pénz, a pénzhez... " \
-			+ "na, tudod. Előbb nézd meg, merre fut az ér, aztán hozz %d aranyat.",
-		"[i]Rézzel bevont kötél csillog a ketrec fölött.[/i]\n\nMegfogtuk a vérkövet! Na jó, csak kikerültük. " \
-			+ "De a lift jár a harmincadikig."],
-	40: ["A negyvenediken a kövek elmásznak, ha nem figyelsz oda. Horgony kell, ami a semmibe is " \
-			+ "beleakad. Kitaláltam egyet. Te csak juss le, hogy lássam, hova kell verni. És %d arany.",
+	30: ["A huszadik alatt kezdődik a Káoszkő: fekete obszidián, lila erekkel, és ahol hozzáér a vashoz, a vas " \
+			+ "elporlad. A kötélre réz kell, a rézhez pénz, a pénzhez... na, tudod. Juss le a harmincadikig, nézd meg, " \
+			+ "merre fut az ér, aztán hozz %d aranyat.",
+		"[i]Rézzel bevont kötél csillog a ketrec fölött; az akna falán halványan lüktetnek a lila erek.[/i]\n\n" \
+			+ "Megfogtuk a káoszkövet! Na jó, csak kikerültük. De a lift jár a harmincadikig."],
+	40: ["A negyvenediken, a Káosz Ura szintjén a kövek elmásznak, ha nem figyelsz oda. Horgony kell, ami a " \
+			+ "semmibe is beleakad. Kitaláltam egyet. Te csak juss le, hogy lássam, hova kell verni. És %d arany.",
 		"[i]Egy fura, csavart vasszerkezetet mutat, ami mintha egyszerre két helyen lenne.[/i]\n\n" \
 			+ "Ne kérdezd, hogy működik. Működik. A negyvenedik a tiéd."],
-	50: ["Félúton vagyunk! Az ötvenedik emeleten régi törpe csigasor van, azt mondják a térképek. Ha " \
-			+ "megtalálod az utat, azt is felhasználom. Leérsz, hozol %d aranyat, és megyünk tovább.",
+	50: ["Félúton vagyunk! A negyvenedik alatt eltűnik a káoszkő, és jön a Fagykő: jeges kripták, hó hullik " \
+			+ "a mennyezetről. Az ötvenedik emeleten régi törpe csigasor van, azt mondják a térképek. Ha megtalálod " \
+			+ "az utat, azt is felhasználom. Leérsz, hozol %d aranyat, és megyünk tovább.",
 		"[i]Egy ősrégi, törpe rúnákkal teli csigát simogat.[/i]\n\nEzer éves, és jobb, mint bármi, amit én " \
 			+ "valaha csináltam. Ne mondd el senkinek. Az ötvenedik nyitva."],
 	60: ["A hatvanadikon dübörög az Ősgépezet. Tudod, mennyire szeretném látni? Ezer éve jár, és sosem " \
@@ -114,6 +116,100 @@ const CAMP_STORIES: Array[Dictionary] = [
 			+ "És van egy tervem. A huszadik emeletig is le lehetne vinni egy aknát. Persze ahhoz kellene egy " \
 			+ "bátor kalandor, aki lekíséri a munkásokat... meg egy halom arany. Majd szólok, ha eljön az ideje."},
 ]
+## Liftszintenként 1-3 történet a táborban: ha a lift már lejár arra az emeletre (floor_open), megjelennek
+## (régi mentésnél is azonnal). A legmélyebb szint történetei kerülnek előre; a DialoguePanel lapozza őket.
+const FLOOR_STORIES := {
+	10: [
+		{"id": "f10_rope", "text": "Mi lett a régi, elszakadt kötéllel?", "trust": 3,
+			"answer": "[i]Előhúz a ládából egy rojtos, megfeketedett kötéldarabot.[/i]\n\n" \
+				+ "Ennyi maradt belőle. Húsz évig a párnám mellett tartottam, hogy emlékeztessen: egyszer " \
+				+ "elszakadt, mert spóroltak a kenderen. Most már acélsodronyon lóg a ketrec. Ezt meg megtartom. " \
+				+ "Egy mérnöknek kell egy rossz emlék, hogy ne legyen túl magabiztos."},
+		{"id": "f10_gold", "text": "Tényleg aranyat hoztatok fel a tizedikről?", "trust": 3,
+			"answer": "Szekérszámra. A király palotájának a fele abból az aranyból épült.\n\n" \
+				+ "[i]Elhúzza a száját.[/i]\n\nAztán amikor jöttek a szörnyek, ugyanaz a király azt mondta, a liftet " \
+				+ "\"átmenetileg nem érdemes javítani\". Húsz év átmenetileg. Ha egyszer találkozol vele, mondd meg " \
+				+ "neki, hogy Bertalan üdvözli. És hogy a trónja alatti gerendát én méreteztem. Picit alulra."},
+	],
+	20: [
+		{"id": "f20_workers", "text": "Hogy bírták a munkások a huszadikat?", "trust": 3,
+			"answer": "Az első nap senki nem szólt egy szót sem. A második nap Feri elkezdett fütyülni, és " \
+				+ "rászóltunk, hogy a vérfarkasok meghallják. A harmadik nap már mindenki fütyült.\n\n" \
+				+ "[i]Elmosolyodik.[/i]\n\nAz ember mindenhez hozzászokik. Még ahhoz is, hogy a fal mögött valami " \
+				+ "végighúzza a karmait a kövön. Csak a ritmust ne vegye fel, mert az már kínos."},
+		{"id": "f20_gaspar", "text": "Gáspár emberei tényleg ott estek el?", "trust": 4,
+			"answer": "[i]Komolyra fordul az arca.[/i]\n\nAz akna alján találtunk egy pajzsot. Behorpadt, a címer " \
+				+ "félig lekopott róla. Elvittem Gáspárnak.\n\nNem mondott semmit. Csak megfogta, és sokáig nézte. " \
+				+ "Aztán megkérdezte, hogy a lift vajon elbírna-e egy kis emléktáblát a ketrec oldalán. Azt mondtam, " \
+				+ "elbír. Ha jól megnézed, ott van a rács alján. Tizenkét név."},
+	],
+	30: [
+		{"id": "f30_copper", "text": "Miért pont réz kell a káoszkő ellen?", "trust": 3,
+			"answer": "Mert a vasat elporlasztja, az ezüst drága, a fát meg a lila erek kiszívják, mint a nyár a " \
+				+ "pocsolyát. A réz csak bezöldül, és durcás lesz tőle, de nem adja fel.\n\n[i]Megkopogtatja a kötél rézbevonatát.[/i]\n\n" \
+				+ "Olyan, mint egy jó öreg bányász: zöld, morcos, és mindent túlél. Na jó, a bányászok nem zöldek. " \
+				+ "Legalábbis a legtöbbjük."},
+	],
+	40: [
+		{"id": "f40_anchor", "text": "Hogy működik az a fura horgony?", "trust": 3,
+			"answer": "[i]Előveszi a rajzot. Minél tovább nézed, annál kevésbé érted.[/i]\n\n" \
+				+ "Egyszerű: ha a kő elmászik, a horgony utánamegy. Ha nem mászik el, a horgony is marad. Ha nem " \
+				+ "tudja eldönteni, akkor... nos, akkor egyszerre csinálja mindkettőt.\n\n" \
+				+ "Egy álmatlan éjszakán találtam ki. Azóta próbálom újra megérteni. Eddig nem sikerült."},
+		{"id": "f40_lost", "text": "Eltévedtél valaha a mélyben?", "trust": 3,
+			"answer": "A negyvenediken egyszer háromszor értem vissza ugyanahhoz a sarokhoz. Pedig mindig balra " \
+				+ "fordultam.\n\nAz ötödik alkalommal krétával felírtam a falra: \"Bertalan járt itt.\" A hatodik " \
+				+ "alkalommal alatta ez állt: \"Mi is.\"\n\n[i]Megborzong.[/i]\n\nNem az én kézírásom volt."},
+	],
+	50: [
+		{"id": "f50_dwarves", "text": "Kik építették a törpe csigasort?", "trust": 4,
+			"answer": "A rúnák szerint a Mélyvasú klán. A csiga oldalán egy egész felirat van: hány fordulatot " \
+				+ "bír, mennyi zsír kell bele, és hogy ki ne merje fordítva felszerelni.\n\n" \
+				+ "[i]Kuncog.[/i]\n\nAz utolsó sort is lefordítottam. Azt írja: \"Ha ezt olvasod, és nem vagy törpe, " \
+				+ "tedd vissza.\" Hát, félig visszatettem. A lift alá."},
+		{"id": "f50_half", "text": "Milyen érzés, hogy félúton járunk?", "trust": 3,
+			"answer": "Mint amikor a hegy közepén rájössz, hogy a teteje még messzebb van, mint gondoltad, de " \
+				+ "visszafelé már ugyanolyan messze lenne.\n\nSzóval megyünk tovább. A mérnök sosem fordul vissza " \
+				+ "félúton. Legfeljebb kiszámolja, hogy rosszul számolt, és úgy csinál, mintha ez lett volna a terv."},
+	],
+	60: [
+		{"id": "f60_engine", "text": "Mit gondolsz az Ősgépezetről?", "trust": 4,
+			"answer": "[i]Csillogó szemmel beszél, mint egy kisfiú.[/i]\n\nEzer éve jár, kenés nélkül. Az én liftem " \
+				+ "egy hétig sem bírja zsír nélkül. Ki építette? Miért? És miért pont a hatvanadik emeletre?\n\n" \
+				+ "Ha egyszer lesz időm, lemegyek, és lerajzolom az egészet. Persze csak ha nem tapos el közben. " \
+				+ "Azt mondják, nem szereti, ha bámulják."},
+		{"id": "f60_counterweight", "text": "Mit építettél be belőle a liftbe?", "trust": 3,
+			"answer": "Az ellensúly elvét. A ketrec most egy nagy kődarabbal tart egyensúlyt az akna túloldalán. " \
+				+ "Fele annyi erő kell, hogy mozgassam.\n\n[i]Halkabban folytatja.[/i]\n\nA kő a hatvanadikról " \
+				+ "jött. Néha éjjel mintha zümmögne. Ambrus szerint képzelődöm. Ambrus szerint mindenki képzelődik, " \
+				+ "aki nem kovács."},
+	],
+	70: [
+		{"id": "f70_chain", "text": "Tényleg Ambrus kovácsolta a láncot?", "trust": 3,
+			"answer": "Mind a háromszáz szemét. Az utolsó éjjel már aludt az üllő mellett, és álmában is " \
+				+ "kalapált.\n\nAmikor felraktuk, nem szólt semmit. Csak megfogta a láncot, megrántotta, " \
+				+ "és bólintott. Ambrusnál ez körülbelül egy háromnapos ünnepséggel ér fel."},
+		{"id": "f70_cold", "text": "Milyen hideg van a hetvenediken?", "trust": 3,
+			"answer": "Annyira, hogy a kimondott szavak megfagynak, és csak a táborban olvadnak fel.\n\n" \
+				+ "[i]Rád néz, aztán felnevet.[/i]\n\nJó, ez túlzás. De a kávém megfagyott a bögrében, mielőtt " \
+				+ "megihattam volna. És a szakállam azóta is ropog, ha megvakarom."},
+	],
+	80: [
+		{"id": "f80_gate", "text": "Miért nem viszed a liftet a kapun túlra?", "trust": 4,
+			"answer": "[i]Sokáig hallgat.[/i]\n\nAmikor lent jártunk a nyolcvanadikon, a kapu mögül hő áradt. " \
+				+ "És hangok. Nem szörnyhangok: emberiek. Mintha valaki a nevemen szólított volna.\n\n" \
+				+ "Egy lift két irányba jár, érted? Ha én levezetek oda egy aknát, akkor onnan is fel lehet " \
+				+ "jönni rajta. Ezt a kockázatot nem vállalom. Ezt senki nem vállalhatja."},
+		{"id": "f80_legacy", "text": "Mi lesz a lifttel, ha egyszer abbahagyod?", "trust": 3,
+			"answer": "Írtam egy könyvet. Minden csavar, minden csiga, minden rúna benne van. A tanoncom majd " \
+				+ "abból tanul.\n\n[i]Megvakarja a fejét.[/i]\n\nMost már csak egy tanonc kéne. Ha látsz valakit, " \
+				+ "aki szereti a fogaskerekeket, nem fél a sötétben, és nem kérdez túl sokat, küldd ide."},
+		{"id": "f80_thanks", "text": "Megérte húsz évet lent tölteni?", "trust": 5,
+			"answer": "[i]Végignéz a táboron: a tűzön, a sátrakon, rajtad.[/i]\n\nHúsz évig vigyáztam egy " \
+				+ "elszakadt kötélre, és azt hittem, bolond vagyok. Aztán jöttél te, és lett értelme.\n\n" \
+				+ "Szóval igen. Megérte. De ha még egyszer meg kell csinálnom, előbb veszek egy rendes kötelet."},
+	],
+}
 const DEPTH := 10
 
 const GREETING := "[i]Egy védőszemüveges, kormos képű szerelő hajol egy hatalmas, rozsdás fogaskerék fölé. Fel sem néz.[/i]\n\n" \
@@ -174,6 +270,7 @@ static func camp_options() -> Array[Dictionary]:
 		list.append({"id": "deeper", "text": "Lejjebb nem viszed a liftet?",
 			"on_choose": func() -> String: return "[i]Nagyon komolyan néz rád.[/i]\n\n" \
 				+ "Nem. A kapu mögé nem építek. Van, ahová nem lift kell, hanem bátorság. Az meg nálad van, nem nálam."})
+	list.append_array(floor_stories())
 	list.append_array(CAMP_STORIES)
 	var asked: Array = Progress.asked_topics(ID)
 	for option in STORIES:
@@ -182,6 +279,19 @@ static func camp_options() -> Array[Dictionary]:
 	list.append({"id": "running", "text": "Működik a lift?",
 		"on_choose": func() -> String: return "[i]Büszkén megpaskolja a rácsos fülkét.[/i]\n\n" \
 			+ "Mint a svájci óra. Szállj be, és válaszd ki az emeletet. Én innen figyelem a kötelet."})
+	return list
+
+
+## A már nyitott liftszintek történetei, a legmélyebbtől.
+static func floor_stories() -> Array[Dictionary]:
+	var list: Array[Dictionary] = []
+	var depths := FLOOR_STORIES.keys()
+	depths.sort()
+	depths.reverse()
+	for depth: int in depths:
+		if floor_open(depth):
+			for story: Dictionary in FLOOR_STORIES[depth]:
+				list.append(story)
 	return list
 
 

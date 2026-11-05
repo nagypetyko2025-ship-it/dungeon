@@ -584,6 +584,7 @@ func _build_interior() -> void:
 	witch.offset = Vector2(0, -14)
 	witch.position = _center(WITCH_TILE) + Vector2(0, 14)
 	_entities.add_child(witch)
+	TalkMark.attach(witch, WITCH_ID)
 	_body(witch, Vector2(0, -2), Vector2(8, 4))
 	# Asztal üvegcsékkel, koponyával és gyertyával (balra elöl).
 	var table := _tile(Town.TABLE, Vector2i(r.position.x + 2, r.position.y + 4), 0, _entities)

@@ -189,7 +189,7 @@ func _build_interior() -> void:
 	_small_candle(desk, Vector2(-9, -5))
 	_light(Vector2(INTERIOR_DOOR.x + 0.5, r.position.y + 2) * TILE, Color(1.0, 0.78, 0.5), 1.6, 0.7)
 	_doctor_position = Vector2(INTERIOR_DOOR.x + 1.5, r.position.y + 2.8) * TILE
-	_npc(DOCTOR, _doctor_position)
+	TalkMark.attach(_npc(DOCTOR, _doctor_position), Doctor.ID)
 	# A nővér a középső folyosón áll (nem zár el semmilyen rést).
 	_npc(NURSE, Vector2(r.position.x + 5.2, r.position.y + 5.2) * TILE).flip_h = true
 	# Gyógyszeres polc a hátsó falon, ládák a sarokban, mosdótál, kosár véres kötéssel, paraván,

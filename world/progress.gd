@@ -70,6 +70,8 @@ static var quests_done: Array = []
 ## NPC-k bizalma (npc -> -100..+100) és a tőlük már megkérdezett témák (npc -> [téma]).
 static var trust := {}
 static var asked := {}
+## NPC-k, akikkel már beszéltél (npc -> true): ilyenkor eltűnik a feje fölötti "!" (TalkMark).
+static var talked := {}
 ## NPC-küldetések állapota (Dialogues): küldetés -> "active" / "done" (nincs = még nem kérte).
 static var npc_quests := {}
 ## Szörnyek könyve (Bestiary): szörny -> hányat öltél meg belőle (minden futásból összesen).
@@ -178,6 +180,9 @@ static func load_game(force := false) -> void:
 		var saved_trust: Variant = config.get_value("camp", "trust", {})
 		if saved_trust is Dictionary:
 			trust = saved_trust
+		var saved_talked: Variant = config.get_value("camp", "talked", {})
+		if saved_talked is Dictionary:
+			talked = saved_talked
 		var saved_asked: Variant = config.get_value("camp", "asked", {})
 		if saved_asked is Dictionary:
 			asked = saved_asked
@@ -229,6 +234,7 @@ static func save_game() -> void:
 	config.set_value("camp", "quests_done", quests_done)
 	config.set_value("camp", "trust", trust)
 	config.set_value("camp", "asked", asked)
+	config.set_value("camp", "talked", talked)
 	config.set_value("camp", "npc_quests", npc_quests)
 	config.set_value("camp", "kills", kills)
 	config.set_value("camp", "seen_items", seen_items)
@@ -255,6 +261,18 @@ static func trust_of(npc_id: String) -> int:
 
 static func change_trust(npc_id: String, delta: int) -> void:
 	trust[npc_id] = clampi(trust_of(npc_id) + delta, -100, 100)
+	save_game()
+
+
+## Beszéltél-e már az NPC-vel (a régi mentéseknél a bizalom / megkérdezett téma is ennek számít).
+static func has_talked(npc_id: String) -> bool:
+	return talked.has(npc_id) or asked.has(npc_id) or trust.has(npc_id)
+
+
+static func mark_talked(npc_id: String) -> void:
+	if npc_id.is_empty() or talked.has(npc_id):
+		return
+	talked[npc_id] = true
 	save_game()
 
 
@@ -289,6 +307,7 @@ static func _clear() -> void:
 	quests_done = []
 	trust = {}
 	asked = {}
+	talked = {}
 	npc_quests = {}
 	kills = {}
 	seen_items = {}

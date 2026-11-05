@@ -350,6 +350,7 @@ func _build_dome() -> void:
 	_dome.play("idle")
 	_dome.visible = Blaster.at_well()
 	add_child(_dome)
+	TalkMark.attach(_dome, Blaster.ID)
 	_dome_dialogue = DialoguePanel.new()
 	_dome_dialogue.name = "WellBlasterDialogue"
 	_dome_dialogue.npc_id = Blaster.ID

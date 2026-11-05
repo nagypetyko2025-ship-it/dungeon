@@ -9,6 +9,10 @@ const ENTRIES: Array[Dictionary] = [
 		"Az összesítő azt is kiírja, ha csapda vagy mérgezés végzett veled.",
 		"Öt új ritka felszerelés: Szegecselt harci kesztyű (epikus), Éjvadász kesztyű, Hadúr vaskesztyűje, "
 			+ "Orgyilkos csizma és Obszidián lábvért (mind legendás).",
+		"Sárga felkiáltójel lebeg azok feje fölött, akik küldetést vagy történetet adnak; az első beszélgetés után eltűnik.",
+		"Bertalan minden liftszint után 1-3 új történetet mesél (a már megnyitott szintekét rögtön), és a liftes szövegei "
+			+ "pontosabbak lettek (a 21-40. emelet Káoszkő, a 41.-től Fagykő).",
+		"Kikerült a hordágyas katonák bejátszása.",
 	]},
 	{"date": "2026-11-04", "items": [
 		"Két új nadrág: Lápjáró nadrág (ritka: kikerülés, regeneráció, gyorsaság) és Lángtáncos nadrág (legendás: sebzés, "

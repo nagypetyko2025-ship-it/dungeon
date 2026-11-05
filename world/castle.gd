@@ -390,6 +390,7 @@ func _build_throne_room() -> void:
 	king.z_index = -6
 	king.play()
 	add_child(king)
+	TalkMark.attach(king, King.ID)
 	_solid(Rect2(Vector2(THRONE_TILE.x - 1, r.position.y) * TILE, Vector2(4 * TILE, 1.6 * TILE)))
 	# Oszlopsor a szőnyeg két oldalán, és két őr a trón mellett.
 	for y in [4, 7, 10]:

@@ -44,6 +44,7 @@ func _ready() -> void:
 	figure.flip_h = true
 	figure.play()
 	_engineer.add_child(figure)
+	TalkMark.attach(figure, Engineer.ID)
 	var body := StaticBody2D.new()
 	var shape := CollisionShape2D.new()
 	var box := RectangleShape2D.new()

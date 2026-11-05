@@ -71,6 +71,7 @@ func _build_engineer() -> void:
 	figure.offset = Vector2(0, -Engineer.FRAME_SIZE.y / 2.0)
 	figure.play()
 	_engineer.add_child(figure)
+	TalkMark.attach(figure, Engineer.ID)
 	var body := StaticBody2D.new()
 	var shape := CollisionShape2D.new()
 	var box := RectangleShape2D.new()
