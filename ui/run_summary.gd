@@ -13,6 +13,14 @@ const MONSTER_ICON := Vector2(36, 36)
 const HEADER_COLOR := Color(1, 0.85, 0.5)
 const TEXT_COLOR := Color(0.9, 0.84, 0.76)
 const KILLER_COLOR := Color(1, 0.45, 0.4)
+## Nem szörny okozta halál: a GameState.killer ilyenkor "trap" (a tüskecsapda Hitboxának "hazard" metája) vagy
+## "poison" (a játékos méreg-sebzése).
+const TRAP := "trap"
+const POISON := "poison"
+const HAZARDS := {
+	TRAP: ["Csapda", "res://assets/0x72_dungeon/0x72_DungeonTilesetII_v1.7.png", Rect2(64, 192, 16, 16)],
+	POISON: ["Mérgezés", "res://assets/cards/icons/s_poison01.png", Rect2()],
+}
 
 
 ## A szörny azonosítója a Szörnyek könyvéhez: főellenségnél a neve, egyébként a típus neve; "" ha nem szörny.
@@ -33,6 +41,8 @@ static func monster_key(node: Variant) -> String:
 
 ## A szörny megjelenített neve (a Szörnyek könyvéből; a főellenségek kulcsa már a nevük).
 static func monster_name(monster: String) -> String:
+	if HAZARDS.has(monster):
+		return HAZARDS[monster][0]
 	var entry: Variant = Bestiary.ENTRIES.get(monster)
 	return str(entry[0]) if entry is Array else monster
 
@@ -164,7 +174,7 @@ static func _header(text: String) -> Label:
 static func _monster_row(monster: String, count: String, color: Color) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	var picture: Array = Bestiary.icon(monster)
+	var picture: Array = _hazard_icon(monster) if HAZARDS.has(monster) else Bestiary.icon(monster)
 	var icon := TextureRect.new()
 	icon.texture = picture[0]
 	icon.modulate = picture[1]
@@ -181,6 +191,18 @@ static func _monster_row(monster: String, count: String, color: Color) -> HBoxCo
 		amount.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		row.add_child(amount)
 	return row
+
+
+## Csapda / mérgezés képe [textúra, szín] (mint a Bestiary.icon).
+static func _hazard_icon(hazard: String) -> Array:
+	var texture := load(HAZARDS[hazard][1]) as Texture2D
+	var region: Rect2 = HAZARDS[hazard][2]
+	if region.has_area():
+		var atlas := AtlasTexture.new()
+		atlas.atlas = texture
+		atlas.region = region
+		texture = atlas
+	return [texture, Color.WHITE]
 
 
 ## Keretes kis doboz: a keret a ritkaság színe.

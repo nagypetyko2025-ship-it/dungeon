@@ -15,6 +15,8 @@ var _armed := true
 
 func _ready() -> void:
 	_sprite.frame = FRAME_DOWN
+	# A futás végi összesítőhöz (RunSummary): ha ez öl meg, "Csapda" a végzetes ellenfél.
+	$Hitbox.set_meta("hazard", "trap")
 	body_entered.connect(_on_body_entered)
 
 

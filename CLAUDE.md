@@ -107,6 +107,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   (DeathScreen._add_summary), `overlay()` győzelemkor (VictoryPanel._go_to_camp a "Tovább"-ra vár). Adatok:
   `GameState.kill_counts` (Room._on_enemy_died, RunSave is menti), `GameState.killer` (Player._on_hurt: utolsó támadó),
   `card_picks`, felszerelés. `RunSummary.monster_key(node)` = a Szörnyek könyve kulcsa (főellenség: boss_name).
+  Nem szörny gyilkos: `RunSummary.HAZARDS` ("trap": a tüskecsapda Hitboxán `hazard` meta; "poison": a méreg-tick, ha
+  megöl). Új csapdafajtánál a Hitboxra `set_meta("hazard", ...)` + HAZARDS-bejegyzés (név, kép, régió).
   Ritkaságok: common → rare → epic → legendary → mythic (Mítikus, piros: 17 saját tárgy, fegyverfajtánként / helyenként
   egy, a DEFINITIONS végén). Mítikus csak két helyről jön: a nagy főellenség (Vérfarkas, Káosz Ura) fő dobása
   `MYTHIC_LORD_CHANCE` (1%) eséllyel, és a bolt a `MYTHIC_SHOP_DEPTH` (21.) emelettől, áruhelyenként `MYTHIC_SHOP_CHANCE`

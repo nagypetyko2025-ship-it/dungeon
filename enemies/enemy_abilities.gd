@@ -327,6 +327,7 @@ func _explode(player: Node2D) -> void:
 		var blast := Hitbox.new()
 		blast.damage = roundi(int(enemy.get("stats")["damage"]) * 1.5)
 		blast.knockback = 520.0
+		blast.set_meta("source", enemy)
 		enemy.get_parent().add_child(blast)
 		blast.global_position = enemy.global_position
 		player.call("_on_hurt", blast)

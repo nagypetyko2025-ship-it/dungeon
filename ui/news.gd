@@ -6,6 +6,9 @@ const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-05", "items": [
 		"Futás végi összesítő: halálkor és győzelem után látod, ki ölt meg, melyik szörnyből győztél le a legtöbbet, "
 			+ "milyen kártyákat vettél fel (ritkaság szerint színezve) és mi volt rajtad a végén.",
+		"Az összesítő azt is kiírja, ha csapda vagy mérgezés végzett veled.",
+		"Öt új ritka felszerelés: Szegecselt harci kesztyű (epikus), Éjvadász kesztyű, Hadúr vaskesztyűje, "
+			+ "Orgyilkos csizma és Obszidián lábvért (mind legendás).",
 	]},
 	{"date": "2026-11-04", "items": [
 		"Két új nadrág: Lápjáró nadrág (ritka: kikerülés, regeneráció, gyorsaság) és Lángtáncos nadrág (legendás: sebzés, "

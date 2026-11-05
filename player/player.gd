@@ -428,6 +428,9 @@ func _update_afflictions(delta: float) -> void:
 			_poison_tick = 1.0
 			if not GameState.god_mode and _health.damage(POISON_DAMAGE, false):
 				FloatingText.spawn(get_parent(), global_position + Vector2(0, -56), "-%d" % POISON_DAMAGE, Color(0.5, 1, 0.4))
+				# Ha a méreg végez veled, az összesítőben "Mérgezés" a végzetes ellenfél.
+				if _health.is_dead():
+					GameState.killer = RunSummary.POISON
 	_sprite.self_modulate = POISON_TINT if _poison_left > 0.0 else (FROST_TINT if _slow_left > 0.0 else Color.WHITE)
 
 
@@ -1049,7 +1052,8 @@ func _on_hurt(hitbox: Hitbox) -> void:
 		# Életlopó támadó (a Vérfarkas): a sebzésből gyógyul.
 		var attacker: Variant = hitbox.get_meta("source", hitbox.owner)
 		# A futás végi összesítőhöz: ki talált el utoljára (ha belehalsz, ő ölt meg).
-		var monster := RunSummary.monster_key(attacker if attacker is Node else hitbox)
+		var monster := str(hitbox.get_meta("hazard")) if hitbox.has_meta("hazard") \
+			else RunSummary.monster_key(attacker if attacker is Node else hitbox)
 		if not monster.is_empty():
 			GameState.killer = monster
 		if is_instance_valid(attacker) and attacker.has_method("on_hit_player"):
