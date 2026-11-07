@@ -26,7 +26,7 @@ const LUCIFER := "Azazel, a Halálangyal és Démonkirály"
 ## Kategóriák sorrendben: [cím, szörnyek].
 const CATEGORIES := [
 	["Élőholtak", ["tiny_zombie", "zombie", "ice_zombie", "big_zombie", "skelet", "skeleton_legionary",
-		"giant_skeleton", "necromancer", "lich", "blood_wraith", "mummy", "flame_skull", "ghost"]],
+		"giant_skeleton", "necromancer", "lich", "blood_wraith", "mummy", "flame_skull", "ghost", "ancient_lich", "death_knight"]],
 	["Zöldbőrűek", ["goblin", "farmer_goblin", "club_goblin", "archer_goblin", "spear_goblin", "kamikaze_goblin", "orc_warrior",
 		"masked_orc", "orc_raider", "orc_shaman", "orc_mage", "ogre"]],
 	["Démonok", ["imp", "wogol", "chort", "big_demon", "armored_demon", "red_demon", "purple_demon", "gargoyle"]],
@@ -34,7 +34,7 @@ const CATEGORIES := [
 	["Népek", ["archer", "huntress", "dark_mage", "fire_witch", "fallen_knight", "dwarf", "dwarf_berserker",
 		"plague_doctor", "lizard", "lizard_scout", "barbarian", "fire_ninja", "renegade_monk", "crazy_clown"]],
 	["Kalózok", ["pirate_grunt", "pirate_gunner", "pirate_captain"]],
-	["Fenevadak", ["rat", "cave_bat", "grey_wolf", "minotaur", "yeti", "wendigo", "mammoth", "giant_crab"]],
+	["Fenevadak", ["rat", "cave_bat", "grey_wolf", "minotaur", "yeti", "wendigo", "mammoth", "giant_crab", "frost_giant"]],
 	["Sárkányok", ["fire_dragon", "frost_dragon", "gold_dragon", "shadow_dragon"]],
 	["Bogarak", ["fly", "spider", "fire_ant", "blue_beetle", "soldier_ant", "hornet", "scorpion"]],
 	["Káosz", ["chaos_spawn", "chaos_hound", "chaos_maw", "chaos_shard", "chaos_weaver"]],
@@ -80,6 +80,9 @@ const ENTRIES := {
 	"chaos_shard": ["Hasadékszilánk", "Obszidiánszilánkok egy izzó repedés körül, a repedésben egyetlen vörös szem pislog. Lassú, de alig lehet megsebezni: pajzsot von maga köré, a sebei összeforrnak, és ha szétzúzod, szilánkokká robban."],
 	"chaos_weaver": ["Káoszszövő", "Szemekkel teleszórt, csavart fonaloszlop, fölötte törött glória forog. Káoszivadékot szakít fel a semmiből, gyógyítja a társait, és a semmin át melletted terem. Vele kezdd!"],
 	"grey_wolf": ["Szürke farkas", "Sovány, szürke bundájú farkas, amelyik a felszínről tévedt le, és már nem talál vissza. Gyors, cikázva közelít, aztán hirtelen nekiront, mint a vadászó falka."],
+	"ancient_lich": ["Ősi lich", "Egykor király volt, a koronáját a halál sem vette le. Ötösével szórja a jeges varázslövedékeket, a csontjaiból légiósokat támaszt, és mire odaérsz, már máshol áll."],
+	"death_knight": ["Halállovag", "Fekete páncél, üres szemgödör, zöldes derengés. Egyszer felesküdött valamire, és a halál sem oldotta fel: rohamra indul, pajzsot von maga köré, és sebesülten csak dühösebb."],
+	"frost_giant": ["Fagyóriás", "A Fagykő mélyén ébredt óriás, a bőre maga a jég. Lassan jár, de az ütése csontig fagyaszt, és ha felordít, a körülötte lévők is nekilódulnak."],
 	"ghost": ["Kísértet", "Csuklyás, lebegő árny, a kámzsája alatt kéken izzó koponya. Nem ismer falat: átsuhan a köveken, egyenesen feléd, és az érintése jéghideg."],
 	"flame_skull": ["Lángkoponya", "Egy elégett varázsló koponyája, ami azóta is lángol. Cikázva száguld feléd, nekiront, és ha szétvered, tüzes szilánkokra robban szét."],
 	"cave_bat": ["Barlangi denevér", "Barna szárnyú denevér a kazamata mennyezetéről. Gyenge, de gyors, és ide-oda cikázva csap le: nehéz eltalálni."],

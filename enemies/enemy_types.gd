@@ -398,6 +398,25 @@ const TYPES: Array[Dictionary] = [
 		"rect": Rect2(0, 0, 19, 31), "run": true, "size": 1.0,
 		"health": [18, 24], "damage": [5, 7], "speed": [90, 110], "dodge": [30, 40],
 		"knockback": [120, 160], "resist": [0.3, 0.4], "xp": [14, 17], "min_depth": 12, "weight": 2},
+	# --- A mély emeletek új lakói (Dungeon Crawl Stone Soup, CC0; a 30-80. emelet közti hézagra). ---
+	# Ősi lich: koronás, kék köpenyes holt varázsló; ötös jégvarázs-legyező, légiós csontvázakat idéz, és odébb terem.
+	{"name": "ancient_lich", "abilities": ["summon", "teleport", "frost"], "ranged": true,
+		"projectile": "magic", "weapon_region": Rect2(324, 129, 8, 30), "shots": 5, "spread": 12.0,
+		"summon": {"type": "skeleton_legionary", "count": 2, "limit": 4, "text": "Keljetek fel, szolgáim!"},
+		"sheet": "res://assets/enemies/ancient_lich.png", "rect": Rect2(0, 0, 34, 33), "run": true, "size": 1.15,
+		"health": [80, 95], "damage": [11, 13], "speed": [65, 80], "dodge": [15, 22],
+		"knockback": [300, 340], "resist": [0.6, 0.7], "xp": [48, 54], "min_depth": 33, "max_depth": 80, "weight": 2,
+		"fire_interval": [2.0, 2.6], "arrow_speed": [240, 280], "keep_distance": [230, 290]},
+	# Halállovag: fekete páncélos, holt lovag; nekiront a játékosnak, pajzsot von maga köré, és megsebezve dühöng.
+	{"name": "death_knight", "abilities": ["shield", "berserk"], "dash": true,
+		"sheet": "res://assets/enemies/death_knight.png", "rect": Rect2(0, 0, 34, 33), "run": true, "size": 1.2,
+		"health": [140, 165], "damage": [15, 18], "speed": [90, 105], "dodge": [10, 15],
+		"knockback": [460, 520], "resist": [0.8, 0.9], "xp": [56, 64], "min_depth": 36, "max_depth": 80, "weight": 2},
+	# Fagyóriás: lassú, hatalmas jégbőrű óriás; az ütése fagyaszt, harci kiáltással feltüzeli a társait, és dühöng.
+	{"name": "frost_giant", "abilities": ["frost", "war_cry", "berserk"],
+		"sheet": "res://assets/enemies/frost_giant.png", "rect": Rect2(0, 0, 34, 33), "run": true, "size": 1.6,
+		"health": [220, 260], "damage": [20, 24], "speed": [62, 74], "dodge": [0, 5],
+		"knockback": [520, 580], "resist": [0.92, 0.98], "xp": [72, 82], "min_depth": 52, "max_depth": 80, "weight": 2},
 	# Mérges gombaszörny: lassú, szívós, mérgez, és halálakor spórafelhővé robban (ScratchIO, CC0).
 	{"name": "toadstool", "abilities": ["poison", "death_burst"], "sheet": "res://assets/enemies/toadstool.png",
 		"rect": Rect2(0, 0, 22, 24), "run": true, "size": 1.25,

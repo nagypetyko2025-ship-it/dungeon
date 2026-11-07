@@ -332,6 +332,11 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   küldetésnél ehhez igazodj (easy < 6. emelet, medium ~6-15, hard ~20-30, elite 45+), és futtasd le a robotot.
 - Kísértet (`ghost`, 12. emelettől, Élőholtak): "phase" kulcs az EnemyTypes-ban = félig átlátszó, nem ütközik a
   világgal (collision_mask 4), egyenesen jön (Enemy._phase). Kép: Gothicvania Ghost (CC0), assets/enemies/ghost.png.
+- Mély emeleti szörnyek (2026-11-07, Dungeon Crawl Stone Soup CC0, 32×32 állókép → 8 kockás lap 34×33, lélegzés / ringás;
+  a zip a scratchpad dcss_dl/d.zip-jében): ancient_lich (33-80., Élőholtak), death_knight (36-80., Élőholtak), frost_giant
+  (52-80., Fenevadak). A régi "lich" és "frost_dragon" már foglalt név.
+- Kártyák ritkasági rendje (robot, 2026-11-07): medián erősség common 0.6 < rare 1.1 < epic 2.0 < legendary 4.6 < mythic 8.5.
+  Cost-ként ne adj alapból 0 statot (defense, dodge stb.): a kártya akkor soha nem jön (Viharúr így nem jött).
 - Tábori térkép: `ui/camp_map.gd` (`CampMap`, a táborban "HUD/Minimap", így a Menus M-re nyitja). Betöltéskor egyszer
   lefényképezi a külső világot (SubViewport a tábor World2D-jével, SCALE 0.25, CanvasModulate / játékos / HiddenGrave
   rejtve), a titkos sír tisztását a jobbra lévő erdősávval takarja (`_cover_secret`). Kicsiben jobb alul a játékos körül

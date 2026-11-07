@@ -4,6 +4,9 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-07", "items": [
+		"Erősebb legendás kártyák: a Nyílzápor, az Átütés és a Titánerő javult, és jött három új: Főnixtoll, Árnyvadász, "
+			+ "Viharúr. A két mítikus is erősebb lett, a Hóhér kicsit szintén.",
+		"Három új szörny a mélyben: Ősi lich (33. emelettől), Halállovag (36.-tól) és Fagyóriás (52.-től).",
 		"A szintes küldetések nehezebbek lettek (eddig túl korán teljesültek): A Mélység hőse 40., Élő legenda 55., "
 			+ "Tiszti rang 95., Veterán 130. szint.",
 		"Új szörny: Kísértet (a 12. emelettől). Csuklyás, félig átlátszó árny, ami átsuhan a falakon, és az érintése dermeszt.",
