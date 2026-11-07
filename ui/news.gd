@@ -4,6 +4,8 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-07", "items": [
+		"A szintes küldetések nehezebbek lettek (eddig túl korán teljesültek): A Mélység hőse 40., Élő legenda 55., "
+			+ "Tiszti rang 95., Veterán 130. szint.",
 		"Új szörny: Kísértet (a 12. emelettől). Csuklyás, félig átlátszó árny, ami átsuhan a falakon, és az érintése dermeszt.",
 		"Térkép a táborban is: jobb alul a környéked (veled mozog), M-re nagy térkép, amit egérrel húzva szabadon "
 			+ "mozgathatsz és görgővel nagyíthatsz; ha az egeret egy jelre viszed, kiírja, mit lehet ott csinálni, "

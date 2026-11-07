@@ -1,67 +1,69 @@
 # Egyensúly-jelentés
 
-Készült: 2026-11-07 10:32:58 (tools/balance_robot.gd). Minden szám becslés, XP-bónusz és csalás nélkül.
+Készült: 2026-11-07 10:37:56 (tools/balance_robot.gd). Minden szám becslés, XP-bónusz és csalás nélkül.
 
-## 1. Szintgörbe (átlagos játékos, minden szobát kitisztít)
+## 1. Szintgörbe (a valódi emelet-generálással)
 
-| Emelet | Szörny az emeleten | XP az emeleten | Összes XP | Szint (minden szoba) | Szint (fele szoba) |
-|---|---|---|---|---|---|
-| 1 | 10 | 16 | 16 | 2 | 1 |
-| 2 | 19 | 49 | 65 | 4 | 3 |
-| 3 | 28 | 275 | 340 | 9 | 8 |
-| 4 | 41 | 200 | 540 | 11 | 9 |
-| 5 | 89 | 737 | 1277 | 15 | 12 |
-| 10 | 126 | 3322 | 10842 | 36 | 28 |
-| 15 | 127 | 6297 | 38644 | 57 | 45 |
-| 20 | 1 | 58 | 68748 | 70 | 55 |
-| 25 | 220 | 25544 | 177470 | 97 | 77 |
-| 30 | 181 | 28343 | 317632 | 119 | 94 |
-| 35 | 200 | 34105 | 498361 | 139 | 110 |
-| 40 | 1 | 173 | 641095 | 152 | 120 |
-| 45 | 201 | 52234 | 886249 | 170 | 134 |
-| 50 | 200 | 57883 | 1170648 | 187 | 148 |
-| 55 | 200 | 61757 | 1464571 | 201 | 159 |
-| 60 | 1 | 1906 | 1724518 | 213 | 169 |
-| 65 | 220 | 77474 | 2105239 | 228 | 180 |
-| 70 | 220 | 90104 | 2506877 | 242 | 192 |
-| 75 | 181 | 80664 | 2915271 | 255 | 202 |
-| 80 | 1 | 424 | 3255776 | 264 | 209 |
-| 85 | 220 | 381776 | 4726466 | 300 | 238 |
-| 90 | 201 | 395464 | 6547077 | 335 | 265 |
-| 95 | 200 | 372055 | 8381106 | 364 | 288 |
+| Emelet | Összes XP (minden szoba, minden gömb) | Szint (elméleti maximum) | Szint (valós becslés) |
+|---|---|---|---|
+| 1 | 16 | 2 | 1 |
+| 2 | 75 | 4 | 2 |
+| 3 | 335 | 9 | 4 |
+| 4 | 532 | 11 | 5 |
+| 5 | 1197 | 15 | 7 |
+| 10 | 11659 | 37 | 18 |
+| 15 | 38679 | 57 | 30 |
+| 20 | 70609 | 70 | 37 |
+| 25 | 173438 | 96 | 51 |
+| 30 | 316026 | 119 | 64 |
+| 35 | 474255 | 137 | 74 |
+| 40 | 618300 | 150 | 81 |
+| 45 | 856117 | 168 | 91 |
+| 50 | 1132220 | 184 | 100 |
+| 55 | 1430996 | 200 | 109 |
+| 60 | 1693232 | 212 | 115 |
+| 65 | 2048119 | 226 | 123 |
+| 70 | 2419057 | 239 | 130 |
+| 75 | 2805171 | 251 | 137 |
+| 80 | 3147234 | 261 | 143 |
+| 85 | 4582345 | 297 | 162 |
+| 90 | 6365122 | 332 | 182 |
+| 95 | 8164594 | 361 | 198 |
+
+Valós arány: a teljes XP 17%-a (kalibráció: 15. emelet = 30. szint).
 
 ### Szintes és emeletes küldetések: hol teljesülnek
 
 | Küldetés | Megbízó | Fokozat | Cél | Becslés |
 |---|---|---|---|---|
-| Le a mélybe | barkeep | easy | floor 3 | 9. szint körül (fele szobával 8.) |
-| Tapasztalt kalandor | barkeep | easy | level 5 | minden szobával a 3. emeleten, fele szobával a 3. emeleten |
-| Első lépcső | barkeep | easy | floor 2 | 4. szint körül (fele szobával 3.) |
-| Zöldfülű | barkeep | easy | level 3 | minden szobával a 2. emeleten, fele szobával a 2. emeleten |
-| Az ötödik emelet | barkeep | easy | floor 5 | 15. szint körül (fele szobával 12.) |
-| Edzett harcos | barkeep | easy | level 8 | minden szobával a 3. emeleten, fele szobával a 3. emeleten |
-| A negyedik emelet | barkeep | easy | floor 4 | 11. szint körül (fele szobával 9.) |
-| A hetedik emelet | barkeep | easy | floor 7 | 24. szint körül (fele szobával 19.) |
-| A tizedik emelet | barkeep | medium | floor 10 | 36. szint körül (fele szobával 28.) |
-| Veterán kalandor | barkeep | medium | level 15 | minden szobával a 5. emeleten, fele szobával a 6. emeleten |
-| A tizenötödik emelet | barkeep | medium | floor 15 | 57. szint körül (fele szobával 45.) |
-| Tizenkettes szint | barkeep | medium | level 12 | minden szobával a 5. emeleten, fele szobával a 5. emeleten ⚠ túl könnyű a fokozatához |
-| A huszadik emelet | barkeep | hard | floor 20 | 70. szint körül (fele szobával 55.) |
-| A harmincadik emelet | barkeep | hard | floor 30 | 119. szint körül (fele szobával 94.) |
-| Élő legenda | barkeep | hard | level 25 | minden szobával a 8. emeleten, fele szobával a 9. emeleten ⚠ túl könnyű a fokozatához |
-| A huszonötödik emelet | barkeep | hard | floor 25 | 97. szint körül (fele szobával 77.) |
-| A negyvenedik emelet | barkeep | hard | floor 40 | 152. szint körül (fele szobával 120.) |
-| A Mélység hőse | barkeep | hard | level 20 | minden szobával a 6. emeleten, fele szobával a 8. emeleten ⚠ túl könnyű a fokozatához |
-| Tiszti rang | lieutenant | elite | level 50 | minden szobával a 14. emeleten, fele szobával a 17. emeleten ⚠ túl könnyű a fokozatához |
-| Az ötvenedik | lieutenant | elite | floor 50 | 187. szint körül (fele szobával 148.) |
-| A gépezet ura | lieutenant | elite | floor 61 | 216. szint körül (fele szobával 171.) |
-| Veterán | lieutenant | elite | level 80 | minden szobával a 22. emeleten, fele szobával a 26. emeleten ⚠ túl könnyű a fokozatához |
-| A kapun túl | lieutenant | elite | floor 81 | 270. szint körül (fele szobával 214.) |
-| Az utolsó lépcső | lieutenant | elite | floor 99 | 387. szint körül (fele szobával 306.) |
+| Le a mélybe | barkeep | easy | floor 3 | valósan a 4. szint körül |
+| Tapasztalt kalandor | barkeep | easy | level 5 | valósan a 4. emeleten (legkorábban a 3. emeleten) |
+| Első lépcső | barkeep | easy | floor 2 | valósan a 2. szint körül |
+| Zöldfülű | barkeep | easy | level 3 | valósan a 3. emeleten (legkorábban a 2. emeleten) |
+| Az ötödik emelet | barkeep | easy | floor 5 | valósan a 7. szint körül |
+| Edzett harcos | barkeep | easy | level 8 | valósan a 6. emeleten (legkorábban a 3. emeleten) |
+| A negyedik emelet | barkeep | easy | floor 4 | valósan a 5. szint körül |
+| A hetedik emelet | barkeep | easy | floor 7 | valósan a 12. szint körül |
+| A tizedik emelet | barkeep | medium | floor 10 | valósan a 18. szint körül |
+| Veterán kalandor | barkeep | medium | level 15 | valósan a 9. emeleten (legkorábban a 5. emeleten) |
+| A tizenötödik emelet | barkeep | medium | floor 15 | valósan a 30. szint körül |
+| Tizenkettes szint | barkeep | medium | level 12 | valósan a 7. emeleten (legkorábban a 5. emeleten) |
+| A huszadik emelet | barkeep | hard | floor 20 | valósan a 37. szint körül |
+| A harmincadik emelet | barkeep | hard | floor 30 | valósan a 64. szint körül |
+| Élő legenda | barkeep | hard | level 55 | valósan a 27. emeleten (legkorábban a 15. emeleten) |
+| A huszonötödik emelet | barkeep | hard | floor 25 | valósan a 51. szint körül |
+| A negyvenedik emelet | barkeep | hard | floor 40 | valósan a 81. szint körül |
+| A Mélység hőse | barkeep | hard | level 40 | valósan a 21. emeleten (legkorábban a 11. emeleten) |
+| Tiszti rang | lieutenant | elite | level 95 | valósan a 47. emeleten (legkorábban a 25. emeleten) |
+| Az ötvenedik | lieutenant | elite | floor 50 | valósan a 100. szint körül |
+| A gépezet ura | lieutenant | elite | floor 61 | valósan a 117. szint körül |
+| Veterán | lieutenant | elite | level 130 | valósan a 70. emeleten (legkorábban a 33. emeleten) |
+| A kapun túl | lieutenant | elite | floor 81 | valósan a 146. szint körül |
+| Az utolsó lépcső | lieutenant | elite | floor 99 | valósan a 210. szint körül |
 
 ## 2. Kártyák
 
-Sorsolás (4000 szintlépés, 20. szint felett): common 59.4%, rare 27.6%, epic 11.1%, legendary 1.5%, mythic 0.4%
+Sorsolás (4000 szintlépés, 20. szint felett): common 60.4%, rare 26.8%, epic 10.8%, legendary 1.5%, mythic 0.5%
 
 Soha nem jött fel (lehet, hogy karakterhez / íjhoz kötött): Mágiaforrás, Vihartüske, Szikra, Rúnakő, Mágusfókusz, Arkán tudás
 
@@ -93,5 +95,6 @@ megölni) és a kiugró veszély számít: a nagy testű szörnyek szándékosan
 
 | Szörny | Mélység | Mi lóg ki |
 |---|---|---|
-| Vendigó (wendigo) | 5 | kiugróan veszélyes (sebzés × sebesség 1113, a társaié 345) |
+| Vendigó (wendigo) | 5 | kiugróan veszélyes (sebzés × sebesség 1111, a társaié 338) |
+| Szürke farkas (grey_wolf) | 5 | kiugróan veszélyes (sebzés × sebesség 1017, a társaié 338) |
 

@@ -16,6 +16,10 @@ const MAX_DEPTH := 99
 const XP_SAMPLES := 300
 const CARD_ROLLS := 4000
 const ITEM_SAMPLES := 40
+## Valós kalibráció (a felhasználó tapasztalata): ügyes játékkal a 15. emeleten a 30. szint körül jársz. Ebből jön,
+## a teljes (minden szoba, minden gömb) XP hányad részét szerzi meg egy valódi futás; a "valós" oszlop ezzel számol.
+const CALIBRATION_FLOOR := 15
+const CALIBRATION_LEVEL := 30
 ## Ennyiszeres eltérés a csoport mediánjától számít kilógónak.
 const OUTLIER := 1.6
 
@@ -50,17 +54,14 @@ func _line(text: String) -> void:
 # ---------------------------------------------------------------- 1. szintgörbe
 
 func _level_curve() -> void:
-	_line("## 1. Szintgörbe (átlagos játékos, minden szobát kitisztít)")
+	_line("## 1. Szintgörbe (a valódi emelet-generálással)")
 	_line("")
-	_line("| Emelet | Szörny az emeleten | XP az emeleten | Összes XP | Szint (minden szoba) | Szint (fele szoba) |")
-	_line("|---|---|---|---|---|---|")
+	_line("| Emelet | Összes XP (minden szoba, minden gömb) | Szint (elméleti maximum) | Szint (valós becslés) |")
+	_line("|---|---|---|---|")
 	var total := 0
 	var level := 1
 	var level_at := {}
-	## Ha csak a szobák felét tisztítja ki (és a főellenséget legyőzi): óvatosabb játékos.
-	var half_total := 0
-	var half_level := 1
-	var half_at := {}
+	var totals := {}
 	var boss_xp := 0.0
 	for boss: Dictionary in Boss.BOSSES:
 		boss_xp += float(boss["xp"])
@@ -77,13 +78,20 @@ func _level_curve() -> void:
 		while total >= _xp_to_reach(level + 1):
 			level += 1
 		level_at[depth] = level
-		var boss_part := boss_xp * (1.0 + 0.2 * (depth - 1)) * Boss.TOUGHNESS_XP if depth % Boss.BOSS_EVERY == 0 else 0.0
-		half_total += roundi((xp - boss_part) / 2.0 + boss_part)
-		while half_total >= _xp_to_reach(half_level + 1):
-			half_level += 1
-		half_at[depth] = half_level
+		totals[depth] = total
+	# A valós arány a kalibrációból, és vele a valós szintgörbe.
+	var share := float(_xp_to_reach(CALIBRATION_LEVEL)) / float(totals[CALIBRATION_FLOOR])
+	var half_at := {}
+	var real_level := 1
+	for depth in range(1, MAX_DEPTH + 1):
+		while float(totals[depth]) * share >= _xp_to_reach(real_level + 1):
+			real_level += 1
+		half_at[depth] = real_level
+	for depth in range(1, MAX_DEPTH + 1):
 		if depth <= 5 or depth % 5 == 0:
-			_line("| %d | %d | %d | %d | %d | %d |" % [depth, count, roundi(xp), total, level, half_level])
+			_line("| %d | %d | %d | %d |" % [depth, totals[depth], level_at[depth], half_at[depth]])
+	_line("")
+	_line("Valós arány: a teljes XP %.0f%%-a (kalibráció: %d. emelet = %d. szint)." % [share * 100.0, CALIBRATION_FLOOR, CALIBRATION_LEVEL])
 	_line("")
 	_line("### Szintes és emeletes küldetések: hol teljesülnek")
 	_line("")
@@ -97,12 +105,12 @@ func _level_curve() -> void:
 			"level":
 				var full := _first_floor(level_at, goal)
 				var half := _first_floor(half_at, goal)
-				estimate = "minden szobával a %s, fele szobával a %s" % [_floor_text(full), _floor_text(half)]
-				# Figyelmeztetés: a fokozatához képest (fele szobával is) túl korán megvan.
+				estimate = "valósan a %s (legkorábban a %s)" % [_floor_text(half), _floor_text(full)]
+				# Figyelmeztetés: a fokozatához képest (valósan) túl korán megvan.
 				if half > 0 and _too_easy(quest.get("tier", "easy"), half):
 					estimate += " ⚠ túl könnyű a fokozatához"
 			"floor":
-				estimate = "%d. szint körül (fele szobával %d.)" % [level_at[mini(goal, MAX_DEPTH)], half_at[mini(goal, MAX_DEPTH)]]
+				estimate = "valósan a %d. szint körül" % half_at[mini(goal, MAX_DEPTH)]
 			_:
 				continue
 		_line("| %s | %s | %s | %s %d | %s |" % [quest["name"], Quests.giver_of(id), quest.get("tier", "easy"), quest["kind"], goal, estimate])

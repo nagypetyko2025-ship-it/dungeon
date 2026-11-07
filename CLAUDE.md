@@ -327,6 +327,9 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   profillal, a végén törli), jelentés: `tools/balance_report.md`. Szintgörbe a valódi emelet-generálással (minden / fele
   szoba), a szintes / emeletes küldetések becsült teljesülése, kártya- és tárgy-kilógók (fegyverek nélkül), szörnyek
   XP / szívósság aránya. A "Could not resolve class boss.gd / enemy.gd" sorok az indulásnál zajok (a futás jó).
+  Kalibráció (`CALIBRATION_FLOOR/LEVEL`): a felhasználó szerint ügyes játékkal a 15. emeleten ~30. szint → egy valódi
+  futás a teljes XP ~18%-át szerzi. Valós görbe: 10.→18., 20.→37., 30.→65., 50.→102., 70.→133. szint. Új szintes
+  küldetésnél ehhez igazodj (easy < 6. emelet, medium ~6-15, hard ~20-30, elite 45+), és futtasd le a robotot.
 - Kísértet (`ghost`, 12. emelettől, Élőholtak): "phase" kulcs az EnemyTypes-ban = félig átlátszó, nem ütközik a
   világgal (collision_mask 4), egyenesen jön (Enemy._phase). Kép: Gothicvania Ghost (CC0), assets/enemies/ghost.png.
 - Tábori térkép: `ui/camp_map.gd` (`CampMap`, a táborban "HUD/Minimap", így a Menus M-re nyitja). Betöltéskor egyszer
@@ -342,7 +345,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   alatt kezdett, tiszteli; kép: `assets/characters/officer.png`, átszínezett 0x72 knight_m). FEJLESZTÉST NEM AD (a
   felhasználó kérése: elég a 2 fejlődési mód). Küldetései a `Quests.ALL`-ban "giver": "lieutenant" (lt_*, "hard" és új
   "elite" fokozat), ugyanúgy futnak, mint a kocsmárosé; `Quests.ids_of / ready_ids(giver) / GIVERS`; a QuestPanel `giver`
-  változója (a barakk "lieutenant"-tal hozza létre). 24 parancs (lt_*; a szintes: 50. és 80. szint, mert a 30. a 15. emeletig elérhető), mindegyik leadása után 2 történet (`Lieutenant.AFTER_STORIES`),
+  változója (a barakk "lieutenant"-tal hozza létre). 24 parancs (lt_*; a szintes: 95. és 130. szint, a robot valós görbéje szerint), mindegyik leadása után 2 történet (`Lieutenant.AFTER_STORIES`),
   plusz 3 alap (`STORIES`). Fölötte zöld "?" ha van leadható (csak az első beszélgetés után). J könyv: "Hadnagy" fül
   (`QuestBook.LIEUTENANT_TAB`, az első beszélgetés után; ugyanolyan szűrős lista, mint az Általános, ami most csak a kocsmárosé).
 - A hordágyas bejátszás (stretcher_scene) a felhasználó kérésére törölve (2026-11-05); a kórházi hordágy kellék és a doktor
