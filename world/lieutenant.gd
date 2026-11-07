@@ -227,6 +227,105 @@ const AFTER_STORIES := {
 				+ "állok az utadba. Csak egyet kérek: ha visszajössz, gyere ide először. Az ezred várni fog. " \
 				+ "Mindig."},
 	],
+	"lt_pirates": [
+		{"id": "pirates_coast", "text": "Honnan kerülnek kalózok a föld alá?", "trust": 3,
+			"answer": "A déli partról. Húsz éve egy egész kalózflotta tűnt el a Ködös-öbölben. Azt mondták, " \
+				+ "elsüllyedtek.\n\n[i]Megkopogtatja a térkép szélét, ahol a tenger kezdődik.[/i]\n\n" \
+				+ "Nem süllyedtek el. Barlangok vannak a sziklák alatt, és azok lefelé vezetnek. A Mélység nem " \
+				+ "csak itt nyílik, kalandor. Itt csak mi őrizzük."},
+		{"id": "pirates_captain", "text": "Harcoltál már kalózkapitánnyal?", "trust": 3,
+			"answer": "Egyszer, fiatalon, a parton. Elvette a kardomat, a földre lökött, és nevetett. Aztán " \
+				+ "visszaadta, és azt mondta: \"Gyere vissza, ha már tudod fogni.\"\n\n" \
+				+ "[i]Megszorítja a kardja markolatát.[/i]\n\nEttől kezdve minden reggel ezer vágást gyakoroltam. " \
+				+ "Soha nem találkoztunk újra. Talán ott volt a hatvan között, akit felhoztál. Remélem, nem."},
+	],
+	"lt_casters": [
+		{"id": "casters_distrust", "text": "Miért nem bízol a varázslókban?", "trust": 3,
+			"answer": "Mert a varázsló nem áll sorba. Nem tart pajzsot, nem vár parancsra, és amikor baj van, " \
+				+ "olyan erővel nyúl bele, amit senki sem ért.\n\n[i]Elhallgat, aztán kelletlenül hozzáteszi.[/i]\n\n" \
+				+ "Lőrinc más. Ő tudja, mi a felelősség: a saját hibáját vállalta, és nem hencegett vele. " \
+				+ "Egy katona ezt megérti."},
+		{"id": "casters_court", "text": "Vannak varázslók a királyi udvarban?", "trust": 4,
+			"answer": "Egy. Az udvari csillagjós, Mérő Ambrózy. Minden reggel a király mellett áll, és megmondja, " \
+				+ "milyen napra virradtunk.\n\nAmikor Gáspár emberei a huszadikon odavesztek, ő azt jósolta " \
+				+ "előtte, hogy \"szerencsés az út lefelé\".\n\n[i]Hidegen néz.[/i]\n\nNem varázsló. Hazug. Az " \
+				+ "rosszabb."},
+	],
+	"lt_undead_patrol": [
+		{"id": "undead_burial", "text": "Hogyan temetitek el a halottaitokat?", "trust": 3,
+			"answer": "Elégetjük őket. Mindegyiket, kivétel nélkül. Vendel, a sírásó egyszer megkérdezte, " \
+				+ "miért nem kapnak rendes sírt.\n\n[i]A sátor bejárata felé néz.[/i]\n\n" \
+				+ "Mert láttam, mi mászik ki a földből a Mélység közelében. Egy katonám sem fog egyszer " \
+				+ "csontlégiósként szembejönni velem. Ezt megígértem nekik."},
+		{"id": "undead_legion", "text": "Kik voltak a csontlégiósok?", "trust": 4,
+			"answer": "A régi királyi légió. Évszázadokkal ezelőtt ment le, I. Aurél parancsára. A krónikák szerint " \
+				+ "győztek, és hazatértek.\n\nAz egyiknek a páncélján a légió sasa volt, rozsdásan, de " \
+				+ "épen.\n\n[i]Sokáig hallgat.[/i]\n\nNem tértek haza. Valaki hazudott a krónikában, nagyon " \
+				+ "régen. És a király ma is ugyanazt a krónikát olvassa."},
+	],
+	"lt_demons": [
+		{"id": "demons_fear", "text": "Félsz a démonoktól?", "trust": 3,
+			"answer": "Igen.\n\n[i]Egyenesen a szemedbe néz.[/i]\n\nAki azt mondja, nem fél, az vagy " \
+				+ "hazudik, vagy még nem látott egyet közelről. A félelem nem szégyen. A szégyen az, ha " \
+				+ "hagyod, hogy ő adja a parancsot.\n\nAmikor először láttam egy páncélos démont, hánytam. " \
+				+ "Aztán felálltam, és megöltük. Ebben a sorrendben."},
+		{"id": "demons_chapel", "text": "Imádkozol néha?", "trust": 4,
+			"answer": "A régi kápolnában, minden hónap első napján. Nem magamért. Az embereimért, és " \
+				+ "azokért, akik nem jöttek vissza.\n\n[i]Elmosolyodik, keserűen.[/i]\n\nA harangot nem húzom " \
+				+ "meg. Vendel azt mondja, a harang a holtakat ébreszti. Lehet, hogy viccel. Lehet, hogy nem. " \
+				+ "Nem kockáztatok."},
+	],
+	"lt_recon": [
+		{"id": "recon_maps", "text": "Mire kellenek neked a feltérképezett szobák?", "trust": 3,
+			"answer": "A Mélység nem véletlenszerű. Mindenki azt hiszi, hogy a szobák minden alkalommal " \
+				+ "máshogy állnak. Igaz. De a minta nem változik: a nagy termek mindig a lépcsőtől " \
+				+ "keletre vannak, a ládák a zsákutcákban.\n\n[i]Egy köteg jegyzetet tol eléd.[/i]\n\n" \
+				+ "Hatszáz szoba. Most már látom a mintát. Ez azt jelenti, hogy valaki megtervezte. És ami " \
+				+ "meg van tervezve, azt meg lehet érteni."},
+		{"id": "recon_recruit", "text": "Végre jött újonc a barakkba?", "trust": 3,
+			"answer": "Kettő. Egy kovácsinas a faluból meg egy halászlány a tó mellől. Azt mondták, " \
+				+ "rólad hallottak, és ha te le mersz menni, ők is lemernek.\n\n[i]Nem tudja eldönteni, " \
+				+ "hogy bosszús legyen vagy hálás.[/i]\n\nA kovácsinas a lándzsát fordítva fogta. A halászlány " \
+				+ "elsőre eltalálta a célt. Mindkettő marad. Ez a te hibád, úgyhogy te is felelsz értük."},
+	],
+	"lt_war_hero": [
+		{"id": "hero_king", "text": "Hallottam, hogy a király hívatott.", "trust": 4,
+			"answer": "Kitüntetést akart adni. Nekem, a százhoz, amit te győztél le. Azt mondtam, nem az " \
+				+ "enyém.\n\n[i]Kihúzza magát.[/i]\n\nErre azt mondta, akkor adja neked. Azt feleltem, hogy te " \
+				+ "nem állsz a parancsnokságom alatt, és nem tudom, elfogadnád-e egy királytól, aki bált tart, " \
+				+ "amikor a katonái meghalnak.\n\nNem fogok hadnagyként meghalni. Valószínűleg holnap " \
+				+ "lefokoznak. Megérte."},
+		{"id": "hero_stone", "text": "Mi ez a kavics a kezemben?", "trust": 5,
+			"answer": "A harmincötödik. A kazamata lejárata elől hoztam, mint a többit.\n\n" \
+				+ "[i]Belerakja a markodba, és rázárja az ujjaidat.[/i]\n\nAz ezred mindenkinek ad egyet, aki " \
+				+ "a parancsnokságom alatt áll. Te nem állsz. Mégis neked adom. Ha egyszer nem jössz vissza, " \
+				+ "valaki leteszi a sírodra. Ha visszajössz, tartsd meg. Ez a szabály."},
+	],
+	"lt_tribute": [
+		{"id": "tribute_ilona", "text": "Mi lett Ilonával?", "trust": 4,
+			"answer": "Megtudta. Valaki megírta neki, mi van itt. Gyanítom, hogy Kálmán doktor, mert ők " \
+				+ "levelezni szoktak az orvosságokról.\n\n[i]Sóhajt; először hallod sóhajtani.[/i]\n\n" \
+				+ "Jövő hónapban jön. A kórházban fog dolgozni. Megpróbáltam megtiltani. Erre azt írta vissza, " \
+				+ "hogy ő nem a katonám. Igaza van. Senki sem olyan makacs ebben a családban, mint ő."},
+		{"id": "tribute_gold", "text": "Mit kezdesz ennyi arannyal?", "trust": 3,
+			"answer": "Kőfalat. A barakk helyére. Ha a király nem ad, majd a Mélység fizet érte.\n\n" \
+				+ "[i]A sátorvászonra néz.[/i]\n\nBár nem is tudom. Ez a sátor kilenc telet kibírt. " \
+				+ "Az embereim megszokták a ponyva zizegését. Lehet, hogy inkább a kórháznak adom. Ilona úgyis " \
+				+ "kérni fogja."},
+	],
+	"lt_last_stair": [
+		{"id": "stair_order", "text": "Kiadod a parancsot, hogy menjek le a pokolba?", "trust": 4,
+			"answer": "Nem. Ezt nem adhatom ki. Senki nem adhatja ki.\n\n[i]Feláll az asztal mellől, és " \
+				+ "olyan közel lép hozzád, hogy látod a ráncokat a szeme körül.[/i]\n\nDe ha lemész, az " \
+				+ "ezred a lépcső tetején fog állni. Harmincöt ember, a te kavicsoddal együtt. Nem mehetünk " \
+				+ "veled. De senki nem jön fel mögötted, amíg mi ott állunk."},
+		{"id": "stair_gaspar", "text": "Gáspár tudja, meddig jutottam?", "trust": 5,
+			"answer": "Tudja. Tegnap este együtt ültünk a tűznél, és bort hoztam, ahogy kérte.\n\n" \
+				+ "[i]Halkan beszél, és most nem úgy áll, mint egy tiszt.[/i]\n\nSokáig nem szólt. Aztán azt " \
+				+ "mondta: \"Húsz éve én is ott álltam a lépcső tetején, és visszafordultam. Ő nem fog.\"\n\n" \
+				+ "Aztán megkért, hogy ha visszajössz, mondjam meg neked: büszke rád. Ő maga nem fogja " \
+				+ "elmondani. Ő ilyen."},
+	],
 }
 
 

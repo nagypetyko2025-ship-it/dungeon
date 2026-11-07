@@ -6,6 +6,9 @@ const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-07", "items": [
 		"Vas Szilárd hadnagy 8 új parancsot ad (összesen 16): árulók, óriások, káoszfront, sárkányok, 5000 szörny, "
 			+ "30. szint és a Pokolkapun túl; mindegyik után két új történettel.",
+		"A hadnagy újabb 8 parancsot ad (összesen 24): kalózok, varázslók, élőholtak, démonok, 600 szoba, 100 főellenség, "
+			+ "60000 arany és a 99. emelet, mindegyik után két történettel. A szintes parancsai nehezebbek lettek "
+			+ "(Tiszti rang: 50., Veterán: 80. szint).",
 	]},
 	{"date": "2026-11-05", "items": [
 		"Futás végi összesítő: halálkor és győzelem után látod, ki ölt meg, melyik szörnyből győztél le a legtöbbet, "
