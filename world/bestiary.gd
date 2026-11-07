@@ -26,7 +26,7 @@ const LUCIFER := "Azazel, a Halálangyal és Démonkirály"
 ## Kategóriák sorrendben: [cím, szörnyek].
 const CATEGORIES := [
 	["Élőholtak", ["tiny_zombie", "zombie", "ice_zombie", "big_zombie", "skelet", "skeleton_legionary",
-		"giant_skeleton", "necromancer", "lich", "blood_wraith", "mummy", "flame_skull"]],
+		"giant_skeleton", "necromancer", "lich", "blood_wraith", "mummy", "flame_skull", "ghost"]],
 	["Zöldbőrűek", ["goblin", "farmer_goblin", "club_goblin", "archer_goblin", "spear_goblin", "kamikaze_goblin", "orc_warrior",
 		"masked_orc", "orc_raider", "orc_shaman", "orc_mage", "ogre"]],
 	["Démonok", ["imp", "wogol", "chort", "big_demon", "armored_demon", "red_demon", "purple_demon", "gargoyle"]],
@@ -48,7 +48,7 @@ const ABILITY_NAMES := {
 	"zigzag": "cikázás", "teleport": "teleport", "summon": "idézés", "heal": "gyógyítás",
 	"war_cry": "harci kiáltás", "berserk": "dühöngés", "death_burst": "halálrobbanás",
 	"regenerate": "regeneráció", "poison": "méreg", "frost": "fagy", "plunder": "fosztogatás",
-	"shield": "pajzs", "explode": "kamikaze robbanás", "dash": "roham", "ranged": "távolsági",
+	"shield": "pajzs", "explode": "kamikaze robbanás", "dash": "roham", "ranged": "távolsági", "phase": "falon át",
 }
 
 ## szörny -> [név, rövid leírás]
@@ -80,6 +80,7 @@ const ENTRIES := {
 	"chaos_shard": ["Hasadékszilánk", "Obszidiánszilánkok egy izzó repedés körül, a repedésben egyetlen vörös szem pislog. Lassú, de alig lehet megsebezni: pajzsot von maga köré, a sebei összeforrnak, és ha szétzúzod, szilánkokká robban."],
 	"chaos_weaver": ["Káoszszövő", "Szemekkel teleszórt, csavart fonaloszlop, fölötte törött glória forog. Káoszivadékot szakít fel a semmiből, gyógyítja a társait, és a semmin át melletted terem. Vele kezdd!"],
 	"grey_wolf": ["Szürke farkas", "Sovány, szürke bundájú farkas, amelyik a felszínről tévedt le, és már nem talál vissza. Gyors, cikázva közelít, aztán hirtelen nekiront, mint a vadászó falka."],
+	"ghost": ["Kísértet", "Csuklyás, lebegő árny, a kámzsája alatt kéken izzó koponya. Nem ismer falat: átsuhan a köveken, egyenesen feléd, és az érintése jéghideg."],
 	"flame_skull": ["Lángkoponya", "Egy elégett varázsló koponyája, ami azóta is lángol. Cikázva száguld feléd, nekiront, és ha szétvered, tüzes szilánkokra robban szét."],
 	"cave_bat": ["Barlangi denevér", "Barna szárnyú denevér a kazamata mennyezetéről. Gyenge, de gyors, és ide-oda cikázva csap le: nehéz eltalálni."],
 	"toadstool": ["Mérges gombaszörny", "Vöröskalapú, lábra kelt gomba a nyirkos termekből. Lassú és szívós, a csípése mérgez, és ha elpusztul, mérges spórafelhővé robban szét."],
@@ -230,7 +231,7 @@ static func abilities_text(monster: String) -> String:
 	var names: Array[String] = []
 	for ability: String in type.get("abilities", []):
 		names.append(ABILITY_NAMES.get(ability, ability))
-	for flag: String in ["dash", "ranged"]:
+	for flag: String in ["dash", "ranged", "phase"]:
 		if type.get(flag, false):
 			names.append(ABILITY_NAMES[flag])
 	return ", ".join(names)

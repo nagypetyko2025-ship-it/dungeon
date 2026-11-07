@@ -83,6 +83,8 @@ var _aiming := false
 var _bow_scale := Vector2(2, 2)
 var _magic := false
 var _dash := false
+## Szellem: átsuhan a falakon (lásd "phase" az EnemyTypes-ban).
+var _phase := false
 var _dash_state := DashState.READY
 var _dash_cooldown := 0.0
 var _dash_time := 0.0
@@ -160,6 +162,11 @@ func _ready() -> void:
 		_visual.add_child(_bow)
 
 	_dash = _type.get("dash", false)
+	# Szellem ("phase"): félig átlátszó, és átsuhan a falakon (nem ütközik a világgal, egyenesen jön).
+	_phase = _type.get("phase", false)
+	if _phase:
+		collision_mask = 4
+		_sprite.modulate.a = 0.62
 	_dash_cooldown = randf_range(1.0, 2.5)
 	_repath_left = randf_range(0.0, PATH_RETRY)
 
@@ -384,7 +391,7 @@ func _ranged_direction(delta: float) -> Vector2:
 ## egyenesen; különben az útkereső háló szerint (lásd Dungeon.nav_path), az oszlopokat megkerülve.
 func _chase_direction(delta: float) -> Vector2:
 	var target := _player.global_position
-	if _clear_to(target):
+	if _phase or _clear_to(target):
 		_path = PackedVector2Array()
 		return global_position.direction_to(target)
 	_repath_left -= delta

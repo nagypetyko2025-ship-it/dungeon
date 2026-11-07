@@ -393,6 +393,11 @@ const TYPES: Array[Dictionary] = [
 		"rect": Rect2(0, 0, 30, 33), "run": true, "size": 0.9,
 		"health": [28, 36], "damage": [7, 9], "speed": [135, 155], "dodge": [25, 35],
 		"knockback": [220, 260], "resist": [0.3, 0.4], "xp": [20, 24], "min_depth": 17, "weight": 2},
+	# Kísértet: félig átlátszó, átsuhan a falakon ("phase"), az érintése dermeszt.
+	{"name": "ghost", "abilities": ["frost"], "phase": true, "sheet": "res://assets/enemies/ghost.png",
+		"rect": Rect2(0, 0, 19, 31), "run": true, "size": 1.0,
+		"health": [18, 24], "damage": [5, 7], "speed": [90, 110], "dodge": [30, 40],
+		"knockback": [120, 160], "resist": [0.3, 0.4], "xp": [14, 17], "min_depth": 12, "weight": 2},
 	# Mérges gombaszörny: lassú, szívós, mérgez, és halálakor spórafelhővé robban (ScratchIO, CC0).
 	{"name": "toadstool", "abilities": ["poison", "death_burst"], "sheet": "res://assets/enemies/toadstool.png",
 		"rect": Rect2(0, 0, 22, 24), "run": true, "size": 1.25,

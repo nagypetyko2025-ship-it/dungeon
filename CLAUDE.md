@@ -323,6 +323,12 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Pihenő a főellenség után (`ui/boss_return_panel.gd`): a kék portál a táborból ugyanoda hoz vissza — `GameState.break_floor`
   (`Dungeon.break_snapshot`: mag (`_floor_seed`, egyjátékosban is rögzítve), kitisztított/bejárt szobák, zárt ládák, hely),
   visszatéréskor `Room.restore_cleared`; a RunSave is menti. Új portál nem nyílik újra (egy pihenő főellenségenként).
+- Egyensúly-robot: `tools/balance_robot.gd` (`Godot --path . --headless --script res://tools/balance_robot.gd`, a 9-es
+  profillal, a végén törli), jelentés: `tools/balance_report.md`. Szintgörbe a valódi emelet-generálással (minden / fele
+  szoba), a szintes / emeletes küldetések becsült teljesülése, kártya- és tárgy-kilógók (fegyverek nélkül), szörnyek
+  XP / szívósság aránya. A "Could not resolve class boss.gd / enemy.gd" sorok az indulásnál zajok (a futás jó).
+- Kísértet (`ghost`, 12. emelettől, Élőholtak): "phase" kulcs az EnemyTypes-ban = félig átlátszó, nem ütközik a
+  világgal (collision_mask 4), egyenesen jön (Enemy._phase). Kép: Gothicvania Ghost (CC0), assets/enemies/ghost.png.
 - Tábori térkép: `ui/camp_map.gd` (`CampMap`, a táborban "HUD/Minimap", így a Menus M-re nyitja). Betöltéskor egyszer
   lefényképezi a külső világot (SubViewport a tábor World2D-jével, SCALE 0.25, CanvasModulate / játékos / HiddenGrave
   rejtve), a titkos sír tisztását a jobbra lévő erdősávval takarja (`_cover_secret`). Kicsiben jobb alul a játékos körül

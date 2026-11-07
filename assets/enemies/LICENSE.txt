@@ -38,3 +38,4 @@ lucifer.png: a "Gothicvania Patreon's Collection" (ansimuz, CC0) Demon idle kock
 mummy.png, wisp.png, gargoyle.png: Múmia, Lidércfény, Vízköpő — ehhez a projekthez rajzolva (pixel art), CC0. 8 kocka: 4 álló, 4 futás.
 grey_wolf.png (Szürke farkas): "Gothicvania Patreon's Collection" (ansimuz, CC0, https://opengameart.org/content/gothicvania-patreons-collection), a szürke "wolf running cycle" 4 kockája; álló: az első kocka 1 px-es légzéssel.
 flame_skull.png (Lángkoponya): ugyanonnan a "Fire Skull" 8 kockája, jobbra tükrözve, harmadára kicsinyítve (0-3 álló, 4-7 futás).
+ghost.png (Kísértet): Gothicvania Patreon Collection, Ghost (ansimuz, CC0, https://ansimuz.itch.io/gothicvania-patreon-collection), az álló animáció 7 kockája tükrözve, 2/3-ra kicsinyítve, 8 kockás lappá rendezve.
