@@ -1346,10 +1346,10 @@ func _build_map() -> void:
 	hud.add_child(map)
 	var top := Castle.RECT.position.y - FOREST_DEPTH
 	var world := Rect2i(WORLD_START_X, top, WORLD_END_X - WORLD_START_X, SIZE.y + FOREST_DEPTH - top)
-	var camp := Color(0.95, 0.75, 0.3)
-	var town := Color(0.85, 0.45, 0.25)
-	var story := Color(0.55, 0.4, 0.8)
-	var danger := Color(0.8, 0.2, 0.2)
+	var camp := CampMap.CAMP_COLOR
+	var town := CampMap.TOWN_COLOR
+	var story := CampMap.STORY_COLOR
+	var danger := CampMap.DANGER_COLOR
 	var veteran := "Gáspár már a kocsmában ül; a sátra üres." if _veteran_position == Vector2.INF \
 		else "Beszélgetés Gáspárral, a veteránnal: történetek és küldetések."
 	var locations: Array[Dictionary] = [
@@ -1394,7 +1394,7 @@ func _build_map() -> void:
 			"text": "A kocsma alatt. Régi sírok, és egy sírásó, aki sosem pihen."},
 		{"name": "Régi kápolna", "pos": Chapel.door_position(), "color": story,
 			"does": "körülnézni, felmászni a harangtoronyba.",
-			"text": "Elhagyott kápolna a temető mellett. A harangot jobb, ha nem húzod meg."},
+			"text": "Elhagyott kápolna a temető mellett. Fent a harangtorony."},
 		{"name": "Királyi vár", "pos": Vector2(Castle.PATH_COLUMN + 1, Castle.GATE_ROW + 1) * TILE, "color": story,
 			"does": "a királlyal beszélni (csak a 30. emelet megjárása után engednek be).",
 			"text": "IV. Aurél király vára. A kapuban két lándzsás őr áll."},
@@ -1417,15 +1417,7 @@ func _build_map() -> void:
 			"does": "Holló Margit, a boszorkány küldetései.",
 			"text": "Sáros út vezet le hozzá. Bent üst fortyog a tűzön."},
 	]
-	var pages := [
-		["Az egész vidék", world],
-		["Tábor", Rect2i(-3, -3, 50, 36)],
-		["Nyugati tisztás", Rect2i(-34, 5, 30, 34)],
-		["Város", Rect2i(57, 1, 42, 30)],
-		["Királyi vár", Rect2i(57, -21, 42, 28)],
-		["Tó és bánya", Rect2i(90, -27, 42, 44)],
-	]
-	map.setup(self, world, locations, pages)
+	map.setup(self, world, locations)
 
 
 ## A kamera nem lát túl az erdő szélén (ott már nincs semmi).

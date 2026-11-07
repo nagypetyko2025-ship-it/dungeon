@@ -4,8 +4,9 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-07", "items": [
-		"Térkép a táborban is: jobb alul a környéked (veled mozog), M-re nagy térkép oldalakkal (egész vidék, tábor, "
-			+ "nyugati tisztás, város, vár, tó és bánya); ha az egeret egy jelre viszed, kiírja, mit lehet ott csinálni.",
+		"Térkép a táborban is: jobb alul a környéked (veled mozog), M-re nagy térkép, amit egérrel húzva szabadon "
+			+ "mozgathatsz és görgővel nagyíthatsz; ha az egeret egy jelre viszed, kiírja, mit lehet ott csinálni, "
+			+ "alul pedig jelmagyarázat mutatja, melyik szín mit jelent.",
 		"Vas Szilárd hadnagy 8 új parancsot ad (összesen 16): árulók, óriások, káoszfront, sárkányok, 5000 szörny, "
 			+ "30. szint és a Pokolkapun túl; mindegyik után két új történettel.",
 		"A hadnagy újabb 8 parancsot ad (összesen 24): kalózok, varázslók, élőholtak, démonok, 600 szoba, 100 főellenség, "

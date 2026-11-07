@@ -326,7 +326,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Tábori térkép: `ui/camp_map.gd` (`CampMap`, a táborban "HUD/Minimap", így a Menus M-re nyitja). Betöltéskor egyszer
   lefényképezi a külső világot (SubViewport a tábor World2D-jével, SCALE 0.25, CanvasModulate / játékos / HiddenGrave
   rejtve), a titkos sír tisztását a jobbra lévő erdősávval takarja (`_cover_secret`). Kicsiben jobb alul a játékos körül
-  (`SMALL_VIEW_TILES`), nagyban oldalak (`Camp._build_map`: pages) és helyszínek {name, pos, color, does, text, left?};
+  (`SMALL_VIEW_TILES`), nagyban EGY szabadon húzható / görgővel nagyítható térkép (oldalak nincsenek, a felhasználó
+  kérése), alul jelmagyarázat (`CampMap.LEGEND`, a színek `*_COLOR`). Helyszínek (`Camp._build_map`) {name, pos, color, does, text, left?};
   új helyszínnél ide kell felvenni. A titkos sírt SOHA ne jelöld (a felhasználó kérése).
 - Katonai barakk: `world/barracks.gd` (`Barracks`), a vár tisztásán az úttól balra (`TENT_BASE` (70, 0), kétsávos földút (`_dirt`) a vár útjáig; a Kenney RPG zöld
   sátra 5× nagyítva, zöld hadi zászlók). Belül `INTERIOR` (690, 0, 16×10): Kenney Indoor
