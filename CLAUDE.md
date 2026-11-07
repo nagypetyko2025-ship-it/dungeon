@@ -323,6 +323,11 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Pihenő a főellenség után (`ui/boss_return_panel.gd`): a kék portál a táborból ugyanoda hoz vissza — `GameState.break_floor`
   (`Dungeon.break_snapshot`: mag (`_floor_seed`, egyjátékosban is rögzítve), kitisztított/bejárt szobák, zárt ládák, hely),
   visszatéréskor `Room.restore_cleared`; a RunSave is menti. Új portál nem nyílik újra (egy pihenő főellenségenként).
+- Tábori térkép: `ui/camp_map.gd` (`CampMap`, a táborban "HUD/Minimap", így a Menus M-re nyitja). Betöltéskor egyszer
+  lefényképezi a külső világot (SubViewport a tábor World2D-jével, SCALE 0.25, CanvasModulate / játékos / HiddenGrave
+  rejtve), a titkos sír tisztását a jobbra lévő erdősávval takarja (`_cover_secret`). Kicsiben jobb alul a játékos körül
+  (`SMALL_VIEW_TILES`), nagyban oldalak (`Camp._build_map`: pages) és helyszínek {name, pos, color, does, text, left?};
+  új helyszínnél ide kell felvenni. A titkos sírt SOHA ne jelöld (a felhasználó kérése).
 - Katonai barakk: `world/barracks.gd` (`Barracks`), a vár tisztásán az úttól balra (`TENT_BASE` (70, 0), kétsávos földút (`_dirt`) a vár útjáig; a Kenney RPG zöld
   sátra 5× nagyítva, zöld hadi zászlók). Belül `INTERIOR` (690, 0, 16×10): Kenney Indoor
   (`assets/shop/kenney_indoor.png`, a kocsma és a bolt is ezt használja) zöld fémpriccsek alvó őrökkel, zöld csíkos vászonfal, pajzsok; asztal, őrök,

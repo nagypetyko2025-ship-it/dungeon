@@ -298,6 +298,8 @@ func _ready() -> void:
 	var book: CanvasLayer = preload("res://ui/quest_book.gd").new()
 	book.name = "QuestBook"
 	add_child(book)
+	# Térkép: kicsiben jobb alul, M-re nagyban (a Menus a "HUD/Minimap"-et kezeli). Minden felépülése után.
+	_build_map.call_deferred()
 	_upgrades_panel = CAMP_UPGRADES.new()
 	_upgrades_panel.name = "CampUpgrades"
 	add_child(_upgrades_panel)
@@ -1330,6 +1332,100 @@ func _toast(text: String) -> void:
 	_toast_tween = create_tween()
 	_toast_tween.tween_interval(3.0)
 	_toast_tween.tween_property(_toast_label, "modulate:a", 0.0, 0.8)
+
+
+## A tábor térképe (ui/camp_map.gd): a külső világ, a helyszínek (név, mit lehet ott csinálni, leírás) és az
+## oldalak. A titkos erdei sír (HiddenGrave) szándékosan nincs köztük.
+func _build_map() -> void:
+	var hud := CanvasLayer.new()
+	hud.name = "HUD"
+	hud.layer = 4
+	add_child(hud)
+	var map := CampMap.new()
+	map.name = "Minimap"
+	hud.add_child(map)
+	var top := Castle.RECT.position.y - FOREST_DEPTH
+	var world := Rect2i(WORLD_START_X, top, WORLD_END_X - WORLD_START_X, SIZE.y + FOREST_DEPTH - top)
+	var camp := Color(0.95, 0.75, 0.3)
+	var town := Color(0.85, 0.45, 0.25)
+	var story := Color(0.55, 0.4, 0.8)
+	var danger := Color(0.8, 0.2, 0.2)
+	var veteran := "Gáspár már a kocsmában ül; a sátra üres." if _veteran_position == Vector2.INF \
+		else "Beszélgetés Gáspárral, a veteránnal: történetek és küldetések."
+	var locations: Array[Dictionary] = [
+		{"name": "A kazamata lejárata", "pos": _stairs_position, "color": danger,
+			"does": "lemenni a kazamatába (E): itt indul a futás.",
+			"text": "Kőpadlós lépcső a tábor fölött. Innen vezet le az út a Mélységbe."},
+		{"name": "Tábori lift", "pos": _tile_center(LIFT_TILE), "color": camp, "left": true,
+			"does": "lefelé utazni a már megnyitott emeletekre.",
+			"text": "Bertalan bányaliftje. Amíg meg nem javítja (a 10. emeleten), csak az 1. emeletre visz."},
+		{"name": "Tábortűz", "pos": _tile_center(FIRE_TILE), "color": camp,
+			"does": "körülnézni: innen minden fontos hely közel van.",
+			"text": "A tábor szíve. Körülötte a sátrak, a láda és a vándorárus."},
+		{"name": "Fejlesztések sátra", "pos": _training_tent_position, "color": camp,
+			"does": "tábori fejlesztéseket venni tábori aranyért.",
+			"text": "A fejlesztések minden karakterre érvényesek, és megmaradnak."},
+		{"name": "Tábori láda", "pos": _stash_position, "color": camp,
+			"does": "a felküldött és megtartott tárgyakat tárolni, kivenni.",
+			"text": "Ide kerülnek a tárgylifttel és a győzelem után felhozott tárgyak."},
+		{"name": "Zoltán, a vándorárus", "pos": _npc_position, "color": camp, "left": true,
+			"does": "vásárolni (a főellenség utáni pihenő alatt).",
+			"text": "Csak akkor nyit, ha egy főellenség után feljöttél pihenni."},
+		{"name": "Ambrus kovácsműhelye", "pos": _smith_position, "color": camp,
+			"does": "tárgyat fejleszteni porral, szétszedni, beszélgetni.",
+			"text": "Ambrus, a kovács. A sikertelen fejlesztésnél a por elvész."},
+		{"name": "Gáspár sátra", "pos": _tile_center(VETERAN_TENT + Vector2i(1, 2)), "color": story,
+			"does": veteran,
+			"text": "Gáspár, a sebesült veterán a farönkön, a tűz mellett."},
+		{"name": "A könyvek", "pos": _tile_center(BOOKS_PATCH), "color": camp,
+			"does": "elolvasni a Szörnyek, a Tárgyak és az Eredmények könyvét.",
+			"text": "Három állvány: amit legyőztél, megszereztél és elértél, mind itt van feljegyezve."},
+		{"name": "Mélységi kocsma", "pos": _town.door_position(), "color": town,
+			"does": "Tóbiás küldetései, szobabérlés, beszélgetés és karakterváltás.",
+			"text": "A város szíve. Bent ülnek a játszható karakterek, hátul a szobák folyosója."},
+		{"name": "Kalandorok kórháza", "pos": Hospital.door_position(), "color": town,
+			"does": "Kálmán doktor küldetései és történetei.",
+			"text": "Betegágyak, Rozi nővér és a doktor, pestisdoktor-maszkban."},
+		{"name": "Raktár", "pos": Warehouse.door_position(), "color": town,
+			"does": "beszélgetni Kormos Gyulával, a bányásszal.",
+			"text": "Poros ládák és hordók között egy széken alszik valaki."},
+		{"name": "Temető", "pos": Vector2(Graveyard.GATE_COLUMN + 0.5, Graveyard.RECT.position.y) * TILE, "color": story,
+			"does": "Vendel, a sírásó küldetései.",
+			"text": "A kocsma alatt. Régi sírok, és egy sírásó, aki sosem pihen."},
+		{"name": "Régi kápolna", "pos": Chapel.door_position(), "color": story,
+			"does": "körülnézni, felmászni a harangtoronyba.",
+			"text": "Elhagyott kápolna a temető mellett. A harangot jobb, ha nem húzod meg."},
+		{"name": "Királyi vár", "pos": Vector2(Castle.PATH_COLUMN + 1, Castle.GATE_ROW + 1) * TILE, "color": story,
+			"does": "a királlyal beszélni (csak a 30. emelet megjárása után engednek be).",
+			"text": "IV. Aurél király vára. A kapuban két lándzsás őr áll."},
+		{"name": "Barakk", "pos": Barracks.door_position(), "color": story,
+			"does": "Vas Szilárd hadnagy parancsai és történetei.",
+			"text": "A Harmadik Lándzsás Ezred sátra a vár alatt."},
+		{"name": "Tó és móló", "pos": Lake.PIER_DOCK * TILE, "color": story,
+			"does": "Öreg Ábellel beszélni; csónakkal a szigetre evezni.",
+			"text": "Ovális tó a város keleti rétjén, közepén egy kis szigettel."},
+		{"name": "Bánya", "pos": Mine.ENTRANCE, "color": danger,
+			"does": "a régi tárnákat bejárni.",
+			"text": "A hegy oldalába vájt bejárat. Bent szakadék és régi járatok."},
+		{"name": "Romos ház", "pos": $Ruin.door_position(), "color": story,
+			"does": "körülnézni. Azt mondják, valaki rejtőzik itt...",
+			"text": "A sáros ösvény végén, a nyugati tisztáson."},
+		{"name": "A kút", "pos": _tile_center(Ruin.WELL_TILE), "color": story,
+			"does": "belenézni a kútba.",
+			"text": "Öreg kút a romos ház mellett. Néha hang jön belőle."},
+		{"name": "Boszorkánykunyhó", "pos": $WitchHut.door_position(), "color": story,
+			"does": "Holló Margit, a boszorkány küldetései.",
+			"text": "Sáros út vezet le hozzá. Bent üst fortyog a tűzön."},
+	]
+	var pages := [
+		["Az egész vidék", world],
+		["Tábor", Rect2i(-3, -3, 50, 36)],
+		["Nyugati tisztás", Rect2i(-34, 5, 30, 34)],
+		["Város", Rect2i(57, 1, 42, 30)],
+		["Királyi vár", Rect2i(57, -21, 42, 28)],
+		["Tó és bánya", Rect2i(90, -27, 42, 44)],
+	]
+	map.setup(self, world, locations, pages)
 
 
 ## A kamera nem lát túl az erdő szélén (ott már nincs semmi).
