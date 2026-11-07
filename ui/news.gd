@@ -3,6 +3,10 @@ class_name News
 ## rövid, játékosnak szóló sor a legfrissebb dátum alá (a legújabb van felül).
 
 const ENTRIES: Array[Dictionary] = [
+	{"date": "2026-11-07", "items": [
+		"Vas Szilárd hadnagy 8 új parancsot ad (összesen 16): árulók, óriások, káoszfront, sárkányok, 5000 szörny, "
+			+ "30. szint és a Pokolkapun túl; mindegyik után két új történettel.",
+	]},
 	{"date": "2026-11-05", "items": [
 		"Futás végi összesítő: halálkor és győzelem után látod, ki ölt meg, melyik szörnyből győztél le a legtöbbet, "
 			+ "milyen kártyákat vettél fel (ritkaság szerint színezve) és mi volt rajtad a végén.",

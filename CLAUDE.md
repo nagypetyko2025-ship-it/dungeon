@@ -330,7 +330,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   alatt kezdett, tiszteli; kép: `assets/characters/officer.png`, átszínezett 0x72 knight_m). FEJLESZTÉST NEM AD (a
   felhasználó kérése: elég a 2 fejlődési mód). Küldetései a `Quests.ALL`-ban "giver": "lieutenant" (lt_*, "hard" és új
   "elite" fokozat), ugyanúgy futnak, mint a kocsmárosé; `Quests.ids_of / ready_ids(giver) / GIVERS`; a QuestPanel `giver`
-  változója (a barakk "lieutenant"-tal hozza létre). Minden leadott lt_ küldetés után 2 történet (`Lieutenant.AFTER_STORIES`),
+  változója (a barakk "lieutenant"-tal hozza létre). 16 parancs (lt_*), mindegyik leadása után 2 történet (`Lieutenant.AFTER_STORIES`),
   plusz 3 alap (`STORIES`). Fölötte zöld "?" ha van leadható (csak az első beszélgetés után). J könyv: "Hadnagy" fül
   (`QuestBook.LIEUTENANT_TAB`, az első beszélgetés után; ugyanolyan szűrős lista, mint az Általános, ami most csak a kocsmárosé).
 - A hordágyas bejátszás (stretcher_scene) a felhasználó kérésére törölve (2026-11-05); a kórházi hordágy kellék és a doktor

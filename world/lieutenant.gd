@@ -129,6 +129,104 @@ const AFTER_STORIES := {
 				+ "De ha egyszer mégis, akkor hazaviszem az embereimet. Mindegyiket, a kavicsokat is. És a " \
 				+ "hadi naplót a király asztalára teszem. Az lesz az utolsó parancs, amit végrehajtok."},
 	],
+	"lt_traitors": [
+		{"id": "traitors_oath", "text": "Miért gyűlölöd ennyire az elesett lovagokat?", "trust": 3,
+			"answer": "Nem gyűlölöm őket. Szánom. Mindegyik esküt tett valakinek, és mindegyik megszegte. A " \
+				+ "Mélység nem öli meg az embert, ha esküszegő. Csak megtartja.\n\n[i]Megérinti a mellén a " \
+				+ "rangjelzést.[/i]\n\nAz egyiknek a pajzsán a mi ezredünk címerét láttam. Régi minta, még Gáspár " \
+				+ "idejéből. Nem tudom, ki volt. És nem akarom megtudni."},
+		{"id": "traitors_barta", "text": "Megtaláltad Bartát?", "trust": 4,
+			"answer": "[i]Az állkapcsa megfeszül.[/i]\n\nAz egyik csontlégiós kezében az ő kése volt. Ismerem, " \
+				+ "én adtam neki, amikor őrmester lett.\n\nA kést visszahoztam. A hadi naplóban áthúztam a " \
+				+ "\"szökevény\" szót a neve mellett, és azt írtam helyette: \"elesett\". Hogy ez igaz-e, azt " \
+				+ "nem tudom. De egy ezred a halottairól dönti el, kik voltak."},
+	],
+	"lt_supplies": [
+		{"id": "supplies_treasurer", "text": "Mit szólt a kincstárnok a ládákhoz?", "trust": 3,
+			"answer": "Azt, hogy ami a kazamatából jön, az a koronáé. Erre megkérdeztem, hogy akkor a korona " \
+				+ "jönne-e le érte legközelebb.\n\n[i]Ugyanolyan kemény arccal mondja, de a szeme sarkában " \
+				+ "most először látszik valami mosolyféle.[/i]\n\nAzóta nem kér semmit. Az embereim új csizmát " \
+				+ "kaptak. Ez többet ér, mint egy kitüntetés."},
+		{"id": "supplies_sister", "text": "Van családod?", "trust": 4,
+			"answer": "Egy húgom. Ilona. Gyógyító a fővárosban, a szegénynegyedben. Minden hónapban írok neki, " \
+				+ "és minden levélben azt írom, hogy unalmas itt, csak őrséget állunk.\n\n" \
+				+ "[i]Elnéz melletted.[/i]\n\nTíz éve hazudok neki. Ha egyszer megtudja, mi van itt, ide fog jönni. " \
+				+ "Ő ilyen. Ezért jobb, ha unalmasnak hiszi."},
+	],
+	"lt_giants": [
+		{"id": "giants_size", "text": "Hogyan áll ki egy ember egy minotaurusz ellen?", "trust": 3,
+			"answer": "Sehogy. Három ember áll ki ellene. Egy elől a pajzzsal, kettő oldalról a lándzsával. Aki " \
+				+ "elől áll, annak nem szabad hátrálnia, akármi történik.\n\n[i]Megmutatja a bal alkarját: " \
+				+ "egy régi, fehér heg fut rajta végig.[/i]\n\nEz nem sebesülés. Ez lecke. Gáspár azt mondta, " \
+				+ "ha egyszer hátrálok, nem fogok tudni megállni. Nem hátráltam."},
+		{"id": "giants_bertalan", "text": "Ismered Bertalant, a mérnököt?", "trust": 3,
+			"answer": "A lift emberét? Egyszer összevesztünk. Katonákat kért tőlem a mély aknákhoz, hogy " \
+				+ "őrizzék a munkásait. Megtagadtam: az embereim nem csigasorokat védenek, hanem a vár kapuját.\n\n" \
+				+ "[i]Vállat von.[/i]\n\nAztán te lementél helyettük, és a munkások utánad mentek. Egyikünknek sem " \
+				+ "lett igaza. Azóta tisztelem. Aki húsz évig vigyáz valamire, az katona, akár van egyenruhája, " \
+				+ "akár nincs."},
+	],
+	"lt_chaos_front": [
+		{"id": "chaos_map", "text": "Mit rajzolsz a térképre?", "trust": 3,
+			"answer": "A frontot. Minden emeletet, ahol a káosz átütött a kövön. A huszonegyediktől a " \
+				+ "negyvenedikig lila foltok. Mint egy seb, ami nem gyógyul.\n\n[i]Egy tűvel a térképbe szúr.[/i]\n\n" \
+				+ "A seb a negyvenedik körül a legmélyebb. Te ott jártál. Láttad, mi ül a közepén. Én csak a " \
+				+ "széleit látom innen. Az is elég."},
+		{"id": "chaos_dream", "text": "Szoktál álmodni a Mélységről?", "trust": 4,
+			"answer": "Egy katona nem álmodik. Alszik, aztán felkel.\n\n[i]Csend. Aztán halkabban.[/i]\n\n" \
+				+ "Egyszer. Egy lila folyosón álltam, és a falból az embereim nevét suttogták. Mind a " \
+				+ "harmincnégyet, sorban. A harmincötödiknél felébredtem. Nem tudom, kié volt.\n\n" \
+				+ "Ezt senkinek nem mondtam el. Te se mondd."},
+	],
+	"lt_dragons": [
+		{"id": "dragons_banner", "text": "Miért sárkány van az ezred zászlaján?", "trust": 3,
+			"answer": "Mert az első parancsnokunk legyőzött egyet. Legalábbis a nóta szerint. A valóságban " \
+				+ "a sárkány öreg volt, félvak, és a lovagja inkább csak túlélte.\n\n[i]Kurtán felnevet; " \
+				+ "először hallod nevetni.[/i]\n\nTe tizenötöt hoztál. A nóta átírása most az ezred legfontosabb " \
+				+ "feladata. Az írnokunk már három versszakot rímelt rád. Mindhárom borzalmas."},
+		{"id": "dragons_scale", "text": "Mit csinálsz a sárkánypikkellyel?", "trust": 3,
+			"answer": "Pajzsot. Ambrusszal megbeszéltük: minden pikkelyből egy pajzsdísz lesz, és mindegyik " \
+				+ "katona kap egyet, aki egy évet kihúz a barakkban.\n\nNem a sárkány miatt. Hanem hogy " \
+				+ "lássák: valaki lement oda, ahová ők nem mernek, és visszajött. Ha neked sikerült, nekik " \
+				+ "is sikerülhet. A fegyelem fele bizalom."},
+	],
+	"lt_forced_march": [
+		{"id": "march_first", "text": "Milyen volt az első menetelésed?", "trust": 3,
+			"answer": "Kilencven mérföld, négy nap alatt, esőben. Az ötödik napon a csizmám talpa levált, és " \
+				+ "mezítláb mentem tovább, mert nem akartam szólni.\n\n[i]Megcsóválja a fejét.[/i]\n\nGáspár " \
+				+ "észrevette. Nem szidott meg. Odaadta a saját csizmáját, és ő ment mezítláb a menet végéig. " \
+				+ "Utána egy hétig sántított. Soha nem hozta szóba. Én minden nap gondolok rá."},
+		{"id": "march_count", "text": "Ötezer. Ez sok?", "trust": 3,
+			"answer": "Több, mint amennyi szörnnyel az egész ezred végzett húsz év alatt.\n\n[i]Hosszan néz " \
+				+ "rád, mintha most látna először.[/i]\n\nNem tudom, hogy dicsérjelek, vagy aggódjak. Aki ennyit " \
+				+ "öl, annak vigyáznia kell, hogy ne felejtse el, miért teszi. Te miért teszed? Ne most " \
+				+ "válaszolj. Majd ha egyszer tudod."},
+	],
+	"lt_veteran": [
+		{"id": "veteran_rank", "text": "Most már veteránnak számítok?", "trust": 4,
+			"answer": "[i]Kihúzza magát, és tiszteleg. Nem félig, nem gúnyból: rendesen, ahogy a királynak " \
+				+ "kellene.[/i]\n\nVeterán az, aki többet látott, mint amennyit el tud mondani, és mégis visszamegy. " \
+				+ "Te ilyen vagy.\n\nA hadi naplóba beírtalak. Tiszteletbeli őrmester, Harmadik Lándzsás Ezred. " \
+				+ "Ne bízd el magad: ez nem rang, hanem felelősség."},
+		{"id": "veteran_gaspar", "text": "Mit szólna Gáspár a beírásomhoz?", "trust": 4,
+			"answer": "Már tudja. Tegnap elmentem hozzá a táborba, és megmutattam neki a naplót.\n\n" \
+				+ "[i]Egy pillanatra elhallgat.[/i]\n\nSokáig nézte a nevedet. Aztán azt mondta: \"Na végre. " \
+				+ "Valaki, aki nem hátrál.\" Aztán megkérdezte, miért nem hoztam bort. Ez Gáspárnál a " \
+				+ "legnagyobb dicséret."},
+	],
+	"lt_gate": [
+		{"id": "gate_voice", "text": "Ugyanazt a hangot hallottam a kapunál, mint Bertalan?", "trust": 4,
+			"answer": "[i]Mozdulatlanul hallgat végig.[/i]\n\nA neved hívta, ugye? Nem a tiédet. Azét, akit a " \
+				+ "legjobban hiányolsz.\n\nAz embereim közül kettő hallotta a hetvenedik alatt. Mindketten " \
+				+ "visszafordultak, és engem kértek, hogy kössem meg őket éjszakára. Megkötöttem. Ez is " \
+				+ "fegyelem. Néha a legkeményebb parancs az, amit önmagadnak adsz."},
+		{"id": "gate_last", "text": "Mi van a kapu mögött, hadnagy?", "trust": 5,
+			"answer": "Nem tudom. És ez az első parancs, amit nem adok ki: nem küldök le senkit, hogy " \
+				+ "megnézze.\n\n[i]Leveszi a sisakját, és az asztalra teszi. Ősz haja van, idősebb, mint " \
+				+ "gondoltad.[/i]\n\nDe te már lent voltál. Ha egyszer úgy döntesz, hogy végigmész, nem " \
+				+ "állok az utadba. Csak egyet kérek: ha visszajössz, gyere ide először. Az ezred várni fog. " \
+				+ "Mindig."},
+	],
 }
 
 
