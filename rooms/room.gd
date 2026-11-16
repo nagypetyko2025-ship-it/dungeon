@@ -839,18 +839,19 @@ func _next_wave() -> void:
 		_spawn_enemy(at, taken)
 
 
-## Egy hullám elfogyott: feljegyezzük, szünet, aztán a következő; az utolsó után a lépcső (győzelem).
+## Egy hullám elfogyott: feljegyezzük, szünet, aztán a következő. A Drill.MAX_WAVES. után kinyílik a lépcső
+## (kilépés a jutalommal, Dungeon._challenge_won), de a hullámok mennek tovább, amíg maradsz (hosszabb szünettel).
 func _wave_done() -> void:
 	GameState.challenge["waves_cleared"] = _wave
-	if _wave >= Drill.MAX_WAVES:
-		_wave = 0
-		_finish_fight()
+	var pause := Drill.BREAK_SECONDS
+	if _wave == Drill.MAX_WAVES:
 		open_stairs(anchor)
+		pause = Drill.EXIT_BREAK_SECONDS
 		FloatingText.spawn(self, global_position + Vector2(0, -60), Drill.WON_TEXT % Drill.MAX_WAVES, Color(1, 0.85, 0.4), 22)
-		return
+	else:
+		FloatingText.spawn(self, global_position + Vector2(0, -60), "Hullám kész! Pihenő...", Color(0.6, 1, 0.6), 22)
 	_wave_pending = true
-	FloatingText.spawn(self, global_position + Vector2(0, -60), "Hullám kész! Pihenő...", Color(0.6, 1, 0.6), 22)
-	await get_tree().create_timer(Drill.BREAK_SECONDS, false).timeout
+	await get_tree().create_timer(pause, false).timeout
 	_wave_pending = false
 	if not is_inside_tree() or (is_instance_valid(_player) and _player.get_node("Health").is_dead()):
 		return

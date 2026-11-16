@@ -340,10 +340,11 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Cost-ként ne adj alapból 0 statot (defense, dodge stb.): a kártya akkor soha nem jön (Viharúr így nem jött).
 - Hadgyakorlat: `world/drill.gd` (`Drill`), Vas Szilárd "Hadgyakorlat" opciója (`Lieutenant.options(open_orders, open_drill)`,
   `Barracks._open_drill` → ChallengePanel). Történet-futás "story": "drill", 1 emelet: a Dungeon arénájában nincs főellenség,
-  room.lord "drill" → `Room._next_wave / _wave_done` (`wave_started` jel → HUD), `MAX_WAVES` 15, a hullám szörnyei a
-  `wave_depth` (2w-1) emeletéről. A felszerelés a táborban marad (`Camp._enter_dungeon_now` nem üríti a camp_inventory-t),
-  kidőlve `DeathScreen` → `Drill.finish` (arany `gold_for`, rekord `BEST_FLAG` az npc_quests-ben), győzelem: a terem lépcsője
-  → `_challenge_won` → `Drill.reward` (legendás). A LakeCrypt elosztóban is benne van.
+  room.lord "drill" → `Room._next_wave / _wave_done` (`wave_started` jel → HUD), a hullámok végtelenek (a felhasználó kérése),
+  a `MAX_WAVES` (15.) után kinyílik a lépcső (kilépés = győzelem, legendás + arany; `EXIT_BREAK_SECONDS` szünet), a hullám
+  szörnyei a `wave_depth` (2w-1, max 99) emeletéről. Kidőlve csak az arany. A felszerelés a táborban marad (`Camp._enter_dungeon_now` nem üríti a camp_inventory-t),
+  kidőlve `DeathScreen` → `Drill.finish` (arany `gold_for`, rekord `BEST_FLAG` az npc_quests-ben), kilépés: a terem lépcsője
+  → `_challenge_won` → `Drill.reward` (legendás + a túlélt hullámok aranya). A LakeCrypt elosztóban is benne van.
 - Fagykő tárgyak (2026-11-16, DCSS CC0 ikonok): 8 db "min_depth": 41 kulccsal; a `random_item` a min_depth > depth tárgyat
   kihagyja (a mélység nélküli hívások, pl. jutalmak, így sosem adják).
 - Tábori térkép: `ui/camp_map.gd` (`CampMap`, a táborban "HUD/Minimap", így a Menus M-re nyitja). Betöltéskor egyszer
