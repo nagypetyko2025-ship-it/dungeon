@@ -266,6 +266,11 @@ func _ready() -> void:
 				room.final_boss = true
 				room.lord = Challenge.story() if knocker_floor else ("chaos" if chaos_floor else "engine" if engine_floor else "gate" if gate_floor else "werewolf")
 				room.enemy_count = 1
+				# Hadgyakorlat (Drill): főellenség helyett hullámok (Room._next_wave).
+				if Challenge.story() == "drill":
+					room.has_boss = false
+					room.final_boss = false
+					room.wave_started.connect(func(wave: int) -> void: _hud.show_message(Drill.wave_text(wave)))
 		elif cell == shop_cell:
 			room.has_shop = true
 		elif cell == lift_cell:

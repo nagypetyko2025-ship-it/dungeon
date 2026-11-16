@@ -3,6 +3,13 @@ class_name News
 ## rövid, játékosnak szóló sor a legfrissebb dátum alá (a legújabb van felül).
 
 const ENTRIES: Array[Dictionary] = [
+	{"date": "2026-11-16", "items": [
+		"Hadgyakorlat! Vas Szilárd hadnagy a barakkban túlélős arénát tart: 15 egyre keményebb hullám, az 1. szintről, "
+			+ "a saját felszereléseddel (kidőlve sem veszik el). Túlélt hullámonként arany, mind a 15 után legendás tárgy.",
+		"Nyolc új Fagykő tárgy (csak a 41. emelettől): Jégsárkány-páncél, Fagykristály medál, Hókirálynő gyűrűje, "
+			+ "Gleccserdárda, Hóvihar íj, Fagyvért sisak, Zúzmarakesztyű, Fagyjáró csizma.",
+		"A Vendigó és a Szürke farkas csak a 7. emelettől jön (az 5.-en túl veszélyesek voltak).",
+	]},
 	{"date": "2026-11-07", "items": [
 		"Erősebb legendás kártyák: a Nyílzápor, az Átütés és a Titánerő javult, és jött három új: Főnixtoll, Árnyvadász, "
 			+ "Viharúr. A két mítikus is erősebb lett, a Hóhér kicsit szintén.",

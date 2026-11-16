@@ -162,7 +162,7 @@ const TYPES: Array[Dictionary] = [
 	{"name": "wendigo", "abilities": ["teleport", "zigzag"],
 		"sheet": "res://assets/enemies/wendigo.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.7,
 		"health": [18, 22], "damage": [5, 6], "speed": [120, 140], "dodge": [15, 25],
-		"knockback": [380, 420], "resist": [0.5, 0.6], "xp": [13, 15], "min_depth": 5, "weight": 2},
+		"knockback": [380, 420], "resist": [0.5, 0.6], "xp": [13, 15], "min_depth": 7, "weight": 2},
 	{"name": "armored_demon", "abilities": ["berserk", "death_burst", "shield"], "ranged": true,
 		"projectile": "magic", "weapon_region": Rect2(324, 129, 8, 30), "shots": 3, "spread": 15.0,
 		"sheet": "res://assets/enemies/armored_demon.png", "rect": Rect2(0, 0, 16, 16), "run": true, "size": 1.7,
@@ -387,7 +387,7 @@ const TYPES: Array[Dictionary] = [
 	{"name": "grey_wolf", "voice": "hound", "abilities": ["zigzag"], "dash": true, "sheet": "res://assets/enemies/grey_wolf.png",
 		"rect": Rect2(0, 0, 46, 23), "run": true, "size": 0.75,
 		"health": [10, 14], "damage": [3, 4], "speed": [155, 175], "dodge": [15, 25],
-		"knockback": [240, 280], "resist": [0.2, 0.3], "xp": [7, 9], "min_depth": 5, "weight": 2},
+		"knockback": [240, 280], "resist": [0.2, 0.3], "xp": [7, 9], "min_depth": 7, "weight": 2},
 	# Lángkoponya: lángoló, repülő koponya; cikázva ront rád, és halálakor szétrobban (Gothicvania "Fire Skull", ansimuz, CC0).
 	{"name": "flame_skull", "abilities": ["zigzag", "death_burst"], "dash": true, "sheet": "res://assets/enemies/flame_skull.png",
 		"rect": Rect2(0, 0, 30, 33), "run": true, "size": 0.9,

@@ -331,11 +331,12 @@ const AFTER_STORIES := {
 
 ## A beszélgetés opciói: elöl a parancsok (a küldetések ablaka), aztán a legutóbb teljesített küldetések
 ## utáni történetek (a legújabb elöl), végül az alap történetek.
-static func options(open_orders: Callable) -> Array[Dictionary]:
+static func options(open_orders: Callable, open_drill: Callable) -> Array[Dictionary]:
 	var ready := Quests.ready_ids(ID).size()
 	var list: Array[Dictionary] = [{"id": "orders",
 		"text": ("Jelentkezem! Teljesítettem a parancsot (%d)." % ready) if ready > 0 else "Mi a parancs? (küldetések)",
-		"on_choose": open_orders}]
+		"on_choose": open_orders},
+		{"id": "drill", "text": "Hadgyakorlat (túlélős aréna, legjobb: %s)" % Drill.best_text(), "on_choose": open_drill}]
 	var ids := Quests.ids_of(ID)
 	ids.reverse()
 	for id in ids:

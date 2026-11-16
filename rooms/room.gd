@@ -12,6 +12,8 @@ signal shop_entered(return_position: Vector2)
 ## Főellenség-harc kezdete / vége (a Dungeon a HUD-ot és a zenét intézi).
 signal boss_fight_started(boss: Node2D)
 signal boss_defeated(boss: Node2D)
+## Hadgyakorlat (lord "drill", lásd Drill): új hullám indult.
+signal wave_started(wave: int)
 
 const TILE := 32
 const MIN_SPAWN_DISTANCE := 200.0
@@ -108,6 +110,9 @@ var _spawn_queue: Array[Node2D] = []
 const SPAWNS_PER_FRAME := 3
 var _player: Node2D
 var _check_left := 0.0
+## Hadgyakorlat: az aktuális hullám (0 = még nem kezdődött), és hogy épp szünet van-e két hullám közt.
+var _wave := 0
+var _wave_pending := false
 ## Foglalt csempék (oszlop, csapda, lépcső), hogy ne kerüljön semmi egymásra.
 var _used_tiles := {}
 var _doors: Array[Door] = []
@@ -393,6 +398,9 @@ func _begin_fight(at: Vector2, body: Node2D) -> void:
 	_set_doors_locked(true)
 	if has_boss:
 		_spawn_boss()
+		return
+	if lord == "drill":
+		_next_wave()
 		return
 	var taken := {}
 	for i in enemy_count:
@@ -770,7 +778,10 @@ func _fighting() -> bool:
 
 
 func _finish_fight() -> void:
-	if _cleared:
+	if _cleared or _wave_pending:
+		return
+	if lord == "drill" and _wave > 0:
+		_wave_done()
 		return
 	_cleared = true
 	Quests.notify("room")
@@ -812,3 +823,35 @@ func _set_doors_locked(locked: bool) -> void:
 		Audio.play("door_lock" if locked else "door_unlock")
 	for door in _doors:
 		door.set_blocked(locked)
+
+
+# ---------------------------------------------------------------- Hadgyakorlat (Drill)
+
+## A következő hullám: Drill.wave_count szörny a Drill.wave_depth emeletről, távol a játékostól.
+func _next_wave() -> void:
+	_wave += 1
+	depth = Drill.wave_depth(_wave)
+	wave_started.emit(_wave)
+	Audio.play("door_lock")
+	var at := _player.global_position if is_instance_valid(_player) else global_position
+	var taken := {}
+	for i in Drill.wave_count(_wave):
+		_spawn_enemy(at, taken)
+
+
+## Egy hullám elfogyott: feljegyezzük, szünet, aztán a következő; az utolsó után a lépcső (győzelem).
+func _wave_done() -> void:
+	GameState.challenge["waves_cleared"] = _wave
+	if _wave >= Drill.MAX_WAVES:
+		_wave = 0
+		_finish_fight()
+		open_stairs(anchor)
+		FloatingText.spawn(self, global_position + Vector2(0, -60), Drill.WON_TEXT % Drill.MAX_WAVES, Color(1, 0.85, 0.4), 22)
+		return
+	_wave_pending = true
+	FloatingText.spawn(self, global_position + Vector2(0, -60), "Hullám kész! Pihenő...", Color(0.6, 1, 0.6), 22)
+	await get_tree().create_timer(Drill.BREAK_SECONDS, false).timeout
+	_wave_pending = false
+	if not is_inside_tree() or (is_instance_valid(_player) and _player.get_node("Health").is_dead()):
+		return
+	_next_wave()

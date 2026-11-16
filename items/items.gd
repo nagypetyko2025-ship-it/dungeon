@@ -570,6 +570,33 @@ const DEFINITIONS := {
 	"pants_obsidian": {"name": "Obszidián lábvért", "slot": "pants", "rarity": "legendary",
 		"stats": {"defense": [7, 10], "max_health": [8, 12], "thorns": [2, 4], "move_speed": [-4, -2]},
 		"description": "Vulkáni üvegből csiszolt lemezek: kemény, éles, és kicsit lassít."},
+	# A Fagykő tárgyai: csak a FROST_ITEM_DEPTH. emelettől esnek / jönnek a boltban ("min_depth").
+	"chest_ice_dragon": {"name": "Jégsárkány-páncél", "slot": "chest", "rarity": "legendary", "min_depth": 41,
+		"stats": {"defense": [9, 12], "max_health": [10, 14], "thorns": [2, 3], "move_speed": [-4, -2]},
+		"description": "Egy jégsárkány pikkelyeiből: a hideg sosem olvad le róla. A Fagykő mélyén lelni."},
+	"amulet_frost_crystal": {"name": "Fagykristály medál", "slot": "amulet", "rarity": "epic", "min_depth": 41,
+		"stats": {"max_health": [6, 8], "health_regen": [0.4, 0.6], "defense": [2, 3]},
+		"description": "Sosem olvadó jégkristály aranyláncon. A Fagykő mélyén lelni."},
+	"ring_snow_queen": {"name": "Hókirálynő gyűrűje", "slot": "ring", "rarity": "legendary", "min_depth": 41,
+		"stats": {"crit_chance": [6, 9], "damage_percent": [8, 12], "dodge": [3, 5]},
+		"description": "Jégből csiszolt karika; aki viseli, annak a keze sosem remeg. A Fagykő mélyén lelni."},
+	"spear_glacier": {"name": "Gleccserdárda", "slot": "weapon", "rarity": "legendary", "weapon_type": "spear",
+		"min_depth": 41, "base": [5, 6], "scaling": 1.05, "crit": 2.3,
+		"stats": {"attack_range": [20, 28], "attack_speed": [10, 16], "crit_chance": [8, 12], "damage_percent": [8, 12]},
+		"description": "Egy darab örök jég, lándzsává csiszolva. A Fagykő mélyén lelni."},
+	"bow_blizzard": {"name": "Hóvihar íj", "slot": "weapon", "rarity": "legendary", "weapon_type": "bow",
+		"min_depth": 41, "base": [4, 5], "scaling": 1.25, "crit": 2.0,
+		"stats": {"multishot": [1, 1], "ranged_damage": [3, 4], "attack_range": [18, 26], "crit_chance": [8, 12], "damage_percent": [8, 12], "accuracy": [6, 10]},
+		"description": "A húrja fagyott szél; a nyilai jégszilánkként süvítenek. A Fagykő mélyén lelni."},
+	"helmet_frost_crown": {"name": "Fagyvért sisak", "slot": "helmet", "rarity": "epic", "min_depth": 41,
+		"stats": {"defense": [4, 6], "max_health": [5, 7], "crit_chance": [2, 3]},
+		"description": "A jégbe fagyott régi őrség sisakja, deres tollforgóval. A Fagykő mélyén lelni."},
+	"gloves_rime": {"name": "Zúzmarakesztyű", "slot": "gloves", "rarity": "legendary", "min_depth": 41,
+		"stats": {"attack_speed": [12, 16], "damage": [3, 4], "crit_chance": [3, 5]},
+		"description": "Arannyal futtatott, deres vaskesztyű: minden ütése csíp. A Fagykő mélyén lelni."},
+	"boots_frostwalker": {"name": "Fagyjáró csizma", "slot": "boots", "rarity": "epic", "min_depth": 41,
+		"stats": {"move_speed": [10, 14], "dodge": [5, 7], "defense": [2, 3]},
+		"description": "Jégen sem csúszik, hóban sem süllyed. A Fagykő mélyén lelni."},
 	# Gyűrűk
 	"ring_emerald_cut": {"name": "Smaragdköves gyűrű", "slot": "ring", "rarity": "rare",
 		"stats": {"max_health": [3, 4], "health_regen": [0.2, 0.3]}},
@@ -855,7 +882,7 @@ static func random_item(max_rarity := "legendary", min_rarity := "common", depth
 			break
 	# Csak azok a tárgyak, amelyeknek ez a ritkasága elérhető (a sajátjuk).
 	var ids: Array = DEFINITIONS.keys().filter(func(id: String) -> bool:
-		return chosen in available_rarities(id) and DEFINITIONS[id].get("shop", true))
+		return chosen in available_rarities(id) and DEFINITIONS[id].get("shop", true) and int(DEFINITIONS[id].get("min_depth", 1)) <= depth)
 	var weights: Array[float] = []
 	var weight_total := 0.0
 	for id: String in ids:

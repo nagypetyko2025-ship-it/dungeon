@@ -28,7 +28,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
    **Ezen felül shellből is**: futtatás előtt `cp "$APPDATA/Godot/app_userdata/dungeon/save.cfg" <scratchpad>/save_backup.cfg`,
    utána *feltétel nélkül* vissza (ha a szkript elszáll, a GDScript-es visszaállítás nem fut le — egyszer már így
    íródott felül a felhasználó mentése). A tesztben ne írj a felhasználó táskájának foglalt helyére.
-4. A végén a "2 RID allocations ... leaked" és a RenderingServer hibák ártalmatlanok.
+4. Push előtt: `Godot --headless --path . --script res://tools/check_all.gd` → "checked N, bad: 0" (a --import nem mutatja a parse hibákat).
+5. A végén a "2 RID allocations ... leaked" és a RenderingServer hibák ártalmatlanok.
 5. Játszó robot (nem a repóban; 2026-11-01): fej nélkül, valódi bemenettel játszik (mozgás `Dungeon.nav_path`-szal, célzás
    `InputEventMouseMotion`-nel, `Engine.time_scale` 4-6). Fej nélkül a viewport egérhelye ≈ az esemény helye × 20: két ponttal
    kalibráld (esemény → `root.get_mouse_position()`), különben mellé céloz. Az út első pontja a saját csempe közepe (fal mellett
@@ -168,7 +169,7 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   A történet-futások közös elosztója: `LakeCrypt.story_boss / story_reward / story_*_text` (a Dungeon, a Room és a
   ChallengePanel már nem csak a "knocker"-t ismeri; új történetnél ide kell felvenni).
 - Saját rajzú szörnyek (8 kocka): wisp (Lidércfény, Különös lények, 4.-től), mummy (Múmia, Élőholtak, 7.-től), gargoyle (Vízköpő, Démonok, 11.-től);
-  Gothicvania (CC0) képekből: grey_wolf (Szürke farkas, Fenevadak, 5.-től), flame_skull (Lángkoponya, Élőholtak, 17.-től; a csomag a régi
+  Gothicvania (CC0) képekből: grey_wolf (Szürke farkas, Fenevadak, 7.-től), flame_skull (Lángkoponya, Élőholtak, 17.-től; a csomag a régi
   scratchpad gv/g.zip-jében, a Ghost még nincs felhasználva). Új szörny: EnemyTypes.TYPES + Bestiary CATEGORIES és leírás, más nem kell;
   a rajzoló szkript nincs a repóban.
 - Őrült bohóc (crazy_clown, Népek, 14.-től): az EnemyTypes "dash_cooldown" / "dash_windup" kulcsa sűrű rohamot ad.
@@ -337,6 +338,14 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   (52-80., Fenevadak). A régi "lich" és "frost_dragon" már foglalt név.
 - Kártyák ritkasági rendje (robot, 2026-11-07): medián erősség common 0.6 < rare 1.1 < epic 2.0 < legendary 4.6 < mythic 8.5.
   Cost-ként ne adj alapból 0 statot (defense, dodge stb.): a kártya akkor soha nem jön (Viharúr így nem jött).
+- Hadgyakorlat: `world/drill.gd` (`Drill`), Vas Szilárd "Hadgyakorlat" opciója (`Lieutenant.options(open_orders, open_drill)`,
+  `Barracks._open_drill` → ChallengePanel). Történet-futás "story": "drill", 1 emelet: a Dungeon arénájában nincs főellenség,
+  room.lord "drill" → `Room._next_wave / _wave_done` (`wave_started` jel → HUD), `MAX_WAVES` 15, a hullám szörnyei a
+  `wave_depth` (2w-1) emeletéről. A felszerelés a táborban marad (`Camp._enter_dungeon_now` nem üríti a camp_inventory-t),
+  kidőlve `DeathScreen` → `Drill.finish` (arany `gold_for`, rekord `BEST_FLAG` az npc_quests-ben), győzelem: a terem lépcsője
+  → `_challenge_won` → `Drill.reward` (legendás). A LakeCrypt elosztóban is benne van.
+- Fagykő tárgyak (2026-11-16, DCSS CC0 ikonok): 8 db "min_depth": 41 kulccsal; a `random_item` a min_depth > depth tárgyat
+  kihagyja (a mélység nélküli hívások, pl. jutalmak, így sosem adják).
 - Tábori térkép: `ui/camp_map.gd` (`CampMap`, a táborban "HUD/Minimap", így a Menus M-re nyitja). Betöltéskor egyszer
   lefényképezi a külső világot (SubViewport a tábor World2D-jével, SCALE 0.25, CanvasModulate / játékos / HiddenGrave
   rejtve), a titkos sír tisztását a jobbra lévő erdősávval takarja (`_cover_secret`). Kicsiben jobb alul a játékos körül

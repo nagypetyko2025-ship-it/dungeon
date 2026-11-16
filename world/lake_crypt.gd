@@ -49,6 +49,8 @@ static func is_story_lord(lord: String) -> bool:
 
 ## A történet-futás jutalma győzelemkor.
 static func story_reward(story: String) -> Dictionary:
+	if story == "drill":
+		return Drill.reward()
 	if story == "entrance":
 		return OldEntrance.reward()
 	return Knocking.reward() if story == "knocker" else reward()
@@ -56,6 +58,8 @@ static func story_reward(story: String) -> Dictionary:
 
 ## Feliratok: a futás eleje, az emeletek, és a főellenség legyőzése.
 static func story_start_text(story: String, floors: int) -> String:
+	if story == "drill":
+		return Drill.START_TEXT % Drill.MAX_WAVES
 	if story == "crypt":
 		return "Az elárasztott kripta: %d emelet lefelé. A víz jéghideg, a fáklyák kéken égnek." % floors
 	if story == "entrance":
@@ -64,6 +68,8 @@ static func story_start_text(story: String, floors: int) -> String:
 
 
 static func story_floor_text(story: String, depth: int, floors: int) -> String:
+	if story == "drill":
+		return Drill.START_TEXT % Drill.MAX_WAVES
 	if story == "entrance":
 		return OldEntrance.FLOOR_TEXT % [depth, floors, OldEntrance.NEAR_TEXT if depth >= floors else ""]
 	if story == "crypt":
@@ -74,6 +80,8 @@ static func story_floor_text(story: String, depth: int, floors: int) -> String:
 
 
 static func story_won_text(story: String) -> String:
+	if story == "drill":
+		return Drill.WON_TEXT % Drill.MAX_WAVES
 	if story == "crypt":
 		return "A Tófenék Ura elesett! A lépcső szabad: fel a szigetre."
 	if story == "entrance":

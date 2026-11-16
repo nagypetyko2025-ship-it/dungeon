@@ -23,6 +23,7 @@ const INTERACT_RANGE := 56.0
 ## A belső tér, messze a pályától.
 const INTERIOR := Rect2i(690, 0, 16, 10)
 const INTERIOR_DOOR := Vector2i(697, 10)
+var _drill_panel: ChallengePanel
 const INSIDE_LIGHT := Color(0.6, 0.56, 0.47)
 const CANVAS := Color(0.42, 0.47, 0.32)
 ## Kenney "Roguelike Indoor" (CC0): zöld fémpriccs (párna balra), zöld csíkos tapéta (a vászonfal, felső és alsó
@@ -231,7 +232,7 @@ func _build_lieutenant(at: Vector2) -> void:
 	_dialogue.npc_name = Lieutenant.NAME
 	_dialogue.portrait = Lieutenant.portrait()
 	_dialogue.greeting = Lieutenant.GREETING
-	_dialogue.options_provider = func() -> Array[Dictionary]: return Lieutenant.options(_open_orders)
+	_dialogue.options_provider = func() -> Array[Dictionary]: return Lieutenant.options(_open_orders, _open_drill)
 	_camp.add_child.call_deferred(_dialogue)
 
 
@@ -240,6 +241,22 @@ func _open_orders() -> String:
 	var menus := _camp.get_node("Menus")
 	menus.call("close_current")
 	menus.call_deferred("open_menu", _orders)
+	return ""
+
+
+## "Hadgyakorlat": a beszélgetés helyett az ajánlat ablaka (ChallengePanel, Drill.run_challenge); az "Indulok!"
+## a tábor enter_challenge-ével indítja (pihenő közben és közös játékban az nem enged).
+func _open_drill() -> String:
+	var menus := _camp.get_node("Menus")
+	menus.call("close_current")
+	if _drill_panel == null:
+		_drill_panel = ChallengePanel.new()
+		_drill_panel.name = "DrillPanel"
+		_drill_panel.visible = false
+		_camp.add_child(_drill_panel)
+	var start := func(challenge: Dictionary) -> void: _camp.call("enter_challenge", challenge)
+	_drill_panel.show_offer(Drill.run_challenge(), start)
+	menus.call_deferred("open_menu", _drill_panel)
 	return ""
 
 

@@ -60,8 +60,14 @@ func show_for(player: Node) -> void:
 		_restart.text = "Újra a gyakorlás (R)"
 	elif GameState.cheated:
 		_stats_label.text += "\n\nCsalt futás: semmi nem mentődött belőle."
+	elif Challenge.story() == "drill":
+		var waves := Drill.waves_cleared()
+		var record := waves > Drill.best()
+		var earned := Drill.finish(waves)
+		_stats_label.text += "\n\nHadgyakorlat: %d hullámot bírtál ki%s. Jutalom: %d tábori arany.\nA felszerelésed megmaradt." % [
+			waves, " (új csúcs)" if record else "", earned]
 	elif Challenge.active():
-		_stats_label.text += "\n\nA próbatétel elbukott: a tárgyaid és az aranyad lent maradtak."
+		_stats_label.text +="\n\nA próbatétel elbukott: a tárgyaid és az aranyad lent maradtak."
 	else:
 		var rescued := Progress.rescue_gold(int(player.get("gold")), DEATH_GOLD_RATIO)
 		_stats_label.text += "\n\nA pénzed %d%%-a (%d arany) a táborba került." % [roundi(DEATH_GOLD_RATIO * 100), rescued]

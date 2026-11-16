@@ -1761,7 +1761,9 @@ func _enter_dungeon_now(start_depth: int, cheat: bool, challenge := {}) -> void:
 		GameState.potions += Town.take_rest_bonus()
 	# A nálad lévő felszereléssel szállsz le; az a táborból "elfogy" (a futásban veszhet el).
 	GameState.saved_inventory = _player.get_node("Inventory").save_data()
-	Progress.camp_inventory = {}
+	# Hadgyakorlat (Drill): a felszerelés a táborban is megmarad (kidőlve sem veszik el).
+	if str(challenge.get("story", "")) != "drill":
+		Progress.camp_inventory = {}
 	Progress.save_game()
 	get_tree().change_scene_to_file(DUNGEON_SCENE)
 
