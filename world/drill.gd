@@ -11,8 +11,10 @@ class_name Drill
 const MAX_WAVES := 15
 ## A legjobb eredmény (túlélt hullámok) a Progress.npc_quests-ben, szövegként.
 const BEST_FLAG := "drill_best"
-## Hullámonként ennyi arany (összeadódik: a 10. túlélt hullám után 25 × (1 + ... + 10)).
-const GOLD_PER_WAVE := 25
+## A w. túlélt hullám aranya: GOLD_BASE + GOLD_STEP × w (lassan nő; a felhasználó kérésére, a régi 25 × w túl gyorsan
+## nőtt). Összesen: 15 hullám 690, 30 hullám 1830, 50 hullám 4050 arany.
+const GOLD_BASE := 30
+const GOLD_STEP := 2
 ## Két hullám közti szünet (mp); a MAX_WAVES. után hosszabb, hogy eldönthesd: kilépsz vagy maradsz.
 const BREAK_SECONDS := 4.0
 const EXIT_BREAK_SECONDS := 12.0
@@ -41,7 +43,7 @@ static func wave_count(wave: int) -> int:
 
 
 static func gold_for(waves_cleared: int) -> int:
-	return GOLD_PER_WAVE * waves_cleared * (waves_cleared + 1) / 2
+	return GOLD_BASE * waves_cleared + GOLD_STEP * waves_cleared * (waves_cleared + 1) / 2
 
 
 static func best() -> int:

@@ -3,6 +3,9 @@ class_name News
 ## rövid, játékosnak szóló sor a legfrissebb dátum alá (a legújabb van felül).
 
 const ENTRIES: Array[Dictionary] = [
+	{"date": "2026-11-17", "items": [
+		"Hadgyakorlat: a hullámokért járó arany lassabban nő (15 hullám 690, 30 hullám 1830 arany).",
+	]},
 	{"date": "2026-11-16", "items": [
 		"Hadgyakorlat! Vas Szilárd hadnagy a barakkban túlélős arénát tart: végtelen, egyre keményebb hullámok, az 1. szintről, "
 			+ "a saját felszereléseddel (kidőlve sem veszik el). Túlélt hullámonként arany; a 15. után a lépcsőn kiléphetsz "
