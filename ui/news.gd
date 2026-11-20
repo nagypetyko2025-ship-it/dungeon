@@ -4,6 +4,7 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-20", "items": [
+		"Hadgyakorlat: a sátorbolt belseje mostantól rendes, fallal körülvett szoba (eddig egy végtelen zöld mezőben állt).",
 		"Megújult Hadgyakorlat: nappali, cölöpökkel kerített földes küzdőtér a barakk mögött, a hullám rögtön indul. "
 			+ "Minden hullám után aranyat kapsz (csak ott költheted el), középen bolt és egy kar: ha meghúzod, jön a következő.",
 		"Elveszett lapok: Vidor bányaírnok négyszáz éves naplójának 10 lapja szétszórva — 4 a tábor régi házaiban, "

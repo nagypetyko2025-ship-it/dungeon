@@ -252,7 +252,9 @@ func _ready() -> void:
 		for dir in [Vector2i.RIGHT, Vector2i.DOWN]:
 			if cells.has(cell + dir):
 				_carve_corridor(room_rects[cell], room_rects[cell + dir], cell, dir)
-	if shop_cell != NO_SHOP:
+	# A gyakorlótér padlója (a bolt belseje nélkül: az kőfalas szoba, nem a szabad ég alatt).
+	var arena_cells := _floor.duplicate()
+	if shop_cell != NO_SHOP or drill:
 		# A bolt belseje: külön szoba fapadlóval, messze a pályától.
 		for rect in [ShopInterior.RECT, ShopInterior.EXIT_RECT]:
 			_carve(rect)
@@ -261,9 +263,24 @@ func _ready() -> void:
 					_wood_floor[Vector2i(x, y)] = true
 	if drill:
 		var arena := DrillArena.new()
-		arena.floor_cells = _floor
+		arena.floor_cells = arena_cells
 		add_child(arena)
 		move_child(arena, 0)
+		# A bolt belseje itt is kap fapadlót és falat (különben végtelen zöld mezőben állna).
+		var shop_cells := {}
+		for pos: Vector2i in _floor:
+			if not arena_cells.has(pos):
+				shop_cells[pos] = true
+		_paint_tiles(shop_cells)
+		# A bolt körül sötét (a háttérszín a gyakorlótér füve).
+		var dark := ColorRect.new()
+		var around := ShopInterior.RECT.merge(ShopInterior.EXIT_RECT).grow(30)
+		dark.position = Vector2(around.position * Room.TILE)
+		dark.size = Vector2(around.size * Room.TILE)
+		dark.color = Color(0.03, 0.025, 0.035)
+		dark.z_index = -11
+		add_child(dark)
+		move_child(dark, 0)
 	else:
 		_paint_tiles()
 
@@ -291,7 +308,7 @@ func _ready() -> void:
 			if drill:
 				room.lord = "drill"
 				room.enemy_count = 1
-				room.allowed_cells = _floor.duplicate()
+				room.allowed_cells = arena_cells.duplicate()
 				room.wave_started.connect(func(wave: int) -> void: _hud.show_message(Drill.wave_text(wave)))
 			if cell == Vector2i.RIGHT and not portal_floor:
 				room.has_boss = true
@@ -869,15 +886,17 @@ func _carve_corridor(from: Rect2i, to: Rect2i, cell: Vector2i, dir: Vector2i) ->
 
 ## Padló + falak. A padló fölötti falcsempe "homlokzat" (téglafal),
 ## fölötte a fal teteje; a többi falcella láthatatlan, de tömör.
-func _paint_tiles() -> void:
-	for pos: Vector2i in _floor:
+## `only`: ha nem üres, csak ezeket a padlócsempéket (és a falukat) rajzolja (a Hadgyakorlat boltja).
+func _paint_tiles(only := {}) -> void:
+	var cells: Dictionary = _floor if only.is_empty() else only
+	for pos: Vector2i in cells:
 		if _wood_floor.has(pos):
 			_floor_layer.set_cell(pos, WOOD_SOURCE, WOOD_TILES.pick_random())
 			continue
 		var floor_tile: Vector2i = FLOOR_TILES.pick_random() if randf() < FLOOR_DECOR_CHANCE else FLOOR_TILES[0]
 		_floor_layer.set_cell(pos, 0, floor_tile)
 	var faces := {}
-	for pos: Vector2i in _floor:
+	for pos: Vector2i in cells:
 		# Két csempe vastag fal, hogy semmit ne lökhessen át rajta a fizika.
 		for dx in range(-WALL_THICKNESS, WALL_THICKNESS + 1):
 			for dy in range(-WALL_THICKNESS, WALL_THICKNESS + 1):

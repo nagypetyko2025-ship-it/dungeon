@@ -346,6 +346,8 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   Hullám vége (`Room._wave_done`): `Drill.wave_gold` arany a futásba (lent elkölthető, a győzelemkor sem jön fel:
   `_challenge_won`), a bolt ingyen frissül a következő hullám mélységére (`ShopInterior.drill_restock`, "shop_interior"
   csoport), középen `DrillArena.Station` (sátor + boltos: nekimenve a bolt belsejébe visz; kar: E → következő hullám).
+  A bolt belsejét itt a `_paint_tiles(shop_cells)` rajzolja (csak a bolt csempéi + fal), körülötte sötét ColorRect
+  (különben a zöld háttérszín látszik); a gyakorlótér padlója `arena_cells` (bolt nélkül).
   A `MAX_WAVES` (15.) után `Drill.EXIT_TILE`-on lépcső (kilépés = legendás + a tábori arany `gold_for`: 30 + 2w
   hullámonként), a hullámok végtelenek, a szörnyek a `wave_depth` (2w-1, max 99) emeletéről. A felszerelés a táborban
   marad (`Camp._enter_dungeon_now` nem üríti a camp_inventory-t); kidőlve `DeathScreen` → `Drill.finish` (csak arany, rekord
