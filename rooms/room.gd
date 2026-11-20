@@ -113,6 +113,10 @@ var _spawn_queue: Array[Node2D] = []
 const SPAWNS_PER_FRAME := 3
 var _player: Node2D
 var _check_left := 0.0
+## Ha nem üres: a véletlen szörnyhelyek csak ezekre a csempékre eshetnek (a gyakorlótér szabálytalan padlója).
+var allowed_cells := {}
+## Hadgyakorlat: a szünet állomása (sátor + kar, DrillArena.Station).
+var _station: Node2D
 ## Hadgyakorlat: az aktuális hullám (0 = még nem kezdődött), és hogy épp szünet van-e két hullám közt.
 var _wave := 0
 var _wave_pending := false
@@ -154,9 +158,11 @@ func _ready() -> void:
 		_special = SpecialRoom.new()
 		_special.room = self
 		add_child(_special)
-	var decor := RoomDecor.new()
-	decor.room = self
-	add_child(decor)
+	# A gyakorlótér (DrillArena) a szabad ég alatt van: se fáklya, se pókháló.
+	if lord != "drill":
+		var decor := RoomDecor.new()
+		decor.room = self
+		add_child(decor)
 
 
 func _to_local_pos(tile: Vector2i) -> Vector2:
@@ -338,8 +344,8 @@ func _create_trigger() -> void:
 ## Oszlopok tükrözve a cella középpontjára; a középső sor és oszlop
 ## szabadon marad, hogy minden ajtó elérhető legyen.
 func _place_pillars() -> void:
-	if has_boss:
-		return  # a főellenség-terem nyitott aréna
+	if has_boss or lord == "drill":
+		return  # a főellenség-terem és a gyakorlótér nyitott aréna
 	var inner := rect.grow(-2)
 	for i in randi_range(0, MAX_PILLAR_GROUPS):
 		var offset := Vector2i(randi_range(3, 5), randi_range(2, 3))
@@ -407,7 +413,13 @@ func _begin_fight(at: Vector2, body: Node2D) -> void:
 		_spawn_boss()
 		return
 	if lord == "drill":
-		_next_wave()
+		# A gyakorlótéren rögtön kezdődik: egy pillanat a felkészülésre, aztán jön az első hullám.
+		_wave_pending = true
+		FloatingText.spawn(self, global_position + Vector2(0, -60), "Készülj!", Color(1, 0.85, 0.4), 26)
+		await get_tree().create_timer(Drill.START_DELAY, false).timeout
+		_wave_pending = false
+		if is_inside_tree():
+			_next_wave()
 		return
 	if _special != null and _special.begin_fight():
 		return
@@ -739,6 +751,7 @@ func _random_spawn_point(avoid: Vector2, taken := {}) -> Vector2:
 			randi_range(inner.position.x, inner.end.x - 1),
 			randi_range(inner.position.y, inner.end.y - 1))
 		if not _used_tiles.has(tile) and not taken.has(tile) \
+				and (allowed_cells.is_empty() or allowed_cells.has(tile)) \
 				and tile_center(tile).distance_to(avoid) >= MIN_SPAWN_DISTANCE:
 			break
 	return tile_center(tile)
@@ -861,19 +874,28 @@ func _next_wave() -> void:
 		_spawn_enemy(at, taken)
 
 
-## Egy hullám elfogyott: feljegyezzük, szünet, aztán a következő. A Drill.MAX_WAVES. után kinyílik a lépcső
-## (kilépés a jutalommal, Dungeon._challenge_won), de a hullámok mennek tovább, amíg maradsz (hosszabb szünettel).
+## Egy hullám elfogyott: arany a futásba (Drill.wave_gold: lent elkölthető, fel nem hozható), aztán szünet: a
+## közepén sátor a boltossal és egy kar (DrillArena.Station); a kar meghúzására jön a következő. A Drill.MAX_WAVES.
+## után a pálya szélén kinyílik a lépcső (kilépés a jutalommal, Dungeon._challenge_won), de a hullámok mennek tovább.
 func _wave_done() -> void:
 	GameState.challenge["waves_cleared"] = _wave
-	var pause := Drill.BREAK_SECONDS
-	if _wave == Drill.MAX_WAVES:
-		open_stairs(anchor)
-		pause = Drill.EXIT_BREAK_SECONDS
-		FloatingText.spawn(self, global_position + Vector2(0, -60), Drill.WON_TEXT % Drill.MAX_WAVES, Color(1, 0.85, 0.4), 22)
-	else:
-		FloatingText.spawn(self, global_position + Vector2(0, -60), "Hullám kész! Pihenő...", Color(0.6, 1, 0.6), 22)
 	_wave_pending = true
-	await get_tree().create_timer(pause, false).timeout
+	var gold := Drill.wave_gold(_wave)
+	if is_instance_valid(_player):
+		_player.call("add_gold", gold)
+	if _wave == Drill.MAX_WAVES:
+		open_stairs(Drill.EXIT_TILE)
+		FloatingText.spawn(self, global_position + Vector2(0, -90), Drill.WON_TEXT % Drill.MAX_WAVES, Color(1, 0.85, 0.4), 22)
+	FloatingText.spawn(self, global_position + Vector2(0, -60),
+		"Hullám kész! +%d arany — vásárolj, aztán húzd meg a kart." % gold, Color(0.6, 1, 0.6), 20)
+	# A bolt áruja a következő hullám erejéhez igazodik, és ingyen cserélődik.
+	get_tree().call_group("shop_interior", "drill_restock", Drill.wave_depth(_wave + 1))
+	_station = DrillArena.Station.new()
+	_station.connect("shop_entered", shop_entered.emit)
+	add_child(_station)
+	await _station.pulled
+	if is_instance_valid(_station):
+		_station.queue_free()
 	_wave_pending = false
 	if not is_inside_tree() or (is_instance_valid(_player) and _player.get_node("Health").is_dead()):
 		return

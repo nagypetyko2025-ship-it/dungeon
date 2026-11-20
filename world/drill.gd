@@ -16,8 +16,13 @@ const BEST_FLAG := "drill_best"
 const GOLD_BASE := 30
 const GOLD_STEP := 2
 ## Két hullám közti szünet (mp); a MAX_WAVES. után hosszabb, hogy eldönthesd: kilépsz vagy maradsz.
-const BREAK_SECONDS := 4.0
-const EXIT_BREAK_SECONDS := 12.0
+## Belépéskor ennyi idő a felkészülésre, aztán jön az első hullám (a többi a kar meghúzására, lásd Room._wave_done).
+const START_DELAY := 1.5
+## A kilépő lépcső helye a MAX_WAVES. után (a pálya jobb részén, DrillArena).
+const EXIT_TILE := Vector2i(11, 0)
+## Hullámonként a futásba kapott arany (lent a boltban elkölthető, fel nem hozható): WAVE_GOLD_BASE + STEP × hullám.
+const WAVE_GOLD_BASE := 20
+const WAVE_GOLD_STEP := 10
 ## A hullámok szörnyei legfeljebb erről az emeletről jönnek.
 const MAX_DEPTH := 99
 
@@ -40,6 +45,10 @@ static func wave_depth(wave: int) -> int:
 
 static func wave_count(wave: int) -> int:
 	return mini(3 + wave, 14)
+
+
+static func wave_gold(wave: int) -> int:
+	return WAVE_GOLD_BASE + WAVE_GOLD_STEP * wave
 
 
 static func gold_for(waves_cleared: int) -> int:

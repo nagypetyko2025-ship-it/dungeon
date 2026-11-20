@@ -339,12 +339,17 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
 - Kártyák ritkasági rendje (robot, 2026-11-07): medián erősség common 0.6 < rare 1.1 < epic 2.0 < legendary 4.6 < mythic 8.5.
   Cost-ként ne adj alapból 0 statot (defense, dodge stb.): a kártya akkor soha nem jön (Viharúr így nem jött).
 - Hadgyakorlat: `world/drill.gd` (`Drill`), Vas Szilárd "Hadgyakorlat" opciója (`Lieutenant.options(open_orders, open_drill)`,
-  `Barracks._open_drill` → ChallengePanel). Történet-futás "story": "drill", 1 emelet: a Dungeon arénájában nincs főellenség,
-  room.lord "drill" → `Room._next_wave / _wave_done` (`wave_started` jel → HUD), a hullámok végtelenek (a felhasználó kérése),
-  a `MAX_WAVES` (15.) után kinyílik a lépcső (kilépés = győzelem, legendás + arany; `EXIT_BREAK_SECONDS` szünet), a hullám
-  szörnyei a `wave_depth` (2w-1, max 99) emeletéről. Kidőlve csak az arany. A felszerelés a táborban marad (`Camp._enter_dungeon_now` nem üríti a camp_inventory-t),
-  kidőlve `DeathScreen` → `Drill.finish` (arany `gold_for`: 30 + 2w hullámonként, szándékosan lassan nő, rekord `BEST_FLAG` az npc_quests-ben), kilépés: a terem lépcsője
-  → `_challenge_won` → `Drill.reward` (legendás + a túlélt hullámok aranya). A LakeCrypt elosztóban is benne van.
+  `Barracks._open_drill` → ChallengePanel). Történet-futás "story": "drill", 1 emelet, de NEM kazamata: a Dungeon egyetlen
+  cellát rak, a padlót a `DrillArena.carve` adja (szabálytalan folt), `_paint_tiles` helyett `rooms/drill_arena.gd`
+  (`DrillArena`: nappali, Kenney fű + kitaposott föld, körben fa cölöpsor ütközővel; CanvasModulate fehér). A Room
+  ("drill", `allowed_cells` = a padló) díszlet és oszlop nélkül; a játékos benne kezd, így rögtön indul (`START_DELAY`).
+  Hullám vége (`Room._wave_done`): `Drill.wave_gold` arany a futásba (lent elkölthető, a győzelemkor sem jön fel:
+  `_challenge_won`), a bolt ingyen frissül a következő hullám mélységére (`ShopInterior.drill_restock`, "shop_interior"
+  csoport), középen `DrillArena.Station` (sátor + boltos: nekimenve a bolt belsejébe visz; kar: E → következő hullám).
+  A `MAX_WAVES` (15.) után `Drill.EXIT_TILE`-on lépcső (kilépés = legendás + a tábori arany `gold_for`: 30 + 2w
+  hullámonként), a hullámok végtelenek, a szörnyek a `wave_depth` (2w-1, max 99) emeletéről. A felszerelés a táborban
+  marad (`Camp._enter_dungeon_now` nem üríti a camp_inventory-t); kidőlve `DeathScreen` → `Drill.finish` (csak arany, rekord
+  `BEST_FLAG`).
 - Fagykő tárgyak (2026-11-16, DCSS CC0 ikonok): 8 db "min_depth": 41 kulccsal; a `random_item` a min_depth > depth tárgyat
   kihagyja (a mélység nélküli hívások, pl. jutalmak, így sosem adják).
 - Különleges szobák (2026-11-20): `rooms/special_room.gd` (`SpecialRoom`, `Room.special`), a Dungeon sorsolja

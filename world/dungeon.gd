@@ -144,6 +144,10 @@ func _ready() -> void:
 	if GameState.hell and GameState.depth == Hell.DEPTH:
 		RenderingServer.set_default_clear_color(Hell.CLEAR)
 		($CanvasModulate as CanvasModulate).color = Hell.LIGHT
+	# A Hadgyakorlat (DrillArena) a szabad ég alatt: nappali fény, fű a háttérben.
+	if Challenge.story() == "drill":
+		RenderingServer.set_default_clear_color(DrillArena.CLEAR_COLOR)
+		($CanvasModulate as CanvasModulate).color = Color.WHITE
 	# Indításkor egyszer teljes képernyő; utána az F11-es váltás megmarad.
 	if not GameState.display_initialized:
 		GameState.display_initialized = true
@@ -196,13 +200,17 @@ func _ready() -> void:
 	elif hell:
 		cells = Hell.CELLS.duplicate()
 	elif final_floor:
+		# A Hadgyakorlat egyetlen nagy, nyitott gyakorlótér (DrillArena).
 		cells = [Vector2i.ZERO, Vector2i.RIGHT]
+		if Challenge.story() == "drill":
+			cells = [Vector2i.ZERO]
 	else:
 		cells = _generate_layout(mini(base_room_count + depth - 1, max_room_count))
 	var distances := _distances_from_start(cells)
 	var stairs_cell := _farthest(distances)
 	var shop_cell := TUTORIAL_CELLS[TUTORIAL_SHOP_ROOM] if tutorial else NO_SHOP if final_floor or hell \
 		else _pick_shop_cell(cells, stairs_cell)
+	var drill := Challenge.story() == "drill"
 	# A 10. emeleten mindig van liftszoba (kék a térképen), a kezdőszobához legközelebbi szabad szobában;
 	# a mély aknák emeletein (Engineer.LIFT_FLOORS, ha már nyitva vannak) is, a nagy főellenség emeletén a
 	# kezdőszobában.
@@ -222,6 +230,10 @@ func _ready() -> void:
 
 	var room_rects := {}
 	for cell in cells:
+		if drill:
+			room_rects[cell] = DrillArena.RECT
+			DrillArena.carve(_floor)
+			continue
 		if hell:
 			room_rects[cell] = Hell.room_rect(cell, _cell)
 		elif final_floor:
@@ -247,7 +259,13 @@ func _ready() -> void:
 			for x in range(rect.position.x, rect.end.x):
 				for y in range(rect.position.y, rect.end.y):
 					_wood_floor[Vector2i(x, y)] = true
-	_paint_tiles()
+	if drill:
+		var arena := DrillArena.new()
+		arena.floor_cells = _floor
+		add_child(arena)
+		move_child(arena, 0)
+	else:
+		_paint_tiles()
 
 	for cell in cells:
 		var room: Room = room_scene.instantiate()
@@ -269,16 +287,17 @@ func _ready() -> void:
 				room.lift_offset = FINAL_LIFT_OFFSET
 			if not chaos_floor and not engine_floor and not gate_floor and not knocker_floor and not portal_floor:
 				room.fallen_guards = FINAL_ARENA_GUARDS if cell == Vector2i.RIGHT else FINAL_START_GUARDS
+			# Hadgyakorlat (Drill): a gyakorlótér maga az aréna; főellenség helyett hullámok (Room._next_wave).
+			if drill:
+				room.lord = "drill"
+				room.enemy_count = 1
+				room.allowed_cells = _floor.duplicate()
+				room.wave_started.connect(func(wave: int) -> void: _hud.show_message(Drill.wave_text(wave)))
 			if cell == Vector2i.RIGHT and not portal_floor:
 				room.has_boss = true
 				room.final_boss = true
 				room.lord = Challenge.story() if knocker_floor else ("chaos" if chaos_floor else "engine" if engine_floor else "gate" if gate_floor else "werewolf")
 				room.enemy_count = 1
-				# Hadgyakorlat (Drill): főellenség helyett hullámok (Room._next_wave).
-				if Challenge.story() == "drill":
-					room.has_boss = false
-					room.final_boss = false
-					room.wave_started.connect(func(wave: int) -> void: _hud.show_message(Drill.wave_text(wave)))
 		elif cell == shop_cell:
 			room.has_shop = true
 		elif cell == lift_cell:
@@ -346,7 +365,7 @@ func _ready() -> void:
 	var page_rooms: Array[Room] = []
 	page_rooms.assign(_rooms.get_children())
 	LostPages.place_in_dungeon(page_rooms, depth, _floor_seed)
-	if shop_cell != NO_SHOP:
+	if shop_cell != NO_SHOP or drill:
 		var interior := ShopInterior.new()
 		_entities.add_child(interior)
 		interior.exited.connect(_exit_shop)
@@ -609,7 +628,11 @@ func _challenge_won() -> void:
 		else:
 			item = Challenge.roll_reward(challenge)
 		Progress.add_to_stash(item)
-		Progress.add_camp_gold(gold)
+		# A Hadgyakorlaton lent kapott arany lent marad (a jutalom a Drill.reward-ban van).
+		if Challenge.story() == "drill":
+			gold = 0
+		else:
+			Progress.add_camp_gold(gold)
 		# A történet (a régi tárnák) nem a random próbatétel: az marad.
 		if Challenge.story().is_empty():
 			Challenge.reroll()

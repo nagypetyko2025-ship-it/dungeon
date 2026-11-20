@@ -97,6 +97,8 @@ var _stalls: Array = []
 ## Hányszor kértél új árut ebben a boltban (minden alkalommal drágább).
 var _restocks := 0
 var _lever_position := Vector2.ZERO
+## Az áru mélysége (0 = GameState.depth; a Hadgyakorlat hullámonként állítja, lásd drill_restock).
+var stock_depth := 0
 var _lever_prompt: Label
 var _potions_left := POTIONS_PER_SHOP
 var _potion_nodes: Array[Sprite2D] = []
@@ -113,6 +115,7 @@ static func kenney(col: int, row: int) -> Rect2:
 
 func _ready() -> void:
 	y_sort_enabled = true
+	add_to_group("shop_interior")
 	_build_back_wall_shelves()
 	_build_counter()
 	_build_market_counters()
@@ -217,11 +220,11 @@ func _build_counter_column(x: int, top: int, bottom: int, facing: int, used_ids:
 		_sprite(RPG, MARKET_COUNTERS[(y - top) % MARKET_COUNTERS.size()], Vector2i(x, y))
 	_solid(Rect2i(x, top, 1, bottom - top + 1))
 	for y in range(top, bottom + 1, ITEM_SPACING):
-		var item := Items.random_shop_item(GameState.depth)
+		var item := Items.random_shop_item(_stock_depth())
 		for attempt in 10:
 			if not used_ids.has(item["id"]):
 				break
-			item = Items.random_shop_item(GameState.depth)
+			item = Items.random_shop_item(_stock_depth())
 		used_ids[item["id"]] = true
 		_stalls.append([Vector2i(x, y), Vector2i(x + facing, y), facing])
 		_add_stock(item, Vector2i(x, y), Vector2i(x + facing, y), facing)
@@ -472,6 +475,21 @@ func _restock() -> void:
 	_restocks += 1
 	Audio.play("door_unlock")
 	Audio.play("coin")
+	_replace_stock()
+
+
+## Hadgyakorlat (Room._wave_done, "shop_interior" csoport): minden hullám után ingyen friss áru, a következő
+## hullám mélységéhez igazítva.
+func drill_restock(depth: int) -> void:
+	stock_depth = depth
+	_replace_stock()
+
+
+func _stock_depth() -> int:
+	return stock_depth if stock_depth > 0 else GameState.depth
+
+
+func _replace_stock() -> void:
 	for entry in _stock:
 		if entry != null:
 			for node: Node in entry["nodes"]:
@@ -481,11 +499,11 @@ func _restock() -> void:
 	_tooltip.hide_tooltip()
 	var used_ids := {}
 	for stall: Array in _stalls:
-		var item := Items.random_shop_item(GameState.depth)
+		var item := Items.random_shop_item(_stock_depth())
 		for attempt in 10:
 			if not used_ids.has(item["id"]):
 				break
-			item = Items.random_shop_item(GameState.depth)
+			item = Items.random_shop_item(_stock_depth())
 		used_ids[item["id"]] = true
 		_add_stock(item, stall[0], stall[1], stall[2])
 	FloatingText.spawn(self, _shopkeeper.global_position + Vector2(0, -36), "Friss áru... hehe.", Color(0.85, 0.75, 1))
