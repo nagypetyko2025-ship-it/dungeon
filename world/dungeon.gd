@@ -342,6 +342,10 @@ func _ready() -> void:
 	# játékosonként más; a terem, az oszlopok, csapdák és díszek fent már közösek.
 	if NetLobby.is_playing(get_tree()):
 		randomize()
+	# Elveszett lap (LostPages): emeletenként legfeljebb egy, a padló saját magjából.
+	var page_rooms: Array[Room] = []
+	page_rooms.assign(_rooms.get_children())
+	LostPages.place_in_dungeon(page_rooms, depth, _floor_seed)
 	if shop_cell != NO_SHOP:
 		var interior := ShopInterior.new()
 		_entities.add_child(interior)

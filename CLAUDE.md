@@ -356,6 +356,13 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   jégfehéren, fagyos köddel (`_frost`), `THAW_RANGE`-en belül kiolvadnak; befagyott kalandor → a harc végén tárgy.
   Kikapcsolt process mellett a szörny megjelenési animációja nem fut: a `_spawn` a ready-nél teljes méretre állítja.
   A felhasználó a téglalap alakú jégtömböt csúnyának találta: ne tegyél vissza ilyet.
+- Elveszett lapok (2026-11-20): `world/lost_pages.gd` (`LostPages.PAGES`, 10 lap: Vidor bányaírnok naplója, a király
+  szálának előzménye — Aurél, az egyezség, a láda, az első harminc). "camp" lapok: a romos ház, a raktár, a kápolna és a
+  barakk belsejében (`place_camp`, a Camp hívja); "depth" lapok: ettől az emelettől, emeletenként legfeljebb egy, a
+  legkisebb sorszámú, `PAGE_CHANCE` (a Dungeon `place_in_dungeon`, saját RNG a padló magjából). Jelző: npc_quests
+  "lost_page_<n>". Felvehető: `LostPages.PagePickup` (izzik, lebeg, szikrázik; a "Pickup" név foglalt). Olvasó:
+  `ui/lost_pages_panel.gd` (`LostPagesPanel.show_page`), a J könyv címe mellett "Elveszett lapok (x / 10)" gomb.
+  Új lapnál a szöveg ne mondjon ellent a King / Hell lore-nak. Teszt: a belső terek kamerahatára csak ajtón át vált.
 - Tábori térkép: `ui/camp_map.gd` (`CampMap`, a táborban "HUD/Minimap", így a Menus M-re nyitja). Betöltéskor egyszer
   lefényképezi a külső világot (SubViewport a tábor World2D-jével, SCALE 0.25, CanvasModulate / játékos / HiddenGrave
   rejtve), a titkos sír tisztását a jobbra lévő erdősávval takarja (`_cover_secret`). Kicsiben jobb alul a játékos körül

@@ -53,6 +53,7 @@ var _tier := "all"
 var _filter_row: HBoxContainer
 var _status_buttons: Array[Button] = []
 var _tier_buttons: Array[Button] = []
+var _pages_button: Button
 
 
 func _ready() -> void:
@@ -173,6 +174,7 @@ func _set_tab(tab: int) -> void:
 
 
 func open() -> void:
+	_pages_button.text = "Elveszett lapok (%d / %d)" % [LostPages.found_count(), LostPages.count()]
 	# A Király fül csak a vár kapujánál tett első látogatás után látszik.
 	_tab_buttons[KING_TAB].visible = Progress.npc_quest_state(Castle.PERMIT_QUEST) != ""
 	if _tab == KING_TAB and not _tab_buttons[KING_TAB].visible:
@@ -247,7 +249,19 @@ func _build() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 10)
 	center.add_child(root)
-	root.add_child(MenuStyle.title_label("Küldetések könyve", 44, MenuStyle.GOLD))
+	var head := HBoxContainer.new()
+	head.alignment = BoxContainer.ALIGNMENT_CENTER
+	head.add_theme_constant_override("separation", 24)
+	root.add_child(head)
+	head.add_child(MenuStyle.title_label("Küldetések könyve", 44, MenuStyle.GOLD))
+	# Az Elveszett lapok olvasója (LostPagesPanel).
+	_pages_button = MenuStyle.button("")
+	_pages_button.custom_minimum_size = Vector2(230, 44)
+	_pages_button.add_theme_font_size_override("font_size", 14)
+	_pages_button.focus_mode = Control.FOCUS_NONE
+	_pages_button.modulate = Color(1.15, 1.05, 0.75)
+	_pages_button.pressed.connect(func() -> void: LostPagesPanel.show_page(get_tree(), -1))
+	head.add_child(_pages_button)
 	# Fülek két sorban (egy sorba már nem férnek el).
 	var rows: Array[HBoxContainer] = []
 	for r in 2:

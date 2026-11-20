@@ -261,6 +261,8 @@ func _ready() -> void:
 	hidden_grave.setup(self)
 	hidden_grave.build()
 	_entities.add_child(Fisherman.new())
+	# Az Elveszett lapok tábori darabjai (LostPages: a régi házakban elrejtve).
+	LostPages.place_camp(_entities)
 	# A temető mellett (keletre) a régi kápolna; a sírásó a küldetése után ide költözik.
 	var chapel := Chapel.new()
 	chapel.name = "Chapel"

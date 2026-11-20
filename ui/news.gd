@@ -4,6 +4,9 @@ class_name News
 
 const ENTRIES: Array[Dictionary] = [
 	{"date": "2026-11-20", "items": [
+		"Elveszett lapok: Vidor bányaírnok négyszáz éves naplójának 10 lapja szétszórva — 4 a tábor régi házaiban, "
+			+ "6 lent a kazamatában. Aranyan izzanak, és összefüggő történetet mesélnek. A J könyvben az \"Elveszett lapok\" "
+			+ "gombbal újraolvashatod őket.",
 		"Különleges szobák a kazamatában! Könyvtár (polcok, olvasópult, könyvek — és szörnyek), börtöncella-sor (a 3. "
 			+ "emelettől: belépéskor rácsok nyílnak fel, néha csak egy-kettő, néha mind) és a Fagykőben a fagyott terem: "
 			+ "csúszós jég, jégbe dermedt szörnyek, akik kiolvadnak, ha közel mész, és egy befagyott kalandor a zsákmányával.",
