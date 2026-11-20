@@ -3,6 +3,11 @@ class_name News
 ## rövid, játékosnak szóló sor a legfrissebb dátum alá (a legújabb van felül).
 
 const ENTRIES: Array[Dictionary] = [
+	{"date": "2026-11-20", "items": [
+		"Különleges szobák a kazamatában! Könyvtár (polcok, olvasópult, könyvek — és szörnyek), börtöncella-sor (a 3. "
+			+ "emelettől: belépéskor rácsok nyílnak fel, néha csak egy-kettő, néha mind) és a Fagykőben a fagyott terem: "
+			+ "csúszós jég, jégbe dermedt szörnyek, akik kiolvadnak, ha közel mész, és egy befagyott kalandor a zsákmányával.",
+	]},
 	{"date": "2026-11-17", "items": [
 		"Hadgyakorlat: a hullámokért járó arany lassabban nő (15 hullám 690, 30 hullám 1830 arany).",
 	]},

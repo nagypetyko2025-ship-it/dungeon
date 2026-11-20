@@ -12,6 +12,13 @@ const ROOM_JITTER := 1
 ## Az 5. emelettől nagyobbak a szobák (és több szörny jön): ehhez nagyobb rácscella kell,
 ## hogy a szomszédos szobák fala ne érjen össze.
 const BIG_ROOMS_FROM := 5
+## Különleges szobák (SpecialRoom) esélye szobánként (fajtánként emeletenként legfeljebb egy).
+const SPECIAL_CHANCES := {"frozen": 0.2, "prison": 0.07, "library": 0.08}
+## A börtöncellák ettől az emelettől jönnek; a fagyott terem csak a Fagykőben (DungeonTheme.band 3).
+const PRISON_FROM := 3
+const FROZEN_MAX_ENEMIES := 10
+## Teszthez: ha nem üres, minden alkalmas szoba ilyen különleges szoba lesz.
+static var test_special := ""
 const BIG_CELL := Vector2i(26, 19)
 const BIG_ROOM_WIDTH := Vector2i(15, 19)
 const BIG_ROOM_HEIGHT := Vector2i(11, 14)
@@ -228,6 +235,7 @@ func _ready() -> void:
 		_carve(room_rects[cell])
 	if boss_floor and alcove_dir != Vector2i.ZERO:
 		_carve(_alcove_rect(room_rects[stairs_cell], stairs_cell * _cell, alcove_dir))
+	var specials_used: Array[String] = []
 	for cell in cells:
 		for dir in [Vector2i.RIGHT, Vector2i.DOWN]:
 			if cells.has(cell + dir):
@@ -292,6 +300,17 @@ func _ready() -> void:
 			if Challenge.active():
 				room.enemy_count = maxi(1, roundi(room.enemy_count * Challenge.mult("enemy_count")))
 				room.trap_count = roundi(room.trap_count * Challenge.mult("trap_count"))
+			# Különleges szoba (SpecialRoom): emeletenként fajtánként legfeljebb egy, a lépcső szobájában nem;
+			# közös játékban és a gyakorló pályán sem (a szörnyeik a gazdánál nem úgy élnének).
+			if cell != stairs_cell and not tutorial and not NetLobby.is_playing(get_tree()):
+				var kind := _pick_special(depth, specials_used)
+				if not kind.is_empty():
+					specials_used.append(kind)
+					room.special = kind
+					if kind != "library":
+						room.trap_count = 0
+					if kind == "frozen":
+						room.enemy_count = mini(room.enemy_count, FROZEN_MAX_ENEMIES)
 		room.has_stairs = cell == stairs_cell and not boss_floor and not final_floor and not hell
 		if tutorial:
 			var plan: Dictionary = TUTORIAL_ROOMS[TUTORIAL_CELLS.find(cell)]
@@ -962,3 +981,19 @@ func _build_tile_set() -> TileSet:
 		wood.create_tile(coords)
 		wood.get_tile_data(coords, 0).modulate = WOOD_TINT
 	return tile_set
+
+
+## Különleges szoba fajtája ("" = sima szoba), a már kiosztottakat kihagyva.
+func _pick_special(depth: int, used: Array[String]) -> String:
+	if not test_special.is_empty():
+		return test_special
+	for kind: String in SPECIAL_CHANCES:
+		if used.has(kind):
+			continue
+		if kind == "frozen" and DungeonTheme.band(depth) != 3:
+			continue
+		if kind == "prison" and depth < PRISON_FROM:
+			continue
+		if randf() < float(SPECIAL_CHANCES[kind]):
+			return kind
+	return ""

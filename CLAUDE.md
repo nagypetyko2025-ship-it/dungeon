@@ -347,6 +347,15 @@ Rövid, hogy ne kelljen minden munkamenetben újra kinyomozni. A felhasználóva
   → `_challenge_won` → `Drill.reward` (legendás + a túlélt hullámok aranya). A LakeCrypt elosztóban is benne van.
 - Fagykő tárgyak (2026-11-16, DCSS CC0 ikonok): 8 db "min_depth": 41 kulccsal; a `random_item` a min_depth > depth tárgyat
   kihagyja (a mélység nélküli hívások, pl. jutalmak, így sosem adják).
+- Különleges szobák (2026-11-20): `rooms/special_room.gd` (`SpecialRoom`, `Room.special`), a Dungeon sorsolja
+  (`SPECIAL_CHANCES`, `_pick_special`; fajtánként emeletenként egy, a lépcső szobájában, közös játékban és a gyakorló
+  pályán nem; `Dungeon.test_special` teszthez). "library": Kenney RPG polcok (CC0, a projektben), olvasópult, könyvek,
+  rendes harc. "prison" (3.-tól): cellák a hátsó fal tövében, a lakók process kikapcsolva; belépéskor `_opened_count`
+  rács nyílik, csak azok kerülnek a harc listájára (`Room.track_enemy`; `Room.spawn_enemy_at` nem teszi rá).
+  "frozen" (csak band 3 = Fagykő): jégpadló, `Player.on_ice` (csúszás, `ICE_GRIP`), a szörnyek process nélkül,
+  jégfehéren, fagyos köddel (`_frost`), `THAW_RANGE`-en belül kiolvadnak; befagyott kalandor → a harc végén tárgy.
+  Kikapcsolt process mellett a szörny megjelenési animációja nem fut: a `_spawn` a ready-nél teljes méretre állítja.
+  A felhasználó a téglalap alakú jégtömböt csúnyának találta: ne tegyél vissza ilyet.
 - Tábori térkép: `ui/camp_map.gd` (`CampMap`, a táborban "HUD/Minimap", így a Menus M-re nyitja). Betöltéskor egyszer
   lefényképezi a külső világot (SubViewport a tábor World2D-jével, SCALE 0.25, CanvasModulate / játékos / HiddenGrave
   rejtve), a titkos sír tisztását a jobbra lévő erdősávval takarja (`_cover_secret`). Kicsiben jobb alul a játékos körül

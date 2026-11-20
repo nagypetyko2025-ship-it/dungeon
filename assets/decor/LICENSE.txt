@@ -2,3 +2,4 @@
 License: CC0 1.0 Universal (public domain).
 
 cobweb.png, bones.png, blood.png: drawn for this project (pixel art), free to use.
+ice_floor.png (a Fagyott terem jégpadlója), frost_sparkle.png, frost_mist.png (a befagyott szörnyek csillogása és fagyos köde): "Dungeon Crawl Stone Soup Full" (CC0, https://opengameart.org/content/dungeon-crawl-32x32-tiles), dungeon/floor/ice_0_new.png (áttetszővé téve), effect/frost_0.png + frost_1.png (egymás mellé, 2 kocka), effect/cloud_cold_0.png.

@@ -94,6 +94,9 @@ var final_boss := false
 ## Melyik nagy főellenség vár itt: "werewolf" (20. emelet), "chaos" (a Káosz Ura, 40. emelet), "engine" (60.) vagy "gate" (80.)
 ## (az Ősgépezet, 60. emelet).
 var lord := "werewolf"
+## Különleges szoba (SpecialRoom): "" (nincs), "library", "prison", "frozen". A Dungeon sorsolja.
+var special := ""
+var _special: SpecialRoom
 ## A tárgylift jobb oldali csempéjének x-e (csak a bolt szobájában; a fáklyák kikerülik).
 var lift_x := -99999
 ## A szoba lépcsője (ha van): a harc végéig rács van rajta.
@@ -147,6 +150,10 @@ func _ready() -> void:
 	_create_trigger()
 	_place_pillars()
 	_place_traps()
+	if not special.is_empty():
+		_special = SpecialRoom.new()
+		_special.room = self
+		add_child(_special)
 	var decor := RoomDecor.new()
 	decor.room = self
 	add_child(decor)
@@ -401,6 +408,8 @@ func _begin_fight(at: Vector2, body: Node2D) -> void:
 		return
 	if lord == "drill":
 		_next_wave()
+		return
+	if _special != null and _special.begin_fight():
 		return
 	var taken := {}
 	for i in enemy_count:
@@ -658,16 +667,29 @@ func _add_enemy(type: Dictionary, world_position: Vector2, taken := {}) -> void:
 	var net := NetEnemies.active(get_tree())
 	if net != null and net.is_client_mode():
 		return
-	var enemy = enemy_scene.instantiate()
-	enemy.setup(type, depth)
-	enemy.position = safe_spawn_position(world_position, taken) - position
-	enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
+	var enemy := spawn_enemy_at(type, world_position, taken)
 	_alive_enemies.append(enemy)
-	_queue_spawn(enemy)
 	if net != null:
 		# A statok már most dőlnek el, hogy a vendégek bábja ugyanilyen legyen.
-		enemy.stats = EnemyTypes.roll(type, depth)
+		enemy.set("stats", EnemyTypes.roll(type, depth))
 		net.register(enemy, self)
+
+
+## Szörny a megadott helyen (biztonságos csempén), de a harc listáján NINCS rajta (track_enemy teszi rá): a
+## különleges szobák (SpecialRoom) így tartják bezárva / jégben a még nem harcolókat.
+func spawn_enemy_at(type: Dictionary, world_position: Vector2, taken := {}) -> Node2D:
+	var enemy: Node2D = enemy_scene.instantiate()
+	enemy.call("setup", type, depth)
+	enemy.position = safe_spawn_position(world_position, taken) - position
+	enemy.get_node("Health").died.connect(_on_enemy_died.bind(enemy))
+	_queue_spawn(enemy)
+	return enemy
+
+
+## A szörny a harc listájára kerül (amíg él, a szoba zárva marad).
+func track_enemy(enemy: Node2D) -> void:
+	if not _alive_enemies.has(enemy):
+		_alive_enemies.append(enemy)
 
 
 ## A szörny a következő képkockák egyikén kerül pályára (lásd _spawn_queue).

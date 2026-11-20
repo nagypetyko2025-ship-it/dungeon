@@ -124,6 +124,10 @@ var _wait_held_move := false
 @onready var _inventory: Inventory = $Inventory
 
 var _knockback := Vector2.ZERO
+## Jégpadlón áll (a fagyott terem állítja, lásd SpecialRoom): csúszik (ICE_GRIP: mennyire gyorsan igazodik a sebesség).
+var on_ice := false
+var _ice_velocity := Vector2.ZERO
+const ICE_GRIP := 420.0
 var _cooldown_left := 0.0
 ## A társakkal megosztott lövéseink sorszáma (lásd share_shot).
 var _shot_count := 0
@@ -514,7 +518,14 @@ func _physics_process(delta: float) -> void:
 		_shadow_step(get_global_mouse_position())
 	_update_afflictions(delta)
 	var slow := SLOW_MULTIPLIER if _slow_left > 0.0 else 1.0
-	velocity = input_dir * BASE_SPEED * (_stats.move_speed / 100.0) * slow + _knockback
+	var wanted := input_dir * BASE_SPEED * (_stats.move_speed / 100.0) * slow
+	if on_ice:
+		# Jégen (SpecialRoom "frozen"): a sebesség csak lassan igazodik a bemenethez, a karakter csúszik.
+		_ice_velocity = _ice_velocity.move_toward(wanted, ICE_GRIP * delta)
+		wanted = _ice_velocity
+	else:
+		_ice_velocity = wanted
+	velocity = wanted + _knockback
 	_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
 	move_and_slide()
 	_update_footsteps(delta, input_dir)
